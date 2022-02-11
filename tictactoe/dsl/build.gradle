@@ -1,0 +1,12 @@
+dependencies {
+    api project(":azuki-core")
+    api project(":tictactoe:adapter-api")
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    runtimeOnly "org.jetbrains.kotlin:kotlin-script-runtime:$kotlinVersion"
+    runtimeOnly "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion"
+    runtimeOnly "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:$kotlinVersion"
+    runtimeOnly "org.jetbrains.kotlin:kotlin-script-util:$kotlinVersion"
+}

@@ -1,0 +1,4 @@
+include(
+    "vdm-animation-api",
+    "vdm-animation-overture",
+)

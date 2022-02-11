@@ -1,0 +1,14 @@
+root = true
+
+[*]
+insert_final_newline = true
+trim_trailing_whitespace = true
+tab_width = 4
+indent_style = space
+indent_size = 4
+ij_continuation_indent_size = 4
+
+[{*.kt,*.scn}]
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+ij_kotlin_call_parameters_right_paren_on_new_line = false
+ij_kotlin_call_parameters_new_line_after_left_paren = false

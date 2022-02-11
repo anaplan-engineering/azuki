@@ -1,0 +1,10 @@
+.DS_Store
+build/
+.gradle/
+*.iml
+out/
+.project
+.idea
+*.swp
+*.hprof
+

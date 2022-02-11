@@ -1,0 +1,10 @@
+dependencies {
+    api project(":tictactoe:dsl")
+    testRuntime project(":tictactoe:adapter-vdm")
+}
+
+test {
+    systemProperties = [
+        retainOvertureTempFiles: project.findProperty("retainOvertureTempFiles") ?: true,
+    ]
+}

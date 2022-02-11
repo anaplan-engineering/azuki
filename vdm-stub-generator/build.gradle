@@ -1,0 +1,42 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy'
+}
+
+repositories {
+    mavenCentral()
+}
+
+group "com.anaplan.engineering"
+version findProperty("version")
+
+apply plugin: 'maven-publish'
+
+dependencies {
+    implementation gradleApi()
+    implementation "com.anaplan.engineering:vdm-animation-api:$version"
+    runtime "com.anaplan.engineering:vdm-animation-overture:$version"
+}
+
+
+gradlePlugin {
+    plugins {
+        vdmStubGenerator {
+            id = "vdm-stub-generator"
+            implementationClass = "com.anaplan.engineering.vdmstubgenerator.VdmStubGenerationPlugin"
+        }
+    }
+}
+
+
+publishing {
+    repositories {
+        maven {
+            credentials {
+                username System.env.ART_USERNAME
+                password System.env.ART_PASSWORD
+            }
+            url findProperty('ART_URL')
+        }
+    }
+}

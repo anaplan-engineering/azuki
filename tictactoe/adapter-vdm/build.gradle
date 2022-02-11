@@ -1,0 +1,58 @@
+buildscript {
+    dependencies {
+        classpath("com.anaplan.engineering:vdm-stub-generator")
+    }
+}
+
+apply plugin: "vdm-stub-generator"
+
+configurations {
+    vdm
+}
+
+dependencies {
+    api project(":tictactoe:adapter-declaration")
+    api project(":azuki-vdm")
+}
+
+ext {
+    generatedSourceDir = "$buildDir/generated-sources"
+    generatedResourceDir = "$buildDir/generated-resources"
+    vdmResourceDir = "$generatedResourceDir/vdm"
+    vdmSourceDir = "$projectDir/src/main/vdm"
+}
+
+task generateSpecificationManifest {
+    doLast {
+        file(vdmResourceDir).mkdirs()
+        file("$vdmResourceDir/specification.mf").text = fileTree(vdmSourceDir).findAll { f ->
+            f.name.endsWith("vdmsl")
+        }.collect { f ->
+            file(vdmSourceDir).toPath().relativize(f.toPath())
+        }.sort().join("\n")
+    }
+}
+
+processResources {
+    dependsOn generateSpecificationManifest
+}
+
+generateVdmStubs {
+    targetPackage = "com.anaplan.engineering.azuki.tictactoe.adapter.vdm"
+    specificationManifest = file("$vdmResourceDir/specification.mf")
+    specificationDir = file(vdmSourceDir)
+
+    dependsOn generateSpecificationManifest
+}
+
+compileKotlin {
+    dependsOn generateVdmStubs
+}
+
+sourceSets {
+    main.kotlin.srcDirs generatedSourceDir
+    main.resources.srcDirs generatedResourceDir
+    main.resources.srcDirs vdmSourceDir
+}
+
+

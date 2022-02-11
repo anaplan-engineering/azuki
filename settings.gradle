@@ -1,0 +1,11 @@
+include(
+    "azuki-core",
+    "azuki-vdm",
+    "tictactoe:dsl",
+    "tictactoe:adapter-api",
+    "tictactoe:adapter-declaration",
+    "tictactoe:adapter-vdm",
+    "tictactoe:eacs",
+)
+includeBuild("vdm-animation")
+includeBuild("vdm-stub-generator")
