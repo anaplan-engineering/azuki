@@ -3,7 +3,7 @@ dependencies {
     api "com.anaplan.engineering:vdm-animation-api:$version"
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
-    runtime "com.anaplan.engineering:vdm-animation-overture:$version"
+    runtimeOnly"com.anaplan.engineering:vdm-animation-overture:$version"
 }
 
 publishing {
