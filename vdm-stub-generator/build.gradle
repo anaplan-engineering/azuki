@@ -15,7 +15,7 @@ apply plugin: 'maven-publish'
 dependencies {
     implementation gradleApi()
     implementation "com.anaplan.engineering:vdm-animation-api:$version"
-    runtimeOnly"com.anaplan.engineering:vdm-animation-overture:$version"
+    runtimeOnly "com.anaplan.engineering:vdm-animation-overture:$version"
 }
 
 

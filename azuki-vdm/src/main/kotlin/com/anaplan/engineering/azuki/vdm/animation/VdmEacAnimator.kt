@@ -21,7 +21,7 @@ class VdmEacAnimator(private val animationModule: AnimationModule) {
 
     private fun createAnimationFile(animationModule: AnimationModule): VdmFile {
         return VdmFile("Animation",
-            """
+"""-- @Warning(5000) suppress warnings for unused definitions
 module Animation
 ${generateImports(animationModule.imports)}
 definitions
@@ -37,7 +37,7 @@ return true
 )
 
 end Animation
-                """
+"""
         )
     }
 
