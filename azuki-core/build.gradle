@@ -8,4 +8,14 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
 }
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Azuki'
+                description = 'The core library of the Azuki framework for behaviour driven specification'
+            }
+        }
+    }
+}
 

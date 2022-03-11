@@ -1,15 +1,18 @@
 plugins {
     id 'maven-publish'
+    id 'signing'
 }
+
 
 publishing {
     repositories {
         maven {
+            url 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
             credentials {
-                username System.env.ART_USERNAME
-                password System.env.ART_PASSWORD
+                username findProperty("ossrhUsername")
+                password findProperty("ossrhPassword")
             }
-            url findProperty('ART_URL')
         }
     }
 }
+

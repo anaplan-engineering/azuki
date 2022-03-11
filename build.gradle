@@ -1,12 +1,5 @@
 // There is no easy way to have the composite build publish all the things!
-task publishAll {
-    dependsOn gradle.includedBuild('vdm-animation').task(':vdm-animation-api:publish')
-    dependsOn gradle.includedBuild('vdm-animation').task(':vdm-animation-overture:publish')
-    dependsOn gradle.includedBuild('vdm-stub-generator').task(':publish')
-    dependsOn ':azuki-core:publishToMavenLocal'
-    dependsOn ':azuki-vdm:publishToMavenLocal'
-}
-
+// For publication to Maven Central see scripts directory
 task publishAllToMavenLocal {
     dependsOn gradle.includedBuild('vdm-animation').task(':vdm-animation-api:publishToMavenLocal')
     dependsOn gradle.includedBuild('vdm-animation').task(':vdm-animation-overture:publishToMavenLocal')

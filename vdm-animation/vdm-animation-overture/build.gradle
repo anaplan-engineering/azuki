@@ -11,3 +11,14 @@ dependencies {
     testImplementation group: 'org.mockito.kotlin', name: 'mockito-kotlin', version: '3.2.0'
     testImplementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect'
 }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Overture VDM animator'
+                description = 'A programmatic wrapper enabling in-process animation of VDM specifications'
+            }
+        }
+    }
+}

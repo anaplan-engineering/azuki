@@ -1,6 +1,6 @@
 plugins {
     id 'azuki.kotlin-conventions'
-    id 'vdm-stub-generator'
+    id "com.anaplan.engineering.vdm-stub-generator"
 }
 
 configurations {

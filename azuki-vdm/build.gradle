@@ -9,3 +9,14 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
     runtimeOnly "com.anaplan.engineering:vdm-animation-overture:$version"
 }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Azuki VDM tools'
+                description = 'Tools for adapting to VDM when using the Azuki framework for behaviour driven specification'
+            }
+        }
+    }
+}

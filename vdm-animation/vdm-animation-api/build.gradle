@@ -3,3 +3,13 @@ plugins {
     id 'azuki.jar-publishing-conventions'
 }
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'VDM animation API'
+                description = 'A service API for animating VDM specifications'
+            }
+        }
+    }
+}
