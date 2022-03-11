@@ -1,16 +1,9 @@
 plugins {
+    id 'azuki.common-conventions'
+    id 'azuki.publishing-conventions'
     id 'java-gradle-plugin'
     id 'groovy'
 }
-
-repositories {
-    mavenCentral()
-}
-
-group "com.anaplan.engineering"
-version findProperty("version")
-
-apply plugin: 'maven-publish'
 
 dependencies {
     implementation gradleApi()
@@ -29,14 +22,3 @@ gradlePlugin {
 }
 
 
-publishing {
-    repositories {
-        maven {
-            credentials {
-                username System.env.ART_USERNAME
-                password System.env.ART_PASSWORD
-            }
-            url findProperty('ART_URL')
-        }
-    }
-}

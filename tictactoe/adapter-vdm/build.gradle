@@ -1,10 +1,7 @@
-buildscript {
-    dependencies {
-        classpath("com.anaplan.engineering:vdm-stub-generator")
-    }
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'vdm-stub-generator'
 }
-
-apply plugin: "vdm-stub-generator"
 
 configurations {
     vdm

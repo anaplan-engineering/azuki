@@ -1,0 +1,11 @@
+plugins {
+    id 'azuki.publishing-conventions'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
