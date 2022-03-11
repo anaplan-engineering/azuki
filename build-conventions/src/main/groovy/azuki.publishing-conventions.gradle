@@ -1,0 +1,15 @@
+plugins {
+    id 'maven-publish'
+}
+
+publishing {
+    repositories {
+        maven {
+            credentials {
+                username System.env.ART_USERNAME
+                password System.env.ART_PASSWORD
+            }
+            url findProperty('ART_URL')
+        }
+    }
+}

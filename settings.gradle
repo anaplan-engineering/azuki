@@ -7,5 +7,6 @@ include(
     "tictactoe:adapter-vdm",
     "tictactoe:eacs",
 )
+includeBuild("build-conventions")
 includeBuild("vdm-animation")
 includeBuild("vdm-stub-generator")

@@ -1,1 +1,2 @@
 includeBuild("../vdm-animation")
+includeBuild("../build-conventions")

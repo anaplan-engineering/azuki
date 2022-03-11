@@ -1,0 +1,6 @@
+repositories {
+    mavenCentral()
+}
+
+group "com.anaplan.engineering"
+version findProperty("version")

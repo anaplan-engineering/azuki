@@ -1,58 +1,16 @@
-plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.5.31"
-}
-
-
-allprojects {
-    buildscript {
-        repositories {
-            mavenCentral()
-        }
-    }
-
-    repositories {
-        mavenCentral()
-    }
-
-    group "com.anaplan.engineering"
-    version findProperty("version")
-}
-
-
-subprojects {
-    apply plugin: 'kotlin'
-    apply plugin: 'maven-publish'
-
-    ext {
-        kotlinVersion = '1.5.31'
-    }
-
-    // Using artifactory plugin appears broken -- https://github.com/gradle/gradle/issues/4783
-    publishing {
-        repositories {
-            maven {
-                credentials {
-                    username System.env.ART_USERNAME
-                    password System.env.ART_PASSWORD
-                }
-                url findProperty('ART_URL')
-            }
-        }
-    }
-}
-
 // There is no easy way to have the composite build publish all the things!
 task publishAll {
-    dependsOn gradle.includedBuild("vdm-animation").task(":vdm-animation-api:publish")
-    dependsOn gradle.includedBuild("vdm-animation").task(":vdm-animation-overture:publish")
-    dependsOn gradle.includedBuild("vdm-stub-generator").task(":publish")
-    dependsOn subprojects*.tasks.publish
+    dependsOn gradle.includedBuild('vdm-animation').task(':vdm-animation-api:publish')
+    dependsOn gradle.includedBuild('vdm-animation').task(':vdm-animation-overture:publish')
+    dependsOn gradle.includedBuild('vdm-stub-generator').task(':publish')
+    dependsOn ':azuki-core:publishToMavenLocal'
+    dependsOn ':azuki-vdm:publishToMavenLocal'
 }
 
 task publishAllToMavenLocal {
-    dependsOn gradle.includedBuild("vdm-animation").task(":vdm-animation-api:publishToMavenLocal")
-    dependsOn gradle.includedBuild("vdm-animation").task(":vdm-animation-overture:publishToMavenLocal")
-    dependsOn gradle.includedBuild("vdm-stub-generator").task(":publishToMavenLocal")
-    dependsOn subprojects*.tasks.publishToMavenLocal
+    dependsOn gradle.includedBuild('vdm-animation').task(':vdm-animation-api:publishToMavenLocal')
+    dependsOn gradle.includedBuild('vdm-animation').task(':vdm-animation-overture:publishToMavenLocal')
+    dependsOn gradle.includedBuild('vdm-stub-generator').task(':publishToMavenLocal')
+    dependsOn ':azuki-core:publishToMavenLocal'
+    dependsOn ':azuki-vdm:publishToMavenLocal'
 }
-

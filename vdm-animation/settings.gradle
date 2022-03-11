@@ -2,3 +2,4 @@ include(
     "vdm-animation-api",
     "vdm-animation-overture",
 )
+includeBuild("../build-conventions")

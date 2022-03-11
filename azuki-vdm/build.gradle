@@ -1,15 +1,11 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'azuki.jar-publishing-conventions'
+}
+
 dependencies {
     api project(":azuki-core")
     api "com.anaplan.engineering:vdm-animation-api:$version"
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
-    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
     runtimeOnly "com.anaplan.engineering:vdm-animation-overture:$version"
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
 }

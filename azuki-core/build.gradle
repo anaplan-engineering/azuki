@@ -1,13 +1,11 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'azuki.jar-publishing-conventions'
+}
+
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
-    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    implementation 'org.jetbrains.kotlin:kotlin-test-junit'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-}
+
