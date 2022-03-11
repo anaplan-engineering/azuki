@@ -5,13 +5,21 @@ import com.anaplan.engineering.vdmanimation.api.VdmFile
 import com.anaplan.engineering.vdmanimation.api.VdmSpecification
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 
 // TODO -- remove horrible hack to handle duplicate undef!
 abstract class VdmStubGenerationTask extends DefaultTask {
 
+    @Input
     abstract Property<String> getTargetPackage()
+
+    @InputFile
     abstract Property<File> getSpecificationManifest()
+
+    @InputDirectory
     abstract Property<File> getSpecificationDir()
 
     @TaskAction

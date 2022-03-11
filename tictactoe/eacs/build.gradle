@@ -1,6 +1,6 @@
 dependencies {
     api project(":tictactoe:dsl")
-    testRuntime project(":tictactoe:adapter-vdm")
+    testRuntimeOnly project(":tictactoe:adapter-vdm")
 }
 
 test {
