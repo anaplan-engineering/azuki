@@ -3,6 +3,7 @@ plugins {
     id 'azuki.publishing-conventions'
     id 'java-gradle-plugin'
     id 'groovy'
+    id 'com.gradle.plugin-publish' version '0.20.0'
 }
 
 dependencies {
@@ -11,14 +12,79 @@ dependencies {
     runtimeOnly "com.anaplan.engineering:vdm-animation-overture:$version"
 }
 
-
 gradlePlugin {
     plugins {
         vdmStubGenerator {
-            id = "vdm-stub-generator"
+            id = "${group}.vdm-stub-generator"
+            displayName = 'VDM stub generator gradle plugin'
+            description = 'A Gradle plugin to generate stub classes from the structure of a VDM specification'
             implementationClass = "com.anaplan.engineering.vdmstubgenerator.VdmStubGenerationPlugin"
         }
     }
+}
+
+pluginBundle {
+    website = 'https://github.com/anaplan-engineering/azuki'
+    vcsUrl = 'https://github.com/anaplan-engineering/azuki'
+    tags = ['VDM']
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+publishing {
+    afterEvaluate {
+        publications {
+            withType(MavenPublication) {
+                groupId = group
+                pom {
+                    url = 'https://github.com/anaplan-engineering/azuki'
+                    name = 'VDM stub generator gradle plugin'
+                    description = 'A Gradle plugin to generate stub classes from the structure of a VDM specification'
+
+                    scm {
+                        connection = 'scm:git:git://github.com/anaplan-engineering/azuki.git'
+                        developerConnection = 'scm:git:git@github.com:anaplan-engineering/azuki.git'
+                        url = 'https://github.com/anaplan-engineering/azuki'
+                    }
+
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://github.com/anaplan-engineering/azuki/blob/main/LICENCE.txt'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'sifraser'
+                            name = 'Simon Fraser'
+                            email = 'simon.fraser@anaplan.com'
+                            url = "https://github.com/sifraser"
+                            organization = "Anaplan Ltd"
+                            organizationUrl = "http://www.anaplan.com"
+                            roles = ['architect', 'principal engineer']
+                        }
+                        developer {
+                            id = 'donbex'
+                            name = 'Alessandro Pezzoni'
+                            email = 'alessandro.pezzoni@anaplan.com'
+                            url = "https://github.com/donbex"
+                            organization = "Anaplan Ltd"
+                            organizationUrl = "http://www.anaplan.com"
+                            roles = ['associate engineer']
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.withType(MavenPublication)
 }
 
 

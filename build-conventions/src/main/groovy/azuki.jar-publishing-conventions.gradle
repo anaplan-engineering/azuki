@@ -2,10 +2,60 @@ plugins {
     id 'azuki.publishing-conventions'
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+            pom {
+                url = 'https://github.com/anaplan-engineering/azuki'
+
+                scm {
+                    connection = 'scm:git:git://github.com/anaplan-engineering/azuki.git'
+                    developerConnection = 'scm:git:git@github.com:anaplan-engineering/azuki.git'
+                    url = 'https://github.com/anaplan-engineering/azuki'
+                }
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://github.com/anaplan-engineering/azuki/blob/main/LICENCE.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'sifraser'
+                        name = 'Simon Fraser'
+                        email = 'simon.fraser@anaplan.com'
+                        roles = ['architect', 'principal engineer']
+                        url = "https://github.com/sifraser"
+                        organization = "Anaplan Ltd"
+                        organizationUrl = "http://www.anaplan.com"
+                        organization = "Anaplan Ltd"
+                    }
+                    developer {
+                        id = 'donbex'
+                        name = 'Alessandro Pezzoni'
+                        email = 'alessandro.pezzoni@anaplan.com'
+                        url = "https://github.com/donbex"
+                        organization = "Anaplan Ltd"
+                        organizationUrl = "http://www.anaplan.com"
+                        roles = ['associate engineer']
+                    }
+                }
+            }
         }
     }
 }
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+
+
