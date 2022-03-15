@@ -30,6 +30,6 @@ echo "Publishing Azuki"
 cd "$PROJECT_DIR"
 "$GRADLEW" publish -Pversion="$VERSION"
 
-TAG=""v$VERSION""
+TAG="v$VERSION"
 git tag -a $TAG -m "Release $TAG"
 git push origin "$TAG"
