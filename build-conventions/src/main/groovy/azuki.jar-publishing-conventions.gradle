@@ -32,11 +32,10 @@ publishing {
                         id = 'sifraser'
                         name = 'Simon Fraser'
                         email = 'simon.fraser@anaplan.com'
-                        roles = ['architect', 'principal engineer']
                         url = "https://github.com/sifraser"
                         organization = "Anaplan Ltd"
                         organizationUrl = "http://www.anaplan.com"
-                        organization = "Anaplan Ltd"
+                        roles = ['architect', 'principal engineer']
                     }
                     developer {
                         id = 'donbex'

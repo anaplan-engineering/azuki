@@ -23,13 +23,13 @@ interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactor
     fun createSystemFactory(systemDefaults: SD = implementationDefaults): SystemFactory<AF, CF, QF, AGF, SD>
 
     companion object {
-        val implementations by lazy {
+        fun locateImplementations(): List<Implementation<*, *, *, *, *>> {
             val restrictTo = java.lang.System.getProperty("implementations")?.split(",")?.map { it.trim() }
             val loader = ServiceLoader.load(Implementation::class.java)
             val factories =
                 loader.iterator().asSequence().filter { restrictTo == null || restrictTo.contains(it.name) }.toList()
             if (factories.isEmpty()) throw IllegalStateException("No implementations found")
-            factories
+            return factories
         }
     }
 }
