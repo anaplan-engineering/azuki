@@ -196,9 +196,10 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
     }
 
     override fun getChildren(): MutableList<ScenarioRun> {
+        val implementations = Implementation.locateImplementations()
         val eacs = getTestClass().getAnnotatedMethods(Eac::class.java).flatMap { method ->
             val eac = method.getAnnotation(Eac::class.java)!!
-            Implementation.implementations.map { implementation ->
+            implementations.map { implementation ->
                 val beh = getTestClass().getAnnotation(BEH::class.java)
                 val eacMetadata = if (beh == null) {
                     null
@@ -217,13 +218,13 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
         }
         val modellingExamples = getTestClass().getAnnotatedMethods(ModellingExample::class.java).flatMap { method ->
             val modellingExample = method.getAnnotation(ModellingExample::class.java)!!
-            Implementation.implementations.map { implementation ->
+            implementations.map { implementation ->
                 ScenarioRun(modellingExample.summary, method, implementation)
             }
         }
         val adapterTests = getTestClass().getAnnotatedMethods(AdapterTest::class.java).flatMap { method ->
             val adapterTest = method.getAnnotation(AdapterTest::class.java)!!
-            Implementation.implementations.map { implementation ->
+            implementations.map { implementation ->
                 ScenarioRun(method.name,
                     method,
                     implementation,
@@ -232,12 +233,12 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
             }
         }
         val analysisScenarios = getTestClass().getAnnotatedMethods(AnalysisScenario::class.java).flatMap { method ->
-            Implementation.implementations.map { implementation ->
+            implementations.map { implementation ->
                 ScenarioRun(method.name, method, implementation)
             }
         }
         val generatedScenarios = getTestClass().getAnnotatedMethods(GeneratedScenario::class.java).flatMap { method ->
-            Implementation.implementations.map { implementation ->
+            implementations.map { implementation ->
                 ScenarioRun(method.name, method, implementation)
             }
         }
