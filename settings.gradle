@@ -1,6 +1,7 @@
 include(
     "azuki-core",
     "azuki-vdm",
+    "azuki-formatter",
     "tictactoe:dsl",
     "tictactoe:adapter-api",
     "tictactoe:adapter-declaration",
