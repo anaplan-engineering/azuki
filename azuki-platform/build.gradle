@@ -1,0 +1,69 @@
+plugins {
+    id 'azuki.common-conventions'
+    id 'azuki.publishing-conventions'
+    id 'java-platform'
+}
+
+dependencies {
+    constraints {
+        api "com.anaplan.engineering:azuki-core:$version"
+        api "com.anaplan.engineering:azuki-formatter:$version"
+        api "com.anaplan.engineering:azuki-vdm:$version"
+        api "com.anaplan.engineering:vdm-animation-api:$version"
+        api "com.anaplan.engineering:vdm-animation-overture:$version"
+        api "com.anaplan.engineering:vdm-stub-generator:$version"
+    }
+}
+
+publishing {
+    publications {
+        myPlatform(MavenPublication) {
+            from components.javaPlatform
+            pom {
+                url = 'https://github.com/anaplan-engineering/azuki'
+                name = 'Azuki platform'
+                description = 'BOM for the Azuki framework'
+
+                scm {
+                    connection = 'scm:git:git://github.com/anaplan-engineering/azuki.git'
+                    developerConnection = 'scm:git:git@github.com:anaplan-engineering/azuki.git'
+                    url = 'https://github.com/anaplan-engineering/azuki'
+                }
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://github.com/anaplan-engineering/azuki/blob/main/LICENCE.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'sifraser'
+                        name = 'Simon Fraser'
+                        email = 'simon.fraser@anaplan.com'
+                        url = "https://github.com/sifraser"
+                        organization = "Anaplan Ltd"
+                        organizationUrl = "http://www.anaplan.com"
+                        roles = ['architect', 'principal engineer']
+                    }
+                    developer {
+                        id = 'donbex'
+                        name = 'Alessandro Pezzoni'
+                        email = 'alessandro.pezzoni@anaplan.com'
+                        url = "https://github.com/donbex"
+                        organization = "Anaplan Ltd"
+                        organizationUrl = "http://www.anaplan.com"
+                        roles = ['associate engineer']
+                    }
+                }
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.withType(MavenPublication)
+}
+
+

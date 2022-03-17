@@ -66,6 +66,8 @@ A custom task is provided to publish all of the necessary artifacts from the pro
 
 (A `publishAll` task also exists for publishing to a remote Maven repository. This requires various environment variables and properties to be set to configure the remote repository. These can easily be derived from examination from the publishing configuration of [build.gradle](build.gradle).)
 
+N.B. A composite build is necessary for publishing and consuming gradle plugins in the same build.
+
 ### IntelliJ IDEA
 
 The composite Gradle build can be opened in IDEA as a single project by opening the [settings.gradle](settings.gradle) file in the root directory.
