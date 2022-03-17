@@ -33,7 +33,7 @@ cd "$PROJECT_DIR"
 
 echo "Publishing Azuki platform"
 
-cd "PLATFORM_DIR"
+cd "$PLATFORM_DIR"
 "$GRADLEW" publish -Pversion="$VERSION"
 
 TAG="v$VERSION"
