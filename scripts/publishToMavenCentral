@@ -13,6 +13,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 PROJECT_DIR="$SCRIPT_DIR/.."
 ANIMATION_DIR="$PROJECT_DIR/vdm-animation"
 STUB_DIR="$PROJECT_DIR/vdm-stub-generator"
+PLATFORM_DIR="$PROJECT_DIR/azuki-platform"
 GRADLEW="$PROJECT_DIR/gradlew"
 
 echo "Publishing VDM animation"
@@ -28,6 +29,11 @@ cd "$STUB_DIR"
 echo "Publishing Azuki"
 
 cd "$PROJECT_DIR"
+"$GRADLEW" publish -Pversion="$VERSION"
+
+echo "Publishing Azuki platform"
+
+cd "PLATFORM_DIR"
 "$GRADLEW" publish -Pversion="$VERSION"
 
 TAG="v$VERSION"

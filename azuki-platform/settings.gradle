@@ -1,0 +1,4 @@
+includeBuild("..")
+includeBuild("../vdm-animation")
+includeBuild("../build-conventions")
+includeBuild("../vdm-stub-generator")
