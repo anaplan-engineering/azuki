@@ -4,13 +4,12 @@ import com.anaplan.engineering.azuki.core.runner.Eac
 import com.anaplan.engineering.azuki.core.system.BEH
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeBehaviours
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeFunctionalElements
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeImplementation
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeScenario
 
 @BEH(TicTacToeBehaviours.PlaceToken, TicTacToeFunctionalElements.Game, """
     Place a token
 """)
-class BEH3(implementation: TicTacToeImplementation) : TicTacToeScenario(implementation) {
+class BEH3 : TicTacToeScenario() {
 
     @Eac("A player cannot place a token over an existing token")
     fun immutableState() {

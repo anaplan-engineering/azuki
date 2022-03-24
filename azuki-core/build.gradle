@@ -6,6 +6,12 @@ plugins {
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-test-junit'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+
+    runtimeOnly "org.jetbrains.kotlin:kotlin-script-runtime"
+    runtimeOnly "org.jetbrains.kotlin:kotlin-compiler-embeddable"
+    runtimeOnly "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable"
+    runtimeOnly "org.jetbrains.kotlin:kotlin-script-util"
 }
 
 publishing {

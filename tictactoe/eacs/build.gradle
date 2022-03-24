@@ -2,13 +2,64 @@ plugins {
     id 'azuki.kotlin-conventions'
 }
 
+/**
+ * There are two ways in which to provide the adapters/implementations for the scenarios to run against.
+ *
+ * The first is simply to add the require dependencies to the test runtime classpath. This method has the limitation
+ * that you cannot work with two versions of the same code, or where difference implementations rely on different
+ * versions of the same libraries.
+ *
+ * This first method is illustrated by the commented out snippet below.
+ */
+
+//dependencies {
+//    api project(":tictactoe:dsl")
+//    testRuntimeOnly project(":tictactoe:adapter-vdm")
+//    testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+//}
+//
+//test {
+//    systemProperties = [
+//        retainOvertureTempFiles: project.findProperty("retainOvertureTempFiles") ?: true,
+//    ]
+//}
+
+/**
+ * The second, more powerful, method is to specify a jar that contains the necessary artifacts for a given
+ * implementation (typically a classpath jar). Each of these jars will be loaded with an isolated classloader enabling
+ * scenarios to be run against different versions of the same code.
+ *
+ * This second method is demonstrated below.
+ */
+
+configurations {
+    vdm
+}
+
 dependencies {
     api project(":tictactoe:dsl")
-    testRuntimeOnly project(":tictactoe:adapter-vdm")
+    vdm project(":tictactoe:adapter-vdm")
+    testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+}
+
+task vdmClasspathJar(type: Jar) {
+    dependsOn configurations.vdm
+    archiveBaseName = 'VDM'
+    manifest {
+        attributes("Class-Path": configurations.vdm.collect { it.absolutePath }.join(' '))
+    }
 }
 
 test {
+    dependsOn vdmClasspathJar
+
+    def providers = [
+        vdmClasspathJar.archiveFile.get().asFile.absolutePath,
+    ]
     systemProperties = [
-        retainOvertureTempFiles: project.findProperty("retainOvertureTempFiles") ?: true,
+        retainOvertureTempFiles                                 : findProperty("retainOvertureTempFiles") ?: true,
+        "com.anaplan.engineering.azuki.implementation.providers": providers.join(","),
+        "com.anaplan.engineering.azuki.implementation.includes" : findProperty("impl.includes"),
+        "com.anaplan.engineering.azuki.implementation.excludes" : findProperty("impl.excludes"),
     ]
 }

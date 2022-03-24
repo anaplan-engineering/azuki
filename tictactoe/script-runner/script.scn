@@ -1,0 +1,9 @@
+verifiableScenario {
+    given {
+        thereIsANewGameWithPlayers("gameA", "X", "O")
+    }
+    then {
+        playerHasMoved("gameA", "X", times = 0)
+        playerHasMoved("gameA", "O", times = 0)
+    }
+}

@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.core.system
 
+import org.slf4j.LoggerFactory
 import java.util.*
 
 interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, SD : SystemDefaults> {
@@ -23,13 +24,17 @@ interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactor
     fun createSystemFactory(systemDefaults: SD = implementationDefaults): SystemFactory<AF, CF, QF, AGF, SD>
 
     companion object {
-        fun locateImplementations(): List<Implementation<*, *, *, *, *>> {
-            val restrictTo = java.lang.System.getProperty("implementations")?.split(",")?.map { it.trim() }
+        private val Log = LoggerFactory.getLogger(Implementation::class.java)
+
+        fun <AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> locateImplementations(): List<Implementation<AF, CF, QF, AGF, *>> {
             val loader = ServiceLoader.load(Implementation::class.java)
-            val factories =
-                loader.iterator().asSequence().filter { restrictTo == null || restrictTo.contains(it.name) }.toList()
-            if (factories.isEmpty()) throw IllegalStateException("No implementations found")
-            return factories
+            val implementations = loader.iterator().asSequence().map {
+                @Suppress("UNCHECKED_CAST")
+                it as Implementation<AF, CF, QF, AGF, *>
+            }.toList()
+            Log.debug("Located implementations: $implementations")
+            if (implementations.isEmpty()) throw IllegalStateException("No implementations found")
+            return implementations
         }
     }
 }

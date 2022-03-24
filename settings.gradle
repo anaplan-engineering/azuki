@@ -2,11 +2,13 @@ include(
     "azuki-core",
     "azuki-vdm",
     "azuki-formatter",
+    "azuki-runner",
     "tictactoe:dsl",
     "tictactoe:adapter-api",
     "tictactoe:adapter-declaration",
     "tictactoe:adapter-vdm",
     "tictactoe:eacs",
+    "tictactoe:script-runner",
 )
 includeBuild("build-conventions")
 includeBuild("vdm-animation")

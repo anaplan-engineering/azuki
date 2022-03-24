@@ -1,20 +1,22 @@
 package com.anaplan.engineering.azuki.core.runner
 
-import com.anaplan.engineering.azuki.core.system.EacMetadata
-import com.anaplan.engineering.azuki.core.system.EacMetadataRecorder
-import com.anaplan.engineering.azuki.core.system.BEH
-import com.anaplan.engineering.azuki.core.system.Implementation
+import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
+import com.anaplan.engineering.azuki.core.system.*
+import org.junit.Assume
 import org.junit.Ignore
 import org.junit.internal.runners.model.ReflectiveCallable
-import org.junit.internal.runners.statements.Fail
 import org.junit.rules.Timeout
 import org.junit.runner.Description
 import org.junit.runner.notification.RunNotifier
 import org.junit.runners.ParentRunner
 import org.junit.runners.model.FrameworkMethod
 import org.junit.runners.model.Statement
+import org.slf4j.LoggerFactory
+import java.lang.System
 import java.lang.reflect.Method
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.KClass
+import kotlin.reflect.full.primaryConstructor
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
@@ -59,10 +61,15 @@ annotation class RestrictTo(
 )
 
 
-data class ScenarioRun(
+data class ScenarioRun<
+    AF : ActionFactory,
+    CF : CheckFactory,
+    QF : QueryFactory,
+    AGF : ActionGeneratorFactory,
+    >(
     val name: String,
     val method: FrameworkMethod,
-    val implementation: Implementation<*, *, *, *, *>,
+    val implementationProvider: ImplementationProvider<AF, CF, QF, AGF>,
     val eacMetadata: EacMetadata? = null,
     val ignoreWhenUnsupported: Boolean = true,
     val expectSkip: Boolean = false,
@@ -71,11 +78,11 @@ data class ScenarioRun(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as ScenarioRun
+        other as ScenarioRun<*, *, *, *>
 
         if (name != other.name) return false
         if (method != other.method) return false
-        if (implementation != other.implementation) return false
+        if (implementationProvider != other.implementationProvider) return false
 
         return true
     }
@@ -83,17 +90,25 @@ data class ScenarioRun(
     override fun hashCode(): Int {
         var result = name.hashCode()
         result = 31 * result + method.hashCode()
-        result = 31 * result + implementation.hashCode()
+        result = 31 * result + implementationProvider.hashCode()
         return result
     }
 
-    override fun toString() = "$name [${implementation.name}]"
+    override fun toString() = "$name [${implementationProvider.implementationName}]"
 }
 
-class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<ScenarioRun>(testClass) {
+class JUnitScenarioRunner<
+    AF : ActionFactory,
+    CF : CheckFactory,
+    QF : QueryFactory,
+    AGF : ActionGeneratorFactory,
+    S : VerifiableScenario<AF, CF>,
+    >(private val testClass: Class<*>) : ParentRunner<ScenarioRun<AF, CF, QF, AGF>>(testClass) {
 
     companion object {
         private val defaultTimeout = Timeout(3, TimeUnit.MINUTES)
+
+        private val Log = LoggerFactory.getLogger(JUnitScenarioRunner::class.java)
     }
 
     private val runKnownBugs by lazy {
@@ -105,30 +120,31 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
             ?: throw IllegalStateException("Must implement `run` method")
     }
 
-    override fun isIgnored(child: ScenarioRun): Boolean {
+    override fun isIgnored(child: ScenarioRun<AF, CF, QF, AGF>): Boolean {
         if (child.method.getAnnotation(Ignore::class.java) != null) {
             return true
         }
         val knownBug = child.method.getAnnotation(KnownBug::class.java)
-        if (knownBug != null && !runKnownBugs && child.implementation.name in knownBug.issues.map { it.implementation }) {
-            System.err.println("Skipping ${child.method.declaringClass.name}.${child.method.name} as this exhibits a known bug in ${child.implementation.name}")
+        val implementationName = child.implementationProvider.implementationName
+        if (knownBug != null && !runKnownBugs && implementationName in knownBug.issues.map { it.implementation }) {
+            System.err.println("Skipping ${child.method.declaringClass.name}.${child.method.name} as this exhibits a known bug in $implementationName")
             return true
         }
         val toBeDone = child.method.getAnnotation(ToBeDone::class.java)
-        if (toBeDone != null && child.implementation.name in toBeDone.issues.map { it.implementation }) {
-            System.err.println("Skipping ${child.method.declaringClass.name}.${child.method.name} as this is still TBD in ${child.implementation.name}")
+        if (toBeDone != null && implementationName in toBeDone.issues.map { it.implementation }) {
+            System.err.println("Skipping ${child.method.declaringClass.name}.${child.method.name} as this is still TBD in $implementationName")
             return true
         }
         val unsupported = child.method.getAnnotation(Unsupported::class.java)
-        if (unsupported != null && child.implementation.name in unsupported.implementation) {
-            System.err.println("Skipping ${child.method.declaringClass.name}.${child.method.name} as unsupported in ${child.implementation.name}")
+        if (unsupported != null && implementationName in unsupported.implementation) {
+            System.err.println("Skipping ${child.method.declaringClass.name}.${child.method.name} as unsupported in $implementationName")
             return true
         }
         val restrictTo = child.method.getAnnotation(RestrictTo::class.java)
-        return restrictTo != null && restrictTo.implementationName != child.implementation.name
+        return restrictTo != null && restrictTo.implementationName != implementationName
     }
 
-    override fun runChild(child: ScenarioRun, notifier: RunNotifier) {
+    override fun runChild(child: ScenarioRun<AF, CF, QF, AGF>, notifier: RunNotifier) {
         val description = describeChild(child)
         if (isIgnored(child)) {
             notifier.fireTestIgnored(description)
@@ -139,28 +155,27 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
         }
     }
 
-    private fun createRunStatement(run: ScenarioRun): Statement {
-        val testObject = try {
-            object : ReflectiveCallable() {
-                override fun runReflectiveCall(): Any {
-                    return testClass.constructors.first().newInstance(run.implementation)
-                }
-            }.run()
-        } catch (e: Throwable) {
-            return Fail(e)
-        }
-        return ScenarioInvoker(run.method.method,
-            runMethod,
-            testObject,
+    private fun createRunStatement(run: ScenarioRun<AF, CF, QF, AGF>) =
+        @Suppress("UNCHECKED_CAST")
+        ScenarioInvoker(
+            run.method.method,
+            testClass.kotlin as KClass<S>,
+            run.implementationProvider,
             run.eacMetadata,
             run.ignoreWhenUnsupported,
-            run.expectSkip)
-    }
+            run.expectSkip
+        )
 
-    private class ScenarioInvoker(
+    private class ScenarioInvoker<
+        AF : ActionFactory,
+        CF : CheckFactory,
+        QF : QueryFactory,
+        AGF : ActionGeneratorFactory,
+        S : VerifiableScenario<AF, CF>
+        >(
         val build: Method,
-        val run: Method,
-        val testObject: Any,
+        val testClass: KClass<S>,
+        val implementationProvider: ImplementationProvider<AF, CF, QF, AGF>,
         val eacMetadata: EacMetadata?,
         val ignoreWhenUnsupported: Boolean,
         val expectSkip: Boolean,
@@ -168,10 +183,24 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
         override fun evaluate() {
             object : ReflectiveCallable() {
                 override fun runReflectiveCall(): Any {
-                    build.invoke(testObject)
                     try {
+                        val scenario = testClass.primaryConstructor!!.call()
+                        build.invoke(scenario)
                         val scenarioName = eacMetadata?.scenarioName ?: "${build.declaringClass.name}-${build.name}"
-                        run.invoke(testObject, scenarioName, ignoreWhenUnsupported)
+                        val verifiableScenarioRunner =
+                            VerifiableScenarioRunner(implementationProvider, scenario, scenarioName)
+                        when (verifiableScenarioRunner.run()) {
+                            VerifiableScenarioRunner.Result.UnsupportedAction -> unsupported("Skipping - unsupported action found")
+                            VerifiableScenarioRunner.Result.UnsupportedDeclaration -> unsupported("Skipping - unsupported declaration found")
+                            VerifiableScenarioRunner.Result.UnsupportedCheck -> unsupported("Skipping - unsupported check found")
+                            VerifiableScenarioRunner.Result.NoSupportedChecks -> unsupported("Skipping - no supported checks found")
+                            VerifiableScenarioRunner.Result.Unverified -> throw AssertionError("Verification checks failed")
+                            VerifiableScenarioRunner.Result.IncompatibleSystem -> throw SkippedException("Skipping - system does not support verify or report")
+                            VerifiableScenarioRunner.Result.UnknownError -> throw IllegalStateException("Unexpected error running scenario")
+                            VerifiableScenarioRunner.Result.Verified,
+                            VerifiableScenarioRunner.Result.Reported -> {
+                            } // success!
+                        }
                         if (EacMetadataRecorder.recording && eacMetadata != null) {
                             EacMetadataRecorder.record(eacMetadata)
                         }
@@ -184,7 +213,19 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
                 }
             }.run()
         }
+
+        private fun unsupported(msg: String) {
+            // was previously checking if implementation was total as part of this.. should we move that into runner?
+            if (ignoreWhenUnsupported) {
+                Assume.assumeTrue(false)
+            } else {
+                throw SkippedException(msg)
+            }
+        }
+
     }
+
+    class SkippedException(msg: String) : Exception(msg)
 
     private fun FrameworkMethod.getTimeout(): Timeout {
         val annotation = getAnnotation(ExtendedTimeout::class.java)
@@ -195,11 +236,13 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
         }
     }
 
-    override fun getChildren(): MutableList<ScenarioRun> {
-        val implementations = Implementation.locateImplementations()
+    override fun getChildren(): MutableList<ScenarioRun<AF, CF, QF, AGF>> {
+        Log.debug("Getting children: $testClass")
+        val implementationProviders = ImplementationProvider.loadImplementationProviders<AF, CF, QF, AGF>()
+        Log.debug("Available implementation providers: $implementationProviders")
         val eacs = getTestClass().getAnnotatedMethods(Eac::class.java).flatMap { method ->
             val eac = method.getAnnotation(Eac::class.java)!!
-            implementations.map { implementation ->
+            implementationProviders.map { implementationProvider ->
                 val beh = getTestClass().getAnnotation(BEH::class.java)
                 val eacMetadata = if (beh == null) {
                     null
@@ -210,21 +253,26 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
                         behaviorSummary = beh.summary.trim(),
                         methodName = method.name,
                         acceptanceCriteria = eac.summary.trim(),
-                        implementation = implementation.name,
+                        implementation = implementationProvider.implementationName,
                     )
                 }
-                ScenarioRun(eac.summary, method, implementation, eacMetadata = eacMetadata)
+                ScenarioRun(eac.summary,
+                    method,
+                    implementationProvider,
+                    eacMetadata = eacMetadata)
             }
         }
         val modellingExamples = getTestClass().getAnnotatedMethods(ModellingExample::class.java).flatMap { method ->
             val modellingExample = method.getAnnotation(ModellingExample::class.java)!!
-            implementations.map { implementation ->
-                ScenarioRun(modellingExample.summary, method, implementation)
+            implementationProviders.map { implementationProvider ->
+                ScenarioRun(modellingExample.summary,
+                    method,
+                    implementationProvider)
             }
         }
         val adapterTests = getTestClass().getAnnotatedMethods(AdapterTest::class.java).flatMap { method ->
             val adapterTest = method.getAnnotation(AdapterTest::class.java)!!
-            implementations.map { implementation ->
+            implementationProviders.map { implementation ->
                 ScenarioRun(method.name,
                     method,
                     implementation,
@@ -233,28 +281,28 @@ class JUnitScenarioRunner(private val testClass: Class<*>) : ParentRunner<Scenar
             }
         }
         val analysisScenarios = getTestClass().getAnnotatedMethods(AnalysisScenario::class.java).flatMap { method ->
-            implementations.map { implementation ->
-                ScenarioRun(method.name, method, implementation)
+            implementationProviders.map { implementationProvider ->
+                ScenarioRun(method.name, method, implementationProvider)
             }
         }
         val generatedScenarios = getTestClass().getAnnotatedMethods(GeneratedScenario::class.java).flatMap { method ->
-            implementations.map { implementation ->
-                ScenarioRun(method.name, method, implementation)
+            implementationProviders.map { implementationProvider ->
+                ScenarioRun(method.name, method, implementationProvider)
             }
         }
         return (eacs + adapterTests + analysisScenarios + generatedScenarios + modellingExamples).toMutableList()
     }
 
-    override fun describeChild(child: ScenarioRun): Description =
+    override fun describeChild(child: ScenarioRun<AF, CF, QF, AGF>): Description =
         if (excludeImplFromDescription) {
             Description.createTestDescription(testClass.name, child.method.name)
         } else {
-            Description.createTestDescription("${child.implementation.name}-${testClass.name}", child.method.name)
+            Description.createTestDescription("${child.implementationProvider.implementationName}-${testClass.name}",
+                child.method.name)
         }
 
     private val excludeImplFromDescription by lazy {
         System.getProperty("excludeImplFromEacDescription")?.toBoolean() == true
     }
-
 
 }

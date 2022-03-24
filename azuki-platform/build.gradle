@@ -8,6 +8,7 @@ dependencies {
     constraints {
         api "com.anaplan.engineering:azuki-core:$version"
         api "com.anaplan.engineering:azuki-formatter:$version"
+        api "com.anaplan.engineering:azuki-runner:$version"
         api "com.anaplan.engineering:azuki-vdm:$version"
         api "com.anaplan.engineering:vdm-animation-api:$version"
         api "com.anaplan.engineering:vdm-animation-overture:$version"

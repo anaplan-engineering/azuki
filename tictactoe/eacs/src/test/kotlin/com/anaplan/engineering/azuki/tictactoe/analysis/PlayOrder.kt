@@ -7,7 +7,7 @@ import com.anaplan.engineering.azuki.tictactoe.eacs.O
 import com.anaplan.engineering.azuki.tictactoe.eacs.X
 import com.anaplan.engineering.azuki.tictactoe.eacs.gameA
 
-class PlayOrder(implementation: TicTacToeImplementation) : TicTacToeScenario(implementation) {
+class PlayOrder : TicTacToeScenario() {
 
     @AnalysisScenario
     fun hasPlayOrder() {

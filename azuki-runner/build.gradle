@@ -1,0 +1,23 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'azuki.jar-publishing-conventions'
+}
+
+dependencies {
+    api project(":azuki-core")
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    runtimeOnly 'net.java.dev.jna:jna:5.8.0'
+    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Azuki Runner'
+                description = 'Standalone tools to run Azuki scenarios'
+            }
+        }
+    }
+}
+
