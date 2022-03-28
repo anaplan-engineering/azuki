@@ -238,7 +238,7 @@ class JUnitScenarioRunner<
 
     override fun getChildren(): MutableList<ScenarioRun<AF, CF, QF, AGF>> {
         Log.debug("Getting children: $testClass")
-        val implementationProviders = ImplementationProvider.loadImplementationProviders<AF, CF, QF, AGF>()
+        val implementationProviders = ImplementationProvider.getImplementationProviders<AF, CF, QF, AGF>()
         Log.debug("Available implementation providers: $implementationProviders")
         val eacs = getTestClass().getAnnotatedMethods(Eac::class.java).flatMap { method ->
             val eac = method.getAnnotation(Eac::class.java)!!

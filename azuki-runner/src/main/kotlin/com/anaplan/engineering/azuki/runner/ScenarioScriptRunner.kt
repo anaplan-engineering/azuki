@@ -41,7 +41,7 @@ class ScenarioScriptRunner<
     }
 
     private fun runVerifiableScenario(scenario: S) {
-        val implementationProviders = ImplementationProvider.loadImplementationProviders<AF, CF, QF, AGF>()
+        val implementationProviders = ImplementationProvider.getImplementationProviders<AF, CF, QF, AGF>()
         val implementationProvider = implementationProviders.find { it.providerName == testImplementationProviderName }
             ?: exit("No implementation named $testImplementationProviderName found", ExitCode.UnknownImplementation)
         val result = construct(VerifiableScenarioRunner::class,

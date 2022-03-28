@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.core.system
 
 import org.slf4j.LoggerFactory
+import java.net.URLClassLoader
 import java.util.*
 
 interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, SD : SystemDefaults> {
@@ -28,11 +29,7 @@ interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactor
 
         fun <AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> locateImplementations(): List<Implementation<AF, CF, QF, AGF, *>> {
             val loader = ServiceLoader.load(Implementation::class.java)
-            val implementations = loader.iterator().asSequence().map {
-                @Suppress("UNCHECKED_CAST")
-                it as Implementation<AF, CF, QF, AGF, *>
-            }.toList()
-            Log.debug("Located implementations: $implementations")
+            val implementations = loader.iterator().asSequence().filterIsInstance<Implementation<AF, CF, QF, AGF, *>>().toList()
             if (implementations.isEmpty()) throw IllegalStateException("No implementations found")
             return implementations
         }
