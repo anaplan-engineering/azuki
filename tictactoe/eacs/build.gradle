@@ -6,7 +6,7 @@ plugins {
  * There are two ways in which to provide the adapters/implementations for the scenarios to run against.
  *
  * The first is simply to add the require dependencies to the test runtime classpath. This method has the limitation
- * that you cannot work with two versions of the same code, or where difference implementations rely on different
+ * that you cannot work with two versions of the same code, or where different implementations rely on different
  * versions of the same libraries.
  *
  * This first method is illustrated by the commented out snippet below.
