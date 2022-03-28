@@ -37,12 +37,12 @@ interface ImplementationProvider<
 
         private val Log = LoggerFactory.getLogger(JarImplementationProvider::class.java)
 
-        private val implementationProviders = mutableListOf<ImplementationProvider<*,*,*,*>>()
+        private val implementationProviders = mutableListOf<ImplementationProvider<*, *, *, *>>()
 
         fun <AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> getImplementationProviders(): List<ImplementationProvider<AF, CF, QF, AGF>> {
             if (implementationProviders.isEmpty()) {
                 Log.debug("Loading implementation providers as none are registered")
-                implementationProviders.addAll(Loader<AF,CF,QF,AGF>().loadImplementationProviders())
+                implementationProviders.addAll(Loader<AF, CF, QF, AGF>().loadImplementationProviders())
             }
             return implementationProviders.filterIsInstance<ImplementationProvider<AF, CF, QF, AGF>>()
         }

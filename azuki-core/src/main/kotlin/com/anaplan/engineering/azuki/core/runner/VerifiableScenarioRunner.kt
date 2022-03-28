@@ -35,8 +35,9 @@ class VerifiableScenarioRunner<S : VerifiableScenario<AF, CF>, AF : ActionFactor
         if (checks.none { it !is UnsupportedCheck }) {
             return Result.NoSupportedChecks
         }
+        val supportedChecks = checks.filter { it !is UnsupportedCheck }
         val regardlessOfActions = scenario.regardlessOfActions(systemFactory.actionFactory)
-        return verifySystem(buildSystem(systemFactory, declarations, actions, checks, regardlessOfActions))
+        return verifySystem(buildSystem(systemFactory, declarations, actions, supportedChecks, regardlessOfActions))
     }
 
     private fun buildSystem(
