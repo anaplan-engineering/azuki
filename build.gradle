@@ -6,6 +6,7 @@ task publishAllToMavenLocal {
     dependsOn gradle.includedBuild('vdm-stub-generator').task(':publishToMavenLocal')
     dependsOn gradle.includedBuild('azuki-platform').task(':publishToMavenLocal')
     dependsOn ':azuki-core:publishToMavenLocal'
+    dependsOn ':azuki-runner:publishToMavenLocal'
     dependsOn ':azuki-vdm:publishToMavenLocal'
     dependsOn ':azuki-formatter:publishToMavenLocal'
 }

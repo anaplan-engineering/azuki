@@ -1,0 +1,43 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id "com.anaplan.engineering.vdm-stub-generator"
+}
+
+configurations {
+    runner.extendsFrom runtime
+    vdm
+}
+
+dependencies {
+    runner project(":tictactoe:dsl")
+    runner project(":azuki-runner")
+
+    vdm project(":tictactoe:adapter-vdm")
+}
+
+task vdmClasspathJar(type: Jar) {
+    dependsOn configurations.vdm
+    archiveBaseName = 'VDM'
+    manifest {
+        attributes(
+            "Class-Path": configurations.vdm.collect { it.absolutePath }.join(' '))
+    }
+}
+
+task runScript(type: JavaExec) {
+    dependsOn vdmClasspathJar
+    classpath = configurations.runner
+    main 'com.anaplan.engineering.azuki.runner.ScenarioScriptRunnerKt'
+    jvmArgs '-Xmx4g'
+    args = [
+        file("script.scn").absolutePath,
+        file("config/imports").absolutePath,
+        'VDM'
+    ]
+    systemProperties = [
+        "com.anaplan.engineering.azuki.implementation.providers" : vdmClasspathJar.archiveFile.get().asFile.absolutePath
+    ]
+}
+
+
+

@@ -4,13 +4,12 @@ import com.anaplan.engineering.azuki.core.runner.Eac
 import com.anaplan.engineering.azuki.core.system.BEH
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeBehaviours
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeFunctionalElements
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeImplementation
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeScenario
 
 @BEH(TicTacToeBehaviours.GameEnd, TicTacToeFunctionalElements.Game, """
     Complete a game
 """)
-class BEH6(implementation: TicTacToeImplementation) : TicTacToeScenario(implementation) {
+class BEH6 : TicTacToeScenario() {
 
     @Eac("A player can win by completing a line of three tokens")
     fun columnWin() {
