@@ -275,7 +275,7 @@ class JUnitScenarioRunner<
             implementationProviders.map { implementationProvider ->
                 ScenarioRun(method.name,
                     method,
-                    implementation,
+                    implementationProvider,
                     ignoreWhenUnsupported = false,
                     expectSkip = adapterTest.expectSkip)
             }
