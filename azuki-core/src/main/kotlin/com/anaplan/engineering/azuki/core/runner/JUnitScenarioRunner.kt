@@ -205,7 +205,7 @@ class JUnitScenarioRunner<
                             EacMetadataRecorder.record(eacMetadata)
                         }
                     } catch (e: Throwable) {
-                        if (e.cause !is SkippedException || !expectSkip) {
+                        if (e !is SkippedException || !expectSkip) {
                             throw e
                         }
                     }
