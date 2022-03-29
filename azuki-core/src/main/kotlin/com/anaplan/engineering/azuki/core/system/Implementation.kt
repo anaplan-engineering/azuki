@@ -1,7 +1,6 @@
 package com.anaplan.engineering.azuki.core.system
 
 import org.slf4j.LoggerFactory
-import java.net.URLClassLoader
 import java.util.*
 
 interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, SD : SystemDefaults> {
