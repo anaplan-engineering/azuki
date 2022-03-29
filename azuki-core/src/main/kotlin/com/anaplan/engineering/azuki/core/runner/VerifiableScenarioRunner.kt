@@ -32,7 +32,7 @@ class VerifiableScenarioRunner<S : VerifiableScenario<AF, CF>, AF : ActionFactor
             return Result.UnsupportedAction
         }
         val checks = scenario.checks(systemFactory.checkFactory)
-        if (checks.none { it !is UnsupportedCheck }) {
+        if (checks.all { it is UnsupportedCheck }) {
             return Result.NoSupportedChecks
         }
         val supportedChecks = checks.filter { it !is UnsupportedCheck }
