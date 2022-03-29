@@ -272,7 +272,7 @@ class JUnitScenarioRunner<
         }
         val adapterTests = getTestClass().getAnnotatedMethods(AdapterTest::class.java).flatMap { method ->
             val adapterTest = method.getAnnotation(AdapterTest::class.java)!!
-            implementationProviders.map { implementation ->
+            implementationProviders.map { implementationProvider ->
                 ScenarioRun(method.name,
                     method,
                     implementation,
