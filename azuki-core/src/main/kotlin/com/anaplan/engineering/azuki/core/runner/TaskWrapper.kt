@@ -5,36 +5,31 @@ import org.slf4j.LoggerFactory
 import java.io.*
 import java.lang.System
 
-
-class ImplementationTask<
+internal class TaskWrapper<
     AF : ActionFactory,
     CF : CheckFactory,
     QF : QueryFactory,
     AGF : ActionGeneratorFactory,
     R,
     >(
-    private val implementationProvider: ImplementationProvider<AF, CF, QF, AGF>,
     private val taskName: String,
+    private val implementation: Implementation<AF, CF, QF, AGF, *>,
     private val task: (Implementation<AF, CF, QF, AGF, *>) -> R
-) : Thread() {
+) {
 
-    var result: Result<R>? = null
-        private set
-
-    override fun run() {
-        val implementation = implementationProvider.getImplementation()
+    fun run(): TaskResult<R> {
         val start = System.nanoTime()
         val outCapture = LogAndCaptureOutputStream { Log.info(it) }
         val errCapture = LogAndCaptureOutputStream { Log.error(it) }
         System.setOut(PrintStream(outCapture))
         System.setErr(PrintStream(errCapture))
-        result = try {
+        return try {
             val result = task(implementation)
             val duration = System.nanoTime() - start
             Log.debug("Completed task '$taskName' in ${duration.formatNs()}")
             outCapture.flush()
             errCapture.flush()
-            Result(taskName = taskName,
+            TaskResult(taskName = taskName,
                 result = result,
                 duration = duration,
                 output = outCapture.getCapturedText(),
@@ -44,7 +39,7 @@ class ImplementationTask<
             Log.error("Unexpected error", e)
             val duration = System.nanoTime() - start
             outCapture.flush()
-            Result(taskName = taskName,
+            TaskResult(taskName = taskName,
                 error = createErrorText(e),
                 duration = duration,
                 output = outCapture.getCapturedText(),
@@ -58,7 +53,7 @@ class ImplementationTask<
     }
 
     companion object {
-        private val Log = LoggerFactory.getLogger(ImplementationTask::class.java)
+        private val Log = LoggerFactory.getLogger(TaskWrapper::class.java)
 
         private fun Long.formatNs(): String =
             if (this > 10_000_000_000L) {
@@ -71,18 +66,6 @@ class ImplementationTask<
 
         fun createErrorText(e: Exception) =
             "${e.message}\n${e.stackTrace.joinToString(separator = "\n", limit = 10)}"
-    }
-
-    data class Result<T>(
-        val taskName: String,
-        val implName: String,
-        val result: T? = null,
-        val error: String? = null,
-        val script: String? = null,
-        val output: String? = null,
-        val duration: Long? = null
-    ) {
-        fun durationMs() = if (duration == null) 0 else duration / 1000000
     }
 
 }

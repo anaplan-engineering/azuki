@@ -1,7 +1,5 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check
 
-import com.anaplan.engineering.azuki.core.system.Check
-import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 
 class VdmCheckFactory : TicTacToeCheckFactory {

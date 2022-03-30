@@ -5,19 +5,17 @@ import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
 
 class VerifiableScenarioRunner<S : VerifiableScenario<AF, CF>, AF : ActionFactory, CF : CheckFactory>(
-    private val implementationProvider: ImplementationProvider<AF, CF, *, *>,
+    private val implementationInstance: ImplementationInstance<AF, CF, *, *>,
     private val scenario: S,
     private val runName: String,
 ) {
 
     fun run(): Result {
-        val task = implementationProvider.createTask("verify") { implementation ->
+        val taskResult = implementationInstance.runTask("verify") { implementation ->
             println("Using implementation '${implementation.name}'")
             runScenario(implementation.createSystemFactory())
         }
-        task.start()
-        task.join()
-        return task.result?.result ?: Result.UnknownError
+        return taskResult.result ?: Result.UnknownError
     }
 
     private fun runScenario(systemFactory: SystemFactory<AF, CF, *, *, *>): Result {
