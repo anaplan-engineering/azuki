@@ -1,7 +1,7 @@
 package com.anaplan.engineering.azuki.runner
 
 import com.anaplan.engineering.azuki.core.parser.ScenarioParser
-import com.anaplan.engineering.azuki.core.runner.ImplementationProvider
+import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
 import com.anaplan.engineering.azuki.core.runner.VerifiableScenarioRunner
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
@@ -23,8 +23,8 @@ class ScenarioScriptRunner<
     AGF : ActionGeneratorFactory,
     S : BuildableScenario<AF>
     >(
-    private val testImplementationProviderName: String,
-    private val oracleImplementationNames: List<String>,
+    private val testImplementationInstanceJar: String,
+    private val oracleImplementationInstanceJars: List<String>,
     private val scenarioImports: String,
 ) {
 
@@ -41,11 +41,11 @@ class ScenarioScriptRunner<
     }
 
     private fun runVerifiableScenario(scenario: S) {
-        val implementationProviders = ImplementationProvider.getImplementationProviders<AF, CF, QF, AGF>()
-        val implementationProvider = implementationProviders.find { it.providerName == testImplementationProviderName }
-            ?: exit("No implementation named $testImplementationProviderName found", ExitCode.UnknownImplementation)
+        val implementationInstances = ImplementationInstance.getImplementationInstances<AF, CF, QF, AGF>()
+        val implementationInstance = implementationInstances.find { it.instanceName == testImplementationInstanceJar }
+            ?: exit("No implementation named $testImplementationInstanceJar found", ExitCode.UnknownImplementation)
         val result = construct(VerifiableScenarioRunner::class,
-            implementationProvider,
+            implementationInstance,
             scenario,
             "RunAt${System.currentTimeMillis()}").run()
         Log.info("Scenario completed with result: $result")

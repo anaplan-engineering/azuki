@@ -53,13 +53,13 @@ task vdmClasspathJar(type: Jar) {
 test {
     dependsOn vdmClasspathJar
 
-    def providers = [
+    def instanceJars = [
         vdmClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
     systemProperties = [
-        retainOvertureTempFiles                                 : findProperty("retainOvertureTempFiles") ?: true,
-        "com.anaplan.engineering.azuki.implementation.providers": providers.join(","),
-        "com.anaplan.engineering.azuki.implementation.includes" : findProperty("impl.includes"),
-        "com.anaplan.engineering.azuki.implementation.excludes" : findProperty("impl.excludes"),
+        retainOvertureTempFiles                                     : findProperty("retainOvertureTempFiles") ?: true,
+        "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(","),
+        "com.anaplan.engineering.azuki.implementation.includes"     : findProperty("impl.includes"),
+        "com.anaplan.engineering.azuki.implementation.excludes"     : findProperty("impl.excludes"),
     ]
 }

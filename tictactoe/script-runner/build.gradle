@@ -35,7 +35,7 @@ task runScript(type: JavaExec) {
         'VDM'
     ]
     systemProperties = [
-        "com.anaplan.engineering.azuki.implementation.providers" : vdmClasspathJar.archiveFile.get().asFile.absolutePath
+        "com.anaplan.engineering.azuki.implementation.instance.jars": vdmClasspathJar.archiveFile.get().asFile.absolutePath
     ]
 }
 
