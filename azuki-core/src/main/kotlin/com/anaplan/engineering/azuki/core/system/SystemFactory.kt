@@ -60,12 +60,3 @@ sealed class VerificationResult {
         val cause: Exception
     ) : VerificationResult()
 }
-
-
-
-
-
-
-
-
-

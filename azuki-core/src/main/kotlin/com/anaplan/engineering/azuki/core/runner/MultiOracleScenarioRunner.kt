@@ -47,12 +47,15 @@ class MultiOracleScenarioRunner<
     private fun verifyWithOracle(oracleInstance: ImplementationInstance<AF, CF, QF, AGF>): OracleResult<AF, QF, AGF> {
         val declarationValidTaskResult = isDeclarationValid(oracleInstance)
         if (declarationValidTaskResult.result != true) {
-            return OracleResult(false, oracleInstance.instanceName, listOf(declarationValidTaskResult))
+            return OracleResult(false,
+                oracleInstance.instanceName,
+                oracleInstance.version,
+                listOf(declarationValidTaskResult))
         }
         val buildActionsValidTaskResult = areBuildActionsValid(oracleInstance)
         if (buildActionsValidTaskResult.result != true) {
             return OracleResult(false,
-                oracleInstance.instanceName,
+                oracleInstance.instanceName, oracleInstance.version,
                 listOf(declarationValidTaskResult, buildActionsValidTaskResult))
         }
         // TODO - c/should we cache generate/query of test system
@@ -68,14 +71,14 @@ class MultiOracleScenarioRunner<
         Log.debug("Query result, oracle=$oracleInstance answerCount=$answerCount")
         if (answerCount == 0) {
             return OracleResult(false,
-                oracleInstance.instanceName,
+                oracleInstance.instanceName, oracleInstance.version,
                 listOf(declarationValidTaskResult, buildActionsValidTaskResult) + generateTaskResults + queryTaskResult
             )
         }
         val verifyTaskResult = answersSufficient(testInstance, generatedScenario, queryTaskResult.result!!)
         return OracleResult(
             verifyTaskResult.result == true,
-            oracleInstance.instanceName,
+            oracleInstance.instanceName, oracleInstance.version,
             listOf(declarationValidTaskResult,
                 buildActionsValidTaskResult) + generateTaskResults + queryTaskResult + verifyTaskResult
         )
@@ -210,6 +213,7 @@ class MultiOracleScenarioRunner<
         >(
         val verified: Boolean,
         val instanceName: String,
+        val instanceVersion: String?,
         val taskResults: List<TaskResult<OracleScenario<AF, QF, AGF>, *>>
     )
 

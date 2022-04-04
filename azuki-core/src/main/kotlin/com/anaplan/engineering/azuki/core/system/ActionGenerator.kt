@@ -6,4 +6,4 @@ interface ActionGenerator
 
 object NoActionGeneratorFactory : ActionGeneratorFactory
 
-object UnsupportedActionGenerator: ActionGenerator
+object UnsupportedActionGenerator : ActionGenerator

@@ -24,6 +24,8 @@ interface ImplementationInstance<
      */
     val instanceName: String
 
+    val version: String?
+
     fun <S : BuildableScenario<AF>, R> runTask(
         taskName: String,
         scenario: S,
@@ -113,6 +115,8 @@ class StaticImplementationInstance<
 
     override val instanceName = implementationName
 
+    override val version = null
+
     override fun <S : BuildableScenario<AF>, R> runTask(
         taskName: String,
         scenario: S,
@@ -146,6 +150,8 @@ class JarImplementationInstance<
 
     override val instanceName = jar.nameWithoutExtension
 
+    override val version = jar.nameWithoutExtension.split("-").getOrNull(1)
+
     private val threadGroup = ThreadGroup("implementation-$instanceName")
 
     override fun <S : BuildableScenario<AF>, R> runTask(
@@ -172,7 +178,7 @@ class JarImplementationInstance<
 
     private fun getClassLoader(parent: ClassLoader): ClassLoader {
         if (!classLoaderCache.containsKey(parent)) {
-            Log.debug("Cache miss instance=$this jar=$jar, parentClasLoader=$parent")
+            Log.debug("Cache miss instance=$this jar=$jar parentClassLoader=$parent")
             val jarUrl = jar.toURI().toURL()
             classLoaderCache[parent] = URLClassLoader(arrayOf(jarUrl), parent)
         }
