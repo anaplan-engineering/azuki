@@ -2,8 +2,10 @@ package com.anaplan.engineering.azuki.runner
 
 import com.anaplan.engineering.azuki.core.parser.ScenarioParser
 import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
+import com.anaplan.engineering.azuki.core.runner.MultiOracleScenarioRunner
 import com.anaplan.engineering.azuki.core.runner.VerifiableScenarioRunner
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
+import com.anaplan.engineering.azuki.core.scenario.OracleScenario
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.ActionFactory
 import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
@@ -35,15 +37,31 @@ class ScenarioScriptRunner<
             exit("Scenario is invalid:\n${e.message}", ExitCode.InvalidScenario)
         }
         when (scenario) {
+            is OracleScenario<*, *, *> -> runOracleScenario(scenario)
             is VerifiableScenario<*, *> -> runVerifiableScenario(scenario)
             else -> exit("Currently unsupported scenario type", ExitCode.UnsupportedScenarioType)
         }
     }
 
-    private fun runVerifiableScenario(scenario: S) {
+    private fun runOracleScenario(scenario: S) {
+        val testInstance = getImplementationInstance(testImplementationInstanceJar)
+        val oracleInstances = oracleImplementationInstanceJars.map { getImplementationInstance(it) }
+        val result = construct(MultiOracleScenarioRunner::class,
+            testInstance,
+            oracleInstances,
+            scenario,
+            "RunAt${System.currentTimeMillis()}").run()
+        Log.info("Scenario completed with result: $result")
+    }
+
+    private fun getImplementationInstance(instanceName: String): ImplementationInstance<AF, CF, QF, AGF> {
         val implementationInstances = ImplementationInstance.getImplementationInstances<AF, CF, QF, AGF>()
-        val implementationInstance = implementationInstances.find { it.instanceName == testImplementationInstanceJar }
+        return implementationInstances.find { it.instanceName == instanceName }
             ?: exit("No implementation named $testImplementationInstanceJar found", ExitCode.UnknownImplementation)
+    }
+
+    private fun runVerifiableScenario(scenario: S) {
+        val implementationInstance = getImplementationInstance(testImplementationInstanceJar)
         val result = construct(VerifiableScenarioRunner::class,
             implementationInstance,
             scenario,
@@ -83,6 +101,7 @@ fun main(args: Array<String>) {
     val script = File(scriptFile).readText()
     val imports = File(importsFile).readText()
     val oracleImpls = args.drop(3)
+    ScenarioScriptRunner.Log.debug("Starting script runner: testImpl=$testImpl oracleImpls=$oracleImpls")
     val runner = construct(ScenarioScriptRunner::class, testImpl, oracleImpls, imports)
     runner.runScenario(script)
 

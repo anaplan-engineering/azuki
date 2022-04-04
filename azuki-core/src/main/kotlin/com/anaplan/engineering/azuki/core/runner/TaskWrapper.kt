@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.core.runner
 
+import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
 import java.io.*
@@ -17,7 +18,7 @@ internal class TaskWrapper<
     private val task: (Implementation<AF, CF, QF, AGF, *>) -> R
 ) {
 
-    fun run(): TaskResult<R> {
+    fun <S: BuildableScenario<AF>> run(scenario: S): TaskResult<S, R> {
         val start = System.nanoTime()
         val outCapture = LogAndCaptureOutputStream { Log.info(it) }
         val errCapture = LogAndCaptureOutputStream { Log.error(it) }
@@ -30,6 +31,7 @@ internal class TaskWrapper<
             outCapture.flush()
             errCapture.flush()
             TaskResult(taskName = taskName,
+                scenario= scenario,
                 result = result,
                 duration = duration,
                 output = outCapture.getCapturedText(),
@@ -40,6 +42,7 @@ internal class TaskWrapper<
             val duration = System.nanoTime() - start
             outCapture.flush()
             TaskResult(taskName = taskName,
+                scenario= scenario,
                 error = createErrorText(e),
                 duration = duration,
                 output = outCapture.getCapturedText(),

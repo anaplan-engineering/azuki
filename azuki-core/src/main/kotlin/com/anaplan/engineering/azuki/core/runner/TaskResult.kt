@@ -1,11 +1,13 @@
 package com.anaplan.engineering.azuki.core.runner
 
-data class TaskResult<T>(
+import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
+
+data class TaskResult<S: BuildableScenario<*>, T>(
     val taskName: String,
     val implName: String,
     val result: T? = null,
     val error: String? = null,
-    val script: String? = null,
+    val scenario: S,
     val output: String? = null,
     val duration: Long? = null
 ) {
