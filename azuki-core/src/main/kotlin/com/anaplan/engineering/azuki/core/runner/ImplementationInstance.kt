@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.core.runner
 
+import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -23,10 +24,13 @@ interface ImplementationInstance<
      */
     val instanceName: String
 
-    fun <R> runTask(
+    val version: String?
+
+    fun <S : BuildableScenario<AF>, R> runTask(
         taskName: String,
+        scenario: S,
         task: (Implementation<AF, CF, QF, AGF, *>) -> R
-    ): TaskResult<R>
+    ): TaskResult<S, R>
 
     companion object {
         const val includedImplementationsPropertyName = "com.anaplan.engineering.azuki.implementation.includes"
@@ -41,6 +45,7 @@ interface ImplementationInstance<
             if (implementationInstances.isEmpty()) {
                 Log.debug("Loading implementation instances as none are registered")
                 implementationInstances.addAll(InstanceFactory<AF, CF, QF, AGF>().createImplementationInstances())
+                Log.debug("Loaded implementation instances instances=${implementationInstances.joinToString(", ") { it.instanceName }}")
             }
             return implementationInstances.filterIsInstance<ImplementationInstance<AF, CF, QF, AGF>>()
         }
@@ -56,8 +61,12 @@ interface ImplementationInstance<
 
             fun createImplementationInstances() =
                 if (haveJarInstances()) {
+                    Log.trace("Loading implementation instances using configured property with value: ${
+                        java.lang.System.getProperty(jarInstancesPropertyName)
+                    }")
                     createInstancesFromConfiguredJars()
                 } else {
+                    Log.trace("Loading implementation instances from classpath")
                     createInstancesFromClasspath()
                 }
 
@@ -106,9 +115,15 @@ class StaticImplementationInstance<
 
     override val instanceName = implementationName
 
-    override fun <R> runTask(taskName: String, task: (Implementation<AF, CF, QF, AGF, *>) -> R): TaskResult<R> {
+    override val version = null
+
+    override fun <S : BuildableScenario<AF>, R> runTask(
+        taskName: String,
+        scenario: S,
+        task: (Implementation<AF, CF, QF, AGF, *>) -> R
+    ): TaskResult<S, R> {
         val implementationTask = TaskWrapper(taskName, implementation, task)
-        return implementationTask.run()
+        return implementationTask.run(scenario)
     }
 
     override fun toString() = "$implementationName [Static]"
@@ -135,36 +150,42 @@ class JarImplementationInstance<
 
     override val instanceName = jar.nameWithoutExtension
 
+    override val version = jar.nameWithoutExtension.split("-").getOrNull(1)
+
     private val threadGroup = ThreadGroup("implementation-$instanceName")
 
-    override fun <R> runTask(taskName: String, task: (Implementation<AF, CF, QF, AGF, *>) -> R): TaskResult<R> {
-        val runner = object: Runnable {
-            var result : TaskResult<R>? = null
+    override fun <S : BuildableScenario<AF>, R> runTask(
+        taskName: String,
+        scenario: S,
+        task: (Implementation<AF, CF, QF, AGF, *>) -> R
+    ): TaskResult<S, R> {
+        val runner = object : Runnable {
+            var result: TaskResult<S, R>? = null
 
             override fun run() {
                 val implementation = Implementation.locateImplementations<AF, CF, QF, AGF>().single()
                 val implementationTask = TaskWrapper(taskName, implementation, task)
-                result = implementationTask.run()
+                result = implementationTask.run(scenario)
             }
         }
         // need to create thread from our own thread group or can clash with that created by JUnit's  FailOnTimeout
         val thread = Thread(threadGroup, runner, "implementation-task-$taskName")
-        thread.contextClassLoader = getClassloader(thread.contextClassLoader)
+        thread.contextClassLoader = getClassLoader(thread.contextClassLoader)
         thread.start()
         thread.join()
         return runner.result!!
     }
 
-    private fun getClassloader(parent: ClassLoader): ClassLoader {
+    private fun getClassLoader(parent: ClassLoader): ClassLoader {
         if (!classLoaderCache.containsKey(parent)) {
-            Log.debug("Cache miss for $jar, parent class loader $parent")
+            Log.debug("Cache miss instance=$this jar=$jar parentClassLoader=$parent")
             val jarUrl = jar.toURI().toURL()
             classLoaderCache[parent] = URLClassLoader(arrayOf(jarUrl), parent)
         }
         return classLoaderCache[parent]!!
     }
 
-    override fun toString() = "$implementationName [$jar]"
+    override fun toString() = instanceName
 
     companion object {
         private val Log = LoggerFactory.getLogger(JarImplementationInstance::class.java)

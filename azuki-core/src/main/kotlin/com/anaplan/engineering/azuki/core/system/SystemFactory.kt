@@ -60,22 +60,3 @@ sealed class VerificationResult {
         val cause: Exception
     ) : VerificationResult()
 }
-
-
-interface Query<T> : ReifiedBehavior
-
-interface ActionGenerator
-
-interface DerivedQuery<T>
-
-interface Answer<T, CF : CheckFactory> {
-    val to: Query<T>
-    val value: T
-    fun createChecks(factory: CF): List<Check>
-}
-
-interface QueryFactory
-interface ActionGeneratorFactory
-
-object NoQueryFactory : QueryFactory
-object NoActionGeneratorFactory : ActionGeneratorFactory
