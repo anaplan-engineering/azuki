@@ -27,7 +27,7 @@ interface ImplementationInstance<
     val version: String?
 
     fun <S : BuildableScenario<AF>, R> runTask(
-        taskName: String,
+        taskType: TaskType,
         scenario: S,
         task: (Implementation<AF, CF, QF, AGF, *>) -> R
     ): TaskResult<S, R>
@@ -118,11 +118,11 @@ class StaticImplementationInstance<
     override val version = null
 
     override fun <S : BuildableScenario<AF>, R> runTask(
-        taskName: String,
+        taskType: TaskType,
         scenario: S,
         task: (Implementation<AF, CF, QF, AGF, *>) -> R
     ): TaskResult<S, R> {
-        val implementationTask = TaskWrapper(taskName, implementation, task)
+        val implementationTask = TaskWrapper(taskType, implementation, task)
         return implementationTask.run(scenario)
     }
 
@@ -155,7 +155,7 @@ class JarImplementationInstance<
     private val threadGroup = ThreadGroup("implementation-$instanceName")
 
     override fun <S : BuildableScenario<AF>, R> runTask(
-        taskName: String,
+        taskType: TaskType,
         scenario: S,
         task: (Implementation<AF, CF, QF, AGF, *>) -> R
     ): TaskResult<S, R> {
@@ -164,12 +164,12 @@ class JarImplementationInstance<
 
             override fun run() {
                 val implementation = Implementation.locateImplementations<AF, CF, QF, AGF>().single()
-                val implementationTask = TaskWrapper(taskName, implementation, task)
+                val implementationTask = TaskWrapper(taskType, implementation, task)
                 result = implementationTask.run(scenario)
             }
         }
         // need to create thread from our own thread group or can clash with that created by JUnit's  FailOnTimeout
-        val thread = Thread(threadGroup, runner, "implementation-task-$taskName")
+        val thread = Thread(threadGroup, runner, "implementation-task-$taskType")
         thread.contextClassLoader = getClassLoader(thread.contextClassLoader)
         thread.start()
         thread.join()

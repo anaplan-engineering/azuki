@@ -37,7 +37,7 @@ class ScenarioScriptRunner<
         AGF : ActionGeneratorFactory
         > {
 
-        fun processOracleScenario(result: MultiOracleScenarioRunner.Result<AF, QF, AGF>) {
+        fun processOracleScenario(result: MultiOracleScenarioRunner.Result<AF, CF, QF, AGF>) {
             Log.info("Scenario completed with result: $result")
         }
 
