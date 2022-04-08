@@ -13,12 +13,12 @@ internal class TaskWrapper<
     AGF : ActionGeneratorFactory,
     R,
     >(
-    private val taskName: String,
+    private val taskType: TaskType,
     private val implementation: Implementation<AF, CF, QF, AGF, *>,
     private val task: (Implementation<AF, CF, QF, AGF, *>) -> R
 ) {
 
-    fun <S: BuildableScenario<AF>> run(scenario: S): TaskResult<S, R> {
+    fun <S : BuildableScenario<AF>> run(scenario: S): TaskResult<S, R> {
         val start = System.nanoTime()
         val outCapture = LogAndCaptureOutputStream { Log.info(it) }
         val errCapture = LogAndCaptureOutputStream { Log.error(it) }
@@ -27,25 +27,30 @@ internal class TaskWrapper<
         return try {
             val result = task(implementation)
             val duration = System.nanoTime() - start
-            Log.debug("Completed task '$taskName' in ${duration.formatNs()}")
+            Log.debug("Completed task '$taskType' in ${duration.formatNs()}")
             outCapture.flush()
             errCapture.flush()
-            TaskResult(taskName = taskName,
-                scenario= scenario,
+            TaskResult(taskType = taskType,
+                scenario = scenario,
                 result = result,
                 duration = duration,
-                output = outCapture.getCapturedText(),
-                error = errCapture.getCapturedText(),
+                log = Log(
+                    output = outCapture.getCapturedText(),
+                    error = errCapture.getCapturedText()
+                ),
                 implName = implementation.name)
         } catch (e: Exception) {
             Log.error("Unexpected error", e)
             val duration = System.nanoTime() - start
             outCapture.flush()
-            TaskResult(taskName = taskName,
-                scenario= scenario,
-                error = createErrorText(e),
+            TaskResult(taskType = taskType,
+                scenario = scenario,
+                exception = e,
                 duration = duration,
-                output = outCapture.getCapturedText(),
+                log = Log(
+                    output = outCapture.getCapturedText(),
+                    error = errCapture.getCapturedText()
+                ),
                 implName = implementation.name)
         } finally {
             outCapture.close()
@@ -67,8 +72,6 @@ internal class TaskWrapper<
                 "${this}ns"
             }
 
-        fun createErrorText(e: Exception) =
-            "${e.message}\n${e.stackTrace.joinToString(separator = "\n", limit = 10)}"
     }
 
 }

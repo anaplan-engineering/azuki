@@ -11,7 +11,7 @@ class VerifiableScenarioRunner<S : VerifiableScenario<AF, CF>, AF : ActionFactor
 ) {
 
     fun run(): Result {
-        val taskResult = implementationInstance.runTask("verify", scenario) { implementation ->
+        val taskResult = implementationInstance.runTask(TaskType.Verify, scenario) { implementation ->
             println("Using implementation '${implementation.name}'")
             runScenario(implementation.createSystemFactory())
         }

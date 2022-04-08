@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.core.runner
 import com.anaplan.engineering.azuki.core.scenario.OracleScenario
 import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class MultiOracleScenarioRunner<
     AF : ActionFactory,
@@ -23,16 +24,16 @@ class MultiOracleScenarioRunner<
     }
 
     private val actionGenerators by lazy {
-        testInstance.runTask("create-action-generators", scenario) { implementation ->
+        testInstance.runTask(TaskType.CreateActionGenerators, scenario) { implementation ->
             val systemFactory = implementation.createSystemFactory()
             scenario.actionGenerations(systemFactory.actionGeneratorFactory)
         }.result!!
     }
 
 
-    fun run(): Result<AF, QF, AGF> {
+    fun run(): Result<AF, CF, QF, AGF> {
         var remainingOracles = oracleInstances
-        val oracleResults = mutableListOf<OracleResult<AF, QF, AGF>>()
+        val oracleResults = mutableListOf<OracleResult<AF, CF, QF, AGF>>()
         while (oracleResults.lastOrNull()?.verified != true && remainingOracles.isNotEmpty()) {
             val oracle = remainingOracles.first()
             remainingOracles = remainingOracles.drop(1)
@@ -41,52 +42,44 @@ class MultiOracleScenarioRunner<
             Log.info("Verification result, oracle=$oracle verified=${oracleResult.verified}")
             oracleResults.add(oracleResult)
         }
-        return Result(oracleResults)
+        return Result(testInstance, oracleResults)
     }
 
-    private fun verifyWithOracle(oracleInstance: ImplementationInstance<AF, CF, QF, AGF>): OracleResult<AF, QF, AGF> {
+    private fun verifyWithOracle(oracleInstance: ImplementationInstance<AF, CF, QF, AGF>): OracleResult<AF, CF, QF, AGF> {
+        val resultBuilder = OracleResult.Builder(oracleInstance)
         val declarationValidTaskResult = isDeclarationValid(oracleInstance)
+        resultBuilder.add(declarationValidTaskResult)
         if (declarationValidTaskResult.result != true) {
-            return OracleResult(false,
-                oracleInstance.instanceName,
-                oracleInstance.version,
-                listOf(declarationValidTaskResult))
+            return resultBuilder.build()
         }
         val buildActionsValidTaskResult = areBuildActionsValid(oracleInstance)
+        resultBuilder.add(buildActionsValidTaskResult)
         if (buildActionsValidTaskResult.result != true) {
-            return OracleResult(false,
-                oracleInstance.instanceName, oracleInstance.version,
-                listOf(declarationValidTaskResult, buildActionsValidTaskResult))
+            return resultBuilder.build()
         }
-        // TODO - c/should we cache generate/query of test system
+        // TODO - must retain generate of test system -- or we get different scenario!
         var generatedScenario: OracleScenario<AF, QF, AGF> = scenario
-        val generateTaskResults = actionGenerators.map { generators ->
+        resultBuilder.addAll(actionGenerators.map { generators ->
             val generateTaskResult = generateActions(testInstance, generatedScenario, generators)
             val actionCreators = generateTaskResult.result ?: emptyList()
             generatedScenario = GeneratedScenario(generatedScenario, actionCreators)
             generateTaskResult
-        }
+        })
         val queryTaskResult = query(testInstance, generatedScenario)
+        resultBuilder.add(queryTaskResult)
         val answerCount = queryTaskResult.result?.size ?: 0
         Log.debug("Query result, oracle=$oracleInstance answerCount=$answerCount")
         if (answerCount == 0) {
-            return OracleResult(false,
-                oracleInstance.instanceName, oracleInstance.version,
-                listOf(declarationValidTaskResult, buildActionsValidTaskResult) + generateTaskResults + queryTaskResult
-            )
+            return resultBuilder.build()
         }
         val verifyTaskResult = answersSufficient(testInstance, generatedScenario, queryTaskResult.result!!)
-        return OracleResult(
-            verifyTaskResult.result == true,
-            oracleInstance.instanceName, oracleInstance.version,
-            listOf(declarationValidTaskResult,
-                buildActionsValidTaskResult) + generateTaskResults + queryTaskResult + verifyTaskResult
-        )
+        resultBuilder.add(verifyTaskResult)
+        return resultBuilder.build(verifyTaskResult.result == true)
     }
 
 
     private fun isDeclarationValid(instance: ImplementationInstance<AF, CF, QF, AGF>) =
-        instance.runTask("check-declaration", scenario) { implementation ->
+        instance.runTask(TaskType.CheckDeclarations, scenario) { implementation ->
             val systemFactory = implementation.createSystemFactory()
             val declarations = scenario.definitions(systemFactory.actionFactory)
             if (declarations.any { it is UnsupportedAction }) {
@@ -107,7 +100,7 @@ class MultiOracleScenarioRunner<
         }
 
     private fun areBuildActionsValid(instance: ImplementationInstance<AF, CF, QF, AGF>) =
-        instance.runTask("check-actions", scenario) { implementation ->
+        instance.runTask(TaskType.CheckActions, scenario) { implementation ->
             val systemFactory = implementation.createSystemFactory()
             val declarations = scenario.definitions(systemFactory.actionFactory)
             val buildActions = scenario.buildActions(systemFactory.actionFactory)
@@ -136,7 +129,7 @@ class MultiOracleScenarioRunner<
         scenario: OracleScenario<AF, QF, AGF>,
         generators: List<ActionGenerator>
     ) =
-        instance.runTask("generate", scenario) { implementation ->
+        instance.runTask(TaskType.GenerateActions, scenario) { implementation ->
             val systemFactory = implementation.createSystemFactory()
             val declarations = scenario.definitions(systemFactory.actionFactory)
             if (UnsupportedActionGenerator in generators) {
@@ -157,7 +150,7 @@ class MultiOracleScenarioRunner<
         }
 
     private fun query(instance: ImplementationInstance<AF, CF, QF, AGF>, scenario: OracleScenario<AF, QF, AGF>) =
-        instance.runTask("query", scenario) { implementation ->
+        instance.runTask(TaskType.Query, scenario) { implementation ->
             val systemFactory = implementation.createSystemFactory()
             val declarations = scenario.definitions(systemFactory.actionFactory)
             val buildActions = scenario.buildActions(systemFactory.actionFactory)
@@ -184,7 +177,7 @@ class MultiOracleScenarioRunner<
         scenario: OracleScenario<AF, QF, AGF>,
         answers: List<Answer<*, CF>>
     ) =
-        instance.runTask("verify", scenario) { implementation ->
+        instance.runTask(TaskType.Verify, scenario) { implementation ->
             val systemFactory = implementation.createSystemFactory()
             val declarations = scenario.definitions(systemFactory.actionFactory)
             val buildActions = scenario.buildActions(systemFactory.actionFactory)
@@ -208,24 +201,46 @@ class MultiOracleScenarioRunner<
 
     class OracleResult<
         AF : ActionFactory,
+        CF : CheckFactory,
         QF : QueryFactory,
         AGF : ActionGeneratorFactory
         >(
         val verified: Boolean,
-        val instanceName: String,
-        val instanceVersion: String?,
+        val start: LocalDateTime,
+        val instance: ImplementationInstance<AF, CF, QF, AGF>,
         val taskResults: List<TaskResult<OracleScenario<AF, QF, AGF>, *>>
-    )
+    ) {
+        class Builder<
+            AF : ActionFactory,
+            CF : CheckFactory,
+            QF : QueryFactory,
+            AGF : ActionGeneratorFactory
+            >(
+            val instance: ImplementationInstance<AF, CF, QF, AGF>,
+            val start: LocalDateTime = LocalDateTime.now()
+        ) {
+            private val taskResults = mutableListOf <TaskResult<OracleScenario<AF, QF, AGF>, *>>()
+
+            fun add(taskResult: TaskResult<OracleScenario<AF, QF, AGF>, *>) = taskResults.add(taskResult)
+
+            fun addAll(taskResults: List<TaskResult<OracleScenario<AF, QF, AGF>, *>>) = this.taskResults.addAll(taskResults)
+
+            fun build(verified: Boolean = false) = OracleResult(verified, start, instance, taskResults)
+        }
+    }
 
     class Result<
         AF : ActionFactory,
+        CF : CheckFactory,
         QF : QueryFactory,
         AGF : ActionGeneratorFactory
         >(
-        val oracleResults: List<OracleResult<AF, QF, AGF>>
+        val testInstance: ImplementationInstance<AF, CF, QF, AGF>,
+        val oracleResults: List<OracleResult<AF, CF, QF, AGF>>
     ) {
+
         val verified = oracleResults.any { it.verified }
-        val verifiedBy = oracleResults.find { it.verified }?.instanceName
+        val verifiedBy = oracleResults.find { it.verified }?.instance
 
         override fun toString() =
             if (verified) {
