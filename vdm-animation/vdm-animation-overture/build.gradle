@@ -7,6 +7,7 @@ dependencies {
     api project(":vdm-animation-api")
     implementation group: 'org.overturetool.core', name: 'interpreter', version: '3.0.2'
     implementation group: 'org.overturetool.core.annotations', name: 'provided', version: '3.0.2'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     testImplementation group: 'org.mockito.kotlin', name: 'mockito-kotlin', version: '3.2.0'
     testImplementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect'

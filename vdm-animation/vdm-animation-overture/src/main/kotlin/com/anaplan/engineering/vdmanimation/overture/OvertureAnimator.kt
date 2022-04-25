@@ -13,6 +13,7 @@ import org.overture.interpreter.util.ExitStatus
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import org.slf4j.LoggerFactory
 
 class OvertureAnimator : VdmAnimator {
 
@@ -42,7 +43,7 @@ class OvertureAnimator : VdmAnimator {
     }
 
     private fun generateSpecificationFiles(specification: VdmSpecification, tmpDir: Path): List<File> {
-        println("Animating in $tmpDir")
+        Log.info("Animating in $tmpDir")
         return specification.files.map { module ->
             val moduleFile = tmpDir.resolve("${module.name}.vdmsl").toFile()
             moduleFile.writeText(module.text)
@@ -126,6 +127,10 @@ class OvertureAnimator : VdmAnimator {
             throw VdmSpecificationException("VDM type check failed")
         }
         return controller
+    }
+
+    companion object {
+        val Log = LoggerFactory.getLogger(OvertureAnimator::class.java)
     }
 }
 
