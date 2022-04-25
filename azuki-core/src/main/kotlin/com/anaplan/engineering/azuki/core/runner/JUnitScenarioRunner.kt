@@ -127,17 +127,17 @@ class JUnitScenarioRunner<
         val knownBug = child.method.getAnnotation(KnownBug::class.java)
         val implementationName = child.implementationInstance.implementationName
         if (knownBug != null && !runKnownBugs && implementationName in knownBug.issues.map { it.implementation }) {
-            System.err.println("Skipping ${child.method.declaringClass.name}.${child.method.name} as this exhibits a known bug in $implementationName")
+            Log.warn("Skipping ${child.method.declaringClass.name}.${child.method.name} as this exhibits a known bug in $implementationName")
             return true
         }
         val toBeDone = child.method.getAnnotation(ToBeDone::class.java)
         if (toBeDone != null && implementationName in toBeDone.issues.map { it.implementation }) {
-            System.err.println("Skipping ${child.method.declaringClass.name}.${child.method.name} as this is still TBD in $implementationName")
+            Log.warn("Skipping ${child.method.declaringClass.name}.${child.method.name} as this is still TBD in $implementationName")
             return true
         }
         val unsupported = child.method.getAnnotation(Unsupported::class.java)
         if (unsupported != null && implementationName in unsupported.implementation) {
-            System.err.println("Skipping ${child.method.declaringClass.name}.${child.method.name} as unsupported in $implementationName")
+            Log.warn("Skipping ${child.method.declaringClass.name}.${child.method.name} as unsupported in $implementationName")
             return true
         }
         val restrictTo = child.method.getAnnotation(RestrictTo::class.java)

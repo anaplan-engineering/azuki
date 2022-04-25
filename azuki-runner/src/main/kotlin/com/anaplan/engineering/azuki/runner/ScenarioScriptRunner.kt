@@ -24,8 +24,8 @@ class ScenarioScriptRunner<
     QF : QueryFactory,
     AGF : ActionGeneratorFactory
     >(
-    private val testImplementationInstanceJar: String,
-    private val oracleImplementationInstanceJars: List<String>,
+    private val testImplementationInstance: String,
+    private val oracleImplementationInstances: List<String>,
     private val scenarioImports: String,
     private val resultProcessor: ResultProcessor<AF, CF, QF, AGF> = ResultProcessor.Default()
 ) {
@@ -82,8 +82,8 @@ class ScenarioScriptRunner<
     }
 
     private fun runOracleScenario(scenario: OracleScenario<AF, QF, AGF>) {
-        val testInstance = getImplementationInstance(testImplementationInstanceJar)
-        val oracleInstances = oracleImplementationInstanceJars.map { getImplementationInstance(it) }
+        val testInstance = getImplementationInstance(testImplementationInstance)
+        val oracleInstances = oracleImplementationInstances.map { getImplementationInstance(it) }
         val result = MultiOracleScenarioRunner(
             testInstance,
             oracleInstances,
@@ -99,7 +99,7 @@ class ScenarioScriptRunner<
     }
 
     private fun runVerifiableScenario(scenario: VerifiableScenario<AF, CF>) {
-        val implementationInstance = getImplementationInstance(testImplementationInstanceJar)
+        val implementationInstance = getImplementationInstance(testImplementationInstance)
         val result = VerifiableScenarioRunner(
             implementationInstance,
             scenario,
