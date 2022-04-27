@@ -59,6 +59,16 @@ class ScenarioScriptRunner<
             }
         }
 
+        fun handleError(error: Throwable) {
+            when {
+                error is InvalidScenarioException -> exit("Scenario is invalid:\n${error.cause?.message}",
+                    ExitCode.InvalidScenario)
+                error is UnsupportedScenarioTypeException -> exit("Currently unsupported scenario type: ${error.type}",
+                    ExitCode.UnsupportedScenarioType)
+                else -> exit("Unknown error", ExitCode.UnknownError)
+            }
+        }
+
         class Default<
             AF : ActionFactory,
             CF : CheckFactory,
@@ -71,13 +81,14 @@ class ScenarioScriptRunner<
         val scenario = try {
             ScenarioParser.parse<BuildableScenario<AF>>(scenarioScript, scenarioImports)
         } catch (e: ScriptException) {
-            exit("Scenario is invalid:\n${e.message}", ExitCode.InvalidScenario)
+            resultProcessor.handleError(InvalidScenarioException(e))
+            return
         }
         @Suppress("UNCHECKED_CAST")
         when (scenario) {
             is OracleScenario<*, *, *> -> runOracleScenario(scenario as OracleScenario<AF, QF, AGF>)
             is VerifiableScenario<*, *> -> runVerifiableScenario(scenario as VerifiableScenario<AF, CF>)
-            else -> exit("Currently unsupported scenario type", ExitCode.UnsupportedScenarioType)
+            else -> resultProcessor.handleError(UnsupportedScenarioTypeException(scenario::class))
         }
     }
 
@@ -115,8 +126,10 @@ class ScenarioScriptRunner<
             Log.error(msg)
             exitProcess(exitCode.ordinal)
         }
-
     }
+
+    class InvalidScenarioException(e: ScriptException) : RuntimeException(e)
+    class UnsupportedScenarioTypeException(val type: KClass<*>) : RuntimeException()
 }
 
 // we don't have any means to infer generics from the environment
