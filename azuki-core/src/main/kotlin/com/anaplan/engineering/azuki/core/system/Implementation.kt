@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.core.system
 
-import org.slf4j.LoggerFactory
 import java.util.*
 
 interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, SD : SystemDefaults> {
@@ -24,13 +23,9 @@ interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactor
     fun createSystemFactory(systemDefaults: SD = implementationDefaults): SystemFactory<AF, CF, QF, AGF, SD>
 
     companion object {
-        private val Log = LoggerFactory.getLogger(Implementation::class.java)
-
         fun <AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> locateImplementations(): List<Implementation<AF, CF, QF, AGF, *>> {
             val loader = ServiceLoader.load(Implementation::class.java)
-            val implementations = loader.iterator().asSequence().filterIsInstance<Implementation<AF, CF, QF, AGF, *>>().toList()
-            if (implementations.isEmpty()) throw IllegalStateException("No implementations found")
-            return implementations
+            return loader.iterator().asSequence().filterIsInstance<Implementation<AF, CF, QF, AGF, *>>().toList()
         }
     }
 }

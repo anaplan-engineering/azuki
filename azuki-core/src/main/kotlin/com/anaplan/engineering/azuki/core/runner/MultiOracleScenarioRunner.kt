@@ -23,7 +23,6 @@ class MultiOracleScenarioRunner<
         }
     }
 
-
     fun run(): Result<AF, CF, QF, AGF> {
         var remainingOracles = oracleInstances
         val oracleResults = mutableListOf<OracleResult<AF, CF, QF, AGF>>()
@@ -32,16 +31,20 @@ class MultiOracleScenarioRunner<
             val oracle = remainingOracles.first()
             val resultBuilder = OracleResult.Builder(oracle)
             verificationContext = establishVerificationContext(oracle, resultBuilder, verificationContext)
-            val oracleResult = if (verificationContext == null) {
-                resultBuilder.build()
-            } else {
-                Log.info("Attempting to verify scenario, oracle=$oracle")
-                verifyWithOracle(oracle, resultBuilder, verificationContext)
+            val oracleResult = try {
+                if (verificationContext == null) {
+                    resultBuilder.build()
+                } else {
+                    Log.info("Attempting to verify scenario, oracle=$oracle")
+                    verifyWithOracle(oracle, resultBuilder, verificationContext)
+                }
+            } catch (t: Throwable) {
+                Log.error("Unexpected error when verifying, oracle=$oracle", t)
+                OracleResult(false, LocalDateTime.now(), oracle, emptyList())
             }
             Log.info("Verification result, oracle=$oracle verified=${oracleResult.verified}")
             oracleResults.add(oracleResult)
             remainingOracles = remainingOracles.drop(1)
-
         }
         return Result(testInstance, oracleResults)
     }
@@ -121,7 +124,8 @@ class MultiOracleScenarioRunner<
         instance.runTask(TaskType.CheckDeclarations, scenario) { implementation ->
             val systemFactory = implementation.createSystemFactory()
             val declarations = scenario.definitions(systemFactory.actionFactory)
-            if (declarations.any { it is UnsupportedAction }) {
+            val result = if (declarations.any { it is UnsupportedAction }) {
+                Log.debug("Declarations contain unsupported action")
                 false
             } else {
                 val system = systemFactory.create(
@@ -136,6 +140,8 @@ class MultiOracleScenarioRunner<
                     else -> false
                 }
             }
+            Log.debug("Checked declarations implementation=${implementation.name} result=$result")
+            result
         }
 
     private fun areBuildActionsValid(

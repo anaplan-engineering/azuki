@@ -20,14 +20,18 @@ internal class TaskWrapper<
 
     fun <S : BuildableScenario<AF>> run(scenario: S): TaskResult<S, R> {
         val start = System.nanoTime()
-        val outCapture = LogAndCaptureOutputStream { Log.info(it) }
-        val errCapture = LogAndCaptureOutputStream { Log.error(it) }
+        val redirectStdStreams = System.getProperty(redirectStdStreamsPropertyName)?.toBoolean() == true
+        val out = System.out
+        val err = System.err
+        val outCapture = LogAndCaptureOutputStream { if (redirectStdStreams) Log.info(it) else out.println(it) }
+        val errCapture = LogAndCaptureOutputStream { if (redirectStdStreams) Log.error(it) else err.println(it) }
         System.setOut(PrintStream(outCapture))
         System.setErr(PrintStream(errCapture))
         return try {
+            Log.debug("Running task type=$taskType")
             val result = task(implementation)
             val duration = System.nanoTime() - start
-            Log.debug("Completed task '$taskType' in ${duration.formatNs()}")
+            Log.debug("Completed task type=$taskType duration=${duration.formatNs()} result=$result")
             outCapture.flush()
             errCapture.flush()
             TaskResult(taskType = taskType,
@@ -40,7 +44,7 @@ internal class TaskWrapper<
                 ),
                 implName = implementation.name)
         } catch (e: Exception) {
-            Log.error("Unexpected error", e)
+            Log.error("Unexpected error running task type=${taskType}", e)
             val duration = System.nanoTime() - start
             outCapture.flush()
             TaskResult(taskType = taskType,
@@ -52,16 +56,21 @@ internal class TaskWrapper<
                     error = errCapture.getCapturedText()
                 ),
                 implName = implementation.name)
+        } catch (t: Throwable) {
+            Log.error("System error running task type=${taskType}", t)
+            throw t
         } finally {
             outCapture.close()
             errCapture.close()
-            System.setOut(PrintStream(FileOutputStream(FileDescriptor.out)))
-            System.setErr(PrintStream(FileOutputStream(FileDescriptor.err)))
+            System.setOut(out)
+            System.setErr(err)
         }
     }
 
     companion object {
         private val Log = LoggerFactory.getLogger(TaskWrapper::class.java)
+
+        const val redirectStdStreamsPropertyName = "com.anaplan.engineering.azuki.task.redirectStdStreams"
 
         private fun Long.formatNs(): String =
             if (this > 10_000_000_000L) {
@@ -99,6 +108,8 @@ private class LogAndCaptureOutputStream(
     }
 
     override fun close() {
+        log(String(buffer.toByteArray()))
+        buffer.clear()
         capture.close()
     }
 }
