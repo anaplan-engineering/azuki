@@ -163,9 +163,21 @@ class JarImplementationInstance<
             var result: TaskResult<S, R>? = null
 
             override fun run() {
-                val implementation = Implementation.locateImplementations<AF, CF, QF, AGF>().single()
-                val implementationTask = TaskWrapper(taskType, implementation, task)
-                result = implementationTask.run(scenario)
+                val implementations = Implementation.locateImplementations<AF, CF, QF, AGF>()
+                result = if (implementations.size == 1) {
+                    val implementation = implementations.single()
+                    Log.debug("Running task type=$taskType implementation=${implementation.name}")
+                    val implementationTask = TaskWrapper(taskType, implementation, task)
+                    implementationTask.run(scenario)
+                } else {
+                    TaskResult(
+                        taskType = taskType,
+                        implName = "Unknown",
+                        result = null,
+                        exception = IllegalStateException("Implementation instance jar should contain exactly one implementation, but ${implementations.size} found"),
+                        scenario = scenario
+                    )
+                }
             }
         }
         // need to create thread from our own thread group or can clash with that created by JUnit's  FailOnTimeout

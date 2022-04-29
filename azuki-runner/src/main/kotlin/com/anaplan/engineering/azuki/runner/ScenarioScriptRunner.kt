@@ -143,7 +143,8 @@ fun main(args: Array<String>) {
     val imports = File(importsFile).readText()
     val oracleImpls = args.drop(3)
     ScenarioScriptRunner.Log.debug("Starting script runner: testImpl=$testImpl oracleImpls=$oracleImpls")
-    val runner = construct(ScenarioScriptRunner::class, testImpl, oracleImpls, imports)
+    val defaultResultProcessor = construct(ScenarioScriptRunner.ResultProcessor.Default::class)
+    val runner = construct(ScenarioScriptRunner::class, testImpl, oracleImpls, imports, defaultResultProcessor)
     runner.runScenario(script)
 
     // something appears to be keeping this alive -- can't figure out
