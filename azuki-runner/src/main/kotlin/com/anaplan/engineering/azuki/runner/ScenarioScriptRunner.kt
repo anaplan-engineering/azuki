@@ -78,17 +78,22 @@ class ScenarioScriptRunner<
     }
 
     fun runScenario(scenarioScript: String) {
-        val scenario = try {
-            ScenarioParser.parse<BuildableScenario<AF>>(scenarioScript, scenarioImports)
-        } catch (e: ScriptException) {
-            resultProcessor.handleError(InvalidScenarioException(e))
-            return
-        }
-        @Suppress("UNCHECKED_CAST")
-        when (scenario) {
-            is OracleScenario<*, *, *> -> runOracleScenario(scenario as OracleScenario<AF, QF, AGF>)
-            is VerifiableScenario<*, *> -> runVerifiableScenario(scenario as VerifiableScenario<AF, CF>)
-            else -> resultProcessor.handleError(UnsupportedScenarioTypeException(scenario::class))
+        try {
+            val scenario = try {
+                ScenarioParser.parse<BuildableScenario<AF>>(scenarioScript, scenarioImports)
+            } catch (e: ScriptException) {
+                resultProcessor.handleError(InvalidScenarioException(e))
+                return
+            }
+            @Suppress("UNCHECKED_CAST")
+            when (scenario) {
+                is OracleScenario<*, *, *> -> runOracleScenario(scenario as OracleScenario<AF, QF, AGF>)
+                is VerifiableScenario<*, *> -> runVerifiableScenario(scenario as VerifiableScenario<AF, CF>)
+                else -> resultProcessor.handleError(UnsupportedScenarioTypeException(scenario::class))
+            }
+        } catch (t: Throwable) {
+            resultProcessor.handleError(t)
+            throw t
         }
     }
 

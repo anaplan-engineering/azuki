@@ -108,8 +108,10 @@ private class LogAndCaptureOutputStream(
     }
 
     override fun close() {
-        log(String(buffer.toByteArray()))
-        buffer.clear()
+        if (buffer.isNotEmpty()) {
+            log(String(buffer.toByteArray()))
+            buffer.clear()
+        }
         capture.close()
     }
 }
