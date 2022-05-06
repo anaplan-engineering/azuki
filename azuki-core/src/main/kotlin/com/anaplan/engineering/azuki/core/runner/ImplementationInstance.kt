@@ -170,11 +170,14 @@ class JarImplementationInstance<
                     val implementationTask = TaskWrapper(taskType, implementation, task)
                     implementationTask.run(scenario)
                 } else {
+                    val exception =
+                        IllegalStateException("Implementation instance jar should contain exactly one implementation, but ${implementations.size} found")
+                    Log.error("Error running task type=$taskType instance=${instanceName}", exception)
                     TaskResult(
                         taskType = taskType,
                         implName = "Unknown",
                         result = null,
-                        exception = IllegalStateException("Implementation instance jar should contain exactly one implementation, but ${implementations.size} found"),
+                        exception = exception,
                         scenario = scenario
                     )
                 }
