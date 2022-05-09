@@ -46,7 +46,7 @@ class MultiOracleScenarioRunner<
             oracleResults.add(oracleResult)
             remainingOracles = remainingOracles.drop(1)
         }
-        return Result(testInstance, oracleResults)
+        return Result(testInstance, verificationContext?.scenario, oracleResults)
     }
 
     private class VerificationContext<
@@ -285,9 +285,9 @@ class MultiOracleScenarioRunner<
         AGF : ActionGeneratorFactory
         >(
         val testInstance: ImplementationInstance<AF, CF, QF, AGF>,
+        val generatedScenario: OracleScenario<AF, QF, AGF>?,
         val oracleResults: List<OracleResult<AF, CF, QF, AGF>>
     ) {
-
         val verified = oracleResults.any { it.verified }
         val verifiedBy = oracleResults.find { it.verified }?.instance
 
