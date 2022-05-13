@@ -32,7 +32,7 @@ class MultiOracleScenarioRunner<
             val resultBuilder = OracleResult.Builder(oracle)
             verificationContext = establishVerificationContext(oracle, resultBuilder, verificationContext)
             val oracleResult = try {
-                if (verificationContext == null) {
+                if (verificationContext?.answers == null) {
                     resultBuilder.build()
                 } else {
                     Log.info("Attempting to verify scenario, oracle=$oracle")
@@ -55,7 +55,7 @@ class MultiOracleScenarioRunner<
         QF : QueryFactory,
         AGF : ActionGeneratorFactory,
         >(
-        val answers: List<Answer<*, CF>>,
+        val answers: List<Answer<*, CF>>?,
         val scenario: OracleScenario<AF, QF, AGF>
     )
 
@@ -64,7 +64,7 @@ class MultiOracleScenarioRunner<
         resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>,
         verificationContext: VerificationContext<AF, CF, QF, AGF>?,
     ): VerificationContext<AF, CF, QF, AGF>? {
-        if (verificationContext != null) {
+        if (verificationContext?.answers != null) {
             // if we have an existing verification context we can assume scenario is valid and we want to ensure
             // that we use the same generated actions and answers for all oracles
             return verificationContext
@@ -73,21 +73,21 @@ class MultiOracleScenarioRunner<
         val declarationValidTaskResult = isDeclarationValid(oracleInstance, generatedScenario)
         resultBuilder.add(declarationValidTaskResult)
         if (declarationValidTaskResult.result != true) {
-            return null
+            return VerificationContext(null, generatedScenario)
         }
         val buildActionsValidTaskResult = areBuildActionsValid(oracleInstance, generatedScenario)
         resultBuilder.add(buildActionsValidTaskResult)
         if (buildActionsValidTaskResult.result != true) {
-            return null
+            return VerificationContext(null, generatedScenario)
         }
         val queryTaskResult = query(testInstance, generatedScenario)
         resultBuilder.add(queryTaskResult)
         val answerCount = queryTaskResult.result?.size ?: 0
         Log.debug("Query result, oracle=$testInstance answerCount=$answerCount")
         if (answerCount == 0) {
-            return null
+            return VerificationContext(null, generatedScenario)
         }
-        return VerificationContext(queryTaskResult.result!!, generatedScenario)
+        return VerificationContext(queryTaskResult.result, generatedScenario)
     }
 
     private fun generateScenario(resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>): OracleScenario<AF, QF, AGF> {
@@ -112,7 +112,7 @@ class MultiOracleScenarioRunner<
         verificationContext: VerificationContext<AF, CF, QF, AGF>,
     ): OracleResult<AF, CF, QF, AGF> {
         val verifyTaskResult =
-            answersSufficient(oracleInstance, verificationContext.scenario, verificationContext.answers)
+            answersSufficient(oracleInstance, verificationContext.scenario, verificationContext.answers!!)
         resultBuilder.add(verifyTaskResult)
         return resultBuilder.build(verifyTaskResult.result == true)
     }
