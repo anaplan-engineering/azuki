@@ -106,7 +106,10 @@ class JUnitScenarioRunner<
     >(private val testClass: Class<*>) : ParentRunner<ScenarioRun<AF, CF, QF, AGF>>(testClass) {
 
     companion object {
-        private val defaultTimeout = Timeout(3, TimeUnit.MINUTES)
+        const val junitTimeoutPropertyName = "com.anaplan.engineering.azuki.junit.timeout"
+
+        private val defaultTimeout =
+            Timeout(System.getProperty(junitTimeoutPropertyName).toLongOrNull() ?: 3, TimeUnit.MINUTES)
 
         private val Log = LoggerFactory.getLogger(JUnitScenarioRunner::class.java)
     }
