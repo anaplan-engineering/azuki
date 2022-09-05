@@ -109,13 +109,13 @@ class JUnitScenarioRunner<
         const val junitTimeoutPropertyName = "com.anaplan.engineering.azuki.junit.timeout"
 
         private val defaultTimeout =
-            Timeout(System.getProperty(junitTimeoutPropertyName).toLongOrNull() ?: 3, TimeUnit.MINUTES)
+            Timeout(System.getProperty(junitTimeoutPropertyName, "3").toLong(), TimeUnit.MINUTES)
 
         private val Log = LoggerFactory.getLogger(JUnitScenarioRunner::class.java)
     }
 
     private val runKnownBugs by lazy {
-        System.getProperty("run.known.bugs")?.toBoolean() ?: false
+        System.getProperty("run.known.bugs", "false").toBoolean()
     }
 
     private val runMethod by lazy {
@@ -304,7 +304,7 @@ class JUnitScenarioRunner<
         }
 
     private val excludeImplFromDescription by lazy {
-        System.getProperty("excludeImplFromEacDescription")?.toBoolean() == true
+        System.getProperty("excludeImplFromEacDescription", "true").toBoolean()
     }
 
 }

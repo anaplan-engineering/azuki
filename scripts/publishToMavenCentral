@@ -16,6 +16,10 @@ STUB_DIR="$PROJECT_DIR/vdm-stub-generator"
 PLATFORM_DIR="$PROJECT_DIR/azuki-platform"
 GRADLEW="$PROJECT_DIR/gradlew"
 
+echo "Building project"
+cd "$PROJECT_DIR"
+"$GRADLEW" build
+
 echo "Publishing VDM animation"
 
 cd "$ANIMATION_DIR"
