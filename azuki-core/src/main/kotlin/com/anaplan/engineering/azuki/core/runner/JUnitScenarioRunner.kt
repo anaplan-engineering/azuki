@@ -1,5 +1,8 @@
 package com.anaplan.engineering.azuki.core.runner
 
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.excludeImplFromEacDescriptionPropertyName
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.forceKnownBugsPropertyName
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.junitTimeoutPropertyName
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.*
 import org.junit.Assume
@@ -106,8 +109,6 @@ class JUnitScenarioRunner<
     >(private val testClass: Class<*>) : ParentRunner<ScenarioRun<AF, CF, QF, AGF>>(testClass) {
 
     companion object {
-        const val junitTimeoutPropertyName = "com.anaplan.engineering.azuki.junit.timeout"
-
         private val defaultTimeout =
             Timeout(System.getProperty(junitTimeoutPropertyName, "3").toLong(), TimeUnit.MINUTES)
 
@@ -115,7 +116,7 @@ class JUnitScenarioRunner<
     }
 
     private val runKnownBugs by lazy {
-        System.getProperty("run.known.bugs", "false").toBoolean()
+        System.getProperty(forceKnownBugsPropertyName, "false").toBoolean()
     }
 
     private val runMethod by lazy {
@@ -304,7 +305,7 @@ class JUnitScenarioRunner<
         }
 
     private val excludeImplFromDescription by lazy {
-        System.getProperty("excludeImplFromEacDescription", "true").toBoolean()
+        System.getProperty(excludeImplFromEacDescriptionPropertyName, "false").toBoolean()
     }
 
 }

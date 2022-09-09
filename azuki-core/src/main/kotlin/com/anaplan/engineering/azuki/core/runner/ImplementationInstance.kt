@@ -1,5 +1,8 @@
 package com.anaplan.engineering.azuki.core.runner
 
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.jarInstancesPropertyName
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.includedImplementationsPropertyName
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.excludedImplementationsPropertyName
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
@@ -33,9 +36,6 @@ interface ImplementationInstance<
     ): TaskResult<S, R>
 
     companion object {
-        const val includedImplementationsPropertyName = "com.anaplan.engineering.azuki.implementation.includes"
-        const val excludedImplementationsPropertyName = "com.anaplan.engineering.azuki.implementation.excludes"
-        const val jarInstancesPropertyName = "com.anaplan.engineering.azuki.implementation.instance.jars"
 
         private val Log = LoggerFactory.getLogger(JarImplementationInstance::class.java)
 

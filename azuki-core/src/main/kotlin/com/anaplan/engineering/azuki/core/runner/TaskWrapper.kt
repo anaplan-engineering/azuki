@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.core.runner
 
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.redirectStdStreamsPropertyName
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
@@ -20,7 +21,7 @@ internal class TaskWrapper<
 
     fun <S : BuildableScenario<AF>> run(scenario: S): TaskResult<S, R> {
         val start = System.nanoTime()
-        val redirectStdStreams = System.getProperty(redirectStdStreamsPropertyName)?.toBoolean() == true
+        val redirectStdStreams = System.getProperty(redirectStdStreamsPropertyName, "false").toBoolean()
         val out = System.out
         val err = System.err
         val outCapture = LogAndCaptureOutputStream { if (redirectStdStreams) Log.info(it) else out.println(it) }
@@ -69,8 +70,6 @@ internal class TaskWrapper<
 
     companion object {
         private val Log = LoggerFactory.getLogger(TaskWrapper::class.java)
-
-        const val redirectStdStreamsPropertyName = "com.anaplan.engineering.azuki.task.redirectStdStreams"
 
         private fun Long.formatNs(): String =
             if (this > 10_000_000_000L) {
