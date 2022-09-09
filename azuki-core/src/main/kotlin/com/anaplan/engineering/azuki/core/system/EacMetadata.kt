@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.core.system
 
 
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.eacMetadataDirPropertyName
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import java.io.File
@@ -13,8 +14,6 @@ const val unsupportedBehavior: Behavior = -1
 interface ReifiedBehavior  {
     val behavior: Behavior
 }
-
-
 
 data class EacMetadata(
     val functionalElement: FunctionalElement,
@@ -29,14 +28,11 @@ data class EacMetadata(
 
 internal val objectMapper = ObjectMapper().registerModule(KotlinModule())
 
-internal const val eacMetadataDirProperty = "eac.metadata.dir"
-internal const val eacReportDirProperty = "eac.report.dir"
-
 object EacMetadataRecorder {
 
-    private val metadataDir by lazy { File(java.lang.System.getProperty(eacMetadataDirProperty)) }
+    private val metadataDir by lazy { File(java.lang.System.getProperty(eacMetadataDirPropertyName)) }
 
-    val recording by lazy { java.lang.System.getProperties().containsKey(eacMetadataDirProperty) }
+    val recording by lazy { java.lang.System.getProperties().containsKey(eacMetadataDirPropertyName) }
 
     fun record(metadata: EacMetadata) {
         val implDir = File(metadataDir, metadata.implementation)
