@@ -11,14 +11,17 @@ import org.junit.internal.runners.model.ReflectiveCallable
 import org.junit.rules.Timeout
 import org.junit.runner.Description
 import org.junit.runner.notification.RunNotifier
+import org.junit.runners.Parameterized.Parameters
 import org.junit.runners.ParentRunner
 import org.junit.runners.model.FrameworkMethod
 import org.junit.runners.model.Statement
+import org.junit.runners.model.TestClass
 import org.slf4j.LoggerFactory
 import java.lang.System
 import java.lang.reflect.Method
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
+import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.primaryConstructor
 
 @Target(AnnotationTarget.FUNCTION)
@@ -76,6 +79,7 @@ data class ScenarioRun<
     val eacMetadata: EacMetadata? = null,
     val ignoreWhenUnsupported: Boolean = true,
     val expectSkip: Boolean = false,
+    val parameters: Array<Any>? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -115,13 +119,11 @@ class JUnitScenarioRunner<
         private val Log = LoggerFactory.getLogger(JUnitScenarioRunner::class.java)
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private val kClass = testClass.kotlin as KClass<S>
+
     private val runKnownBugs by lazy {
         System.getProperty(forceKnownBugsPropertyName, "false").toBoolean()
-    }
-
-    private val runMethod by lazy {
-        getTestClass().javaClass.getMethod("run", String::class.java, Boolean::class.java)
-            ?: throw IllegalStateException("Must implement `run` method")
     }
 
     override fun isIgnored(child: ScenarioRun<AF, CF, QF, AGF>): Boolean {
@@ -159,14 +161,14 @@ class JUnitScenarioRunner<
     }
 
     private fun createRunStatement(run: ScenarioRun<AF, CF, QF, AGF>) =
-        @Suppress("UNCHECKED_CAST")
         ScenarioInvoker(
             run.method.method,
-            testClass.kotlin as KClass<S>,
+            kClass,
             run.implementationInstance,
             run.eacMetadata,
             run.ignoreWhenUnsupported,
-            run.expectSkip
+            run.expectSkip,
+            run.parameters,
         )
 
     private class ScenarioInvoker<
@@ -182,12 +184,17 @@ class JUnitScenarioRunner<
         val eacMetadata: EacMetadata?,
         val ignoreWhenUnsupported: Boolean,
         val expectSkip: Boolean,
+        val parameters: Array<Any>?,
     ) : Statement() {
         override fun evaluate() {
             object : ReflectiveCallable() {
                 override fun runReflectiveCall(): Any {
                     try {
-                        val scenario = testClass.primaryConstructor!!.call()
+                        val scenario = if (parameters == null) {
+                            testClass.primaryConstructor!!.call()
+                        } else {
+                            testClass.primaryConstructor!!.call(*parameters)
+                        }
                         build.invoke(scenario)
                         val scenarioName = eacMetadata?.scenarioName ?: "${build.declaringClass.name}-${build.name}"
                         val verifiableScenarioRunner =
@@ -230,6 +237,20 @@ class JUnitScenarioRunner<
 
     class SkippedException(msg: String) : Exception(msg)
 
+    private val parameterMethod: FrameworkMethod? by lazy {
+        val companionObject = kClass.companionObjectInstance
+        if (companionObject == null) {
+            null
+        } else {
+            val parameterMethods = TestClass(companionObject.javaClass).getAnnotatedMethods(Parameters::class.java)
+            Log.debug("Parameter methods: $parameterMethods")
+            if (parameterMethods.size > 1) {
+                throw IllegalStateException("Multiple parameter methods declared for $testClass")
+            }
+            if (parameterMethods.isEmpty()) null else parameterMethods.first()
+        }
+    }
+
     private fun FrameworkMethod.getTimeout(): Timeout {
         val annotation = getAnnotation(ExtendedTimeout::class.java)
         return if (annotation == null) {
@@ -238,6 +259,7 @@ class JUnitScenarioRunner<
             Timeout(annotation.timeout, annotation.timeUnit)
         }
     }
+
 
     override fun getChildren(): MutableList<ScenarioRun<AF, CF, QF, AGF>> {
         Log.debug("Getting children: $testClass")
@@ -293,16 +315,28 @@ class JUnitScenarioRunner<
                 ScenarioRun(method.name, method, implementationInstance)
             }
         }
-        return (eacs + adapterTests + analysisScenarios + generatedScenarios + modellingExamples).toMutableList()
+        val nonParameterizedRuns = eacs + adapterTests + analysisScenarios + generatedScenarios + modellingExamples
+        return (if (parameterMethod == null) nonParameterizedRuns else parameterize(nonParameterizedRuns)).toMutableList()
     }
 
-    override fun describeChild(child: ScenarioRun<AF, CF, QF, AGF>): Description =
-        if (excludeImplFromDescription) {
-            Description.createTestDescription(testClass.name, child.method.name)
+    private fun parameterize(baseRuns: List<ScenarioRun<AF, CF, QF, AGF>>): List<ScenarioRun<AF, CF, QF, AGF>> {
+        val parameterPermutations =
+            parameterMethod!!.method.invoke(kClass.companionObjectInstance!!) as? Collection<Array<Any>>
+                ?: throw IllegalStateException("Parameter method $parameterMethod. returns object with invalid type")
+        Log.debug("Test is parameterized, parameter method: ${parameterMethod?.name}, permutation count: ${parameterPermutations.size}")
+        return baseRuns.flatMap { baseRun -> parameterPermutations.map { perm -> baseRun.copy(parameters = perm) } }
+    }
+
+    override fun describeChild(child: ScenarioRun<AF, CF, QF, AGF>): Description {
+        val parameterSuffix = if (child.parameters == null) "" else "${child.parameters.toList()}"
+        val methodName = "${child.method.name}$parameterSuffix"
+        return if (excludeImplFromDescription) {
+            Description.createTestDescription(testClass.name, methodName)
         } else {
             Description.createTestDescription("${child.implementationInstance.implementationName}-${testClass.name}",
-                child.method.name)
+                methodName)
         }
+    }
 
     private val excludeImplFromDescription by lazy {
         System.getProperty(excludeImplFromEacDescriptionPropertyName, "false").toBoolean()
