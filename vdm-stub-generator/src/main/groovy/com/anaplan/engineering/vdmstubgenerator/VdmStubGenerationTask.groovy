@@ -33,7 +33,7 @@ abstract class VdmStubGenerationTask extends DefaultTask {
         def manifestUrl = getClass().getResource(getSpecificationManifest().getOrElse("/vdm/specification.mf"))
         if (manifestUrl != null) {
             vdmFiles.addAll(manifestUrl.readLines().indexed().collect { i, file ->
-                    new VdmFile("${i++}.vdmsl", getClass().getResource("/$file").text)
+                    new VdmFile("$i.vdmsl", getClass().getResource("/$file").text)
             })
         }
         def specificationDirectory = getSpecificationDirectory().getOrNull()
