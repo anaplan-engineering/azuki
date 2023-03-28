@@ -55,7 +55,7 @@ abstract class VdmStubGenerationTask extends DefaultTask {
         stubDirectory.mkdirs()
         def defsFile = new File(stubDirectory, "SpecificationDefinitions.kt")
         defsFile.text = """
-package  $targetPackage
+package $targetPackage
 
 import com.anaplan.engineering.azuki.vdm.VdmDeclarationType
 import com.anaplan.engineering.vdmanimation.api.Definition
