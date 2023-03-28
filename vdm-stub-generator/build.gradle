@@ -38,7 +38,6 @@ publishing {
     afterEvaluate {
         publications {
             withType(MavenPublication) {
-                groupId = group
                 pom {
                     url = 'https://github.com/anaplan-engineering/azuki'
                     name = 'VDM stub generator gradle plugin'

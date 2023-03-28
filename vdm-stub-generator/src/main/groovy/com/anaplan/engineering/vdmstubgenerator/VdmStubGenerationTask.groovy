@@ -5,10 +5,7 @@ import com.anaplan.engineering.vdmanimation.api.VdmFile
 import com.anaplan.engineering.vdmanimation.api.VdmSpecification
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 // TODO -- remove horrible hack to handle duplicate undef!
 abstract class VdmStubGenerationTask extends DefaultTask {
@@ -16,27 +13,47 @@ abstract class VdmStubGenerationTask extends DefaultTask {
     @Input
     abstract Property<String> getTargetPackage()
 
-    @InputFile
-    abstract Property<File> getSpecificationManifest()
-
+    // Typically used for specification files located in a jar
+    @Optional
     @InputDirectory
-    abstract Property<File> getSpecificationDir()
+    abstract Property<File> getSpecificationDirectory()
+
+    // Typically used for local specification files
+    @Optional
+    @Input
+    abstract Property<String> getSpecificationManifest()
+
+    @OutputDirectory
+    abstract Property<File> getStubDirectory()
 
     @TaskAction
     def generateDefinitions() {
         def targetPackage = getTargetPackage().getOrElse("com.anaplan.engineering.vdmstubgenerator.generated")
-        def manifestFile = getSpecificationManifest().getOrElse(new File(project.projectDir,"build/generated-resources/vdm/specification.mf"))
-        def specDir = getSpecificationDir().getOrElse(new File(project.projectDir,"build/generated-resources/"))
+        def vdmFiles = []
+        def manifestUrl = getClass().getResource(getSpecificationManifest().getOrElse("/vdm/specification.mf"))
+        if (manifestUrl != null) {
+            vdmFiles.addAll(manifestUrl.readLines().indexed().collect { i, file ->
+                    new VdmFile("$i.vdmsl", getClass().getResource("/$file").text)
+            })
+        }
+        def specificationDirectory = getSpecificationDirectory().getOrNull()
+        if (specificationDirectory != null) {
+            vdmFiles.addAll(project.fileTree(specificationDirectory).findAll { f ->
+                f.name.endsWith("vdmsl")
+            }.collect { file ->
+                new VdmFile(file.name, file.text)
+            })
+        }
+        if (vdmFiles.isEmpty()) {
+            logger.warn("No specification files found, manifestUrl=$manifestUrl specificationDirectory=$specificationDirectory")
+        }
 
-        int i = 0;
-        def specification = new Specification(files: manifestFile.readLines().collect { file ->
-            new VdmFile("${i++}.vdmsl", new File(specDir,"$file").text)
-        })
+        def specification = new Specification(files: vdmFiles)
         def structure = VdmAnimatorKt.getStructure(specification)
 
-
-        def defsFile = new File(project.projectDir,"build/generated-sources/SpecificationDefinitions.kt")
-        defsFile.parentFile.mkdirs()
+        def stubDirectory = getStubDirectory().getOrElse(new File(project.projectDir, "build/generated-sources"))
+        stubDirectory.mkdirs()
+        def defsFile = new File(stubDirectory, "SpecificationDefinitions.kt")
         defsFile.text = """
 package $targetPackage
 
@@ -80,17 +97,20 @@ abstract class SpecificationDefinition(
 }
 
 
-""" + structure.modules.values().collect { module ->
-            """
+ """ + structure.modules.values().collect {
+            module ->
+                """
 object ${module.name}Module: SpecificationModule(\"${module.name}\") {
 ${
-                module.definitions.values().collect { dfn ->
-                    "    val ${dfn.name.replace("\$", "_")} = ${dfn.type.name()}(\"${dfn.name.replace("\$", "\\\$")}\")"
-                }.join("\n")
-            }
+                    module.definitions.values().collect { dfn ->
+                        "    val ${dfn.name.replace("\$", "_")} = ${dfn.type.name()}(\"${dfn.name.replace("\$", "\\\$")}\")"
+                    }.join("\n")
+                }
 }
 """
-        }.join("\n")
+        }.
+
+            join("\n")
 
     }
 

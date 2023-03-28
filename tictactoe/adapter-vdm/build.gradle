@@ -36,10 +36,8 @@ processResources {
 
 generateVdmStubs {
     targetPackage = "com.anaplan.engineering.azuki.tictactoe.adapter.vdm"
-    specificationManifest = file("$vdmResourceDir/specification.mf")
-    specificationDir = file(vdmSourceDir)
-
-    dependsOn generateSpecificationManifest
+    specificationDirectory = file(vdmSourceDir)
+    stubDirectory = file(generatedSourceDir)
 }
 
 compileKotlin {
