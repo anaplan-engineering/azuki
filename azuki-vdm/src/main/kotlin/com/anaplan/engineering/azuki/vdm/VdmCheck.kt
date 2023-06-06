@@ -6,7 +6,13 @@ interface VdmCheck<SC: SystemContext> : Check {
 
     fun build(builder: ModuleBuilder<SC>): ModuleBuilder<SC>
 
-    fun checkEquals(actual: String = "actual", expected: String = "expected", tolerant: Boolean = true, msg: String? = null) =
+    fun checkEquals(
+        actual: String = "actual",
+        expected: String = "expected",
+        tolerant: Boolean = true,
+        ignoreCase: Boolean = false,
+        msg: String? = null
+    ) =
         """
             if not $actual = $expected
             then return false
