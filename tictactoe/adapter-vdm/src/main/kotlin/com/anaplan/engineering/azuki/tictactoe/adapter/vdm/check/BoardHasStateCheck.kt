@@ -4,10 +4,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.GetPlayOrderBehaviour
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.MoveMap
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.XOModule
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.toVdmMoves
-import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.toVdmPlayer
 import com.anaplan.engineering.azuki.vdm.DefaultModuleBuilder
-import com.anaplan.engineering.azuki.vdm.DefaultVdmCheck
-import com.anaplan.engineering.azuki.vdm.toVdmSequence
 
 class BoardHasStateCheck(
     private val gameName: String,
