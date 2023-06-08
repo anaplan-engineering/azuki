@@ -7,7 +7,9 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarableAct
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarationBuilder
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.toDeclarableAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.action.VdmActionFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check.DefaultVdmCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check.VdmCheckFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check.toDefaultVdmCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.declaration.createVdmDeclarationBuilder
 import com.anaplan.engineering.azuki.vdm.*
 import com.anaplan.engineering.azuki.vdm.animation.AnimationModule
