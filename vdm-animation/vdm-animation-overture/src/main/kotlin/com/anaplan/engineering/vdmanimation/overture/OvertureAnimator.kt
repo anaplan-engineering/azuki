@@ -14,6 +14,8 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import org.slf4j.LoggerFactory
+import java.io.PrintWriter
+import java.io.StringWriter
 
 class OvertureAnimator : VdmAnimator {
 
@@ -70,6 +72,13 @@ class OvertureAnimator : VdmAnimator {
             if (animationContext.expectFailure) {
                 return true
             }
+
+            val stringWriter = StringWriter()
+            val printWriter = PrintWriter(stringWriter)
+            printWriter.write("\n${e.message}\n")
+            e.ctxt.printStackTrace(printWriter, true)
+            Log.error(stringWriter.toString())
+
             when (e.number) {
                 4072 -> throw VdmPostconditionFailure(e)
                 4055 -> throw VdmPreconditionFailure(e)
