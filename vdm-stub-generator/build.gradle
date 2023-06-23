@@ -64,7 +64,7 @@ publishing {
                             url = "https://github.com/sifraser"
                             organization = "Anaplan Ltd"
                             organizationUrl = "http://www.anaplan.com"
-                            roles = ['architect', 'principal engineer']
+                            roles = ['architect', 'senior principal engineer']
                         }
                         developer {
                             id = 'donbex'
@@ -73,7 +73,7 @@ publishing {
                             url = "https://github.com/donbex"
                             organization = "Anaplan Ltd"
                             organizationUrl = "http://www.anaplan.com"
-                            roles = ['associate engineer']
+                            roles = ['engineer']
                         }
                     }
                 }

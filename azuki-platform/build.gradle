@@ -10,6 +10,9 @@ dependencies {
         api "com.anaplan.engineering:azuki-formatter:$version"
         api "com.anaplan.engineering:azuki-runner:$version"
         api "com.anaplan.engineering:azuki-vdm:$version"
+        api "com.anaplan.engineering:azuki-batch-api:$version"
+        api "com.anaplan.engineering:azuki-batch-guided:$version"
+        api "com.anaplan.engineering:azuki-orchestrator:$version"
         api "com.anaplan.engineering:vdm-animation-api:$version"
         api "com.anaplan.engineering:vdm-animation-overture:$version"
         api "com.anaplan.engineering:vdm-stub-generator:$version"
@@ -46,7 +49,7 @@ publishing {
                         url = "https://github.com/sifraser"
                         organization = "Anaplan Ltd"
                         organizationUrl = "http://www.anaplan.com"
-                        roles = ['architect', 'principal engineer']
+                        roles = ['architect', 'senior principal engineer']
                     }
                     developer {
                         id = 'donbex'
@@ -55,7 +58,7 @@ publishing {
                         url = "https://github.com/donbex"
                         organization = "Anaplan Ltd"
                         organizationUrl = "http://www.anaplan.com"
-                        roles = ['associate engineer']
+                        roles = ['engineer']
                     }
                 }
             }
