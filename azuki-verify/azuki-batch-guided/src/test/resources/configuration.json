@@ -1,0 +1,22 @@
+{
+    "implementations": {
+        "oracle": "VDM",
+        "test": "CoreSparse"
+    },
+    "reps": 3,
+    "scenarios": {
+        "files": [
+            "scenario1.scn",
+            "scenario2.scn"
+        ]
+    },
+    "admin": {
+        "maxParallelRuns": 4,
+        "resultDir": "build/verification",
+        "forkXmx": "4g",
+        "killAgentPath": "/home/si/git/github.com/jvmkill/libjvmkill.so",
+        "report": {
+            "generateEvery": 180
+        }
+    }
+}

@@ -1,0 +1,22 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'azuki.jar-publishing-conventions'
+}
+
+dependencies {
+    api project(":azuki-runner")
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Azuki Scenario Batch Api'
+                description = 'Implementable batch constructor for verifying scenario batch with Azuki'
+            }
+        }
+    }
+}

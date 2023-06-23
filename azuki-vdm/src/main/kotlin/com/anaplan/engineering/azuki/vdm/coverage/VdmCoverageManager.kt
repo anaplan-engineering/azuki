@@ -1,4 +1,4 @@
-package com.anaplan.systemspecification.abstractmodelling.vdm.coverage
+package com.anaplan.engineering.azuki.vdm.coverage
 
 import com.anaplan.engineering.azuki.vdm.coverage.CoverageAggregator
 import com.anaplan.engineering.azuki.vdm.coverage.SpecificationCoverage

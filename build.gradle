@@ -9,4 +9,7 @@ task publishAllToMavenLocal {
     dependsOn ':azuki-runner:publishToMavenLocal'
     dependsOn ':azuki-vdm:publishToMavenLocal'
     dependsOn ':azuki-formatter:publishToMavenLocal'
+    dependsOn ':azuki-verify:azuki-batch-api:publishToMavenLocal'
+    dependsOn ':azuki-verify:azuki-batch-guided:publishToMavenLocal'
+    dependsOn ':azuki-verify:azuki-orchestrator:publishToMavenLocal'
 }

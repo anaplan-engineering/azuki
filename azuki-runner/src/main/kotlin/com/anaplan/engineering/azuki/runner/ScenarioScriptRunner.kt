@@ -1,10 +1,9 @@
 package com.anaplan.engineering.azuki.runner
 
-import com.anaplan.engineering.azuki.core.parser.ScenarioParser
+import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
 import com.anaplan.engineering.azuki.core.runner.MultiOracleScenarioRunner
 import com.anaplan.engineering.azuki.core.runner.VerifiableScenarioRunner
-import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.scenario.OracleScenario
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.ActionFactory
@@ -37,6 +36,7 @@ class ScenarioScriptRunner<
         AGF : ActionGeneratorFactory
         > {
 
+        // TODO - have process functions return exit code and handle exit downstream
         fun processOracleScenario(result: MultiOracleScenarioRunner.Result<AF, CF, QF, AGF>) {
             Log.info("Scenario completed with result: $result")
         }
@@ -80,7 +80,7 @@ class ScenarioScriptRunner<
     fun runScenario(scenarioScript: String) {
         try {
             val scenario = try {
-                ScenarioParser.parse<BuildableScenario<AF>>(scenarioScript, scenarioImports)
+                SimpleScenarioParser.parse(scenarioScript, scenarioImports)
             } catch (e: ScriptException) {
                 resultProcessor.handleError(InvalidScenarioException(e))
                 return
@@ -127,7 +127,7 @@ class ScenarioScriptRunner<
     companion object {
         val Log = LoggerFactory.getLogger(ScenarioScriptRunner::class.java)
 
-        private fun exit(msg: String, exitCode: ExitCode): Nothing {
+        fun exit(msg: String, exitCode: ExitCode): Nothing {
             Log.error(msg)
             exitProcess(exitCode.ordinal)
         }
@@ -157,13 +157,24 @@ fun main(args: Array<String>) {
     exitProcess(ExitCode.Ok.ordinal)
 }
 
-enum class ExitCode {
-    Ok,  // should not be used directly, but reserves 0-value
-    InvalidScenario,
-    InvalidSystem,
-    VerificationFailed,
-    QueryFailed,
-    UnsupportedScenarioType,
-    UnknownError,
-    UnknownImplementation,
+
+enum class ExitCode(val category: Category) {
+    Ok(Category.Ok),
+    InvalidScenario(Category.Incomplete),
+    InvalidSystem(Category.Incomplete),
+    FailedDependency(Category.Incomplete),
+    TimeOut(Category.Incomplete),
+    VerificationFailed(Category.Unverified),
+    QueryFailed(Category.Error),
+    UnsupportedScenarioType(Category.Error),
+    UnknownError(Category.Error),
+    UnknownImplementation(Category.Error);
+
+    enum class Category {
+        Ok,
+        Incomplete,
+        Unverified,
+        Error
+    }
+
 }
