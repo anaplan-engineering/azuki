@@ -6,7 +6,6 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.XOModule
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.toVdmPlayer
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.toVdmPos
 import com.anaplan.engineering.azuki.vdm.DefaultModuleBuilder
-import com.anaplan.engineering.azuki.vdm.DefaultVdmCheck
 
 class PlayerCannotPlaceTokenCheck(
     private val gameName: String,

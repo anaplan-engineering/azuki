@@ -1,6 +1,9 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check
 
+import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
+import com.anaplan.engineering.azuki.vdm.EmptySystemContext
+import com.anaplan.engineering.azuki.vdm.VdmCheck
 
 class VdmCheckFactory : TicTacToeCheckFactory {
     override val player = VdmPlayerCheckFactory
@@ -21,4 +24,19 @@ object VdmGameCheckFactory : GameCheckFactory {
     override fun hasState(gameName: String, moves: MoveMap) = BoardHasStateCheck(gameName, moves)
     override fun isComplete(gameName: String) = BoardIsCompleteCheck(gameName)
     override fun isDraw(gameName: String) = GameIsDrawCheck(gameName)
+}
+
+interface DefaultVdmCheck : VdmCheck<EmptySystemContext> {
+
+    fun checkEquals(actual: String = "actual", expected: String = "expected", msg: String? = null) =
+        """
+            if not $actual = $expected
+            then return false
+            else skip;
+        """
+}
+
+val toDefaultVdmCheck: (Check) -> DefaultVdmCheck = {
+    @Suppress("UNCHECKED_CAST")
+    it as? DefaultVdmCheck ?: throw IllegalArgumentException("Invalid check: $it")
 }

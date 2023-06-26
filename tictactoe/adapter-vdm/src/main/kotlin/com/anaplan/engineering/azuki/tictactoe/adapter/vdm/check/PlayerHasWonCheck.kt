@@ -4,7 +4,6 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.GetPlayOrderBehaviour
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.XOModule
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.toVdmPlayer
 import com.anaplan.engineering.azuki.vdm.DefaultModuleBuilder
-import com.anaplan.engineering.azuki.vdm.DefaultVdmCheck
 
 class PlayerHasWonCheck(
     private val gameName: String,
