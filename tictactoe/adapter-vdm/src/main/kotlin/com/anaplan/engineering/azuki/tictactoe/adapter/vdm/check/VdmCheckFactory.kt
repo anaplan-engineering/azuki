@@ -34,20 +34,6 @@ interface DefaultVdmCheck : VdmCheck<EmptySystemContext> {
             then return false
             else skip;
         """
-// can't rely on println being available at moment
-//        """
-//            if not $actual = $expected
-//            then (
-//                $vdmPrintln("* Check '${javaClass.simpleName}${if (msg == null) "" else ":$msg"}' failed (tolerant = $tolerant)");
-//                $vdmPrint("    Expected: ");
-//                $vdmPrintln($expected);
-//                $vdmPrint("    Actual: ");
-//                $vdmPrintln($actual);
-//                return false;
-//            )
-//            else $vdmPrintln("* Check '${javaClass.simpleName}${if (msg == null) "" else ":$msg"}' passed");
-//        """
-
 }
 
 val toDefaultVdmCheck: (Check) -> DefaultVdmCheck = {
