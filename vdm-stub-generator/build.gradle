@@ -3,7 +3,7 @@ plugins {
     id 'azuki.publishing-conventions'
     id 'java-gradle-plugin'
     id 'groovy'
-    id 'com.gradle.plugin-publish' version '0.20.0'
+    id 'com.gradle.plugin-publish' version '1.2.0'
 }
 
 dependencies {
@@ -13,20 +13,17 @@ dependencies {
 }
 
 gradlePlugin {
+    website = 'https://github.com/anaplan-engineering/azuki'
+    vcsUrl = 'https://github.com/anaplan-engineering/azuki'
     plugins {
         vdmStubGenerator {
             id = "${group}.vdm-stub-generator"
             displayName = 'VDM stub generator gradle plugin'
             description = 'A Gradle plugin to generate stub classes from the structure of a VDM specification'
             implementationClass = "com.anaplan.engineering.vdmstubgenerator.VdmStubGenerationPlugin"
+            tags.set(['VDM'])
         }
     }
-}
-
-pluginBundle {
-    website = 'https://github.com/anaplan-engineering/azuki'
-    vcsUrl = 'https://github.com/anaplan-engineering/azuki'
-    tags = ['VDM']
 }
 
 java {
@@ -85,5 +82,7 @@ publishing {
 signing {
     sign publishing.publications.withType(MavenPublication)
 }
+
+
 
 
