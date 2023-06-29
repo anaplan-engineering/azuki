@@ -1,0 +1,8 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":graphs:adapter-declaration")
+    implementation "org.jgrapht:jgrapht-core:1.5.2"
+}

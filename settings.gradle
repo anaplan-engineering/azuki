@@ -13,6 +13,16 @@ include(
     "tictactoe:adapter-vdm",
     "tictactoe:eacs",
     "tictactoe:script-runner",
+    "graphs:dsl",
+    "graphs:adapter-api",
+    "graphs:adapter-declaration",
+    "graphs:adapter-apache",
+    "graphs:adapter-guava",
+    "graphs:adapter-jgrapht",
+    "graphs:adapter-jung",
+    "graphs:eacs",
+    "graphs:script-runner",
+    "graphs:verification-runner",
 )
 includeBuild("build-conventions")
 includeBuild("vdm-animation")

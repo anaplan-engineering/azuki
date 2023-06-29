@@ -1,0 +1,7 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":azuki-core")
+}
