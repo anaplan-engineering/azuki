@@ -7,6 +7,7 @@ plugins {
 dependencies {
     constraints {
         api "com.anaplan.engineering:azuki-core:$version"
+        api "com.anaplan.engineering:azuki-declaration:$version"
         api "com.anaplan.engineering:azuki-formatter:$version"
         api "com.anaplan.engineering:azuki-runner:$version"
         api "com.anaplan.engineering:azuki-vdm:$version"

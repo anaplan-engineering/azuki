@@ -1,5 +1,7 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm
 
+import com.anaplan.engineeering.azuki.declaration.Declaration
+import com.anaplan.engineeering.azuki.declaration.DeclarationBuilderFactory
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
@@ -10,7 +12,8 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.action.VdmActionFacto
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check.DefaultVdmCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check.VdmCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check.toDefaultVdmCheck
-import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.declaration.createVdmDeclarationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.declaration.VdmDeclarationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.declaration.VdmDeclarationBuilderFactory
 import com.anaplan.engineering.azuki.vdm.*
 import com.anaplan.engineering.azuki.vdm.animation.AnimationModule
 import com.anaplan.engineering.azuki.vdm.animation.BaseSpecification
@@ -58,8 +61,7 @@ data class VdmSystem(
     }
 
     private fun createAnimationModule(specification: SpecificationStructure): AnimationModule {
-        val declarations = DeclarationBuilder(declarableActions).build()
-        val vdmDeclarationBuilders = declarations.map { createVdmDeclarationBuilder(it) }
+        val vdmDeclarationBuilders = DeclarationBuilder(declarableActions).build().map { declarationBuilder(it) }
         val moduleBuilder =
             checks.fold(
                 buildActions.fold(
@@ -69,6 +71,9 @@ data class VdmSystem(
             ) { acc, c -> c.build(acc) }
         return moduleBuilder.build()
     }
+
+    private fun <D: Declaration> declarationBuilder(declaration: D) =
+        declarationBuilderFactory.createBuilder<D, VdmDeclarationBuilder<D>>(declaration)
 
     override fun verify() =
         try {
@@ -88,4 +93,8 @@ data class VdmSystem(
     override fun query() = throw UnsupportedOperationException()
 
     override fun generateActions() = throw UnsupportedOperationException()
+
+    companion object {
+        private val declarationBuilderFactory = DeclarationBuilderFactory(VdmDeclarationBuilderFactory::class.java)
+    }
 }

@@ -5,9 +5,8 @@ import com.anaplan.engineering.azuki.graphs.adapter.api.GraphActionFactory
 
 class JGraphTActionFactory: GraphActionFactory {
 
-    override fun create(graphName: String): Action {
-        TODO("Not yet implemented")
-    }
+    // TODO - directed etc
+    override fun create(graphName: String) = CreateGraphAction(graphName)
 
 }
 

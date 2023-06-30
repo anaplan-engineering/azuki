@@ -1,4 +1,4 @@
-package com.anaplan.engineering.azuki.graphs.adapter.declaration
+package com.anaplan.engineeering.azuki.declaration
 
 interface Declaration {
     val name: String

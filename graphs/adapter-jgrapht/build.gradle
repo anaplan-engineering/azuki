@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-    api project(":graphs:adapter-declaration")
+    implementation project(":graphs:adapter-declaration")
     implementation "org.jgrapht:jgrapht-core:1.5.2"
 }

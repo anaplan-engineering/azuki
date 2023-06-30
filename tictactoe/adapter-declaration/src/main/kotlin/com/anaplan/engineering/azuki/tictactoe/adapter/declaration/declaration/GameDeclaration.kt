@@ -1,7 +1,7 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration
 
+import com.anaplan.engineeering.azuki.declaration.Declaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.MoveMap
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.Declaration
 
 data class GameDeclaration(
     override val name: String,

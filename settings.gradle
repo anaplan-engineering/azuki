@@ -1,6 +1,7 @@
 include(
     "azuki-core",
     "azuki-vdm",
+    "azuki-declaration",
     "azuki-formatter",
     "azuki-runner",
     "azuki-verify:azuki-batch-api",

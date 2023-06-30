@@ -1,0 +1,6 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+}

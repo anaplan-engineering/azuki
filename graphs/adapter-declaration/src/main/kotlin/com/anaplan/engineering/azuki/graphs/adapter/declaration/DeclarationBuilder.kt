@@ -1,5 +1,8 @@
 package com.anaplan.engineering.azuki.graphs.adapter.declaration
 
+import com.anaplan.engineeering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.GraphDeclaration
+
 class DeclarationBuilder(private val declarationActions: List<DeclarableAction>) {
 
     private val declarations = LinkedHashMap<String, Declaration>()
@@ -18,6 +21,11 @@ class DeclarationBuilder(private val declarationActions: List<DeclarableAction>)
 
     private fun checkExists(name: String) {
         if (!declarations.containsKey(name)) throw MissingDeclarationException(name)
+    }
+
+    fun declareGraph(graphName: String) {
+        checkForDuplicate(graphName)
+        declarations[graphName] = GraphDeclaration<Any>(graphName, standalone = true)
     }
 
 }

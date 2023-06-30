@@ -4,4 +4,5 @@ plugins {
 
 dependencies {
     api project(":graphs:adapter-api")
+    api project(":azuki-declaration")
 }
