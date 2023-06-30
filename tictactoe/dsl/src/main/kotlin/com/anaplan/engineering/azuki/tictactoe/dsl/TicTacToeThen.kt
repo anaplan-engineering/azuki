@@ -1,12 +1,12 @@
 package com.anaplan.engineering.azuki.tictactoe.dsl
 
+import com.anaplan.engineering.azuki.core.dsl.Then
 import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.dsl.ascii.TicTacToeBoardAscii
 
-class TicTacToeThen(private val checkFactory: TicTacToeCheckFactory):
-    com.anaplan.engineering.azuki.core.dsl.Then<TicTacToeCheckFactory> {
+class TicTacToeThen(private val checkFactory: TicTacToeCheckFactory): Then<TicTacToeCheckFactory> {
 
     private val checkList = mutableListOf<Check>()
 

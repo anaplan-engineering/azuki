@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.DeclarationBuilder
 
 abstract class CreateGraphDeclarableAction(
-    private val graphName: String
+    protected val graphName: String
 ): CreateGraphBehaviour(), DeclarableAction {
 
     override fun declare(builder: DeclarationBuilder) {

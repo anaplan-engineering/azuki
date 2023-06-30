@@ -1,0 +1,36 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+configurations {
+    jgrapht.extendsFrom testRuntime
+}
+
+dependencies {
+    api project(":graphs:dsl")
+    jgrapht project(":graphs:adapter-jgrapht")
+    testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+}
+
+task jgraphtClasspathJar(type: Jar) {
+    dependsOn configurations.jgrapht
+    archiveBaseName = 'JGraphT'
+    manifest {
+        attributes(
+            "Class-Path": configurations.jgrapht.collect { it.absolutePath }.join(' '))
+    }
+}
+
+test {
+    dependsOn jgraphtClasspathJar
+
+    def instanceJars = [
+        jgraphtClasspathJar.archiveFile.get().asFile.absolutePath,
+    ]
+    systemProperties = [
+        retainOvertureTempFiles                                     : findProperty("retainOvertureTempFiles") ?: true,
+        "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(","),
+        "com.anaplan.engineering.azuki.implementation.includes"     : findProperty("impl.includes"),
+        "com.anaplan.engineering.azuki.implementation.excludes"     : findProperty("impl.excludes"),
+    ]
+}

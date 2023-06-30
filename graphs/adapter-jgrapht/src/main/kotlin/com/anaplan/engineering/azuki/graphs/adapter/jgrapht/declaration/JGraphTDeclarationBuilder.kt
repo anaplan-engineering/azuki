@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.graphs.adapter.jgrapht.declaration
 import com.anaplan.engineering.azuki.declaration.Declaration
 import com.anaplan.engineering.azuki.declaration.DeclarationBuilder
 import com.anaplan.engineering.azuki.declaration.FeDeclarationBuilderFactory
+import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionEnvironment
 
 interface JGraphTDeclarationBuilderFactory<D : Declaration> :
     FeDeclarationBuilderFactory<D, JGraphTDeclarationBuilder<D>>
@@ -10,5 +11,5 @@ interface JGraphTDeclarationBuilderFactory<D : Declaration> :
 
 abstract class JGraphTDeclarationBuilder<D: Declaration>(declaration: D): DeclarationBuilder<D>(declaration) {
 
-    abstract fun build()
+    abstract fun build(env: ExecutionEnvironment)
 }

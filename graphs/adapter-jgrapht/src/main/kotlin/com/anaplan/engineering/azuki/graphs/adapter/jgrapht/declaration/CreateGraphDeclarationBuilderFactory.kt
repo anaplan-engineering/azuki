@@ -1,6 +1,9 @@
 package com.anaplan.engineering.azuki.graphs.adapter.jgrapht.declaration
 
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.GraphDeclaration
+import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionEnvironment
+import org.jgrapht.graph.DefaultEdge
+import org.jgrapht.graph.SimpleGraph
 
 class CreateGraphDeclarationBuilderFactory : JGraphTDeclarationBuilderFactory<GraphDeclaration<*>> {
 
@@ -12,8 +15,8 @@ class CreateGraphDeclarationBuilderFactory : JGraphTDeclarationBuilderFactory<Gr
     private class GraphDeclarationBuilder(declaration: GraphDeclaration<*>) :
         JGraphTDeclarationBuilder<GraphDeclaration<*>>(declaration) {
 
-        override fun build() {
-            TODO("Not yet implemented")
+        override fun build(env: ExecutionEnvironment) {
+            env.addGraph(declaration.name, SimpleGraph<Any, DefaultEdge>(DefaultEdge::class.java))
         }
 
     }

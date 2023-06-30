@@ -5,4 +5,5 @@ plugins {
 dependencies {
     implementation project(":graphs:adapter-declaration")
     implementation "org.jgrapht:jgrapht-core:1.5.2"
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
 }
