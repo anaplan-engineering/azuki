@@ -2,13 +2,20 @@ plugins {
     id 'azuki.kotlin-conventions'
 }
 
+repositories {
+    // required for jung snapshot
+    maven { url "https://jitpack.io" }
+}
+
 configurations {
     jgrapht.extendsFrom testRuntime
+    jung.extendsFrom testRuntime
 }
 
 dependencies {
     api project(":graphs:dsl")
     jgrapht project(":graphs:adapter-jgrapht")
+    jung project(":graphs:adapter-jung")
     testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
 }
 
@@ -21,11 +28,22 @@ task jgraphtClasspathJar(type: Jar) {
     }
 }
 
+task jungClasspathJar(type: Jar) {
+    dependsOn configurations.jung
+    archiveBaseName = 'Jung'
+    manifest {
+        attributes(
+            "Class-Path": configurations.jung.collect { it.absolutePath }.join(' '))
+    }
+}
+
 test {
     dependsOn jgraphtClasspathJar
+    dependsOn jungClasspathJar
 
     def instanceJars = [
         jgraphtClasspathJar.archiveFile.get().asFile.absolutePath,
+        jungClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
     systemProperties = [
         retainOvertureTempFiles                                     : findProperty("retainOvertureTempFiles") ?: true,
@@ -34,3 +52,4 @@ test {
         "com.anaplan.engineering.azuki.implementation.excludes"     : findProperty("impl.excludes"),
     ]
 }
+

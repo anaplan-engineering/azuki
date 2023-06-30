@@ -2,6 +2,11 @@ plugins {
     id 'azuki.kotlin-conventions'
 }
 
+repositories {
+    maven { url "https://jitpack.io" }
+}
+
 dependencies {
     api project(":graphs:adapter-declaration")
+    implementation "com.github.jrtom:jung:master-SNAPSHOT"
 }
