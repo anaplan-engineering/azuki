@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration
 
-import com.anaplan.engineeering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.declaration.Declaration
 
 data class GraphDeclaration<T>(
     override val name: String,

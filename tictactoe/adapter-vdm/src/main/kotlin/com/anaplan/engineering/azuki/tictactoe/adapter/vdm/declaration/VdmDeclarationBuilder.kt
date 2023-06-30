@@ -1,8 +1,8 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm.declaration
 
-import com.anaplan.engineeering.azuki.declaration.Declaration
-import com.anaplan.engineeering.azuki.declaration.DeclarationBuilder
-import com.anaplan.engineeering.azuki.declaration.FeDeclarationBuilderFactory
+import com.anaplan.engineering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.declaration.DeclarationBuilder
+import com.anaplan.engineering.azuki.declaration.FeDeclarationBuilderFactory
 import com.anaplan.engineering.azuki.vdm.DefaultModuleBuilder
 import com.anaplan.engineering.azuki.vdm.VdmDeclaration
 import com.anaplan.engineering.azuki.vdm.toVdmName

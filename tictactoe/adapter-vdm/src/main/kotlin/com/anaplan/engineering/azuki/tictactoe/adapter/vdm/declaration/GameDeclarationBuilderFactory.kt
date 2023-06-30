@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm.declaration
 
-import com.anaplan.engineeering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.declaration.Declaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.GameDeclaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.VdmGenerationException
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.XOModule

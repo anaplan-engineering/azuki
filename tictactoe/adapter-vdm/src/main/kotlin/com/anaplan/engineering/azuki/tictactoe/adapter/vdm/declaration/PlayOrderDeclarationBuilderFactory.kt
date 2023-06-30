@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm.declaration
 
-import com.anaplan.engineeering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.declaration.Declaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.PlayOrderDeclaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.XOModule
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.toVdmPlayer

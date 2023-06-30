@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration
 
-import com.anaplan.engineeering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.declaration.Declaration
 
 class PlayOrderDeclaration(
     override val name: String,

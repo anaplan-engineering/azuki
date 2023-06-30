@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.graphs.adapter.declaration
 
-import com.anaplan.engineeering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.declaration.Declaration
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.GraphDeclaration
 
 class DeclarationBuilder(private val declarationActions: List<DeclarableAction>) {

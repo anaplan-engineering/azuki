@@ -1,7 +1,7 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm
 
-import com.anaplan.engineeering.azuki.declaration.Declaration
-import com.anaplan.engineeering.azuki.declaration.DeclarationBuilderFactory
+import com.anaplan.engineering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.declaration.DeclarationBuilderFactory
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory

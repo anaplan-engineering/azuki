@@ -1,4 +1,4 @@
-package com.anaplan.engineeering.azuki.declaration
+package com.anaplan.engineering.azuki.declaration
 
 import java.util.*
 
