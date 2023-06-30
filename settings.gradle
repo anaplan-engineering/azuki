@@ -13,6 +13,8 @@ include(
     "tictactoe:adapter-api",
     "tictactoe:adapter-declaration",
     "tictactoe:adapter-vdm",
+    "tictactoe:implementation",
+    "tictactoe:adapter-implementation",
     "tictactoe:eacs",
     "tictactoe:script-runner",
     "graphs:dsl",

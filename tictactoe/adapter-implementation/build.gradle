@@ -1,0 +1,8 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":tictactoe:adapter-declaration")
+    api project(":tictactoe:implementation")
+}
