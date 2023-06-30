@@ -34,11 +34,13 @@ plugins {
 
 configurations {
     vdm
+    sampleImplementation
 }
 
 dependencies {
     api project(":tictactoe:dsl")
     vdm project(":tictactoe:adapter-vdm")
+    sampleImplementation project(":tictactoe:adapter-implementation")
     testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
 }
 
@@ -50,11 +52,21 @@ task vdmClasspathJar(type: Jar) {
     }
 }
 
+task sampleImplementationClasspathJar(type: Jar) {
+    dependsOn configurations.sampleImplementation
+    archiveBaseName = 'SampleImpl'
+    manifest {
+        attributes("Class-Path": configurations.sampleImplementation.collect { it.absolutePath }.join(' '))
+    }
+}
+
 test {
     dependsOn vdmClasspathJar
+    dependsOn sampleImplementationClasspathJar
 
     def instanceJars = [
         vdmClasspathJar.archiveFile.get().asFile.absolutePath,
+        sampleImplementationClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
     systemProperties = [
         retainOvertureTempFiles                                     : findProperty("retainOvertureTempFiles") ?: true,

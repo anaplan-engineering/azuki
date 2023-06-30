@@ -18,6 +18,8 @@ class Game(
         board[y][x] = player.token
     }
 
+    fun playerMoveCount(player: Player) : Int = board.flatten().count { it == player.token }
+
     companion object {
 
         fun new(rows: Int, cols: Int, vararg player: Player) : Game {

@@ -1,9 +1,9 @@
-package declaration
+package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration
 
-import ExecutionEnvironment
 import Player
 import Token
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.PlayOrderDeclaration
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
 
 class PlayOrderDeclarationBuilder(override val declaration: PlayOrderDeclaration) :
     SampleDeclarationBuilder<PlayOrderDeclaration> {

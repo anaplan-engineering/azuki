@@ -1,9 +1,9 @@
-package declaration
+package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration
 
-import ExecutionEnvironment
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.Declaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.GameDeclaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.PlayOrderDeclaration
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
 
 interface SampleDeclarationBuilder<T : Declaration> {
     val declaration: T
