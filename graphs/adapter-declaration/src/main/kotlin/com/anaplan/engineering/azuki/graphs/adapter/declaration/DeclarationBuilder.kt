@@ -28,6 +28,23 @@ class DeclarationBuilder(private val declarationActions: List<DeclarableAction>)
         declarations[graphName] = GraphDeclaration<Any>(graphName, standalone = true)
     }
 
+    fun <V> addVertex(graphName: String, vertex: V) {
+        checkExists(graphName)
+        val declaration = getDeclaration<GraphDeclaration<V>>(graphName)
+        declarations[graphName] = declaration.copy(
+            vertices = declaration.vertices + vertex
+        )
+    }
+
+    fun <V> addEdge(graphName: String, source: V, target: V) {
+        checkExists(graphName)
+        val declaration = getDeclaration<GraphDeclaration<V>>(graphName)
+        declarations[graphName] = declaration.copy(
+            edges = declaration.edges + Pair(source, target)
+        )
+    }
+
+
 }
 
 class DuplicateDeclarationException(def: String) : IllegalArgumentException("$def is already defined")

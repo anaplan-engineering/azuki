@@ -7,6 +7,12 @@ import com.anaplan.engineering.azuki.graphs.adapter.jung.execution.ExecutionEnvi
 class JungActionFactory : GraphActionFactory {
 
     override fun create(graphName: String) = CreateGraphAction(graphName)
+
+    override fun <T> addVertex(graphName: String, vertex: T) =
+        AddVertexAction(graphName, vertex)
+
+    override fun <T> addEdge(graphName: String, source: T, target: T) =
+        AddEdgeAction(graphName, source, target)
 }
 
 interface JungAction : Action {

@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionE
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleGraph
 
-class CreateGraphDeclarationBuilderFactory : JGraphTDeclarationBuilderFactory<GraphDeclaration<*>> {
+class GraphDeclarationBuilderFactory : JGraphTDeclarationBuilderFactory<GraphDeclaration<*>> {
 
     override val declarationClass = GraphDeclaration::class.java
 
@@ -16,7 +16,18 @@ class CreateGraphDeclarationBuilderFactory : JGraphTDeclarationBuilderFactory<Gr
         JGraphTDeclarationBuilder<GraphDeclaration<*>>(declaration) {
 
         override fun build(env: ExecutionEnvironment) {
-            env.addGraph(declaration.name, SimpleGraph<Any, DefaultEdge>(DefaultEdge::class.java))
+            val graph = SimpleGraph<Any, DefaultEdge>(DefaultEdge::class.java)
+            declaration.vertices.map {
+                graph.addVertex(it)
+            }
+            declaration.edges.map {
+                // necessary to add vertices before using in an edge
+                graph.addVertex(it.first)
+                graph.addVertex(it.second)
+                
+                graph.addEdge(it.first, it.second)
+            }
+            env.addGraph(declaration.name, graph)
         }
 
     }

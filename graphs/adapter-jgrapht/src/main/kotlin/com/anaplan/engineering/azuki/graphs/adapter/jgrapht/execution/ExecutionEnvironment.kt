@@ -6,8 +6,8 @@ class ExecutionEnvironment {
 
     private val graphs = mutableMapOf<String, Graph<*, *>>()
 
-    fun act(graphName: String, action: Graph<*, *>.() -> Unit) =
-        graphs[graphName]?.action() ?: throw ExecutionException("No such graph $graphName")
+    fun <V> act(graphName: String, action: Graph<V, *>.() -> Unit) =
+        (graphs[graphName] as? Graph<V, *>)?.action() ?: throw ExecutionException("No such graph $graphName")
 
     fun <T> get(graphName: String, get: Graph<*, *>.() -> T): T =
         graphs[graphName]?.get() ?: throw ExecutionException("No such graph $graphName")
@@ -18,4 +18,4 @@ class ExecutionEnvironment {
     }
 }
 
-class ExecutionException(msg: String): RuntimeException(msg)
+class ExecutionException(msg: String) : RuntimeException(msg)

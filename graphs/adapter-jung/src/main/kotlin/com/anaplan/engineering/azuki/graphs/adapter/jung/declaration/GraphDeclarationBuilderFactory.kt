@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.Grap
 import com.anaplan.engineering.azuki.graphs.adapter.jung.execution.ExecutionEnvironment
 import com.google.common.graph.GraphBuilder
 
-class CreateGraphDeclarationBuilderFactory : JungDeclarationBuilderFactory<GraphDeclaration<*>> {
+class GraphDeclarationBuilderFactory : JungDeclarationBuilderFactory<GraphDeclaration<*>> {
 
     override val declarationClass = GraphDeclaration::class.java
 
@@ -15,7 +15,14 @@ class CreateGraphDeclarationBuilderFactory : JungDeclarationBuilderFactory<Graph
         JungDeclarationBuilder<GraphDeclaration<*>>(declaration) {
 
         override fun build(env: ExecutionEnvironment) {
-            env.addGraph(declaration.name, GraphBuilder.undirected().build<Any>())
+            val graph = GraphBuilder.undirected().build<Any>()
+            declaration.vertices.forEach {
+                graph.addNode(it)
+            }
+            declaration.edges.forEach {
+                graph.putEdge(it.first, it.second)
+            }
+            env.addGraph(declaration.name, graph)
         }
     }
 }
