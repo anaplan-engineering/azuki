@@ -13,4 +13,8 @@ class GraphThen(private val checkFactory: GraphCheckFactory): Then<GraphCheckFac
     fun hasVertexCount(graphName: String, count: Long) {
         checkList.add(checkFactory.hasVertexCount(graphName, count))
     }
+
+    fun hasShortestPath(graphName: String, from: Any, to: Any, vararg path: Any) {
+        checkList.add(checkFactory.hasShortestPath(graphName, from, to, path.toList()))
+    }
 }

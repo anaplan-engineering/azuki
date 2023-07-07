@@ -24,7 +24,7 @@ class GraphDeclarationBuilderFactory : JGraphTDeclarationBuilderFactory<GraphDec
                 // necessary to add vertices before using in an edge
                 graph.addVertex(it.first)
                 graph.addVertex(it.second)
-                
+
                 graph.addEdge(it.first, it.second)
             }
             env.addGraph(declaration.name, graph)

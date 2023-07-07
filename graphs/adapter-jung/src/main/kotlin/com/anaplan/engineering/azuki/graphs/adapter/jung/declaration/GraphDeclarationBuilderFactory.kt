@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.graphs.adapter.jung.declaration
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.GraphDeclaration
 import com.anaplan.engineering.azuki.graphs.adapter.jung.execution.ExecutionEnvironment
 import com.google.common.graph.GraphBuilder
+import com.google.common.graph.NetworkBuilder
 
 class GraphDeclarationBuilderFactory : JungDeclarationBuilderFactory<GraphDeclaration<*>> {
 
@@ -15,12 +16,12 @@ class GraphDeclarationBuilderFactory : JungDeclarationBuilderFactory<GraphDeclar
         JungDeclarationBuilder<GraphDeclaration<*>>(declaration) {
 
         override fun build(env: ExecutionEnvironment) {
-            val graph = GraphBuilder.undirected().build<Any>()
+            val graph = NetworkBuilder.undirected().build<Any, Pair<*, *>>()
             declaration.vertices.forEach {
                 graph.addNode(it)
             }
             declaration.edges.forEach {
-                graph.putEdge(it.first, it.second)
+                graph.addEdge(it.first, it.second, it)
             }
             env.addGraph(declaration.name, graph)
         }

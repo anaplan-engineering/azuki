@@ -8,7 +8,7 @@ class AddEdgeAction<V>(graphName: String, source: V, target: V) :
     AddEdgeDeclarableAction<V>(graphName, source, target), JungAction {
     override fun act(env: ExecutionEnvironment) {
         env.act(graphName) {
-            putEdge(source, target)
+            addEdge(source, target, Pair(source, target))
         }
     }
 }
