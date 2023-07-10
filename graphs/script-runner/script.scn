@@ -1,0 +1,14 @@
+verifiableScenario {
+    given {
+        thereIsAGraph("graphA") {
+            edge("a", "b")
+            edge("b", "c")
+            edge("a", "d")
+            edge("d", "e")
+            edge("e", "c")
+        }
+    }
+    then {
+        hasShortestPath("graphA", "a", "c", "b")
+    }
+}

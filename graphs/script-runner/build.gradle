@@ -1,0 +1,66 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+repositories {
+    // required for jung snapshot
+    maven { url "https://jitpack.io" }
+}
+
+configurations {
+    runner.extendsFrom runtime
+    jgrapht.extendsFrom runner
+    jung.extendsFrom runner
+}
+
+dependencies {
+    runner project(":graphs:dsl")
+    runner project(":azuki-runner")
+    runner 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+
+    jgrapht project(":graphs:adapter-jgrapht")
+    jung project(":graphs:adapter-jung")
+}
+
+task jgraphtClasspathJar(type: Jar) {
+    dependsOn configurations.jgrapht
+    archiveBaseName = 'JGraphT'
+    manifest {
+        attributes(
+            "Class-Path": configurations.jgrapht.collect { it.absolutePath }.join(' '))
+    }
+}
+
+task jungClasspathJar(type: Jar) {
+    dependsOn configurations.jung
+    archiveBaseName = 'Jung'
+    manifest {
+        attributes(
+            "Class-Path": configurations.jung.collect { it.absolutePath }.join(' '))
+    }
+}
+
+task runScript(type: JavaExec) {
+    dependsOn jgraphtClasspathJar
+    dependsOn jungClasspathJar
+    classpath = configurations.runner
+    main 'com.anaplan.engineering.azuki.runner.ScenarioScriptRunnerKt'
+    jvmArgs '-Xmx4g'
+    args = [
+        file("script.scn").absolutePath,
+        file("config/imports").absolutePath,
+        'JGraphT',
+        'Jung'
+    ]
+    def instanceJars = [
+        jgraphtClasspathJar.archiveFile.get().asFile.absolutePath,
+        jungClasspathJar.archiveFile.get().asFile.absolutePath,
+    ]
+    systemProperties = [
+        "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(",")
+    ]
+    environment "LOG4J_CONFIGURATION_FILE", "config/log4j2.xml"
+}
+
+
+
