@@ -7,8 +7,4 @@ dependencies {
     api project(":tictactoe:adapter-api")
 
     implementation "org.jetbrains.kotlin:kotlin-test-junit"
-    runtimeOnly "org.jetbrains.kotlin:kotlin-script-runtime"
-    runtimeOnly "org.jetbrains.kotlin:kotlin-compiler-embeddable"
-    runtimeOnly "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable"
-    runtimeOnly "org.jetbrains.kotlin:kotlin-script-util"
 }
