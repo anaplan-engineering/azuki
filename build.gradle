@@ -7,9 +7,10 @@ task publishAllToMavenLocal {
     dependsOn gradle.includedBuild('azuki-platform').task(':publishToMavenLocal')
     dependsOn ':azuki-core:publishToMavenLocal'
     dependsOn ':azuki-declaration:publishToMavenLocal'
+    dependsOn ':azuki-script-formatter:publishToMavenLocal'
+    dependsOn ':azuki-script-generation:publishToMavenLocal'
     dependsOn ':azuki-runner:publishToMavenLocal'
     dependsOn ':azuki-vdm:publishToMavenLocal'
-    dependsOn ':azuki-formatter:publishToMavenLocal'
     dependsOn ':azuki-verify:azuki-batch-api:publishToMavenLocal'
     dependsOn ':azuki-verify:azuki-batch-guided:publishToMavenLocal'
     dependsOn ':azuki-verify:azuki-orchestrator:publishToMavenLocal'
