@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import java.util.concurrent.locks.ReentrantLock
 import javax.script.ScriptEngineManager
 
-object SimpleScenarioParser: ScenarioParser<BuildableScenario<*>> {
+class SimpleScenarioParser<S: BuildableScenario<*>>: ScenarioParser<S> {
 
     private val engine by lazy {
         ScriptEngineManager().getEngineByExtension("kts")
@@ -15,7 +15,7 @@ object SimpleScenarioParser: ScenarioParser<BuildableScenario<*>> {
     override fun parse(
         scenarioString: String,
         requiredImports: String
-    ): BuildableScenario<*> {
+    ): S {
         val script = """
             $requiredImports
 
@@ -31,7 +31,8 @@ object SimpleScenarioParser: ScenarioParser<BuildableScenario<*>> {
         if (evalResult !is BuildableScenario<*>) {
             throw IllegalArgumentException("Script does not evaluate to scenario")
         }
-        return evalResult
+        @Suppress("UNCHECKED_CAST")
+        return evalResult as S
     }
 
 }

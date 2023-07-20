@@ -1,0 +1,25 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'azuki.jar-publishing-conventions'
+}
+
+dependencies {
+    api project(":azuki-script-formatter")
+    api project(":azuki-core")
+    api project(":azuki-declaration")
+    implementation 'org.jetbrains.kotlin:kotlin-test-junit'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Azuki Script Generation'
+                description = 'Tools to assist with the recreation of scripts from in-memory Azuki scenarios'
+            }
+        }
+    }
+}
+

@@ -1,0 +1,10 @@
+plugins {
+    id 'groovy'
+    id 'java-library'
+    id 'azuki.common-conventions'
+}
+
+dependencies {
+    api 'org.codehaus.groovy:groovy:3.0.8'
+    implementation 'com.pinterest:ktlint:0.40.0'
+}

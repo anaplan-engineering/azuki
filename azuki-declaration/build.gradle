@@ -3,4 +3,5 @@ plugins {
 }
 
 dependencies {
+    api project(":azuki-core")
 }

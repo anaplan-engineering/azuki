@@ -1,4 +1,4 @@
-package com.anaplan.engineering.azuki.formatter
+package com.anaplan.engineering.azuki.script.formatter
 
 import com.pinterest.ktlint.KtlintCommandLine
 
@@ -7,14 +7,14 @@ import java.nio.file.Files
 class ScenarioFormatter {
 
     static String formatScenario(String scenarioText) {
-        File file = Files.createTempFile("azuki-", ".kts").toFile()
+        File file = Files.createTempFile("eac-", ".kts").toFile()
         // The ktLint formatter does not accept scripts which start with whitespace
-        file.text = scenarioText.dropWhile { (it as Character).isWhitespace() }
+        file.text = scenarioText.dropWhile {(it as Character).isWhitespace() }
         formatKotlinFile(file)
         return file.text.readLines()
-        // remove blank lines
-            .findAll { !it.isAllWhitespace() }
-            .join("\n")
+                // remove blank lines
+                .findAll { !it.isAllWhitespace() }
+                .join("\n")
     }
 
     private static void formatKotlinFile(File file) {

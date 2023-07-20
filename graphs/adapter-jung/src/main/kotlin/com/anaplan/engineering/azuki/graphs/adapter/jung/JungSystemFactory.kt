@@ -2,13 +2,10 @@ package com.anaplan.engineering.azuki.graphs.adapter.jung
 
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.core.system.System
-import com.anaplan.engineering.azuki.declaration.Declaration
-import com.anaplan.engineering.azuki.declaration.DeclarationBuilderFactory
+import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphActionFactory
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphCheckFactory
-import com.anaplan.engineering.azuki.graphs.adapter.declaration.DeclarableAction
-import com.anaplan.engineering.azuki.graphs.adapter.declaration.DeclarationBuilder
-import com.anaplan.engineering.azuki.graphs.adapter.declaration.toDeclarableAction
+import com.anaplan.engineering.azuki.graphs.adapter.declaration.GraphDeclarationState
 import com.anaplan.engineering.azuki.graphs.adapter.jung.action.JungAction
 import com.anaplan.engineering.azuki.graphs.adapter.jung.action.JungActionFactory
 import com.anaplan.engineering.azuki.graphs.adapter.jung.action.toJungAction
@@ -29,7 +26,7 @@ class JungSystemFactory : SystemFactory<
     > {
     override fun create(systemDefinition: SystemDefinition): System<GraphActionFactory, GraphCheckFactory> {
         return JungSystem(
-            systemDefinition.declarations.map(toDeclarableAction),
+            systemDefinition.declarations.map(::toDeclarableAction),
             systemDefinition.actions.map(toJungAction),
             systemDefinition.checks.map(toJungCheck),
         )
@@ -43,7 +40,7 @@ class JungSystemFactory : SystemFactory<
 }
 
 data class JungSystem(
-    val declarableActions: List<DeclarableAction>,
+    val declarableActions: List<DeclarableAction<GraphDeclarationState>>,
     val buildActions: List<JungAction>,
     val checks: List<JungCheck>
 ) : System<GraphActionFactory, GraphCheckFactory> {
@@ -84,7 +81,7 @@ data class JungSystem(
     }
 
     private fun build(env: ExecutionEnvironment) {
-        val declarationBuilders = DeclarationBuilder(declarableActions).build().map { declarationBuilder(it) }
+        val declarationBuilders = declarationStateBuilder.build(declarableActions).map { declarationBuilder(it) }
         declarationBuilders.forEach { it.build(env) }
         buildActions.forEach { it.act(env) }
     }
@@ -101,6 +98,8 @@ data class JungSystem(
 
     companion object {
         private val declarationBuilderFactory = DeclarationBuilderFactory(JungDeclarationBuilderFactory::class.java)
+
+        private val declarationStateBuilder = DeclarationStateBuilder(GraphDeclarationState.Factory)
 
         private val Log = LoggerFactory.getLogger(JungSystemFactory::class.java)
     }

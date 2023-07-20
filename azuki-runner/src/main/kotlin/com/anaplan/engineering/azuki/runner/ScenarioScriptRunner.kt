@@ -4,6 +4,7 @@ import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
 import com.anaplan.engineering.azuki.core.runner.MultiOracleScenarioRunner
 import com.anaplan.engineering.azuki.core.runner.VerifiableScenarioRunner
+import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.scenario.OracleScenario
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.ActionFactory
@@ -80,7 +81,7 @@ class ScenarioScriptRunner<
     fun runScenario(scenarioScript: String) {
         try {
             val scenario = try {
-                SimpleScenarioParser.parse(scenarioScript, scenarioImports)
+                SimpleScenarioParser<BuildableScenario<AF>>().parse(scenarioScript, scenarioImports)
             } catch (e: ScriptException) {
                 resultProcessor.handleError(InvalidScenarioException(e))
                 return

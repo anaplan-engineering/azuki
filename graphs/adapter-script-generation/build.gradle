@@ -1,0 +1,10 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":graphs:dsl")
+    api project(":graphs:adapter-declaration")
+    implementation project(":azuki-script-generation")
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
+}
