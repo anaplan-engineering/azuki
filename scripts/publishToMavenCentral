@@ -9,8 +9,8 @@
 set -e
 
 JAVA_VERSION=$($JAVA_HOME/bin/java -version  2>&1 | awk -F '"' '/version/ {print $2}')
-if [[ ! $JAVA_VERSION == 1.8.* ]]; then
-    echo "Set java home to 1.8 to publish!"
+if [[ ! $JAVA_VERSION == 11.* ]]; then
+    echo "Set java home to 11.* to publish!"
     exit 1
 fi
 
