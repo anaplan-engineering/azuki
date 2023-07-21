@@ -6,3 +6,14 @@ plugins {
 dependencies {
     api project(":azuki-core")
 }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Azuki Declaration'
+                description = 'Tools to assist Azuki adapter implementors with managing declarations'
+            }
+        }
+    }
+}
