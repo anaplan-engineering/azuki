@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.verify.batch.guided
 
-import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.verify.batch.api.ConfigFileProperty
 import com.anaplan.engineering.azuki.verify.batch.api.ScenarioResultContext
