@@ -1,9 +1,9 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration
 
-import Player
-import Token
+import com.anaplan.engineering.azuki.tictactoe.implementation.Token
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.PlayOrderDeclaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
+import com.anaplan.engineering.azuki.tictactoe.implementation.Player
 
 class PlayOrderDeclarationBuilderFactory : SampleDeclarationBuilderFactory<PlayOrderDeclaration> {
 

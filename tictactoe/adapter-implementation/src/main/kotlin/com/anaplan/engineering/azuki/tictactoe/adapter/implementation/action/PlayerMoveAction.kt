@@ -10,7 +10,7 @@ class PlayerMoveAction(gameName: String, playerName: String, position: Position)
 
     override fun act(env: ExecutionEnvironment) {
         env.modifyGame(gameName) {
-            move(toPlayer(playerName), position.col, position.row)
+            move(toPlayer(playerName), position.col - 1, position.row - 1)
         }
     }
 }

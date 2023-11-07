@@ -11,7 +11,7 @@ import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeScenario
 """)
 class BEH6 : TicTacToeScenario() {
 
-    @Eac("A player can win by completing a line of three tokens")
+    @Eac("The game is complete if a player has won")
     fun columnWin() {
         given {
             thereIsAGame(gameA, """
@@ -30,14 +30,14 @@ class BEH6 : TicTacToeScenario() {
         }
     }
 
-    @Eac("It is possible for the board to be complete without either player having won")
+    @Eac("The game is complete if all spaces on the board are filled")
     fun draw() {
         given {
             thereIsAGame(gameA, """
-            X | O | O
-            O | X | X
-            X | X | O
-        """)
+                X | O | O
+                O | X | X
+                X | X | O
+            """)
         }
         then {
             boardIsComplete(gameA)

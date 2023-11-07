@@ -1,7 +1,7 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.implementation
 
-import Game
 import com.anaplan.engineering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.tictactoe.implementation.Game
 import java.lang.IllegalStateException
 
 class ExecutionEnvironment {

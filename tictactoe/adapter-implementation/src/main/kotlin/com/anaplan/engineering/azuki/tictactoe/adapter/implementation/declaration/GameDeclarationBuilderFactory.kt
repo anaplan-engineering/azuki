@@ -1,9 +1,9 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration
 
-import Game
-import PlayOrder
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.GameDeclaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
+import com.anaplan.engineering.azuki.tictactoe.implementation.Game
+import com.anaplan.engineering.azuki.tictactoe.implementation.PlayOrder
 
 class GameDeclarationBuilderFactory : SampleDeclarationBuilderFactory<GameDeclaration> {
 
@@ -16,7 +16,7 @@ class GameDeclarationBuilderFactory : SampleDeclarationBuilderFactory<GameDeclar
         override fun build(env: ExecutionEnvironment) {
             val playOrder = env.get<PlayOrder>(declaration.orderName)
             val game = Game.new(3, 3, *playOrder.toTypedArray())
-            declaration.moves.map { (pos, sym) -> game.move(toPlayer(sym), pos.col, pos.row) }
+            declaration.moves.map { (pos, sym) -> game.move(toPlayer(sym), pos.col - 1, pos.row - 1) }
             env.add(declaration.name, game)
         }
     }
