@@ -2,6 +2,8 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.implementation
 
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.core.system.System
+import com.anaplan.engineering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.declaration.DeclarationBuilderFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarableAction
@@ -11,7 +13,8 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.action.Sam
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.action.SampleActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.SampleCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.SampleCheckFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.createSampleDeclarationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilderFactory
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.UnsupportedOperationException
@@ -56,10 +59,13 @@ class SampleSystem(
 
     private fun build(env: ExecutionEnvironment) {
         val declarationBuilders =
-            DeclarationBuilder(declarableActions).build().map { createSampleDeclarationBuilder(it) }
+            DeclarationBuilder(declarableActions).build().map { declarationBuilder(it) }
         declarationBuilders.forEach { it.build(env) }
         buildActions.forEach { it.act(env) }
     }
+
+    private fun <D: Declaration> declarationBuilder(declaration: D) =
+        declarationBuilderFactory.createBuilder<D, SampleDeclarationBuilder<D>>(declaration)
 
     private fun runAllChecks(env: ExecutionEnvironment) =
         checks.fold(true) { l, r ->
@@ -98,5 +104,7 @@ class SampleSystem(
 
     companion object {
         private val Log = LoggerFactory.getLogger(this::class.java)
+
+        private val declarationBuilderFactory = DeclarationBuilderFactory(SampleDeclarationBuilderFactory::class.java)
     }
 }

@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.core.system.NoSystemDefaults
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeImplementation
 
 class SampleTicTacToeImplementation : TicTacToeImplementation {
-    override val name = "Sample"
+    override val name = "SampleImpl"
 
     override val total = false
 

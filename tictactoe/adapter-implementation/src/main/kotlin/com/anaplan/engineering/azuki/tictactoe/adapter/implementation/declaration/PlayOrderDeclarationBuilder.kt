@@ -5,15 +5,23 @@ import Token
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.PlayOrderDeclaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
 
-class PlayOrderDeclarationBuilder(override val declaration: PlayOrderDeclaration) :
-    SampleDeclarationBuilder<PlayOrderDeclaration> {
+class PlayOrderDeclarationBuilderFactory : SampleDeclarationBuilderFactory<PlayOrderDeclaration> {
 
-    override fun build(env: ExecutionEnvironment) {
-        env.add(declaration.name, declaration.playOrder.map(::toPlayer))
+    override val declarationClass = PlayOrderDeclaration::class.java
+
+    override fun create(declaration: PlayOrderDeclaration): SampleDeclarationBuilder<PlayOrderDeclaration> =
+        PlayOrderDeclarationBuilder(declaration)
+
+    private class PlayOrderDeclarationBuilder(declaration: PlayOrderDeclaration) :
+        SampleDeclarationBuilder<PlayOrderDeclaration>(declaration) {
+
+        override fun build(env: ExecutionEnvironment) {
+            env.add(declaration.name, declaration.playOrder.map(::toPlayer))
+        }
     }
 }
 
-internal fun toPlayer(symbol: String) = when(symbol) {
+internal fun toPlayer(symbol: String) = when (symbol) {
     "X" -> Player("Cross", Token.Cross)
     "O" -> Player("Circle", Token.Circle)
     else -> TODO("Unrecognised player $symbol")

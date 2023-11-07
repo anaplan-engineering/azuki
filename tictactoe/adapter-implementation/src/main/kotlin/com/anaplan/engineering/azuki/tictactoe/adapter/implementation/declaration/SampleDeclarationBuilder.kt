@@ -1,12 +1,13 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration
 
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.Declaration
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.GameDeclaration
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.PlayOrderDeclaration
+import com.anaplan.engineering.azuki.declaration.Declaration
+import com.anaplan.engineering.azuki.declaration.DeclarationBuilder
+import com.anaplan.engineering.azuki.declaration.FeDeclarationBuilderFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
 
-interface SampleDeclarationBuilder<T : Declaration> {
-    val declaration: T
+interface SampleDeclarationBuilderFactory<D : Declaration> : FeDeclarationBuilderFactory<D, SampleDeclarationBuilder<D>>
+
+abstract class SampleDeclarationBuilder<D : Declaration>(declaration: D) : DeclarationBuilder<D>(declaration) {
 
     fun declare(env: ExecutionEnvironment) {
         if (env.declarations.containsKey(declaration.name)) {
@@ -16,12 +17,6 @@ interface SampleDeclarationBuilder<T : Declaration> {
         build(env)
     }
 
-    fun build(env: ExecutionEnvironment)
+    abstract fun build(env: ExecutionEnvironment)
 }
 
-internal fun <T : Declaration> createSampleDeclarationBuilder(declaration: T) =
-    when (declaration) {
-        is PlayOrderDeclaration -> PlayOrderDeclarationBuilder(declaration)
-        is GameDeclaration -> GameDeclarationBuilder(declaration)
-        else -> throw IllegalArgumentException("Unknown declaration: $declaration")
-    }
