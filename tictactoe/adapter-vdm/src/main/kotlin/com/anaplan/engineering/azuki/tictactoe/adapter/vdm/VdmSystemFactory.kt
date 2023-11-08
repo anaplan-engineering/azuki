@@ -49,9 +49,9 @@ class VdmSystemFactory :
 }
 
 data class VdmSystem(
-    val declarableActions: List<DeclarableAction>,
-    val buildActions: List<DefaultVdmAction>,
-    val checks: List<DefaultVdmCheck>
+    private val declarableActions: List<DeclarableAction>,
+    private val buildActions: List<DefaultVdmAction>,
+    private val checks: List<DefaultVdmCheck>
 ) : System<TicTacToeActionFactory, TicTacToeCheckFactory> {
 
     override val supportedActions = if (checks.isNotEmpty()) {

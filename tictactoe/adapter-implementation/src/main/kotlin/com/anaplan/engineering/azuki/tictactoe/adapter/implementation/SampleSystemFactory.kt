@@ -15,8 +15,10 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.Samp
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.SampleCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilder
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilderFactory
+import com.anaplan.engineering.azuki.tictactoe.implementation.GameManager
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.file.Files
 import kotlin.UnsupportedOperationException
 
 class SampleSystemFactory :
@@ -26,12 +28,14 @@ class SampleSystemFactory :
             systemDefinition.declarations.map(toDeclarableAction),
             systemDefinition.actions.map(toSampleAction),
             systemDefinition.checks.map(toSampleCheck),
+            systemDefinition.regardlessOfActions.map { it.map(toSampleAction) },
         )
 
     override val actionFactory = SampleActionFactory()
     override val checkFactory = SampleCheckFactory()
     override val queryFactory = NoQueryFactory
     override val actionGeneratorFactory = NoActionGeneratorFactory
+
 
     companion object {
         private val toSampleAction: (Action) -> SampleAction = {
@@ -45,10 +49,13 @@ class SampleSystemFactory :
 }
 
 class SampleSystem(
-    val declarableActions: List<DeclarableAction>,
-    val buildActions: List<SampleAction>,
-    val checks: List<SampleCheck>
+    private val declarableActions: List<DeclarableAction>,
+    private val buildActions: List<SampleAction>,
+    private val checks: List<SampleCheck>,
+    private val regardlessOfActions: List<List<SampleAction>>,
 ) : System<TicTacToeActionFactory, TicTacToeCheckFactory> {
+
+    private val store = Files.createTempDirectory("XO").toFile()
 
     override val supportedActions: Set<System.SystemAction> =
         if (checks.isNotEmpty()) {
@@ -82,10 +89,14 @@ class SampleSystem(
     }
 
     override fun verify(): VerificationResult {
-        val env = ExecutionEnvironment()
+        val env = ExecutionEnvironment(GameManager(store))
         return try {
             build(env)
-            if (runAllChecks(env)) {
+            val allChecksPass = runAllChecks(env) && regardlessOfActions.all { actions ->
+                actions.forEach { it.act(env) }
+                runAllChecks(env)
+            }
+            if (allChecksPass) {
                 VerificationResult.Verified()
             } else {
                 VerificationResult.Unverified()

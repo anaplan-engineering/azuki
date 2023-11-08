@@ -15,6 +15,8 @@ interface PlayOrderActionFactory {
 interface GameActionFactory {
     fun start(gameName: String, orderName: String): Action
     fun save(gameName: String): Action
+    fun close(gameName: String): Action
+    fun load(gameName: String): Action
     fun move(gameName: String, playerName: String, position: Position): Action
     fun addPlayer(gameName: String, playerName: String): Action
 }

@@ -15,7 +15,9 @@ class SampleActionFactory : TicTacToeActionFactory {
 
 object SampleGameActionFactory : GameActionFactory {
     override fun start(gameName: String, orderName: String) = StartAGameAction(gameName, orderName)
-    override fun save(gameName: String) = UnsupportedAction
+    override fun save(gameName: String) = SaveGameAction(gameName)
+    override fun close(gameName: String) = CloseGameAction(gameName)
+    override fun load(gameName: String) = LoadGameAction(gameName)
     override fun move(gameName: String, playerName: String, position: Position) =
         PlayerMoveAction(gameName, playerName, position)
     override fun addPlayer(gameName: String, playerName: String) = UnsupportedAction

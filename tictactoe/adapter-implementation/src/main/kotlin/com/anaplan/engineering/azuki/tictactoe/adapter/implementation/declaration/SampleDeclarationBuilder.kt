@@ -10,10 +10,6 @@ interface SampleDeclarationBuilderFactory<D : Declaration> : FeDeclarationBuilde
 abstract class SampleDeclarationBuilder<D : Declaration>(declaration: D) : DeclarationBuilder<D>(declaration) {
 
     fun declare(env: ExecutionEnvironment) {
-        if (env.declarations.containsKey(declaration.name)) {
-            throw IllegalStateException("Duplicate declaration ${declaration.name}")
-        }
-        env.declarations[declaration.name] = declaration
         build(env)
     }
 

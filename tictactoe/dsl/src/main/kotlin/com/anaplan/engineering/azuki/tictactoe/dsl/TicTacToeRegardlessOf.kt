@@ -12,6 +12,14 @@ class TicTacToeRegardlessOf(private val actionFactory: TicTacToeActionFactory) :
         actionList.add(actionFactory.game.save(gameName))
     }
 
+    fun closeGame(gameName: String) {
+        actionList.add(actionFactory.game.close(gameName))
+    }
+
+    fun loadGame(gameName: String) {
+        actionList.add(actionFactory.game.load(gameName))
+    }
+
     override fun actions(): List<Action> = actionList
 
 }

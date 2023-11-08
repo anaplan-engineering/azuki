@@ -1,34 +1,21 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.implementation
 
-import com.anaplan.engineering.azuki.declaration.Declaration
 import com.anaplan.engineering.azuki.tictactoe.implementation.Game
-import java.lang.IllegalStateException
+import com.anaplan.engineering.azuki.tictactoe.implementation.GameManager
+import com.anaplan.engineering.azuki.tictactoe.implementation.Player
+import com.anaplan.engineering.azuki.tictactoe.implementation.Token
 
-class ExecutionEnvironment {
+class ExecutionEnvironment(val gameManager: GameManager) {
 
-    val declarations = HashMap<String, Declaration>()
+    val playOrders = mutableMapOf<String, List<String>>()
 
-    private val objects = mutableMapOf<String, Any>()
+    fun <T> withGame(name: String, op: Game.() -> T) = gameManager[name].op()
 
-    fun add(name: String, obj: Any) {
-        if (objects.containsKey(name)) throw IllegalStateException("Object with name $name has already been defined")
-        objects[name] = obj
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun <T> get(name: String): T = objects[name] as? T ?: throw IllegalArgumentException("Unknown object $name")
-
-    fun modifyGame(name: String, op: Game.() -> Unit) {
-        val game = get<Game>(name)
-        game.op()
-        objects[name] = game as Any
-    }
-
-    fun <T> withGame(name: String, op: Game.() -> T): T {
-        if (!objects.containsKey(name) || objects[name] !is Game) {
-            throw IllegalArgumentException("No such game: $name")
-        } else {
-            return (objects[name] as Game).op()
-        }
-    }
 }
+
+internal fun toPlayer(symbol: String) =
+    when (symbol) {
+        "X" -> Player("Cross", Token.Cross)
+        "O" -> Player("Circle", Token.Circle)
+        else -> TODO("Unrecognised player $symbol")
+    }

@@ -41,6 +41,7 @@ dependencies {
     api project(":tictactoe:dsl")
     vdm project(":tictactoe:adapter-vdm")
     sampleImplementation project(":tictactoe:adapter-implementation")
+    sampleImplementation project(":tictactoe:implementation")
     testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
 }
 

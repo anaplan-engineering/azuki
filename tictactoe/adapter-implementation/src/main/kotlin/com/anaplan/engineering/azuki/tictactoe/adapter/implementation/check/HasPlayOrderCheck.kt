@@ -2,7 +2,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check
 
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.GetPlayOrderBehaviour
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.toPlayer
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.toPlayer
 
 class HasPlayOrderCheck(
     private val gameName: String,

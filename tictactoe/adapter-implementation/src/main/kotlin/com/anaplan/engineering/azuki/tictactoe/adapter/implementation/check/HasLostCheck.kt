@@ -3,7 +3,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.HasLostBehaviour
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.HasWonBehaviour
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.toPlayer
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.toPlayer
 
 class HasLostCheck(
     private val gameName: String,

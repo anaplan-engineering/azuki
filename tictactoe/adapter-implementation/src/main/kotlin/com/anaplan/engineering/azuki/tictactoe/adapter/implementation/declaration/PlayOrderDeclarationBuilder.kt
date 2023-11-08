@@ -16,13 +16,9 @@ class PlayOrderDeclarationBuilderFactory : SampleDeclarationBuilderFactory<PlayO
         SampleDeclarationBuilder<PlayOrderDeclaration>(declaration) {
 
         override fun build(env: ExecutionEnvironment) {
-            env.add(declaration.name, declaration.playOrder.map(::toPlayer))
+            env.playOrders[declaration.name] = declaration.playOrder
         }
     }
 }
 
-internal fun toPlayer(symbol: String) = when (symbol) {
-    "X" -> Player("Cross", Token.Cross)
-    "O" -> Player("Circle", Token.Circle)
-    else -> TODO("Unrecognised player $symbol")
-}
+
