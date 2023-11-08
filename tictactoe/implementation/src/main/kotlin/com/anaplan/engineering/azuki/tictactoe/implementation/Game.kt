@@ -44,14 +44,14 @@ class Game(
 
     fun move(player: Player, x: Int, y: Int) {
         Log.info("$player moves to (row $y, col=$x)")
-        if (canMove(player, x, y)) {
-            throw IllegalArgumentException("Coordinates out of bounds (row $y, col=$x)")
+        if (!canMove(player, x, y)) {
+            throw IllegalArgumentException("Player cannot move (player=${player.token.symbol}, row=$y, col=$x)")
         }
         board[y][x] = player.token
     }
 
     fun canMove(player: Player, x: Int, y: Int): Boolean {
-        if (!inBounds(x, y)) {
+        if (x < 0 || y < 0 || x >= width || y >= height) {
             return false
         }
         if (board[y][x] != null) {
@@ -65,8 +65,6 @@ class Game(
             playerMoveCount == otherPlayerMoveCount - 1
         }
     }
-
-    private fun inBounds(x: Int, y: Int) = x < 0 || y < 0 || x >= width || y >= height
 
     fun playerMoveCount(player: Player): Int = board.flatten().count { it == player.token }
 
