@@ -14,6 +14,8 @@ include(
     "tictactoe:adapter-declaration",
     "tictactoe:adapter-vdm",
     "tictactoe:implementation",
+    "tictactoe:implementation-v1",
+    "tictactoe:implementation-v2",
     "tictactoe:adapter-implementation",
     "tictactoe:eacs",
     "tictactoe:script-runner",

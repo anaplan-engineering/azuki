@@ -6,8 +6,6 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeImplementati
 class SampleTicTacToeImplementation : TicTacToeImplementation {
     override val name = "SampleImpl"
 
-    override val total = false
-
     override val implementationDefaults = NoSystemDefaults
 
     override fun createSystemFactory(systemDefaults: NoSystemDefaults) = SampleSystemFactory()

@@ -10,12 +10,6 @@ interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactor
     val name: String
 
     /**
-     * Does this implementation provide a total implementation of the abstract modelling API (i.e. no unsupported
-     * actions/checks).
-     */
-    val total: Boolean
-
-    /**
      * The system defaults preferred by this implementation
      */
     val implementationDefaults: SD

@@ -1,8 +1,9 @@
 package com.anaplan.engineering.azuki.core.runner
 
-import com.anaplan.engineering.azuki.core.JvmSystemProperties.jarInstancesPropertyName
-import com.anaplan.engineering.azuki.core.JvmSystemProperties.includedImplementationsPropertyName
 import com.anaplan.engineering.azuki.core.JvmSystemProperties.excludedImplementationsPropertyName
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.includedImplementationsPropertyName
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.jarInstancesPropertyName
+import com.anaplan.engineering.azuki.core.JvmSystemProperties.persistenceVerificationInstanceJarPropertyName
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
@@ -41,6 +42,25 @@ interface ImplementationInstance<
 
         private val implementationInstances = mutableListOf<ImplementationInstance<*, *, *, *>>()
 
+        private val persistenceVerificationInstances = mutableListOf<ImplementationInstance<*, *, *, *>>()
+
+        val havePersistenceVerificationInstance by lazy {
+            java.lang.System.getProperty(persistenceVerificationInstanceJarPropertyName) != null
+        }
+
+        fun <AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> getPersistenceVerificationInstance(): ImplementationInstance<AF, CF, QF, AGF> {
+            if (persistenceVerificationInstances.isEmpty()) {
+                Log.debug("Loading persistence verification instance as required but not registered")
+                persistenceVerificationInstances.addAll(getListProperty(persistenceVerificationInstanceJarPropertyName)!!.map {
+                    JarImplementationInstance<AF, CF, QF, AGF>(File(it))
+                })
+                Log.debug("Loaded persistence verification instance instance=${
+                    persistenceVerificationInstances.joinToString(", ") { it.instanceName }
+                }")
+            }
+            return persistenceVerificationInstances.filterIsInstance<ImplementationInstance<AF, CF, QF, AGF>>().single()
+        }
+
         fun <AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> getImplementationInstances(): List<ImplementationInstance<AF, CF, QF, AGF>> {
             if (implementationInstances.isEmpty()) {
                 Log.debug("Loading implementation instances as none are registered")
@@ -48,6 +68,15 @@ interface ImplementationInstance<
                 Log.debug("Loaded implementation instances instances=${implementationInstances.joinToString(", ") { it.instanceName }}")
             }
             return implementationInstances.filterIsInstance<ImplementationInstance<AF, CF, QF, AGF>>()
+        }
+
+        private fun getListProperty(propertyName: String): List<String>? {
+            val property = java.lang.System.getProperty(propertyName)
+            return if (property == null || property.isBlank()) {
+                null
+            } else {
+                property.split(",").map { it.trim() }
+            }
         }
 
         private class InstanceFactory<
@@ -67,17 +96,12 @@ interface ImplementationInstance<
                     createInstancesFromConfiguredJars()
                 } else {
                     Log.trace("Loading implementation instances from classpath")
+                    if (havePersistenceVerificationInstance) {
+                        Log.warn("It not advised to mix classpath loading with the user of persistence verification instance. There may be unexpected classloading issues!")
+                    }
                     createInstancesFromClasspath()
                 }
 
-            private fun getListProperty(propertyName: String): List<String>? {
-                val property = java.lang.System.getProperty(propertyName)
-                return if (property == null || property.isBlank()) {
-                    null
-                } else {
-                    property.split(",").map { it.trim() }
-                }
-            }
 
             private fun List<ImplementationInstance<AF, CF, QF, AGF>>.filterImplementations(): List<ImplementationInstance<AF, CF, QF, AGF>> {
                 val includedImplementations = getListProperty(includedImplementationsPropertyName)
@@ -166,7 +190,7 @@ class JarImplementationInstance<
                 val implementations = Implementation.locateImplementations<AF, CF, QF, AGF>()
                 result = if (implementations.size == 1) {
                     val implementation = implementations.single()
-                    Log.debug("Running task type=$taskType implementation=${implementation.name}")
+                    Log.debug("Running task type={} implementation={}", taskType, implementation.name)
                     val implementationTask = TaskWrapper(taskType, implementation, task)
                     implementationTask.run(scenario)
                 } else {
@@ -193,7 +217,7 @@ class JarImplementationInstance<
 
     private fun getClassLoader(parent: ClassLoader): ClassLoader {
         if (!classLoaderCache.containsKey(parent)) {
-            Log.debug("Cache miss instance=$this jar=$jar parentClassLoader=$parent")
+            Log.debug("Cache miss instance={} jar={} parentClassLoader={}", this, jar, parent)
             val jarUrl = jar.toURI().toURL()
             classLoaderCache[parent] = URLClassLoader(arrayOf(jarUrl), parent)
         }

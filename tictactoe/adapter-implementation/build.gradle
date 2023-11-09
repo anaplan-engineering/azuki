@@ -6,4 +6,6 @@ dependencies {
     api project(":tictactoe:adapter-declaration")
     compileOnly project(":tictactoe:implementation")
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2'
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
 }

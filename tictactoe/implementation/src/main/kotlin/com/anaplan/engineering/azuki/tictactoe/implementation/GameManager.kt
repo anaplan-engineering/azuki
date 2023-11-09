@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.*
 
 class GameManager(private val store: File) {
 
@@ -17,10 +18,12 @@ class GameManager(private val store: File) {
         Log.info("Closed $name, active games = ${games.keys}")
     }
 
-    fun load(name: String) : Game {
+    val activeGames: Collection<String> by games::keys
+
+    fun load(name: String): Game {
         val file = gameFile(name)
         Log.info("Loading $name from $file")
-        return add(name, Game(objectMapper.readValue<Game.GameState>(file)))
+        return add(name, gameCreator.create(objectMapper.readValue<GameState>(file)))
     }
 
     fun save(name: String) {
@@ -36,7 +39,7 @@ class GameManager(private val store: File) {
             throw IllegalArgumentException("Game '$name' already exists")
         }
         games[name] = game
-        Log.info("Added game:\n$game")
+        Log.info("Added game: (${game::class.simpleName})\n$game")
         Log.info("Active games = ${games.keys}")
         return game
     }
@@ -44,8 +47,20 @@ class GameManager(private val store: File) {
     private val objectMapper = ObjectMapper()
         .registerModule(KotlinModule())
 
+    val gameCreator: GameCreator by lazy {
+        val loader = ServiceLoader.load(GameCreator::class.java)
+        loader.iterator().asSequence().first()
+    }
+
     companion object {
         private val Log = LoggerFactory.getLogger(GameManager::class.java)
     }
 
 }
+
+interface GameCreator {
+    fun create(state: GameState): Game
+
+    fun create(vararg player: Player, prepopulated: Map<Pair<Int, Int>, Token> = emptyMap()) : Game
+}
+

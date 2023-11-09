@@ -34,14 +34,17 @@ plugins {
 
 configurations {
     vdm
-    sampleImplementation
+    sampleImplementationV1
+    sampleImplementationV2
 }
 
 dependencies {
     api project(":tictactoe:dsl")
     vdm project(":tictactoe:adapter-vdm")
-    sampleImplementation project(":tictactoe:adapter-implementation")
-    sampleImplementation project(":tictactoe:implementation")
+    sampleImplementationV1 project(":tictactoe:adapter-implementation")
+    sampleImplementationV1 project(":tictactoe:implementation-v1")
+    sampleImplementationV2 project(":tictactoe:adapter-implementation")
+    sampleImplementationV2 project(":tictactoe:implementation-v2")
     testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
 }
 
@@ -53,26 +56,59 @@ task vdmClasspathJar(type: Jar) {
     }
 }
 
-task sampleImplementationClasspathJar(type: Jar) {
-    dependsOn configurations.sampleImplementation
-    archiveBaseName = 'SampleImpl'
+task sampleImplementationV1ClasspathJar(type: Jar) {
+    dependsOn configurations.sampleImplementationV1
+    archiveBaseName = 'SampleImpl-v1'
     manifest {
-        attributes("Class-Path": configurations.sampleImplementation.collect { it.absolutePath }.join(' '))
+        attributes("Class-Path": configurations.sampleImplementationV1.collect { it.absolutePath }.join(' '))
+    }
+}
+
+task sampleImplementationV2ClasspathJar(type: Jar) {
+    dependsOn configurations.sampleImplementationV2
+    archiveBaseName = 'SampleImpl-v2'
+    manifest {
+        attributes("Class-Path": configurations.sampleImplementationV2.collect { it.absolutePath }.join(' '))
     }
 }
 
 test {
     dependsOn vdmClasspathJar
-    dependsOn sampleImplementationClasspathJar
+    dependsOn sampleImplementationV2ClasspathJar
 
     def instanceJars = [
         vdmClasspathJar.archiveFile.get().asFile.absolutePath,
-        sampleImplementationClasspathJar.archiveFile.get().asFile.absolutePath,
+        sampleImplementationV2ClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
     systemProperties = [
         retainOvertureTempFiles                                     : findProperty("retainOvertureTempFiles") ?: true,
         "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(","),
         "com.anaplan.engineering.azuki.implementation.includes"     : findProperty("impl.includes"),
         "com.anaplan.engineering.azuki.implementation.excludes"     : findProperty("impl.excludes"),
+    ]
+}
+
+
+// Tests creation & verify in V2 then save, and then load & verify in V1
+task rollBackTest(type: Test) {
+    dependsOn sampleImplementationV1ClasspathJar
+    dependsOn sampleImplementationV2ClasspathJar
+
+    systemProperties = [
+        "com.anaplan.engineering.azuki.implementation.instance.jars"         : sampleImplementationV2ClasspathJar.archiveFile.get().asFile.absolutePath,
+        "com.anaplan.engineering.azuki.implementation.includes"              : "SampleImpl",
+        "com.anaplan.engineering.azuki.persistence.verification.instance.jar": sampleImplementationV1ClasspathJar.archiveFile.get().asFile.absolutePath,
+    ]
+}
+
+// Tests creation & verify in V1 then save, and then load & verify in V2
+task rollForwardTest(type: Test) {
+    dependsOn sampleImplementationV1ClasspathJar
+    dependsOn sampleImplementationV2ClasspathJar
+
+    systemProperties = [
+        "com.anaplan.engineering.azuki.implementation.instance.jars"         : sampleImplementationV1ClasspathJar.archiveFile.get().asFile.absolutePath,
+        "com.anaplan.engineering.azuki.implementation.includes"              : "SampleImpl",
+        "com.anaplan.engineering.azuki.persistence.verification.instance.jar": sampleImplementationV2ClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
 }

@@ -83,7 +83,7 @@ class MultiOracleScenarioRunner<
         val queryTaskResult = query(testInstance, generatedScenario)
         resultBuilder.add(queryTaskResult)
         val answerCount = queryTaskResult.result?.size ?: 0
-        Log.debug("Query result, oracle=$testInstance answerCount=$answerCount")
+        Log.debug("Query result, oracle={} answerCount={}", testInstance, answerCount)
         if (answerCount == 0) {
             return VerificationContext(null, generatedScenario)
         }
