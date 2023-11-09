@@ -9,6 +9,9 @@ object TicTacToeBehaviours {
     const val CreatePlayOrder = 4
     const val GetPlayOrder = 5
     const val GameEnd = 6
+    const val PlayerWon = 7
+    const val PlayerLost = 8
+    const val GameDrawn = 8
 }
 
 open class StartAGameBehaviour : ReifiedBehavior {
@@ -30,3 +33,14 @@ open class CreatePlayOrderBehaviour : ReifiedBehavior {
 open class GetPlayOrderBehaviour : ReifiedBehavior {
     override val behavior = TicTacToeBehaviours.GetPlayOrder
 }
+open class HasWonBehaviour : ReifiedBehavior {
+    override val behavior = TicTacToeBehaviours.PlayerWon
+}
+open class HasLostBehaviour : ReifiedBehavior {
+    override val behavior = TicTacToeBehaviours.PlayerLost
+}
+open class IsCompleteBehaviour : ReifiedBehavior {
+    override val behavior = TicTacToeBehaviours.GameEnd}
+
+open class IsDrawnBehaviour : ReifiedBehavior {
+    override val behavior = TicTacToeBehaviours.GameDrawn}

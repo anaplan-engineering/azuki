@@ -19,6 +19,8 @@ object VdmPlayOrderActionFactory : PlayOrderActionFactory {
 object VdmBoardActionFactory : GameActionFactory {
     override fun start(gameName: String, orderName: String) = StartAGameAction(gameName, orderName)
     override fun save(gameName: String) = UnsupportedAction
+    override fun close(gameName: String) = UnsupportedAction
+    override fun load(gameName: String) = UnsupportedAction
     override fun move(gameName: String, playerName: String, position: Position) =
         PlayerMoveAction(gameName, playerName, position)
     override fun addPlayer(gameName: String, playerName: String) = UnsupportedAction
