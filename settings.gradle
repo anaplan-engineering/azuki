@@ -16,6 +16,8 @@ include(
     "tictactoe:adapter-declaration",
     "tictactoe:adapter-script-generation",
     "tictactoe:adapter-vdm",
+    "tictactoe:adapter-kazuki",
+    "tictactoe:kazuki",
     "tictactoe:implementation",
     "tictactoe:implementation-v1",
     "tictactoe:implementation-v2",
