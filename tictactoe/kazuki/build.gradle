@@ -3,10 +3,6 @@ plugins {
     id 'com.google.devtools.ksp' version("1.9.10-1.0.13")
 }
 
-repositories {
-    mavenLocal()
-}
-
 dependencies {
     api "com.anaplan.engineering:kazuki-core:1"
     ksp "com.anaplan.engineering:kazuki-ksp:1"
