@@ -34,6 +34,7 @@ plugins {
 
 configurations {
     vdm
+    kazuki
     sampleImplementationV1
     sampleImplementationV2
 }
@@ -41,6 +42,8 @@ configurations {
 dependencies {
     api project(":tictactoe:dsl")
     vdm project(":tictactoe:adapter-vdm")
+    kazuki project(":tictactoe:adapter-kazuki")
+    kazuki project(":tictactoe:kazuki")
     sampleImplementationV1 project(":tictactoe:adapter-implementation")
     sampleImplementationV1 project(":tictactoe:implementation-v1")
     sampleImplementationV2 project(":tictactoe:adapter-implementation")
@@ -53,6 +56,14 @@ task vdmClasspathJar(type: Jar) {
     archiveBaseName = 'VDM'
     manifest {
         attributes("Class-Path": configurations.vdm.collect { it.absolutePath }.join(' '))
+    }
+}
+
+task kazukiClasspathJar(type: Jar) {
+    dependsOn configurations.kazuki
+    archiveBaseName = 'Kazuki'
+    manifest {
+        attributes("Class-Path": configurations.kazuki.collect { it.absolutePath }.join(' '))
     }
 }
 
@@ -75,10 +86,12 @@ task sampleImplementationV2ClasspathJar(type: Jar) {
 test {
     dependsOn vdmClasspathJar
     dependsOn sampleImplementationV2ClasspathJar
+    dependsOn kazukiClasspathJar
 
     def instanceJars = [
         vdmClasspathJar.archiveFile.get().asFile.absolutePath,
         sampleImplementationV2ClasspathJar.archiveFile.get().asFile.absolutePath,
+        kazukiClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
     systemProperties = [
         retainOvertureTempFiles                                     : findProperty("retainOvertureTempFiles") ?: true,

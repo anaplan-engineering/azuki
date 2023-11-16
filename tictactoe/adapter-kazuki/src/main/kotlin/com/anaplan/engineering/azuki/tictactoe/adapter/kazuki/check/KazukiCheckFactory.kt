@@ -3,7 +3,8 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.check
 import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
-import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.AnimationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.EnvironmentBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.ExecutionEnvironment
 
 class KazukiCheckFactory : TicTacToeCheckFactory {
     override val player = KazukiPlayerCheckFactory
@@ -11,7 +12,9 @@ class KazukiCheckFactory : TicTacToeCheckFactory {
 }
 
 object KazukiPlayerCheckFactory : PlayerCheckFactory {
-    override fun moveCount(gameName: String, playerName: String, times: Int) = UnsupportedCheck
+    override fun moveCount(gameName: String, playerName: String, times: Int) =
+        PlayerMoveCountCheck(gameName, playerName, times)
+
     override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) = UnsupportedCheck
     override fun hasWon(gameName: String, playerName: String) = UnsupportedCheck
     override fun hasLost(gameName: String, playerName: String) = UnsupportedCheck
@@ -26,5 +29,5 @@ object KazukiGameCheckFactory : GameCheckFactory {
 
 interface KazukiCheck : Check {
 
-    fun check(env: AnimationBuilder): Boolean
+    fun check(env: ExecutionEnvironment): Boolean
 }

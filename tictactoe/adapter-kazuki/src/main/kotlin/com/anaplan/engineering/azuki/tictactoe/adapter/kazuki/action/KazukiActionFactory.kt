@@ -6,7 +6,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.GameActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.PlayOrderActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.AnimationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.ExecutionEnvironment
 
 class KazukiActionFactory : TicTacToeActionFactory {
     override val game = KazukiGameActionFactory
@@ -14,7 +14,7 @@ class KazukiActionFactory : TicTacToeActionFactory {
 }
 
 object KazukiGameActionFactory : GameActionFactory {
-    override fun start(gameName: String, orderName: String) = UnsupportedAction
+    override fun start(gameName: String, orderName: String) = StartAGameAction(gameName, orderName)
     override fun save(gameName: String) = UnsupportedAction
     override fun close(gameName: String) = UnsupportedAction
     override fun load(gameName: String) = UnsupportedAction
@@ -25,9 +25,9 @@ object KazukiGameActionFactory : GameActionFactory {
 }
 
 object KazukiPlayOrderActionFactory : PlayOrderActionFactory {
-    override fun create(orderName: String, players: List<String>) = UnsupportedAction
+    override fun create(orderName: String, players: List<String>) = CreatePlayOrderAction(orderName, players)
 }
 
 interface KazukiAction : Action {
-    fun act(env: AnimationBuilder)
+    fun act(env: ExecutionEnvironment)
 }
