@@ -8,15 +8,14 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarationBuilder
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.toDeclarableAction
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.KazukiDeclarationBuilder
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.KazukiDeclarationBuilderFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.declaration.KazukiDeclarationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.declaration.KazukiDeclarationBuilderFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.action.KazukiAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.action.KazukiActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.check.KazukiCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.check.KazukiCheckFactory
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.nio.file.Files
 
 class KazukiSystemFactory :
     SystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults> {
@@ -57,20 +56,23 @@ class KazukiSystem(
             setOf()
         }
 
-    private fun build(builder: AnimationBuilder) {
+    private fun build(): ExecutionEnvironment {
+        val builder = EnvironmentBuilder()
         val declarationBuilders =
             DeclarationBuilder(declarableActions).build().map { declarationBuilder(it) }
         declarationBuilders.forEach { it.build(builder) }
-        buildActions.forEach { it.act(builder) }
+        val env = builder.build()
+        buildActions.forEach { it.act(env) }
+        return env
     }
 
     private fun <D: Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, KazukiDeclarationBuilder<D>>(declaration)
 
-    private fun runAllChecks(builder: AnimationBuilder) =
+    private fun runAllChecks(env: ExecutionEnvironment) =
         checks.fold(true) { l, r ->
             l && try {
-                r.check(builder)
+                r.check(env)
             } catch (e: LateDetectUnsupportedCheckException) {
                 handleLateDetectedUnsupportedCheck(e)
             }
@@ -82,10 +84,9 @@ class KazukiSystem(
     }
 
     override fun verify(): VerificationResult {
-        val builder = AnimationBuilder()
         return try {
-            build(builder)
-            val allChecksPass = runAllChecks(builder)
+            val env = build()
+            val allChecksPass = runAllChecks(env)
             if (allChecksPass) {
                 VerificationResult.Verified()
             } else {

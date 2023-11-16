@@ -1,7 +1,10 @@
-package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration
+package com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.declaration
 
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.PlayOrderDeclaration
-import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.AnimationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.EnvironmentBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.toPlayer
+import com.anaplan.engineering.azuki.tictactoe.kazuki.XO
+import com.anaplan.engineering.azuki.tictactoe.kazuki.XO_Module
 
 class PlayOrderDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<PlayOrderDeclaration> {
 
@@ -13,7 +16,10 @@ class PlayOrderDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<PlayO
     private class PlayOrderDeclarationBuilder(declaration: PlayOrderDeclaration) :
         KazukiDeclarationBuilder<PlayOrderDeclaration>(declaration) {
 
-        override fun build(builder: AnimationBuilder) {
+        override fun build(builder: EnvironmentBuilder) {
+            builder.declare(declaration.name) {
+                XO_Module.mk_PlayOrder(declaration.playOrder.map { it.toPlayer() })
+            }
         }
     }
 }
