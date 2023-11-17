@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.tictactoe.kazuki
 
+import com.anaplan.engineering.azuki.tictactoe.kazuki.XO_Module.mk_Game
 import com.anaplan.engineering.azuki.tictactoe.kazuki.XO_Module.mk_Position
 import com.anaplan.engineering.kazuki.core.*
 
@@ -92,7 +93,7 @@ object XO {
 
     val whoWon = function(
         command = { g: Game -> iota(Players) { p -> hasWon(g, p) } },
-        pre = { g: Game -> isWon(g) }
+        pre = { g -> isWon(g) }
     )
 
     val isWon = function(
@@ -121,6 +122,29 @@ object XO {
 
     val movesForPlayer = function(
         command = { g: Game, p: Player -> (g.board rrt mk_Set(p)).dom() }
+    )
+
+    val move = function(
+        command = { g: Game, p: Player, pos: Position ->
+            mk_Game(g.board munion mk_Map(pos to p), g.order)
+        },
+        pre = { g, p, pos ->
+            hasTurn(g, p) &&
+                pos !in movesSoFar(g) &&
+                moveCountLeft(g) > 0
+        },
+        post = { g, p, pos, result ->
+            moveCountSoFar(result) == moveCountSoFar(g) + 1
+        }
+    )
+
+    val hasTurn = function(
+        command = { g: Game, p: Player ->
+            val order = g.order
+            val numPlayers = order.len
+            val numMoves = movesSoFar(g).card
+            order[(numMoves % numPlayers) + 1] == p
+        }
     )
 
 }

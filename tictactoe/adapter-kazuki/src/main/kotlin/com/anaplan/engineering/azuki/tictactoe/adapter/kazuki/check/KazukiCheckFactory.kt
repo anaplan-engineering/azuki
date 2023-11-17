@@ -21,9 +21,9 @@ object KazukiPlayerCheckFactory : PlayerCheckFactory {
 }
 
 object KazukiGameCheckFactory : GameCheckFactory {
-    override fun hasPlayOrder(gameName: String, players: List<String>) = UnsupportedCheck
+    override fun hasPlayOrder(gameName: String, players: List<String>) = HasPlayOrderCheck(gameName, players)
     override fun hasState(gameName: String, moves: MoveMap) = UnsupportedCheck
-    override fun isComplete(gameName: String) = UnsupportedCheck
+    override fun isComplete(gameName: String) = BoardIsCompleteCheck(gameName)
     override fun isDraw(gameName: String) = UnsupportedCheck
 }
 
