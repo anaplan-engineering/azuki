@@ -1,6 +1,8 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.kazuki
 
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.kazuki.XO
+import com.anaplan.engineering.azuki.tictactoe.kazuki.XO_Module
 
 class EnvironmentBuilder {
 
@@ -38,3 +40,5 @@ fun String.toPlayer(): XO.Player =
         "O" -> XO.Player.Nought
         else -> throw IllegalArgumentException("Illegal player name: $this")
     }
+
+fun Position.toKazuki(): XO.Position = XO_Module.mk_Position(row, col)

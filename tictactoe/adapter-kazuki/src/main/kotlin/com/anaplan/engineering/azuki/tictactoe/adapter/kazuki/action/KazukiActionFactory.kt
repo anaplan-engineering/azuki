@@ -19,7 +19,7 @@ object KazukiGameActionFactory : GameActionFactory {
     override fun close(gameName: String) = UnsupportedAction
     override fun load(gameName: String) = UnsupportedAction
     override fun move(gameName: String, playerName: String, position: Position) =
-        UnsupportedAction
+        PlayerMoveAction(gameName, playerName, position)
 
     override fun addPlayer(gameName: String, playerName: String) = UnsupportedAction
 }
