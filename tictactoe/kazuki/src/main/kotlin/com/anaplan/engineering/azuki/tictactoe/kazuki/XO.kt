@@ -133,7 +133,7 @@ object XO {
                 pos !in movesSoFar(g) &&
                 moveCountLeft(g) > 0
         },
-        post = { g, p, pos, result ->
+        post = { g, _, _, result ->
             moveCountSoFar(result) == moveCountSoFar(g) + 1
         }
     )

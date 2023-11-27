@@ -15,14 +15,16 @@ object KazukiPlayerCheckFactory : PlayerCheckFactory {
     override fun moveCount(gameName: String, playerName: String, times: Int) =
         PlayerMoveCountCheck(gameName, playerName, times)
 
-    override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) = UnsupportedCheck
+    override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) =
+        CannotPlaceTokenCheck(gameName, playerName, position)
+
     override fun hasWon(gameName: String, playerName: String) = UnsupportedCheck
     override fun hasLost(gameName: String, playerName: String) = UnsupportedCheck
 }
 
 object KazukiGameCheckFactory : GameCheckFactory {
     override fun hasPlayOrder(gameName: String, players: List<String>) = HasPlayOrderCheck(gameName, players)
-    override fun hasState(gameName: String, moves: MoveMap) = UnsupportedCheck
+    override fun hasState(gameName: String, moves: MoveMap) = BoardHasStateCheck(gameName, moves)
     override fun isComplete(gameName: String) = BoardIsCompleteCheck(gameName)
     override fun isDraw(gameName: String) = UnsupportedCheck
 }
