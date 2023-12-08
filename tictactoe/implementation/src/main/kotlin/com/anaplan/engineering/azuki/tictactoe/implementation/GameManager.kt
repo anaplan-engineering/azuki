@@ -49,7 +49,7 @@ class GameManager(private val store: File) {
 
     val gameCreator: GameCreator by lazy {
         val loader = ServiceLoader.load(GameCreator::class.java)
-        loader.iterator().asSequence().first()
+        loader.iterator().next()
     }
 
     companion object {

@@ -97,7 +97,7 @@ interface ImplementationInstance<
                 } else {
                     Log.trace("Loading implementation instances from classpath")
                     if (havePersistenceVerificationInstance) {
-                        Log.warn("It not advised to mix classpath loading with the user of persistence verification instance. There may be unexpected classloading issues!")
+                        Log.warn("It not advised to mix classpath loading with the use of persistence verification instance. There may be unexpected classloading issues!")
                     }
                     createInstancesFromClasspath()
                 }
