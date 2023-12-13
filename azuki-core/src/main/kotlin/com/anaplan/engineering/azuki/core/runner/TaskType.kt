@@ -7,4 +7,5 @@ enum class TaskType {
     GenerateActions,
     Query,
     Verify,
+    PersistenceVerify,
 }

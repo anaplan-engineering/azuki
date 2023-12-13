@@ -46,11 +46,25 @@ interface System<AF : ActionFactory, CF : CheckFactory> {
 
 }
 
+interface PersistableSystem {
+
+    /**
+     * Note that the file returned would not typically contain the serialized system, but would instead provide the
+     * necessary information that would enable the verifying implementation to deserialize the system.
+     */
+    fun verifyAndSerialize(): VerificationResult
+
+    fun deserializeAndVerify(file: File): VerificationResult
+
+}
+
 sealed class VerificationResult {
     // The system was valid, the checks were run, and they were satisfied
     class Verified(
         // val coverage
     ) : VerificationResult()
+
+    class VerifiedAndSerialized(val file: File) : VerificationResult()
 
     // The system was valid and the checks were run, but they were not satisfied
     class Unverified : VerificationResult()

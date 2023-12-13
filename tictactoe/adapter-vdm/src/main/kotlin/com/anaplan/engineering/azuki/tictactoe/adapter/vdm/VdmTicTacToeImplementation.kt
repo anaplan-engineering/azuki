@@ -7,8 +7,6 @@ class VdmTicTacToeImplementation: TicTacToeImplementation {
 
     override val name = "VDM"
 
-    override val total: Boolean = true
-
     override val implementationDefaults = NoSystemDefaults
 
     override fun createSystemFactory(systemDefaults: NoSystemDefaults) = VdmSystemFactory()

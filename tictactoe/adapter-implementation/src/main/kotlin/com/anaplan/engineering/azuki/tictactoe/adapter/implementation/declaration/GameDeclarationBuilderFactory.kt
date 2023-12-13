@@ -15,10 +15,11 @@ class GameDeclarationBuilderFactory : SampleDeclarationBuilderFactory<GameDeclar
         SampleDeclarationBuilder<GameDeclaration>(declaration) {
         override fun build(env: ExecutionEnvironment) {
             val playOrder = env.playOrders[declaration.orderName]!!.map(::toPlayer)
-            val prepopulated = declaration.moves.map {
-                    (pos, sym) -> (pos.col - 1 to pos.row - 1) to toPlayer(sym).token
+            val prepopulated = declaration.moves.map { (pos, sym) ->
+                (pos.col - 1 to pos.row - 1) to toPlayer(sym).token
             }.toMap()
-            env.gameManager.add(declaration.name, Game(3, 3, *playOrder.toTypedArray(), prepopulated = prepopulated))
+            env.gameManager.add(declaration.name,
+                env.gameManager.gameCreator.create(*playOrder.toTypedArray(), prepopulated = prepopulated))
         }
     }
 }

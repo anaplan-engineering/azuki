@@ -1,23 +1,12 @@
 package com.anaplan.engineering.azuki.tictactoe.implementation
 
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
-class Game internal constructor(
-    internal val state: GameState
+abstract class Game protected constructor(
+    val state: GameState
 ) {
 
-    constructor(rows: Int, cols: Int, vararg player: Player, prepopulated: Map<Pair<Int, Int>, Token> = emptyMap()) :
-        this(
-            GameState(
-                (0 until rows).map { r -> (0 until cols).map { c -> prepopulated[c to r] }.toMutableList() }.toMutableList(),
-                player.toList()
-            )
-        )
-
-    internal data class GameState(
-        val board: MutableList<MutableList<Token?>>,
-        val playOrder: PlayOrder,
-    )
+    protected abstract val log: Logger
 
     val board: List<List<Token?>> by state::board
     val playOrder: PlayOrder by state::playOrder
@@ -57,10 +46,22 @@ class Game internal constructor(
             row.joinToString(" | ") { it?.symbol ?: "." }
         }
 
+    fun playerMoveCount(player: Player): Int = board.flatten().count { it == player.token }
+
+    fun hasWon(player: Player) = winner == player.token
+
+    fun hasLost(player: Player) = winner != null && winner != player.token
+
+    fun isComplete() = winner != null || allSpacesFilled()
+
+    fun isDrawn() = allSpacesFilled() && winner == null
+
+    private fun allSpacesFilled() = board.all { it.all { it != null } }
+
     fun move(player: Player, x: Int, y: Int) {
-        Log.info("$player moves to (row $y, col=$x)")
+        log.info("$player moves to (row $y, col=$x)")
         if (!canMove(player, x, y)) {
-            Log.error("Player cannot move (player=${player.token.symbol}, row=$y, col=$x), game:\n$this")
+            log.error("Player cannot move (player=${player.token.symbol}, row=$y, col=$x), game:\n$this")
             throw IllegalArgumentException("Player cannot move (player=${player.token.symbol}, row=$y, col=$x)")
         }
         state.board[y][x] = player.token
@@ -82,21 +83,4 @@ class Game internal constructor(
         }
     }
 
-    fun playerMoveCount(player: Player): Int = board.flatten().count { it == player.token }
-
-    fun hasWon(player: Player) = winner == player.token
-
-    fun hasLost(player: Player) = winner != null && winner != player.token
-
-    fun isComplete() = winner != null || allSpacesFilled()
-
-    fun isDrawn() = allSpacesFilled() && winner == null
-
-    private fun allSpacesFilled() = board.all { it.all { it != null } }
-
-    companion object {
-        private val Log = LoggerFactory.getLogger(Game::class.java)
-    }
 }
-
-typealias PlayOrder = List<Player>

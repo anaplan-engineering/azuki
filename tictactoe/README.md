@@ -84,3 +84,18 @@ They should also inherit from the appropriate behaviour.
 Once a scenario has been written and the adapter and DSL have been updated as required, animate the scenario against the
 specification, ensuring it fails. Then make just enough changes to the specification to have it pass, and move on to the
 next acceptance criterion.
+
+## Implementations
+
+A basic implementation is included in [implementation/](implementation) with an adapter in [adapter-implementation/](adapter-implementation).
+
+This directory contains the common components that are used by two concrete versions of the implementation:
+
+- [implementation-v1/](implementation-v1)
+- [implementation-v2/](implementation-v2)
+
+These are used to simulate two versions of a single demonstration that enable the demonstration of roll-forward/roll-back through Azuki's persistence verification mechanism.
+
+In practice, these versions would typically contain almost identical code, but to avoid repetition and the associated maintenance costs we have shared much of the code.
+We hope this does not distract from the typical use case, but illustrates how flexible the mechanism can be.
+As would be typical when working with two versions of the same code, the same adapter is used for both versions.

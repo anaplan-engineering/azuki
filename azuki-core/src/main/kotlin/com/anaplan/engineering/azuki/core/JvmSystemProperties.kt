@@ -20,6 +20,11 @@ object JvmSystemProperties {
     const val jarInstancesPropertyName = "com.anaplan.engineering.azuki.implementation.instance.jars"
 
     /**
+     * Jar file containing implementation instance to use for persistence verification
+     */
+    const val persistenceVerificationInstanceJarPropertyName = "com.anaplan.engineering.azuki.persistence.verification.instance.jar"
+
+    /**
      * If non-zero the default timeout in minutes to apply to scenarios run with JUnit
      *
      * Default: 3

@@ -76,11 +76,13 @@ data class ScenarioRun<
     val name: String,
     val method: FrameworkMethod,
     val implementationInstance: ImplementationInstance<AF, CF, QF, AGF>,
+    val persistenceVerificationInstance: ImplementationInstance<AF, CF, QF, AGF>?,
     val eacMetadata: EacMetadata? = null,
     val ignoreWhenUnsupported: Boolean = true,
     val expectSkip: Boolean = false,
     val parameters: Array<Any>? = null,
 ) {
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -165,6 +167,7 @@ class JUnitScenarioRunner<
             run.method.method,
             kClass,
             run.implementationInstance,
+            run.persistenceVerificationInstance,
             run.eacMetadata,
             run.ignoreWhenUnsupported,
             run.expectSkip,
@@ -181,6 +184,7 @@ class JUnitScenarioRunner<
         val build: Method,
         val testClass: KClass<S>,
         val implementationInstance: ImplementationInstance<AF, CF, QF, AGF>,
+        val persistenceVerificationInstance: ImplementationInstance<AF, CF, QF, AGF>?,
         val eacMetadata: EacMetadata?,
         val ignoreWhenUnsupported: Boolean,
         val expectSkip: Boolean,
@@ -198,7 +202,10 @@ class JUnitScenarioRunner<
                         build.invoke(scenario)
                         val scenarioName = eacMetadata?.scenarioName ?: "${build.declaringClass.name}-${build.name}"
                         val verifiableScenarioRunner =
-                            VerifiableScenarioRunner(implementationInstance, scenario, scenarioName)
+                            VerifiableScenarioRunner(implementationInstance,
+                                persistenceVerificationInstance,
+                                scenario,
+                                scenarioName)
                         when (verifiableScenarioRunner.run()) {
                             VerifiableScenarioRunner.Result.UnsupportedAction -> unsupported("Skipping - unsupported action found")
                             VerifiableScenarioRunner.Result.UnsupportedDeclaration -> unsupported("Skipping - unsupported declaration found")
@@ -207,6 +214,7 @@ class JUnitScenarioRunner<
                             VerifiableScenarioRunner.Result.Unverified -> throw AssertionError("Verification checks failed")
                             VerifiableScenarioRunner.Result.IncompatibleSystem -> throw SkippedException("Skipping - system does not support verify or report")
                             VerifiableScenarioRunner.Result.UnknownError -> throw IllegalStateException("Unexpected error running scenario")
+                            VerifiableScenarioRunner.Result.NotPersistable -> throw IllegalStateException("Invalid configuration: unpersistable system found")
                             VerifiableScenarioRunner.Result.Verified,
                             VerifiableScenarioRunner.Result.Reported -> {
                             } // success!
@@ -243,7 +251,7 @@ class JUnitScenarioRunner<
             null
         } else {
             val parameterMethods = TestClass(companionObject.javaClass).getAnnotatedMethods(Parameters::class.java)
-            Log.debug("Parameter methods: $parameterMethods")
+            Log.debug("Parameter methods: {}", parameterMethods)
             if (parameterMethods.size > 1) {
                 throw IllegalStateException("Multiple parameter methods declared for $testClass")
             }
@@ -262,9 +270,16 @@ class JUnitScenarioRunner<
 
 
     override fun getChildren(): MutableList<ScenarioRun<AF, CF, QF, AGF>> {
-        Log.debug("Getting children: $testClass")
+        Log.debug("Getting children: {}", testClass)
         val implementationInstances = ImplementationInstance.getImplementationInstances<AF, CF, QF, AGF>()
-        Log.debug("Available implementation instances: $implementationInstances")
+        val persistenceVerificationInstance =
+            if (ImplementationInstance.havePersistenceVerificationInstance) {
+                ImplementationInstance.getPersistenceVerificationInstance<AF, CF, QF, AGF>()
+            } else {
+                null
+            }
+        Log.debug("Available implementation instances: {}", implementationInstances)
+        Log.debug("Persistent verification instance: {}", persistenceVerificationInstance ?: "Not specified")
         val eacs = getTestClass().getAnnotatedMethods(Eac::class.java).flatMap { method ->
             val eac = method.getAnnotation(Eac::class.java)!!
             implementationInstances.map { implementationInstance ->
@@ -281,38 +296,46 @@ class JUnitScenarioRunner<
                         implementation = implementationInstance.implementationName,
                     )
                 }
-                ScenarioRun(eac.summary,
+                ScenarioRun(
+                    eac.summary,
                     method,
                     implementationInstance,
-                    eacMetadata = eacMetadata)
+                    persistenceVerificationInstance,
+                    eacMetadata = eacMetadata
+                )
             }
         }
         val modellingExamples = getTestClass().getAnnotatedMethods(ModellingExample::class.java).flatMap { method ->
             val modellingExample = method.getAnnotation(ModellingExample::class.java)!!
             implementationInstances.map { implementationInstance ->
-                ScenarioRun(modellingExample.summary,
+                ScenarioRun(
+                    modellingExample.summary,
                     method,
-                    implementationInstance)
+                    implementationInstance,
+                    persistenceVerificationInstance
+                )
             }
         }
         val adapterTests = getTestClass().getAnnotatedMethods(AdapterTest::class.java).flatMap { method ->
             val adapterTest = method.getAnnotation(AdapterTest::class.java)!!
             implementationInstances.map { implementationInstance ->
-                ScenarioRun(method.name,
+                ScenarioRun(
+                    method.name,
                     method,
                     implementationInstance,
+                    persistenceVerificationInstance,
                     ignoreWhenUnsupported = false,
                     expectSkip = adapterTest.expectSkip)
             }
         }
         val analysisScenarios = getTestClass().getAnnotatedMethods(AnalysisScenario::class.java).flatMap { method ->
             implementationInstances.map { implementationInstance ->
-                ScenarioRun(method.name, method, implementationInstance)
+                ScenarioRun(method.name, method, implementationInstance, persistenceVerificationInstance)
             }
         }
         val generatedScenarios = getTestClass().getAnnotatedMethods(GeneratedScenario::class.java).flatMap { method ->
             implementationInstances.map { implementationInstance ->
-                ScenarioRun(method.name, method, implementationInstance)
+                ScenarioRun(method.name, method, implementationInstance, persistenceVerificationInstance)
             }
         }
         val nonParameterizedRuns = eacs + adapterTests + analysisScenarios + generatedScenarios + modellingExamples

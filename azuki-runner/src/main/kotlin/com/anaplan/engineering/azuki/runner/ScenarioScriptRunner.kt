@@ -11,6 +11,7 @@ import com.anaplan.engineering.azuki.core.system.ActionFactory
 import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
 import com.anaplan.engineering.azuki.core.system.CheckFactory
 import com.anaplan.engineering.azuki.core.system.QueryFactory
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import javax.script.ScriptException
@@ -55,17 +56,21 @@ class ScenarioScriptRunner<
                     ExitCode.InvalidSystem)
                 VerifiableScenarioRunner.Result.UnknownError -> exit("There was an unexpected error",
                     ExitCode.UnknownError)
+                VerifiableScenarioRunner.Result.NotPersistable -> exit("There was a configuration issue: a persistable system was expected",
+                    ExitCode.NotPersistable)
                 VerifiableScenarioRunner.Result.Verified,
                 VerifiableScenarioRunner.Result.Reported -> Log.info("Run completed successfully")
             }
         }
 
         fun handleError(error: Throwable) {
-            when {
-                error is InvalidScenarioException -> exit("Scenario is invalid:\n${error.cause?.message}",
+            when (error) {
+                is InvalidScenarioException -> exit("Scenario is invalid:\n${error.cause?.message}",
                     ExitCode.InvalidScenario)
-                error is UnsupportedScenarioTypeException -> exit("Currently unsupported scenario type: ${error.type}",
+
+                is UnsupportedScenarioTypeException -> exit("Currently unsupported scenario type: ${error.type}",
                     ExitCode.UnsupportedScenarioType)
+
                 else -> exit("Unknown error", ExitCode.UnknownError)
             }
         }
@@ -115,18 +120,28 @@ class ScenarioScriptRunner<
             ?: exit("No implementation named $instanceName found", ExitCode.UnknownImplementation)
     }
 
+
     private fun runVerifiableScenario(scenario: VerifiableScenario<AF, CF>) {
         val implementationInstance = getImplementationInstance(testImplementationInstance)
+
         val result = VerifiableScenarioRunner(
             implementationInstance,
+            getPersistenceVerificationInstance(),
             scenario,
             "RunAt${System.currentTimeMillis()}").run()
         resultProcessor.processVerifiableScenario(result)
     }
 
+    private fun getPersistenceVerificationInstance() =
+        if (ImplementationInstance.havePersistenceVerificationInstance) {
+            ImplementationInstance.getPersistenceVerificationInstance<AF, CF, QF, AGF>()
+        } else {
+            null
+        }
+
 
     companion object {
-        val Log = LoggerFactory.getLogger(ScenarioScriptRunner::class.java)
+        val Log: Logger = LoggerFactory.getLogger(ScenarioScriptRunner::class.java)
 
         fun exit(msg: String, exitCode: ExitCode): Nothing {
             Log.error(msg)
@@ -148,7 +163,7 @@ fun main(args: Array<String>) {
     val script = File(scriptFile).readText()
     val imports = File(importsFile).readText()
     val oracleImpls = args.drop(3)
-    ScenarioScriptRunner.Log.debug("Starting script runner: testImpl=$testImpl oracleImpls=$oracleImpls")
+    ScenarioScriptRunner.Log.debug("Starting script runner: testImpl={} oracleImpls={}", testImpl, oracleImpls)
     val defaultResultProcessor = construct(ScenarioScriptRunner.ResultProcessor.Default::class)
     val runner = construct(ScenarioScriptRunner::class, testImpl, oracleImpls, imports, defaultResultProcessor)
     runner.runScenario(script)
@@ -169,7 +184,8 @@ enum class ExitCode(val category: Category) {
     QueryFailed(Category.Error),
     UnsupportedScenarioType(Category.Error),
     UnknownError(Category.Error),
-    UnknownImplementation(Category.Error);
+    UnknownImplementation(Category.Error),
+    NotPersistable(Category.Error);
 
     enum class Category {
         Ok,

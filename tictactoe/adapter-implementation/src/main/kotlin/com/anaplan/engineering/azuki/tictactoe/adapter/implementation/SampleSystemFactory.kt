@@ -16,10 +16,13 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.Samp
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilder
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilderFactory
 import com.anaplan.engineering.azuki.tictactoe.implementation.GameManager
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import kotlin.UnsupportedOperationException
+import com.fasterxml.jackson.module.kotlin.readValue
 
 class SampleSystemFactory :
     SystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults> {
@@ -53,9 +56,9 @@ class SampleSystem(
     private val buildActions: List<SampleAction>,
     private val checks: List<SampleCheck>,
     private val regardlessOfActions: List<List<SampleAction>>,
-) : System<TicTacToeActionFactory, TicTacToeCheckFactory> {
+) : System<TicTacToeActionFactory, TicTacToeCheckFactory>, PersistableSystem {
 
-    private val store = Files.createTempDirectory("XO").toFile()
+
 
     override val supportedActions: Set<System.SystemAction> =
         if (checks.isNotEmpty()) {
@@ -88,9 +91,11 @@ class SampleSystem(
         return true
     }
 
-    override fun verify(): VerificationResult {
-        val env = ExecutionEnvironment(GameManager(store))
-        return try {
+    override fun verify(): VerificationResult =
+        verify(ExecutionEnvironment(GameManager(Files.createTempDirectory("XO").toFile())))
+
+    private fun verify(env: ExecutionEnvironment) =
+        try {
             build(env)
             val allChecksPass = runAllChecks(env) && regardlessOfActions.all { actions ->
                 actions.forEach { it.act(env) }
@@ -105,7 +110,6 @@ class SampleSystem(
             Log.info("Unsupported action", e)
             throw e
         }
-    }
 
     override fun query(): List<Answer<*, TicTacToeCheckFactory>> = throw UnsupportedOperationException()
 
@@ -117,5 +121,43 @@ class SampleSystem(
         private val Log = LoggerFactory.getLogger(this::class.java)
 
         private val declarationBuilderFactory = DeclarationBuilderFactory(SampleDeclarationBuilderFactory::class.java)
+    }
+
+    private val objectMapper = ObjectMapper()
+        .registerModule(KotlinModule())
+
+    data class PersistableSystemState(
+        val activeGames: List<String>,
+        val store: File
+    )
+    override fun verifyAndSerialize(): VerificationResult {
+        val store = Files.createTempDirectory("XO").toFile()
+        val env = ExecutionEnvironment(GameManager(store))
+        val result = verify(env)
+        return if (result is VerificationResult.Verified) {
+            try {
+                val activeGames = env.gameManager.activeGames.map { name ->
+                    env.gameManager.save(name)
+                    name
+                }
+                val file = Files.createTempFile("sample", "json").toFile()
+                objectMapper.writeValue(file, PersistableSystemState(activeGames, store))
+                VerificationResult.VerifiedAndSerialized(file)
+            } catch (e: Exception) {
+                Log.error("Unable to serialize", e)
+                result
+            }
+        } else {
+            result
+        }
+    }
+
+    override fun deserializeAndVerify(file: File): VerificationResult {
+        val systemState = objectMapper.readValue<PersistableSystemState>(file)
+        val gameManager = GameManager(systemState.store)
+        systemState.activeGames.forEach {
+            gameManager.load(it)
+        }
+        return verify(ExecutionEnvironment(gameManager))
     }
 }
