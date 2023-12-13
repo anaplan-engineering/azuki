@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.core.runner
 import com.anaplan.engineering.azuki.core.JvmSystemProperties.excludeImplFromEacDescriptionPropertyName
 import com.anaplan.engineering.azuki.core.JvmSystemProperties.forceKnownBugsPropertyName
 import com.anaplan.engineering.azuki.core.JvmSystemProperties.junitTimeoutPropertyName
+import com.anaplan.engineering.azuki.core.scenario.Since
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.*
 import org.junit.Assume
@@ -199,6 +200,16 @@ class JUnitScenarioRunner<
                         } else {
                             testClass.primaryConstructor!!.call(*parameters)
                         }
+                        val sinceAnnotation = build.getAnnotation(Since::class.java)
+                        val scenarioVersion =
+                            sinceAnnotation?.implementationVersion?.filter { it.name == implementationInstance.implementationName }
+                                ?.singleOrNull()
+                        if (implementationInstance.supportsScenarioVersion(scenario, scenarioVersion) == false) {
+                            unsupported("Skipping - scenario version incompatible with implementation instance")
+                        }
+                        if (persistenceVerificationInstance?.supportsScenarioVersion(scenario, scenarioVersion) == false) {
+                            unsupported("Skipping - scenario version incompatible with persistence verification implementation instance")
+                        }
                         build.invoke(scenario)
                         val scenarioName = eacMetadata?.scenarioName ?: "${build.declaringClass.name}-${build.name}"
                         val verifiableScenarioRunner =
@@ -232,11 +243,20 @@ class JUnitScenarioRunner<
             }.run()
         }
 
+        private fun ImplementationInstance<AF, CF, QF, AGF>.supportsScenarioVersion(
+            scenario: S,
+            scenarioVersion: ImplementationVersion?,
+        ) =
+            runTask(TaskType.CheckVersion, scenario) { implementation ->
+                implementation.versionFilter.canVerify(scenarioVersion?.version)
+            }.result
+
         private fun unsupported(msg: String) {
             // was previously checking if implementation was total as part of this.. should we move that into runner?
             if (ignoreWhenUnsupported) {
                 Assume.assumeTrue(false)
             } else {
+                Log.debug(msg)
                 throw SkippedException(msg)
             }
         }
