@@ -7,6 +7,7 @@ import com.anaplan.engineering.azuki.core.scenario.Since
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.*
 import org.junit.Assume
+import org.junit.AssumptionViolatedException
 import org.junit.Ignore
 import org.junit.internal.runners.model.ReflectiveCallable
 import org.junit.rules.Timeout
@@ -254,9 +255,9 @@ class JUnitScenarioRunner<
         private fun unsupported(msg: String) {
             // was previously checking if implementation was total as part of this.. should we move that into runner?
             if (ignoreWhenUnsupported) {
-                Assume.assumeTrue(false)
-            } else {
                 Log.debug(msg)
+                throw AssumptionViolatedException(msg)
+            } else {
                 throw SkippedException(msg)
             }
         }
