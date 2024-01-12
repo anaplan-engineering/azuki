@@ -12,7 +12,8 @@ interface OracleScenario<
     AGF : ActionGeneratorFactory
     >
     : ScenarioWithQueries<AF, QF> {
-    fun actionGenerations(actionGeneratorFactory: AGF): List<List<ActionGenerator>>
+    fun givenActionGenerations(actionGeneratorFactory: AGF): List<List<ActionGenerator>>
+    fun whenActionGenerations(actionGeneratorFactory: AGF): List<List<ActionGenerator>>
 }
 
 open class AbstractOracleScenario<
@@ -36,14 +37,28 @@ open class AbstractOracleScenario<
         this.verificationFunction = verificationFunction
     }
 
-    private val generationFunctions: MutableList<R.() -> Unit> = mutableListOf()
+    private val givenGenerationFunctions: MutableList<R.() -> Unit> = mutableListOf()
+    private val whenGenerationFunctions: MutableList<R.() -> Unit> = mutableListOf()
 
+    // Generate actions will be associated with the given block if no whenever
+    // blocks have been previously declared.
+    // Otherwise, they will be associated with the whenever block.
     fun generate(generationFunction: (R.() -> Unit)) {
-        generationFunctions.add(generationFunction)
+        if (whenFunction == null) {
+            givenGenerationFunctions.add(generationFunction)
+        } else {
+            whenGenerationFunctions.add(generationFunction)
+        }
     }
 
-    override fun actionGenerations(actionGeneratorFactory: AGF) =
-        generationFunctions.map {
+    override fun givenActionGenerations(actionGeneratorFactory: AGF) =
+        givenGenerationFunctions.map {
+            val generate = dslProvider.createGenerate(actionGeneratorFactory)
+            generate.apply { it() }.generators()
+        }
+
+    override fun whenActionGenerations(actionGeneratorFactory: AGF) =
+        whenGenerationFunctions.map {
             val generate = dslProvider.createGenerate(actionGeneratorFactory)
             generate.apply { it() }.generators()
         }

@@ -29,10 +29,10 @@ internal class TaskWrapper<
         System.setOut(PrintStream(outCapture))
         System.setErr(PrintStream(errCapture))
         return try {
-            Log.debug("Running task type=$taskType")
+            Log.debug("Running task type={}", taskType)
             val result = task(implementation)
             val duration = System.nanoTime() - start
-            Log.debug("Completed task type=$taskType duration=${duration.formatNs()} result=$result")
+            Log.debug("Completed task type={} duration={} result={}", taskType, duration.formatNs(), result)
             outCapture.flush()
             errCapture.flush()
             TaskResult(taskType = taskType,

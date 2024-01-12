@@ -55,8 +55,7 @@ class MultiOracleScenarioRunner<
         QF : QueryFactory,
         AGF : ActionGeneratorFactory,
         >(
-        val answers: List<Answer<*, CF>>?,
-        val scenario: OracleScenario<AF, QF, AGF>
+        val answers: List<Answer<*, CF>>?, val scenario: OracleScenario<AF, QF, AGF>
     )
 
     private fun establishVerificationContext(
@@ -91,20 +90,27 @@ class MultiOracleScenarioRunner<
     }
 
     private fun generateScenario(resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>): OracleScenario<AF, QF, AGF> {
-        val actionGenerators =
-            testInstance.runTask(TaskType.CreateActionGenerators, scenario) { implementation ->
-                val systemFactory = implementation.createSystemFactory()
-                scenario.actionGenerations(systemFactory.actionGeneratorFactory)
-            }.result!!
+        val actionGenerators = testInstance.runTask(TaskType.CreateActionGenerators, scenario) { implementation ->
+            val systemFactory = implementation.createSystemFactory()
+            scenario.givenActionGenerations(systemFactory.actionGeneratorFactory).map {
+                it to ActionGeneratorType.Given
+            } + scenario.whenActionGenerations(systemFactory.actionGeneratorFactory).map {
+                it to ActionGeneratorType.When
+            }
+        }.result!!
         var generatedScenario: OracleScenario<AF, QF, AGF> = scenario
-        resultBuilder.addAll(actionGenerators.map { generators ->
+        resultBuilder.addAll(actionGenerators.map { (generators, type) ->
             val generateTaskResult = generateActions(testInstance, generatedScenario, generators)
             val actionCreators = generateTaskResult.result ?: emptyList()
-            generatedScenario = GeneratedScenario(generatedScenario, actionCreators)
+            generatedScenario = GeneratedScenario(base = generatedScenario,
+                givenActionCreators = if (type == ActionGeneratorType.Given) actionCreators else emptyList(),
+                whenActionCreators = if (type == ActionGeneratorType.When) actionCreators else emptyList())
             generateTaskResult
         })
         return generatedScenario
     }
+
+    private enum class ActionGeneratorType { Given, When }
 
     private fun verifyWithOracle(
         oracleInstance: ImplementationInstance<AF, CF, QF, AGF>,
@@ -120,82 +126,78 @@ class MultiOracleScenarioRunner<
     private fun isDeclarationValid(
         instance: ImplementationInstance<AF, CF, QF, AGF>,
         scenario: OracleScenario<AF, QF, AGF>,
-    ) =
-        instance.runTask(TaskType.CheckDeclarations, scenario) { implementation ->
-            val systemFactory = implementation.createSystemFactory()
-            val declarations = scenario.definitions(systemFactory.actionFactory)
-            val result = if (declarations.any { it is UnsupportedAction }) {
-                Log.debug("Declarations contain unsupported action")
-                false
-            } else {
-                val system = systemFactory.create(
-                    SystemDefinition(
-                        declarations = declarations,
-                        actions = emptyList(),
-                        checks = listOf(systemFactory.checkFactory.systemValid()),
-                    )
-                )
-                when (system.verify()) {
-                    is VerificationResult.Verified -> true
-                    else -> false
-                }
+    ) = instance.runTask(TaskType.CheckDeclarations, scenario) { implementation ->
+        val systemFactory = implementation.createSystemFactory()
+        val declarations = scenario.definitions(systemFactory.actionFactory)
+        val result = if (declarations.any { it is UnsupportedAction }) {
+            Log.debug("Declarations contain unsupported action")
+            false
+        } else {
+            val system = systemFactory.create(SystemDefinition(
+                declarations = declarations,
+                actions = emptyList(),
+                checks = listOf(systemFactory.checkFactory.systemValid()),
+            ))
+            when (system.verify()) {
+                is VerificationResult.Verified -> true
+                else -> false
             }
-            Log.debug("Checked declarations implementation=${implementation.name} result=$result")
-            result
         }
+        Log.debug("Checked declarations implementation=${implementation.name} result=$result")
+        result
+    }
 
     private fun areBuildActionsValid(
         instance: ImplementationInstance<AF, CF, QF, AGF>,
         scenario: OracleScenario<AF, QF, AGF>,
-    ) =
-        instance.runTask(TaskType.CheckActions, scenario) { implementation ->
-            val systemFactory = implementation.createSystemFactory()
-            val declarations = scenario.definitions(systemFactory.actionFactory)
-            val buildActions = scenario.buildActions(systemFactory.actionFactory)
-            if (buildActions.isEmpty()) {
-                true
-            } else if (buildActions.any { it is UnsupportedAction }) {
-                false
-            } else {
-                val system = systemFactory.create(
-                    SystemDefinition(
-                        declarations = declarations,
-                        actions = buildActions,
-                        checks = listOf(systemFactory.checkFactory.systemValid()),
-                    )
-                )
-                when (system.verify()) {
-                    is VerificationResult.Verified -> true
-                    else -> false
+    ) = instance.runTask(TaskType.CheckActions, scenario) { implementation ->
+        val systemFactory = implementation.createSystemFactory()
+        val declarations = scenario.definitions(systemFactory.actionFactory)
+        val buildActions = scenario.buildActions(systemFactory.actionFactory)
+        if (buildActions.isEmpty()) {
+            true
+        } else if (buildActions.any { it is UnsupportedAction }) {
+            false
+        } else {
+            val system = systemFactory.create(SystemDefinition(
+                declarations = declarations,
+                actions = buildActions,
+                checks = listOf(systemFactory.checkFactory.systemValid()),
+            ))
+            when (val result = system.verify()) {
+                is VerificationResult.Verified -> true
+                is VerificationResult.SystemInvalid -> {
+                    Log.error("System invalid:", result.cause)
+                    false
                 }
+                else -> false
             }
         }
+    }
 
 
     private fun generateActions(
         instance: ImplementationInstance<AF, CF, QF, AGF>,
         scenario: OracleScenario<AF, QF, AGF>,
         generators: List<ActionGenerator>
-    ) =
-        instance.runTask(TaskType.GenerateActions, scenario) { implementation ->
-            val systemFactory = implementation.createSystemFactory()
-            val declarations = scenario.definitions(systemFactory.actionFactory)
-            if (UnsupportedActionGenerator in generators) {
-                Log.warn("Unsupported action generator found!!")
-                emptyList()
-            } else try {
-                val system = systemFactory.create(
-                    SystemDefinition(
-                        declarations = declarations,
-                        actions = emptyList(),
-                        actionGenerators = generators,
-                    )
-                )
-                system.generateActions()
-            } catch (e: LateDetectUnsupportedActionException) {
-                emptyList()
-            }
+    ) = instance.runTask(TaskType.GenerateActions, scenario) { implementation ->
+        val systemFactory = implementation.createSystemFactory()
+        val declarations = scenario.definitions(systemFactory.actionFactory)
+        val buildActions = scenario.buildActions(systemFactory.actionFactory)
+        if (UnsupportedActionGenerator in generators) {
+            Log.warn("Unsupported action generator found!!")
+            emptyList()
+        } else try {
+            val system = systemFactory.create(SystemDefinition(
+                declarations = declarations,
+                actions = buildActions,
+                actionGenerators = generators,
+            ))
+            system.generateActions()
+        } catch (e: LateDetectUnsupportedActionException) {
+            emptyList()
         }
+    }
 
     private fun query(instance: ImplementationInstance<AF, CF, QF, AGF>, scenario: OracleScenario<AF, QF, AGF>) =
         instance.runTask(TaskType.Query, scenario) { implementation ->
@@ -203,19 +205,22 @@ class MultiOracleScenarioRunner<
             val declarations = scenario.definitions(systemFactory.actionFactory)
             val buildActions = scenario.buildActions(systemFactory.actionFactory)
             if (UnsupportedAction in declarations || UnsupportedAction in buildActions) {
+                Log.warn("Unsupported action found")
                 emptyList()
             } else try {
                 val queries = scenario.queries(systemFactory.queryFactory)
-                val system = systemFactory.create(
-                    SystemDefinition(
-                        declarations = declarations,
-                        actions = buildActions,
-                        queries = queries.queries.filter { it !is UnsupportedQuery<*> },
-                        forAllQueries = queries.forAllQueries,
-                    )
-                )
+                if (queries.isEmpty()) {
+                    Log.warn("No queries found!!")
+                }
+                val system = systemFactory.create(SystemDefinition(
+                    declarations = declarations,
+                    actions = buildActions,
+                    queries = queries.queries.filter { it !is UnsupportedQuery<*> },
+                    forAllQueries = queries.forAllQueries,
+                ))
                 system.query()
             } catch (e: LateDetectUnsupportedActionException) {
+                Log.warn("Late detected unsupported action found")
                 emptyList()
             }
         }
@@ -224,48 +229,34 @@ class MultiOracleScenarioRunner<
         instance: ImplementationInstance<AF, CF, QF, AGF>,
         scenario: OracleScenario<AF, QF, AGF>,
         answers: List<Answer<*, CF>>
-    ) =
-        instance.runTask(TaskType.Verify, scenario) { implementation ->
-            val systemFactory = implementation.createSystemFactory()
-            val declarations = scenario.definitions(systemFactory.actionFactory)
-            val buildActions = scenario.buildActions(systemFactory.actionFactory)
-            val system = systemFactory.create(
-                SystemDefinition(
-                    declarations = declarations,
-                    actions = buildActions,
-                    checks = answers.flatMap { it.createChecks(systemFactory.checkFactory) },
-                )
-            )
-            when (system.verify()) {
-                is VerificationResult.Verified -> true
-                else -> false
-            }
+    ) = instance.runTask(TaskType.Verify, scenario) { implementation ->
+        val systemFactory = implementation.createSystemFactory()
+        val declarations = scenario.definitions(systemFactory.actionFactory)
+        val buildActions = scenario.buildActions(systemFactory.actionFactory)
+        val system = systemFactory.create(SystemDefinition(
+            declarations = declarations,
+            actions = buildActions,
+            checks = answers.flatMap { it.createChecks(systemFactory.checkFactory) },
+        ))
+        when (system.verify()) {
+            is VerificationResult.Verified -> true
+            else -> false
         }
+    }
 
     companion object {
         private val Log = LoggerFactory.getLogger(MultiOracleScenarioRunner::class.java)
     }
 
 
-    class OracleResult<
-        AF : ActionFactory,
-        CF : CheckFactory,
-        QF : QueryFactory,
-        AGF : ActionGeneratorFactory
-        >(
+    class OracleResult<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
         val verified: Boolean,
         val start: LocalDateTime,
         val instance: ImplementationInstance<AF, CF, QF, AGF>,
         val taskResults: List<TaskResult<OracleScenario<AF, QF, AGF>, *>>
     ) {
-        class Builder<
-            AF : ActionFactory,
-            CF : CheckFactory,
-            QF : QueryFactory,
-            AGF : ActionGeneratorFactory
-            >(
-            val instance: ImplementationInstance<AF, CF, QF, AGF>,
-            val start: LocalDateTime = LocalDateTime.now()
+        class Builder<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
+            val instance: ImplementationInstance<AF, CF, QF, AGF>, val start: LocalDateTime = LocalDateTime.now()
         ) {
             private val taskResults = mutableListOf<TaskResult<OracleScenario<AF, QF, AGF>, *>>()
 
@@ -278,12 +269,7 @@ class MultiOracleScenarioRunner<
         }
     }
 
-    class Result<
-        AF : ActionFactory,
-        CF : CheckFactory,
-        QF : QueryFactory,
-        AGF : ActionGeneratorFactory
-        >(
+    class Result<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
         val testInstance: ImplementationInstance<AF, CF, QF, AGF>,
         val generatedScenario: OracleScenario<AF, QF, AGF>?,
         val oracleResults: List<OracleResult<AF, CF, QF, AGF>>
@@ -291,33 +277,33 @@ class MultiOracleScenarioRunner<
         val verified = oracleResults.any { it.verified }
         val verifiedBy = oracleResults.find { it.verified }?.instance
 
-        override fun toString() =
-            if (verified) {
-                "Scenario verifed by $verifiedBy"
-            } else {
-                "Scenario not verified"
-            }
+        override fun toString() = if (verified) {
+            "Scenario verifed by $verifiedBy"
+        } else {
+            "Scenario not verified"
+        }
     }
 
-    private class GeneratedScenario<
-        AF : ActionFactory,
-        QF : QueryFactory,
-        AGF : ActionGeneratorFactory
-        >(
+    private class GeneratedScenario<AF : ActionFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
         private val base: OracleScenario<AF, QF, AGF>,
-        private val actionCreators: List<(AF) -> Action>
+        private val givenActionCreators: List<(AF) -> Action> = emptyList(),
+        private val whenActionCreators: List<(AF) -> Action> = emptyList(),
     ) : OracleScenario<AF, QF, AGF> {
 
         override fun definitions(actionFactory: AF) =
-            base.definitions(actionFactory) + actionCreators.map { it(actionFactory) }
+            base.definitions(actionFactory) + givenActionCreators.map { it(actionFactory) }
 
 
-        override fun buildActions(actionFactory: AF) = base.buildActions(actionFactory)
+        override fun buildActions(actionFactory: AF) =
+            base.buildActions(actionFactory) + whenActionCreators.map { it(actionFactory) }
 
         override fun queries(queryFactory: QF) = base.queries(queryFactory)
 
-        override fun actionGenerations(actionGeneratorFactory: AGF) =
-            throw UnsupportedOperationException()
+        // TODO --- for completeness these could/should include unresolved generators
+        override fun givenActionGenerations(actionGeneratorFactory: AGF): List<List<ActionGenerator>> = emptyList()
+
+        // TODO --- for completeness these could/should include unresolved generators
+        override fun whenActionGenerations(actionGeneratorFactory: AGF): List<List<ActionGenerator>> = emptyList()
     }
 
 }
