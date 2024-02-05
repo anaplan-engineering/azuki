@@ -231,6 +231,9 @@ class JUnitScenarioRunner<
                             VerifiableScenarioRunner.Result.Reported -> {
                             } // success!
                         }
+                        if (expectSkip) {
+                            throw AssertionError("Scenario should have been skipped, but was not")
+                        }
                         if (EacMetadataRecorder.recording && eacMetadata != null) {
                             EacMetadataRecorder.record(eacMetadata)
                         }
