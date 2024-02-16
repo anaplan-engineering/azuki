@@ -32,7 +32,7 @@ class MultiOracleScenarioRunner<
             val resultBuilder = OracleResult.Builder(oracle)
             verificationContext = establishVerificationContext(oracle, resultBuilder, verificationContext)
             val oracleResult = try {
-                if (verificationContext?.answers == null) {
+                if (verificationContext.answers == null) {
                     resultBuilder.build()
                 } else {
                     Log.info("Attempting to verify scenario, oracle=$oracle")
@@ -62,13 +62,17 @@ class MultiOracleScenarioRunner<
         oracleInstance: ImplementationInstance<AF, CF, QF, AGF>,
         resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>,
         verificationContext: VerificationContext<AF, CF, QF, AGF>?,
-    ): VerificationContext<AF, CF, QF, AGF>? {
+    ): VerificationContext<AF, CF, QF, AGF> {
         if (verificationContext?.answers != null) {
             // if we have an existing verification context we can assume scenario is valid and we want to ensure
             // that we use the same generated actions and answers for all oracles
             return verificationContext
         }
         val generatedScenario = generateScenario(resultBuilder)
+        if (resultBuilder.error != null) {
+            Log.error("Unable to generate scenario due to previous error", resultBuilder.error)
+            return VerificationContext(null, generatedScenario)
+        }
         val declarationValidTaskResult = isDeclarationValid(oracleInstance, generatedScenario)
         resultBuilder.add(declarationValidTaskResult)
         if (declarationValidTaskResult.result != true) {
@@ -98,16 +102,20 @@ class MultiOracleScenarioRunner<
                 it to ActionGeneratorType.When
             }
         }.result!!
-        var generatedScenario: OracleScenario<AF, QF, AGF> = scenario
-        resultBuilder.addAll(actionGenerators.map { (generators, type) ->
-            val generateTaskResult = generateActions(testInstance, generatedScenario, generators)
-            val actionCreators = generateTaskResult.result ?: emptyList()
-            generatedScenario = GeneratedScenario(base = generatedScenario,
-                givenActionCreators = if (type == ActionGeneratorType.Given) actionCreators else emptyList(),
-                whenActionCreators = if (type == ActionGeneratorType.When) actionCreators else emptyList())
-            generateTaskResult
-        })
-        return generatedScenario
+        return actionGenerators.fold(scenario) { baseScenario, (generators, type) ->
+            if (resultBuilder.error == null) {
+                val generateTaskResult = generateActions(testInstance, baseScenario, generators)
+                resultBuilder.add(generateTaskResult)
+                val actionCreators = generateTaskResult.result ?: emptyList()
+                GeneratedScenario(
+                    base = baseScenario,
+                    givenActionCreators = if (type == ActionGeneratorType.Given) actionCreators else emptyList(),
+                    whenActionCreators = if (type == ActionGeneratorType.When) actionCreators else emptyList()
+                )
+            } else {
+                baseScenario
+            }
+        }
     }
 
     private enum class ActionGeneratorType { Given, When }
@@ -262,10 +270,9 @@ class MultiOracleScenarioRunner<
 
             fun add(taskResult: TaskResult<OracleScenario<AF, QF, AGF>, *>) = taskResults.add(taskResult)
 
-            fun addAll(taskResults: List<TaskResult<OracleScenario<AF, QF, AGF>, *>>) =
-                this.taskResults.addAll(taskResults)
-
             fun build(verified: Boolean = false) = OracleResult(verified, start, instance, taskResults)
+
+            val error get() = taskResults.reversed().firstOrNull { it.exception != null }?.exception
         }
     }
 
