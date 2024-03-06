@@ -6,7 +6,6 @@ import com.anaplan.engineering.azuki.core.JvmSystemProperties.junitTimeoutProper
 import com.anaplan.engineering.azuki.core.scenario.Since
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.*
-import org.junit.Assume
 import org.junit.AssumptionViolatedException
 import org.junit.Ignore
 import org.junit.internal.runners.model.ReflectiveCallable
@@ -219,7 +218,7 @@ class JUnitScenarioRunner<
                                 scenario,
                                 scenarioName)
                         when (verifiableScenarioRunner.run()) {
-                            VerifiableScenarioRunner.Result.UnsupportedAction -> unsupported("Skipping - unsupported action found")
+                            VerifiableScenarioRunner.Result.UnsupportedCommand -> unsupported("Skipping - unsupported action found")
                             VerifiableScenarioRunner.Result.UnsupportedDeclaration -> unsupported("Skipping - unsupported declaration found")
                             VerifiableScenarioRunner.Result.UnsupportedCheck -> unsupported("Skipping - unsupported check found")
                             VerifiableScenarioRunner.Result.NoSupportedChecks -> unsupported("Skipping - no supported checks found")
@@ -227,6 +226,7 @@ class JUnitScenarioRunner<
                             VerifiableScenarioRunner.Result.IncompatibleSystem -> throw SkippedException("Skipping - system does not support verify or report")
                             VerifiableScenarioRunner.Result.UnknownError -> throw IllegalStateException("Unexpected error running scenario")
                             VerifiableScenarioRunner.Result.NotPersistable -> throw IllegalStateException("Invalid configuration: unpersistable system found")
+                            VerifiableScenarioRunner.Result.NotVerifiable -> throw IllegalStateException("Invalid scenario: not verifiable")
                             VerifiableScenarioRunner.Result.Verified,
                             VerifiableScenarioRunner.Result.Reported -> {
                             } // success!

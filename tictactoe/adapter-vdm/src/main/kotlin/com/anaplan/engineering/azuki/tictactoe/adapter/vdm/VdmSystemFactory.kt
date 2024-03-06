@@ -22,7 +22,7 @@ import com.anaplan.engineering.vdmanimation.api.SpecificationStructure
 import com.anaplan.engineering.vdmanimation.api.VdmAnimationException
 
 class VdmSystemFactory :
-    SystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults> {
+    VerifiableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, VdmSystem> {
 
     override fun create(systemDefinition: SystemDefinition): VdmSystem {
         if (systemDefinition.regardlessOfActions.any {
@@ -32,7 +32,7 @@ class VdmSystemFactory :
         }
         return VdmSystem(
             systemDefinition.declarations.map(toDeclarableAction),
-            systemDefinition.actions.map(toDefaultVdmAction),
+            systemDefinition.commands.map(toDefaultVdmAction),
             systemDefinition.checks.map(toDefaultVdmCheck),
         )
     }
@@ -40,25 +40,13 @@ class VdmSystemFactory :
     override val actionFactory = VdmActionFactory()
     override val checkFactory = VdmCheckFactory()
 
-    override val queryFactory
-        get() = throw UnsupportedOperationException("VDM does not support querying")
-
-    override val actionGeneratorFactory
-        get() = throw UnsupportedOperationException("VDM does not support action generation")
-
 }
 
 data class VdmSystem(
     private val declarableActions: List<DeclarableAction>,
     private val buildActions: List<DefaultVdmAction>,
     private val checks: List<DefaultVdmCheck>
-) : System<TicTacToeActionFactory, TicTacToeCheckFactory> {
-
-    override val supportedActions = if (checks.isNotEmpty()) {
-        setOf(System.SystemAction.Verify)
-    } else {
-        setOf()
-    }
+) : VerifiableSystem<TicTacToeActionFactory, TicTacToeCheckFactory> {
 
     private fun createAnimationModule(specification: SpecificationStructure): AnimationModule {
         val vdmDeclarationBuilders = DeclarationBuilder(declarableActions).build().map { declarationBuilder(it) }
@@ -87,12 +75,6 @@ data class VdmSystem(
         } catch (e: VdmAnimationException) {
             VerificationResult.SystemInvalid(e)
         }
-
-    override fun generateReport(name: String) = throw UnsupportedOperationException()
-
-    override fun query() = throw UnsupportedOperationException()
-
-    override fun generateActions() = throw UnsupportedOperationException()
 
     companion object {
         private val declarationBuilderFactory = DeclarationBuilderFactory(VdmDeclarationBuilderFactory::class.java)

@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.core.runner
 
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
+import com.anaplan.engineering.azuki.core.scenario.VerifiableScenarioCursor
 import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -13,6 +14,10 @@ class VerifiableScenarioRunner<S : VerifiableScenario<AF, CF>, AF : ActionFactor
 ) {
 
     fun run(): Result {
+        if (scenario.iterations().isEmpty()) {
+            Log.error("Verifiable scenario does not have when or then or successors!")
+            RunScenarioResult(Result.NotVerifiable)
+        }
         val taskResult = implementationInstance.runTask(TaskType.Verify, scenario) { implementation ->
             Log.info("Using implementation '${implementation.name}'")
             runScenario(implementation.createSystemFactory())
@@ -21,7 +26,13 @@ class VerifiableScenarioRunner<S : VerifiableScenario<AF, CF>, AF : ActionFactor
             val pvTaskResult =
                 persistenceVerificationInstance.runTask(TaskType.PersistenceVerify, scenario) { implementation ->
                     Log.info("Using persistence verification implementation '${implementation.name}'")
-                    verifyPersistence(implementation.createSystemFactory(), taskResult.result.persistenceContext!!)
+                    val systemFactory = implementation.createSystemFactory() as? PersistableSystemFactory<AF, CF, *, *, *, PersistableSystem<AF, CF>>
+                    if (systemFactory == null) {
+                        Log.warn("Persistence verification instance specified, but system factory does not create persistable systems")
+                        Result.NotPersistable
+                    } else {
+                        verifyPersistence(systemFactory, taskResult.result.persistenceContext!!)
+                    }
                 }
             pvTaskResult.result ?: Result.UnknownError
         } else {
@@ -34,112 +45,138 @@ class VerifiableScenarioRunner<S : VerifiableScenario<AF, CF>, AF : ActionFactor
         val persistenceContext: File? = null
     )
 
-    private fun runScenario(systemFactory: SystemFactory<AF, CF, *, *, *>): RunScenarioResult {
-        val declarations = scenario.definitions(systemFactory.actionFactory)
-        if (declarations.filterIsInstance<UnsupportedAction>().isNotEmpty()) {
-            Log.warn("Unsupported declaration found! Declarations: ${declarations.joinToString("\n") { "\t - $it" }}")
-            return RunScenarioResult(Result.UnsupportedDeclaration)
+    private fun VerificationResult.toResult() =
+        when (this) {
+            is VerificationResult.Verified, is VerificationResult.VerifiedAndSerialized -> Result.Verified
+            is VerificationResult.Unverified -> Result.Unverified
+            is VerificationResult.SystemInvalid -> throw cause
         }
-        val actions = scenario.buildActions(systemFactory.actionFactory)
-        if (actions.filterIsInstance<UnsupportedAction>().isNotEmpty()) {
-            Log.warn("Unsupported action found! Actions: ${actions.joinToString("\n") { "\t - $it" }}")
-            return RunScenarioResult(Result.UnsupportedAction)
-        }
-        val checks = scenario.checks(systemFactory.checkFactory)
-        if (checks.all { it is UnsupportedCheck }) {
-            return RunScenarioResult(Result.NoSupportedChecks)
-        }
-        val supportedChecks = checks.filter { it !is UnsupportedCheck }
-        val regardlessOfActions = scenario.regardlessOfActions(systemFactory.actionFactory)
-        val system = buildSystem(systemFactory, declarations, actions, supportedChecks, regardlessOfActions)
-        return verifySystem(system)
-    }
 
-    private fun verifySystem(system: System<AF, CF>) =
-        try {
-            if (persistenceVerificationInstance != null) {
-                if (system !is PersistableSystem) {
-                    Log.warn("Persistence verification instance specified, but implementation system is not persistable")
-                    RunScenarioResult(Result.NotPersistable)
-                } else {
-                    verifyWithSerialize(system)
-                }
+    private fun VerifiableScenarioCursor.State.toResult() =
+        when (this) {
+            VerifiableScenarioCursor.State.NoChecks -> Result.NoSupportedChecks
+            VerifiableScenarioCursor.State.UnsupportedCommand -> Result.UnsupportedCommand
+            VerifiableScenarioCursor.State.UnsupportedDeclaration -> Result.UnsupportedDeclaration
+            else -> Result.UnknownError
+        }
+
+    private fun runScenario(systemFactory: SystemFactory<AF, CF, *, *, *, *>) =
+        when (systemFactory) {
+            is PersistableSystemFactory -> if (persistenceVerificationInstance == null) {
+                verifyScenario(systemFactory)
             } else {
-                verifyWithoutSerialize(system)
+                verifyScenarioWithPeristence(systemFactory)
+            }
+
+            is ReportGeneratingSystemFactory -> generateReportFromScenario(systemFactory)
+            is VerifiableSystemFactory -> verifyScenario(systemFactory)
+            else -> {
+                Log.error("System factory $systemFactory has no capability to handle verifiable scenario")
+                RunScenarioResult(Result.IncompatibleSystem)
+            }
+        }
+
+    private fun <S : ReportGeneratingSystem<AF, CF>> generateReportFromScenario(systemFactory: ReportGeneratingSystemFactory<AF, CF, *, *, *, S>): RunScenarioResult {
+        val cursor = VerifiableScenarioCursor(systemFactory, scenario)
+        return try {
+            while (cursor.hasNext()) {
+                val system = cursor.next()
+                if (cursor.isEmpty) {
+                    system.generateReport(runName)
+                }
+            }
+            if (cursor.state != VerifiableScenarioCursor.State.Ok) {
+                RunScenarioResult(cursor.state.toResult())
+            } else {
+                RunScenarioResult(Result.Reported)
             }
         } catch (e: LateDetectUnsupportedActionException) {
-            RunScenarioResult(Result.UnsupportedAction)
+            RunScenarioResult(Result.UnsupportedCommand)
         } catch (e: LateDetectUnsupportedCheckException) {
             RunScenarioResult(Result.UnsupportedCheck)
+        } finally {
+            cursor.destroy()
         }
+    }
 
-    private fun verifyWithoutSerialize(system: System<AF, CF>) =
-        RunScenarioResult(
-        if (System.SystemAction.Verify in system.supportedActions) {
-            when (val verificationResult = system.verify()) {
-                is VerificationResult.Verified, is VerificationResult.VerifiedAndSerialized -> Result.Verified
-                is VerificationResult.Unverified -> Result.Unverified
-                is VerificationResult.SystemInvalid -> throw verificationResult.cause
+    private fun <S : PersistableSystem<AF, CF>> verifyScenarioWithPeristence(systemFactory: PersistableSystemFactory<AF, CF, *, *, *, S>): RunScenarioResult {
+        val cursor = VerifiableScenarioCursor(systemFactory, scenario)
+        return try {
+            val results = mutableListOf<VerificationResult>()
+            while (cursor.hasNext() && results.all { it is VerificationResult.Verified }) {
+                val system = cursor.next()
+                results.add(
+                    if (cursor.isEmpty) {
+                        system.verifyAndSerialize()
+                    } else {
+                        system.verify()
+                    }
+                )
             }
-        } else if (System.SystemAction.Report in system.supportedActions) {
-            system.generateReport(runName)
-            Result.Reported
-        } else {
-            Result.IncompatibleSystem
+            if (cursor.state != VerifiableScenarioCursor.State.Ok) {
+                RunScenarioResult(cursor.state.toResult())
+            } else {
+                val result = results.last()
+                if (result is VerificationResult.VerifiedAndSerialized) {
+                    RunScenarioResult(result.toResult(), result.file)
+                } else {
+                    RunScenarioResult(result.toResult())
+                }
+            }
+        } catch (e: LateDetectUnsupportedActionException) {
+            RunScenarioResult(Result.UnsupportedCommand)
+        } catch (e: LateDetectUnsupportedCheckException) {
+            RunScenarioResult(Result.UnsupportedCheck)
+        } finally {
+            cursor.destroy()
         }
-    )
+    }
 
-    private fun verifyWithSerialize(system: System<AF, CF>) =
-        when (val verificationResult = (system as PersistableSystem).verifyAndSerialize()) {
-            is VerificationResult.VerifiedAndSerialized ->
-                RunScenarioResult(Result.Verified, verificationResult.file)
-
-            is VerificationResult.Verified -> RunScenarioResult(Result.NotPersistable)
-            is VerificationResult.Unverified -> RunScenarioResult(Result.Unverified)
-            is VerificationResult.SystemInvalid -> throw verificationResult.cause
+    private fun <S : VerifiableSystem<AF, CF>> verifyScenario(systemFactory: VerifiableSystemFactory<AF, CF, *, *, *, S>): RunScenarioResult {
+        val cursor = VerifiableScenarioCursor(systemFactory, scenario)
+        return try {
+            val results = mutableListOf<VerificationResult>()
+            while (cursor.hasNext() && results.all { it is VerificationResult.Verified }) {
+                val system = cursor.next()
+                results.add(system.verify())
+            }
+            if (cursor.state != VerifiableScenarioCursor.State.Ok) {
+                RunScenarioResult(cursor.state.toResult())
+            } else {
+                RunScenarioResult(results.last().toResult())
+            }
+        } catch (e: LateDetectUnsupportedActionException) {
+            RunScenarioResult(Result.UnsupportedCommand)
+        } catch (e: LateDetectUnsupportedCheckException) {
+            RunScenarioResult(Result.UnsupportedCheck)
+        } finally {
+            cursor.destroy()
         }
+    }
 
-    private fun verifyPersistence(systemFactory: SystemFactory<AF, CF, *, *, *>, persistenceContext: File): Result {
-        val checks = scenario.checks(systemFactory.checkFactory)
+
+    private fun <S : PersistableSystem<AF, CF>> verifyPersistence(systemFactory: PersistableSystemFactory<AF, CF, *, *, *, S>, persistenceContext: File): Result {
+        val checks = scenario.iterations().last().checks(systemFactory.checkFactory)
         if (checks.all { it is UnsupportedCheck }) {
             return Result.NoSupportedChecks
         }
         val supportedChecks = checks.filter { it !is UnsupportedCheck }
         val regardlessOfActions = scenario.regardlessOfActions(systemFactory.actionFactory)
-        val system = buildSystem(systemFactory, emptyList(), emptyList(), supportedChecks, regardlessOfActions)
-        if (system !is PersistableSystem) {
-            Log.warn("Persistence verification instance specified, but persistence verification system is not persistable")
-            return Result.NotPersistable
-        }
+        val system = systemFactory.create(
+            SystemDefinition(
+                declarations = emptyList(),
+                checks = supportedChecks,
+                regardlessOfActions = regardlessOfActions
+            )
+        )
         return try {
-            val verificationResult = (system as PersistableSystem).deserializeAndVerify(persistenceContext)
-            when (verificationResult) {
-                is VerificationResult.Verified -> Result.Verified
-                is VerificationResult.Unverified -> Result.Unverified
-                is VerificationResult.SystemInvalid -> throw verificationResult.cause
-                else -> throw IllegalStateException("Unexpected verification result: $verificationResult")
-            }
+            system.deserializeAndVerify(persistenceContext).toResult()
         } catch (e: LateDetectUnsupportedActionException) {
-            Result.UnsupportedAction
+            Result.UnsupportedCommand
         } catch (e: LateDetectUnsupportedCheckException) {
             Result.UnsupportedCheck
         }
     }
-
-    private fun buildSystem(
-        systemFactory: SystemFactory<AF, CF, *, *, *>,
-        declarations: List<Action>,
-        actions: List<Action>,
-        checks: List<Check>,
-        regardlessOfActions: List<List<Action>>
-    ) = systemFactory.create(
-        SystemDefinition(
-            declarations = declarations,
-            actions = actions,
-            checks = checks,
-            regardlessOfActions = regardlessOfActions
-        )
-    )
 
     companion object {
         private val Log = LoggerFactory.getLogger(VerifiableScenarioRunner::class.java)
@@ -150,12 +187,13 @@ class VerifiableScenarioRunner<S : VerifiableScenario<AF, CF>, AF : ActionFactor
         Unverified,
         Reported,
         UnsupportedDeclaration,
-        UnsupportedAction,
+        UnsupportedCommand,
         UnsupportedCheck,
         NoSupportedChecks,
         IncompatibleSystem,
         UnknownError,
-        NotPersistable
+        NotPersistable,
+        NotVerifiable,
     }
 
 }

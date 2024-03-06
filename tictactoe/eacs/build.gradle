@@ -72,6 +72,11 @@ task sampleImplementationV2ClasspathJar(type: Jar) {
     }
 }
 
+ext {
+    // default impls
+    setProperty("impl.includes", "SampleImpl,VDM")
+}
+
 test {
     dependsOn vdmClasspathJar
     dependsOn sampleImplementationV2ClasspathJar
@@ -112,3 +117,6 @@ task rollForwardTest(type: Test) {
         "com.anaplan.engineering.azuki.persistence.verification.instance.jar": sampleImplementationV2ClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
 }
+
+check.dependsOn(rollBackTest)
+check.dependsOn(rollForwardTest)

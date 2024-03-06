@@ -87,11 +87,11 @@ abstract class ScriptGenerator<
     }
 
     open fun getBuildActions(scenario: BuildableScenario<AF>): List<ScriptGenerationAction> =
-        scenario.buildActions(actionFactory).map { it as ScriptGenerationAction }
+        scenario.commands(actionFactory).map { it as ScriptGenerationAction }
 
 
     fun generateGivenScript(scenario: BuildableScenario<AF>): String {
-        val definitions = scenario.definitions(actionFactory)
+        val definitions = scenario.declarations(actionFactory)
         if (definitions.filterIsInstance<UnsupportedAction>().isNotEmpty()) {
             definitions.forEach { println(" * $it") }
             throw IllegalArgumentException("Scriptgen is missing action")

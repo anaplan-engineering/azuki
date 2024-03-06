@@ -25,20 +25,18 @@ import kotlin.UnsupportedOperationException
 import com.fasterxml.jackson.module.kotlin.readValue
 
 class SampleSystemFactory :
-    SystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults> {
-    override fun create(systemDefinition: SystemDefinition): System<TicTacToeActionFactory, TicTacToeCheckFactory> =
+    PersistableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, SampleSystem> {
+
+    override fun create(systemDefinition: SystemDefinition) =
         SampleSystem(
             systemDefinition.declarations.map(toDeclarableAction),
-            systemDefinition.actions.map(toSampleAction),
+            systemDefinition.commands.map(toSampleAction),
             systemDefinition.checks.map(toSampleCheck),
             systemDefinition.regardlessOfActions.map { it.map(toSampleAction) },
         )
 
     override val actionFactory = SampleActionFactory()
     override val checkFactory = SampleCheckFactory()
-    override val queryFactory = NoQueryFactory
-    override val actionGeneratorFactory = NoActionGeneratorFactory
-
 
     companion object {
         private val toSampleAction: (Action) -> SampleAction = {
@@ -56,16 +54,7 @@ class SampleSystem(
     private val buildActions: List<SampleAction>,
     private val checks: List<SampleCheck>,
     private val regardlessOfActions: List<List<SampleAction>>,
-) : System<TicTacToeActionFactory, TicTacToeCheckFactory>, PersistableSystem {
-
-
-
-    override val supportedActions: Set<System.SystemAction> =
-        if (checks.isNotEmpty()) {
-            setOf(System.SystemAction.Verify)
-        } else {
-            setOf()
-        }
+) : PersistableSystem<TicTacToeActionFactory, TicTacToeCheckFactory> {
 
     private fun build(env: ExecutionEnvironment) {
         val declarationBuilders =
@@ -74,7 +63,7 @@ class SampleSystem(
         buildActions.forEach { it.act(env) }
     }
 
-    private fun <D: Declaration> declarationBuilder(declaration: D) =
+    private fun <D : Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, SampleDeclarationBuilder<D>>(declaration)
 
     private fun runAllChecks(env: ExecutionEnvironment) =
@@ -111,12 +100,6 @@ class SampleSystem(
             throw e
         }
 
-    override fun query(): List<Answer<*, TicTacToeCheckFactory>> = throw UnsupportedOperationException()
-
-    override fun generateActions(): List<(TicTacToeActionFactory) -> Action> = throw UnsupportedOperationException()
-
-    override fun generateReport(name: String): File = throw UnsupportedOperationException()
-
     companion object {
         private val Log = LoggerFactory.getLogger(this::class.java)
 
@@ -130,6 +113,7 @@ class SampleSystem(
         val activeGames: List<String>,
         val store: File
     )
+
     override fun verifyAndSerialize(): VerificationResult {
         val store = Files.createTempDirectory("XO").toFile()
         val env = ExecutionEnvironment(GameManager(store))

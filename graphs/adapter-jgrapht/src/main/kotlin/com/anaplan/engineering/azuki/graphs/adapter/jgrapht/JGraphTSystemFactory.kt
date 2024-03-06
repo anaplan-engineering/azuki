@@ -16,25 +16,24 @@ import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.declaration.JGraphTD
 import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionEnvironment
 import org.slf4j.LoggerFactory
 
-class JGraphTSystemFactory : SystemFactory<
+class JGraphTSystemFactory : VerifiableSystemFactory<
     GraphActionFactory,
     GraphCheckFactory,
     NoQueryFactory,
     NoActionGeneratorFactory,
-    NoSystemDefaults
+    NoSystemDefaults,
+    JGraphTSystem
     > {
-    override fun create(systemDefinition: SystemDefinition): System<GraphActionFactory, GraphCheckFactory> {
-        return JGraphTSystem(
+    override fun create(systemDefinition: SystemDefinition) =
+        JGraphTSystem(
             systemDefinition.declarations.map(::toDeclarableAction),
-            systemDefinition.actions.map(toJGraphTAction),
+            systemDefinition.commands.map(toJGraphTAction),
             systemDefinition.checks.map(toJGraphTCheck),
         )
-    }
 
     override val actionFactory = JGraphTActionFactory()
+
     override val checkFactory = JGraphTCheckFactory()
-    override val queryFactory = NoQueryFactory
-    override val actionGeneratorFactory = NoActionGeneratorFactory
 
 }
 
@@ -42,13 +41,7 @@ data class JGraphTSystem(
     val declarableActions: List<DeclarableAction<GraphDeclarationState>>,
     val buildActions: List<JGraphTAction>,
     val checks: List<JGraphTCheck>
-) : System<GraphActionFactory, GraphCheckFactory> {
-
-    override val supportedActions = if (checks.isNotEmpty()) {
-        setOf(System.SystemAction.Verify)
-    } else {
-        setOf()
-    }
+) : VerifiableSystem<GraphActionFactory, GraphCheckFactory> {
 
     override fun verify(): VerificationResult {
         val env = ExecutionEnvironment()
@@ -87,13 +80,6 @@ data class JGraphTSystem(
 
     private fun <D : Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, JGraphTDeclarationBuilder<D>>(declaration)
-
-
-    override fun generateReport(name: String) = throw UnsupportedOperationException()
-
-    override fun query() = throw UnsupportedOperationException()
-
-    override fun generateActions() = throw UnsupportedOperationException()
 
     companion object {
         private val declarationBuilderFactory = DeclarationBuilderFactory(JGraphTDeclarationBuilderFactory::class.java)

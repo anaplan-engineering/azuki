@@ -48,10 +48,11 @@ class ScenarioScriptRunner<
             when (result) {
                 VerifiableScenarioRunner.Result.Unverified -> exit("Scenario was unverified",
                     ExitCode.VerificationFailed)
-                VerifiableScenarioRunner.Result.UnsupportedAction,
+                VerifiableScenarioRunner.Result.UnsupportedCommand,
                 VerifiableScenarioRunner.Result.UnsupportedDeclaration,
                 VerifiableScenarioRunner.Result.UnsupportedCheck,
-                VerifiableScenarioRunner.Result.NoSupportedChecks -> exit("Invalid scenario", ExitCode.InvalidScenario)
+                VerifiableScenarioRunner.Result.NoSupportedChecks,
+                VerifiableScenarioRunner.Result.NotVerifiable -> exit("Invalid scenario", ExitCode.InvalidScenario)
                 VerifiableScenarioRunner.Result.IncompatibleSystem -> exit("System does not support verify/report",
                     ExitCode.InvalidSystem)
                 VerifiableScenarioRunner.Result.UnknownError -> exit("There was an unexpected error",

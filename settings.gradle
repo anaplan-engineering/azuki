@@ -28,6 +28,7 @@ include(
     "graphs:adapter-jung",
     "graphs:adapter-script-generation",
     "graphs:eacs",
+    "graphs:tests",
     "graphs:script-runner",
     "graphs:verification-runner",
 )
