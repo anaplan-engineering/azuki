@@ -17,25 +17,23 @@ import com.anaplan.engineering.azuki.graphs.adapter.jung.declaration.JungDeclara
 import com.anaplan.engineering.azuki.graphs.adapter.jung.execution.ExecutionEnvironment
 import org.slf4j.LoggerFactory
 
-class JungSystemFactory : SystemFactory<
+class JungSystemFactory : VerifiableSystemFactory<
     GraphActionFactory,
     GraphCheckFactory,
     NoQueryFactory,
     NoActionGeneratorFactory,
-    NoSystemDefaults
+    NoSystemDefaults,
+    JungSystem
     > {
-    override fun create(systemDefinition: SystemDefinition): System<GraphActionFactory, GraphCheckFactory> {
-        return JungSystem(
+    override fun create(systemDefinition: SystemDefinition) =
+         JungSystem(
             systemDefinition.declarations.map(::toDeclarableAction),
-            systemDefinition.actions.map(toJungAction),
+            systemDefinition.commands.map(toJungAction),
             systemDefinition.checks.map(toJungCheck),
         )
-    }
 
     override val actionFactory = JungActionFactory()
     override val checkFactory = JungCheckFactory()
-    override val queryFactory = NoQueryFactory
-    override val actionGeneratorFactory = NoActionGeneratorFactory
 
 }
 
@@ -43,13 +41,7 @@ data class JungSystem(
     val declarableActions: List<DeclarableAction<GraphDeclarationState>>,
     val buildActions: List<JungAction>,
     val checks: List<JungCheck>
-) : System<GraphActionFactory, GraphCheckFactory> {
-
-    override val supportedActions = if (checks.isNotEmpty()) {
-        setOf(System.SystemAction.Verify)
-    } else {
-        setOf()
-    }
+) : VerifiableSystem<GraphActionFactory, GraphCheckFactory> {
 
     override fun verify(): VerificationResult {
         val env = ExecutionEnvironment()
@@ -89,12 +81,6 @@ data class JungSystem(
     private fun <D : Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, JungDeclarationBuilder<D>>(declaration)
 
-
-    override fun generateReport(name: String) = throw UnsupportedOperationException()
-
-    override fun query() = throw UnsupportedOperationException()
-
-    override fun generateActions() = throw UnsupportedOperationException()
 
     companion object {
         private val declarationBuilderFactory = DeclarationBuilderFactory(JungDeclarationBuilderFactory::class.java)

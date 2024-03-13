@@ -14,7 +14,7 @@ interface Implementation<AF : ActionFactory, CF : CheckFactory, QF : QueryFactor
      */
     val implementationDefaults: SD
 
-    fun createSystemFactory(systemDefaults: SD = implementationDefaults): SystemFactory<AF, CF, QF, AGF, SD>
+    fun createSystemFactory(systemDefaults: SD = implementationDefaults): SystemFactory<AF, CF, QF, AGF, SD, *>
 
     val versionFilter: VersionFilter
 

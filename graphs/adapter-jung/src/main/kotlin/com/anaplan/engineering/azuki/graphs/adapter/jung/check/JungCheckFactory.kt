@@ -19,7 +19,7 @@ interface JungCheck: Check {
     fun checkEqual(expected: Any, actual: Any): Boolean {
         val equal = expected == actual
         if (!equal) {
-            Log.error("Eauality check failed: expected=$expected actual=$actual")
+            Log.error("Equality check failed: expected=$expected actual=$actual")
         }
         return equal
     }
