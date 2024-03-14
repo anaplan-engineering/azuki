@@ -20,10 +20,10 @@ class PlayOrder(private val player1: String, private val player2: String) : TicT
     @AnalysisScenario
     fun hasPlayOrder() {
         given {
-            thereIsANewGameWithPlayers(gameA, player1, player2)
+            thereIsANewGameWithPlayers(gameA, this@PlayOrder.player1, this@PlayOrder.player2)
         }
         then {
-            gameHasPlayOrder(gameA, player1, player2)
+            gameHasPlayOrder(gameA, this@PlayOrder.player1, this@PlayOrder.player2)
         }
     }
 }
