@@ -19,11 +19,14 @@ class PlayOrder(private val player1: String, private val player2: String) : TicT
 
     @AnalysisScenario
     fun hasPlayOrder() {
+        // this pattern is often used with parameterized tests, it avoids kotlin's unusual explicit receiver syntax
+        // and makes clear where the source of the variables
+        val params = this
         given {
-            thereIsANewGameWithPlayers(gameA, this@PlayOrder.player1, this@PlayOrder.player2)
+            thereIsANewGameWithPlayers(gameA, params.player1, params.player2)
         }
         then {
-            gameHasPlayOrder(gameA, this@PlayOrder.player1, this@PlayOrder.player2)
+            gameHasPlayOrder(gameA, params.player1, params.player2)
         }
     }
 }
