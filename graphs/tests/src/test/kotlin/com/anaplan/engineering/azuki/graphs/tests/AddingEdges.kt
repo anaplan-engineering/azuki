@@ -91,4 +91,19 @@ class AddingEdges : GraphScenario() {
             }
         )
     }
+
+    @AnalysisScenario
+    fun addEdges4() {
+        given {
+            thereIsAGraph(graphA)
+        }
+        repeat(10) { i ->
+            whenever {
+                addEdge(graphA, i, i + 1)
+            }
+            then {
+                hasVertexCount(graphA, i + 1L)
+            }
+        }
+    }
 }
