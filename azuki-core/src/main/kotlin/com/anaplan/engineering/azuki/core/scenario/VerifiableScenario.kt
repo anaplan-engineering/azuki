@@ -65,6 +65,16 @@ abstract class AbstractVerifiableScenario<
     fun successor(successorFunction: VerifiableSuccessorScenario<AF, CF, W, T, RO>.() -> Unit) =
         successors(successorFunction)
 
+    /**
+     * Calls the successor function `count` times with an incrementing argument starting at 1
+     */
+    fun repeat(count: Int, successorFunction: VerifiableSuccessorScenario<AF, CF, W, T, RO>.(Int) -> Unit) {
+        successorFunctions.addAll((1..count).map { i ->
+            { s: VerifiableSuccessorScenario<AF, CF, W, T, RO> ->
+                s.successorFunction(i)
+            }
+        })
+    }
 
     override fun iterations() =
         if (whenFunction == null && thenFunction == null) {
