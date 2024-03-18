@@ -34,6 +34,7 @@ plugins {
 
 configurations {
     vdm
+    dafny
     sampleImplementationV1
     sampleImplementationV2
 }
@@ -41,6 +42,7 @@ configurations {
 dependencies {
     api project(":tictactoe:dsl")
     vdm project(":tictactoe:adapter-vdm")
+    dafny project(":tictactoe:adapter-dfy")
     sampleImplementationV1 project(":tictactoe:adapter-implementation")
     sampleImplementationV1 project(":tictactoe:implementation-v1")
     sampleImplementationV2 project(":tictactoe:adapter-implementation")
@@ -53,6 +55,14 @@ task vdmClasspathJar(type: Jar) {
     archiveBaseName = 'VDM'
     manifest {
         attributes("Class-Path": configurations.vdm.collect { it.absolutePath }.join(' '))
+    }
+}
+
+task dafnyClasspathJar(type: Jar) {
+    dependsOn configurations.dafny
+    archiveBaseName = 'Dafny'
+    manifest {
+        attributes("Class-Path": configurations.dafny.collect { it.absolutePath }.join(' '))
     }
 }
 
@@ -74,15 +84,17 @@ task sampleImplementationV2ClasspathJar(type: Jar) {
 
 ext {
     // default impls
-    setProperty("impl.includes", "SampleImpl,VDM")
+    setProperty("impl.includes", "SampleImpl,Dafny,VDM")
 }
 
 test {
     dependsOn vdmClasspathJar
+    dependsOn dafnyClasspathJar
     dependsOn sampleImplementationV2ClasspathJar
 
     def instanceJars = [
         vdmClasspathJar.archiveFile.get().asFile.absolutePath,
+        dafnyClasspathJar.archiveFile.get().asFile.absolutePath,
         sampleImplementationV2ClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
     systemProperties = [

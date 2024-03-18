@@ -23,6 +23,16 @@ class BEH1 : TicTacToeScenario() {
         }
     }
 
+    @Eac("")
+    fun simple() {
+        given {
+            thereIsAPlayOrder(orderA, X, O)
+        }
+        then {
+            everythingIsOkay()
+        }
+    }
+
 }
 
 

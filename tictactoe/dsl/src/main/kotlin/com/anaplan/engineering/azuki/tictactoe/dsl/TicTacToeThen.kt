@@ -43,4 +43,8 @@ class TicTacToeThen(private val checkFactory: TicTacToeCheckFactory): Then<TicTa
     fun gameIsDraw(gameName: String) {
         checkList.add(checkFactory.game.isDraw(gameName))
     }
+
+    fun everythingIsOkay() {
+        checkList.add(checkFactory.sanityCheck())
+    }
 }

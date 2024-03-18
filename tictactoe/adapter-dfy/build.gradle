@@ -1,0 +1,16 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+//configurations {
+//    dfy
+//}
+
+dependencies {
+    api project(":tictactoe:adapter-declaration")
+    implementation project(":tictactoe:specification-dfy")
+    implementation "org.dafny:DafnyRuntime:4.4.0"
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
+}
+
+sourceSets.main.java.srcDirs += "/Users/alessandro.pezzoni/repositories/system-specification/azuki/tictactoe/specification-dfy/build/generated/sources/fromDafny/java/main-java"

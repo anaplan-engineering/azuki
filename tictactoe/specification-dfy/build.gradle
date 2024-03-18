@@ -1,0 +1,17 @@
+plugins {
+  id "org.dafny.dafny" version "0.1.0"
+}
+
+dependencies {
+    implementation "org.dafny:DafnyRuntime:4.4.0"
+}
+
+dafny {
+    dafnyVersion.set("4.4.0+707b18acee078b3aa4d84c0590a980966bf22428")
+
+    optionsMap.put("unicode-char", true)
+}
+
+repositories {
+  mavenCentral()
+}

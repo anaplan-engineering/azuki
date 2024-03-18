@@ -2,10 +2,13 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.api
 
 import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.core.system.CheckFactory
+import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
 
 interface TicTacToeCheckFactory : CheckFactory {
     val player: PlayerCheckFactory
     val game: GameCheckFactory
+
+    fun sanityCheck(): Check = UnsupportedCheck
 }
 
 interface PlayerCheckFactory {

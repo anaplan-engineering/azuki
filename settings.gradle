@@ -13,6 +13,8 @@ include(
     "tictactoe:adapter-api",
     "tictactoe:adapter-declaration",
     "tictactoe:adapter-vdm",
+    "tictactoe:specification-dfy",
+    "tictactoe:adapter-dfy",
     "tictactoe:implementation",
     "tictactoe:implementation-v1",
     "tictactoe:implementation-v2",
