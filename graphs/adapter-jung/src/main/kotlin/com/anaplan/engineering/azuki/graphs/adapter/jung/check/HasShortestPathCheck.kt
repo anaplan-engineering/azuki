@@ -17,10 +17,10 @@ class HasShortestPathCheck<V>(
     }
 
     override fun check(env: ExecutionEnvironment) =
-        checkEqual(fullShortestPath, env.get<V, List<V>>(graphName) {
-            val pathAlg = DijkstraShortestPath(this)
-            val edges = pathAlg.getPath(from, to)
-            edges.first().toList() + edges.drop(1).map { it.second }
+        checkEqual(fullShortestPath, env.get(graphName) {
+            val shortestPath = DijkstraShortestPath(this)
+            val edges = shortestPath.getPath(from, to)
+            val edgeMap = shortestPath.getIncomingEdgeMap(from)
+            listOf(from) + edgeMap.filter { it.value in edges }.keys.toList()
         })
-
 }

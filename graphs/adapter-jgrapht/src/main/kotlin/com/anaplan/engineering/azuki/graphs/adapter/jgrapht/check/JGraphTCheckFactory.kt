@@ -11,6 +11,12 @@ class JGraphTCheckFactory : GraphCheckFactory {
 
     override fun hasShortestPath(graphName: String, from: Any, to: Any, shortestPath: List<Any>) =
         HasShortestPathCheck(graphName, from, to, shortestPath)
+
+    override fun hasCycles(graphName: String, hasCycles: Boolean) =
+        HasCyclesCheck(graphName, hasCycles)
+
+    override fun getSimpleCycleCount(graphName: String, count: Long) =
+        GetSimpleCycleCountCheck(graphName, count)
 }
 
 interface JGraphTCheck : Check {

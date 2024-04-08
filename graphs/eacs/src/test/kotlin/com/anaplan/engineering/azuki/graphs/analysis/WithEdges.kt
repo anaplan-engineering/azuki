@@ -4,12 +4,24 @@ import com.anaplan.engineering.azuki.core.runner.AnalysisScenario
 import com.anaplan.engineering.azuki.graphs.dsl.GraphScenario
 import com.anaplan.engineering.azuki.graphs.graphA
 
-class WithEdges: GraphScenario() {
+class WithEdges : GraphScenario() {
 
     @AnalysisScenario
     fun graphWithEdges() {
         given {
-            thereIsAGraph(graphA) {
+            thereIsAnUndirectedGraph(graphA) {
+                edge("a", "b")
+            }
+        }
+        then {
+            hasVertexCount(graphA, 2)
+        }
+    }
+
+    @AnalysisScenario
+    fun directedGraphWithEdges() {
+        given {
+            thereIsADirectedGraph(graphA) {
                 edge("a", "b")
             }
         }

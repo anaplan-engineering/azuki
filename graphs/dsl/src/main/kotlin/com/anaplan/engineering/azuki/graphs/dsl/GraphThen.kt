@@ -19,4 +19,13 @@ class GraphThen(private val checkFactory: GraphCheckFactory) : Then<GraphCheckFa
     override fun hasShortestPath(graphName: String, from: Any, to: Any, vararg path: Any) {
         checkList.add(checkFactory.hasShortestPath(graphName, from, to, path.toList()))
     }
+
+    override fun hasCycles(graphName: String, hasCycles: Boolean) {
+        checkList.add(checkFactory.hasCycles(graphName, hasCycles))
+    }
+
+    override fun getSimpleCycleCount(graphName: String, count: Long) {
+        checkList.add(checkFactory.getSimpleCycleCount(graphName, count))
+    }
+
 }

@@ -1,11 +1,20 @@
 package com.anaplan.engineering.azuki.graphs.dsl.declaration
 
-import com.anaplan.engineering.azuki.graphs.dsl.GraphBlock
+import com.anaplan.engineering.azuki.graphs.dsl.DirectedGraphBlock
+import com.anaplan.engineering.azuki.graphs.dsl.UndirectedGraphBlock
 
-interface GraphDeclarations {
+interface UndirectedGraphDeclarations {
 
-    fun thereIsAGraph(graphName: String)
+    fun thereIsAnUndirectedGraph(graphName: String)
 
-    fun thereIsAGraph(graphName: String, init: GraphBlock.() -> Unit)
+    fun thereIsAnUndirectedGraph(graphName: String, init: UndirectedGraphBlock.() -> Unit)
+
+}
+
+interface DirectedGraphDeclarations {
+
+    fun thereIsADirectedGraph(graphName: String)
+
+    fun thereIsADirectedGraph(graphName: String, init: DirectedGraphBlock.() -> Unit)
 
 }

@@ -1,7 +1,7 @@
 package com.anaplan.engineering.azuki.graphs.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.GraphDeclaration
-import com.anaplan.engineering.azuki.graphs.dsl.GraphBlock
+import com.anaplan.engineering.azuki.graphs.dsl.DirectedGraphBlock
 import com.anaplan.engineering.azuki.script.generation.ScriptGenDeclarationBuilder
 import com.anaplan.engineering.azuki.script.generation.ScriptGenDeclarationBuilderFactory
 
@@ -18,7 +18,7 @@ class GraphDeclarationBuilderFactory : ScriptGenDeclarationBuilderFactory<GraphD
         override fun getDeclarationScript(): String {
             val edges = declaration.edges.joinToString("\n") {
                 GraphScriptingHelper.scriptifyFunction(
-                    GraphBlock::edge,
+                    DirectedGraphBlock::edge,
                     it.first,
                     it.second
                 )
@@ -27,7 +27,7 @@ class GraphDeclarationBuilderFactory : ScriptGenDeclarationBuilderFactory<GraphD
             val nonEdgeVertices = declaration.vertices - edgeVertices
             val vertices = nonEdgeVertices.joinToString("\n") {
                 GraphScriptingHelper.scriptifyFunction(
-                    GraphBlock::vertex,
+                    DirectedGraphBlock::vertex,
                     it
                 )
             }

@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.api.GraphCheckFactory
 import com.anaplan.engineering.azuki.graphs.adapter.jung.execution.ExecutionEnvironment
 import org.slf4j.LoggerFactory
 
-class JungCheckFactory: GraphCheckFactory {
+class JungCheckFactory : GraphCheckFactory {
 
     override fun hasVertexCount(graphName: String, count: Long) = HasVertexCountCheck(graphName, count)
 
@@ -13,8 +13,8 @@ class JungCheckFactory: GraphCheckFactory {
         HasShortestPathCheck(graphName, from, to, shortestPath)
 }
 
-interface JungCheck: Check {
-    fun check(env: ExecutionEnvironment) : Boolean
+interface JungCheck : Check {
+    fun check(env: ExecutionEnvironment): Boolean
 
     fun checkEqual(expected: Any, actual: Any): Boolean {
         val equal = expected == actual

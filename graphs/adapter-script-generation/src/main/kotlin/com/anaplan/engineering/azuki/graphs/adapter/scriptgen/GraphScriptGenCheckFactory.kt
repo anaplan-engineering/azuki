@@ -1,7 +1,9 @@
 package com.anaplan.engineering.azuki.graphs.adapter.scriptgen
 
+import com.anaplan.engineering.azuki.graphs.adapter.api.GetCycleCountBehavior
 import com.anaplan.engineering.azuki.graphs.adapter.api.GetVertexCountBehaviour
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphCheckFactory
+import com.anaplan.engineering.azuki.graphs.adapter.api.HasCyclesBehavior
 import com.anaplan.engineering.azuki.graphs.dsl.check.GraphChecks
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationCheck
 
@@ -17,6 +19,15 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         shortestPath: List<Any>
     ): ScriptGenerationCheck = HasShortestPathCheck(graphName, from, to, shortestPath)
 
+    override fun hasCycles(
+        graphName: String,
+        hasCycles: Boolean,
+    ): ScriptGenerationCheck = HasCyclesCheck(graphName, hasCycles)
+
+    override fun getSimpleCycleCount(
+        graphName: String,
+        count: Long,
+    ): ScriptGenerationCheck = GetSimpleCycleCountCheck(graphName, count)
 
     private class HasVertexCountCheck(private val graphName: String, private val count: Long) :
         GetVertexCountBehaviour(), ScriptGenerationCheck {
@@ -33,6 +44,24 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         GetVertexCountBehaviour(), ScriptGenerationCheck {
         override fun getCheckScript() =
             GraphScriptingHelper.scriptifyFunction(GraphChecks::hasVertexCount, graphName, from, to, shortestPath)
+    }
+
+    private class HasCyclesCheck(
+        private val graphName: String,
+        private val hasCycles: Boolean,
+    ) :
+        HasCyclesBehavior(), ScriptGenerationCheck {
+        override fun getCheckScript() =
+            GraphScriptingHelper.scriptifyFunction(GraphChecks::hasCycles, graphName, hasCycles)
+    }
+
+    private class GetSimpleCycleCountCheck(
+        private val graphName: String,
+        private val count: Long
+    ) :
+        GetCycleCountBehavior(), ScriptGenerationCheck {
+        override fun getCheckScript() =
+            GraphScriptingHelper.scriptifyFunction(GraphChecks::getSimpleCycleCount, graphName, count)
     }
 
 }

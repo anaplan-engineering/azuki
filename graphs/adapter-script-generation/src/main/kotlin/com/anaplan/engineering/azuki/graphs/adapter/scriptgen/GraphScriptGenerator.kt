@@ -5,7 +5,6 @@ import com.anaplan.engineering.azuki.core.system.NoQueryFactory
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphActionFactory
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphCheckFactory
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.GraphDeclarationState
-import com.anaplan.engineering.azuki.script.generation.ScriptGenerationAction
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerator
 import com.anaplan.engineering.azuki.script.generation.ScriptingHelper
 

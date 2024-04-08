@@ -4,28 +4,42 @@ import com.anaplan.engineering.azuki.core.dsl.ParallelWhen
 import com.anaplan.engineering.azuki.core.dsl.When
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphActionFactory
-import com.anaplan.engineering.azuki.graphs.dsl.action.GraphActions
+import com.anaplan.engineering.azuki.graphs.dsl.action.DirectedGraphActions
+import com.anaplan.engineering.azuki.graphs.dsl.action.UndirectedGraphActions
 
-class GraphWhen(private val actionFactory: GraphActionFactory<*>):
+class GraphWhen(private val actionFactory: GraphActionFactory<*>) :
     When<GraphActionFactory<*>>,
     ParallelWhen<GraphActionFactory<*>, GraphWhen>,
-    GraphActions
-{
+    UndirectedGraphActions,
+    DirectedGraphActions {
     private val actionList = mutableListOf<Action>()
 
     override fun actions() = actionList
 
-    override fun create(graphName: String) {
-        actionList.add(actionFactory.create(graphName))
+    override fun createUndirected(graphName: String) {
+        actionList.add(actionFactory.undirected.create(graphName))
     }
 
-    override fun addVertex(graphName: String, vertex: Any) {
-        actionList.add(actionFactory.addVertex(graphName,  vertex))
+    override fun createDirected(graphName: String) {
+        actionList.add(actionFactory.directed.create(graphName))
     }
 
-    override fun addEdge(graphName: String, source: Any, target: Any) {
-        actionList.add(actionFactory.addEdge(graphName,  source, target))
+    override fun addVertexToUndirectedGraph(graphName: String, vertex: Any) {
+        actionList.add(actionFactory.undirected.addVertex(graphName, vertex))
     }
+
+    override fun addEdgeToUndirectedGraph(graphName: String, source: Any, target: Any) {
+        actionList.add(actionFactory.undirected.addEdge(graphName, source, target))
+    }
+
+    override fun addVertexToDirectedGraph(graphName: String, vertex: Any) {
+        actionList.add(actionFactory.directed.addVertex(graphName, vertex))
+    }
+
+    override fun addEdgeToDirectedGraph(graphName: String, source: Any, target: Any) {
+        actionList.add(actionFactory.directed.addEdge(graphName, source, target))
+    }
+
 
     override fun parallel(vararg fns: GraphWhen.() -> Unit) {
         actionList.add(actionFactory.createParallelAction(

@@ -14,7 +14,7 @@ class GraphScriptGeneratorTest {
         ScenarioScriptingTestUtils.checkScenarioGeneration(
             verifiableScenario {
                 given {
-                    thereIsAGraph(graphA) {
+                    thereIsAnUndirectedGraph(graphA) {
                         edge("a", "b")
                     }
                 }
@@ -30,17 +30,31 @@ class GraphScriptGeneratorTest {
         ScenarioScriptingTestUtils.checkScenarioGeneration(
             verifiableScenario {
                 given {
-                    thereIsAGraph(graphA)
+                    thereIsAnUndirectedGraph(graphA)
                 }
                 whenever {
                     parallel({
-                        addEdge(graphA, "a", "b")
+                        addEdgeToUndirectedGraph(graphA, "a", "b")
                     }, {
-                        addEdge(graphA, "a", "c")
+                        addEdgeToUndirectedGraph(graphA, "a", "c")
                     })
                 }
                 then {
                     hasVertexCount(graphA, 3L)
+                }
+            }
+        )
+    }
+
+    @Test
+    fun directedGraph() {
+        ScenarioScriptingTestUtils.checkScenarioGeneration(
+            verifiableScenario {
+                given {
+                    thereIsADirectedGraph("graphA") {}
+                }
+                then {
+                    hasVertexCount("graphA", 0)
                 }
             }
         )

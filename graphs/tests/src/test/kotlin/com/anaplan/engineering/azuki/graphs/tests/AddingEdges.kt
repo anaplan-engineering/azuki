@@ -12,19 +12,19 @@ class AddingEdges : GraphScenario() {
     @AnalysisScenario
     fun addEdges1() {
         given {
-            thereIsAGraph(graphA) {
+            thereIsAnUndirectedGraph(graphA) {
                 edge("a", "b")
             }
         }
         whenever {
-            addEdge(graphA, "b", "c")
+            addEdgeToUndirectedGraph(graphA, "b", "c")
         }
         then {
             hasVertexCount(graphA, 3)
         }
         successor {
             whenever {
-                addEdge(graphA, "a", "c")
+                addEdgeToUndirectedGraph(graphA, "a", "c")
             }
             then {
                 hasVertexCount(graphA, 3)
@@ -35,12 +35,12 @@ class AddingEdges : GraphScenario() {
     @AnalysisScenario
     fun addEdges2() {
         given {
-            thereIsAGraph(graphA) {
+            thereIsAnUndirectedGraph(graphA) {
                 edge("a", "b")
             }
         }
         whenever {
-            addEdge(graphA, "b", "c")
+            addEdgeToUndirectedGraph(graphA, "b", "c")
         }
         then {
             hasVertexCount(graphA, 3)
@@ -48,7 +48,7 @@ class AddingEdges : GraphScenario() {
         successors(
             {
                 whenever {
-                    addEdge(graphA, "a", "c")
+                    addEdgeToUndirectedGraph(graphA, "a", "c")
                 }
                 then {
                     hasVertexCount(graphA, 3)
@@ -56,7 +56,7 @@ class AddingEdges : GraphScenario() {
             },
             {
                 whenever {
-                    addEdge(graphA, "d", "a")
+                    addEdgeToUndirectedGraph(graphA, "d", "a")
                 }
                 then {
                     hasVertexCount(graphA, 4)
@@ -68,14 +68,14 @@ class AddingEdges : GraphScenario() {
     @AnalysisScenario
     fun addEdges3() {
         given {
-            thereIsAGraph(graphA) {
+            thereIsAnUndirectedGraph(graphA) {
                 edge("a", "b")
             }
         }
         successors(
             {
                 whenever {
-                    addEdge(graphA, "a", "c")
+                    addEdgeToUndirectedGraph(graphA, "a", "c")
                 }
                 then {
                     hasVertexCount(graphA, 3)
@@ -83,7 +83,7 @@ class AddingEdges : GraphScenario() {
             },
             {
                 whenever {
-                    addEdge(graphA, "d", "a")
+                    addEdgeToUndirectedGraph(graphA, "d", "a")
                 }
                 then {
                     hasVertexCount(graphA, 4)
@@ -95,11 +95,11 @@ class AddingEdges : GraphScenario() {
     @AnalysisScenario
     fun addEdges4() {
         given {
-            thereIsAGraph(graphA)
+            thereIsAnUndirectedGraph(graphA)
         }
         repeat(10) { i ->
             whenever {
-                addEdge(graphA, i, i + 1)
+                addEdgeToUndirectedGraph(graphA, i, i + 1)
             }
             then {
                 hasVertexCount(graphA, i + 1L)
@@ -110,13 +110,13 @@ class AddingEdges : GraphScenario() {
     @AnalysisScenario
     fun addEdges5() {
         given {
-            thereIsAGraph(graphA)
+            thereIsAnUndirectedGraph(graphA)
         }
         whenever {
             parallel({
-                addEdge(graphA, "a", "b")
+                addEdgeToUndirectedGraph(graphA, "a", "b")
             }, {
-                addEdge(graphA, "a", "c")
+                addEdgeToUndirectedGraph(graphA, "a", "c")
             })
         }
         then {

@@ -1,1 +1,2 @@
-com.anaplan.engineering.azuki.graphs.adapter.jgrapht.declaration.GraphDeclarationBuilderFactory
+com.anaplan.engineering.azuki.graphs.adapter.jgrapht.declaration.DirectedGraphDeclarationBuilderFactory
+com.anaplan.engineering.azuki.graphs.adapter.jgrapht.declaration.UndirectedGraphDeclarationBuilderFactory
