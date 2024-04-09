@@ -18,7 +18,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.jung.execution.ExecutionEnvi
 import org.slf4j.LoggerFactory
 
 class JungSystemFactory : VerifiableSystemFactory<
-    GraphActionFactory,
+    GraphActionFactory<JungAction>,
     GraphCheckFactory,
     NoQueryFactory,
     NoActionGeneratorFactory,
@@ -41,7 +41,7 @@ data class JungSystem(
     val declarableActions: List<DeclarableAction<GraphDeclarationState>>,
     val buildActions: List<JungAction>,
     val checks: List<JungCheck>
-) : VerifiableSystem<GraphActionFactory, GraphCheckFactory> {
+) : VerifiableSystem<GraphActionFactory<JungAction>, GraphCheckFactory> {
 
     override fun verify(): VerificationResult {
         val env = ExecutionEnvironment()

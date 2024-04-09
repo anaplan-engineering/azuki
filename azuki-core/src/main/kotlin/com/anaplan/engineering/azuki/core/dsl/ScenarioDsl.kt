@@ -21,6 +21,11 @@ interface When<AF : ActionFactory> {
 }
 
 @ScenarioDsl
+interface ParallelWhen<AF, W: When<AF>> where AF: ActionFactory, AF: ParallelActionFactory<*> {
+    fun parallel(vararg fns: W.() -> Unit)
+}
+
+@ScenarioDsl
 interface Then<CF : CheckFactory> {
     fun checks(): List<Check>
 }

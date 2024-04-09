@@ -17,7 +17,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionE
 import org.slf4j.LoggerFactory
 
 class JGraphTSystemFactory : VerifiableSystemFactory<
-    GraphActionFactory,
+    GraphActionFactory<JGraphTAction>,
     GraphCheckFactory,
     NoQueryFactory,
     NoActionGeneratorFactory,
@@ -39,9 +39,9 @@ class JGraphTSystemFactory : VerifiableSystemFactory<
 
 data class JGraphTSystem(
     val declarableActions: List<DeclarableAction<GraphDeclarationState>>,
-    val buildActions: List<JGraphTAction>,
+    val commands: List<JGraphTAction>,
     val checks: List<JGraphTCheck>
-) : VerifiableSystem<GraphActionFactory, GraphCheckFactory> {
+) : VerifiableSystem<GraphActionFactory<JGraphTAction>, GraphCheckFactory> {
 
     override fun verify(): VerificationResult {
         val env = ExecutionEnvironment()
@@ -75,7 +75,7 @@ data class JGraphTSystem(
     private fun build(env: ExecutionEnvironment) {
         val declarationBuilders = declarationStateBuilder.build(declarableActions).map { declarationBuilder(it) }
         declarationBuilders.forEach { it.build(env) }
-        buildActions.forEach { it.act(env) }
+        commands.forEach { it.act(env) }
     }
 
     private fun <D : Declaration> declarationBuilder(declaration: D) =

@@ -10,6 +10,7 @@ typealias FunctionalElement = Int
 typealias Behavior = Int
 
 const val unsupportedBehavior: Behavior = -1
+const val parallel: Behavior = -2
 
 interface ReifiedBehavior  {
     val behavior: Behavior

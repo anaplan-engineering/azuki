@@ -10,7 +10,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.api.GraphActionFactory
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphCheckFactory
 
 object GraphDslProvider : DslProvider<
-    GraphActionFactory,
+    GraphActionFactory<*>,
     GraphCheckFactory,
     NoQueryFactory,
     NoActionGeneratorFactory,
@@ -22,9 +22,9 @@ object GraphDslProvider : DslProvider<
     NoGenerate,
     GraphRegardlessOf
     > {
-    override fun createGiven(actionFactory: GraphActionFactory) = GraphGiven(actionFactory)
+    override fun createGiven(actionFactory: GraphActionFactory<*>) = GraphGiven(actionFactory)
 
-    override fun createWhen(actionFactory: GraphActionFactory) = GraphWhen(actionFactory)
+    override fun createWhen(actionFactory: GraphActionFactory<*>) = GraphWhen(actionFactory)
 
     override fun createThen(checkFactory: GraphCheckFactory) = GraphThen(checkFactory)
 
@@ -34,6 +34,6 @@ object GraphDslProvider : DslProvider<
 
     override fun createGenerate(actionGeneratorFactory: NoActionGeneratorFactory) = NoGenerate
 
-    override fun createRegardlessOf(actionFactory: GraphActionFactory) = GraphRegardlessOf(actionFactory)
+    override fun createRegardlessOf(actionFactory: GraphActionFactory<*>) = GraphRegardlessOf(actionFactory)
 }
 

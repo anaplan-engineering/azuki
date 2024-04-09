@@ -14,7 +14,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.api.GraphActionFactory
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphCheckFactory
 
 open class GraphScenario : RunnableScenario<
-    GraphActionFactory,
+    GraphActionFactory<*>,
     GraphCheckFactory,
     NoQueryFactory,
     NoActionGeneratorFactory,
@@ -27,18 +27,18 @@ open class GraphScenario : RunnableScenario<
     GraphRegardlessOf,
     NoSystemDefaults>(GraphDslProvider)
 
-interface GraphBuildableScenario : BuildableScenario<GraphActionFactory> {
+interface GraphBuildableScenario : BuildableScenario<GraphActionFactory<*>> {
     fun given(givenFunction: GraphGiven.() -> Unit)
     fun whenever(whenFunction: GraphWhen.() -> Unit)
 }
 
-interface GraphVerifiableScenario : VerifiableScenario<GraphActionFactory, GraphCheckFactory>,
+interface GraphVerifiableScenario : VerifiableScenario<GraphActionFactory<*>, GraphCheckFactory>,
     GraphBuildableScenario {
     fun then(thenFunction: GraphThen.() -> Unit)
 }
 
 open class GraphVerifiableScenarioImpl :
-    AbstractVerifiableScenario<GraphActionFactory, GraphCheckFactory, GraphGiven, GraphWhen, GraphThen, GraphRegardlessOf>(
+    AbstractVerifiableScenario<GraphActionFactory<*>, GraphCheckFactory, GraphGiven, GraphWhen, GraphThen, GraphRegardlessOf>(
         GraphDslProvider), GraphVerifiableScenario
 
 fun verifiableScenario(init: GraphVerifiableScenario.() -> Unit): GraphVerifiableScenario {

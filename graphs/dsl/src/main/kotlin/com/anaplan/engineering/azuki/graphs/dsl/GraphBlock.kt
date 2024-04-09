@@ -7,7 +7,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.api.GraphActionFactory
 @ScenarioDsl
 class GraphBlock(
     private val graphName: String,
-    private val actionFactory: GraphActionFactory,
+    private val actionFactory: GraphActionFactory<*>,
 ) {
 
     private val actionList = mutableListOf<Action>()

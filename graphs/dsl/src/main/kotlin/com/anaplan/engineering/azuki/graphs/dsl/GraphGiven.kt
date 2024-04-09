@@ -8,7 +8,7 @@ import com.anaplan.engineering.azuki.graphs.dsl.action.GraphDeclarableActions
 import com.anaplan.engineering.azuki.graphs.dsl.declaration.GraphDeclarations
 
 @ScenarioDsl
-class GraphGiven(private val actionFactory: GraphActionFactory): Given<GraphActionFactory>,
+class GraphGiven(private val actionFactory: GraphActionFactory<*>): Given<GraphActionFactory<*>>,
     GraphDeclarations, GraphDeclarableActions
 {
 

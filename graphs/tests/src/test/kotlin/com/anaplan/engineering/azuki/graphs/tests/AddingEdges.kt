@@ -106,4 +106,21 @@ class AddingEdges : GraphScenario() {
             }
         }
     }
+
+    @AnalysisScenario
+    fun addEdges5() {
+        given {
+            thereIsAGraph(graphA)
+        }
+        whenever {
+            parallel({
+                addEdge(graphA, "a", "b")
+            }, {
+                addEdge(graphA, "a", "c")
+            })
+        }
+        then {
+            hasVertexCount(graphA, 3L)
+        }
+    }
 }
