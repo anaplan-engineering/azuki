@@ -175,6 +175,8 @@ class VerifiableScenarioRunner<S : VerifiableScenario<AF, CF>, AF : ActionFactor
             Result.UnsupportedCommand
         } catch (e: LateDetectUnsupportedCheckException) {
             Result.UnsupportedCheck
+        } finally {
+            if (system is MutableSystem<*, *>) system.destroy()
         }
     }
 

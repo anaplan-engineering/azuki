@@ -75,7 +75,7 @@ private class VerifiableSystemCursor<AF : ActionFactory, CF : CheckFactory, S : 
     private var systemDefinition: SystemDefinition
 ) {
 
-    val system = systemFactory.create(systemDefinition)
+    private val system = systemFactory.create(systemDefinition)
 
     fun apply(iteration: SystemIteration) =
         if (system is MutableSystem<*, *>) {

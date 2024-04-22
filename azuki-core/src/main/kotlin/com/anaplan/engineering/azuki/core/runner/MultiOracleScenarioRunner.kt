@@ -93,33 +93,6 @@ class MultiOracleScenarioRunner<
         return VerificationContext(queryTaskResult.result, generatedScenario)
     }
 
-    private fun generateScenario(resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>): OracleScenario<AF, QF, AGF> {
-        val actionGenerators = testInstance.runTask(TaskType.CreateActionGenerators, scenario) { implementation ->
-            val systemFactory =
-                implementation.createSystemFactory() as? ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>
-                    ?: throw IllegalStateException("Trying to generate actions, but system factory does not create systems with action generation capability")
-            scenario.givenActionGenerations(systemFactory.actionGeneratorFactory).map {
-                it to ActionGeneratorType.Given
-            } + scenario.whenActionGenerations(systemFactory.actionGeneratorFactory).map {
-                it to ActionGeneratorType.When
-            }
-        }.result!!
-        return actionGenerators.fold(scenario) { baseScenario, (generators, type) ->
-            if (resultBuilder.error == null) {
-                val generateTaskResult = generateActions(testInstance, baseScenario, generators)
-                resultBuilder.add(generateTaskResult)
-                val actionCreators = generateTaskResult.result ?: emptyList()
-                GeneratedScenario(
-                    base = baseScenario,
-                    givenActionCreators = if (type == ActionGeneratorType.Given) actionCreators else emptyList(),
-                    whenActionCreators = if (type == ActionGeneratorType.When) actionCreators else emptyList()
-                )
-            } else {
-                baseScenario
-            }
-        }
-    }
-
     private enum class ActionGeneratorType { Given, When }
 
     private fun verifyWithOracle(
@@ -150,9 +123,13 @@ class MultiOracleScenarioRunner<
                 commands = emptyList(),
                 checks = listOf(systemFactory.checkFactory.systemValid()),
             ))
-            when (system.verify()) {
-                is VerificationResult.Verified -> true
-                else -> false
+            try {
+                when (system.verify()) {
+                    is VerificationResult.Verified -> true
+                    else -> false
+                }
+            } finally {
+                if (system is MutableSystem<*, *>) system.destroy()
             }
         }
         Log.debug("Checked declarations implementation=${implementation.name} result=$result")
@@ -178,38 +155,104 @@ class MultiOracleScenarioRunner<
                 commands = commands,
                 checks = listOf(systemFactory.checkFactory.systemValid()),
             ))
-            when (val result = system.verify()) {
-                is VerificationResult.Verified -> true
-                is VerificationResult.SystemInvalid -> {
-                    Log.error("System invalid:", result.cause)
-                    false
-                }
+            try {
+                when (val result = system.verify()) {
+                    is VerificationResult.Verified -> true
+                    is VerificationResult.SystemInvalid -> {
+                        Log.error("System invalid:", result.cause)
+                        false
+                    }
 
-                else -> false
+                    else -> false
+                }
+            } finally {
+                if (system is MutableSystem<*, *>) system.destroy()
             }
         }
     }
 
+    private class ActionGeneratingSystemCursor<AF : ActionFactory, CF : CheckFactory, S : ActionGeneratingSystem<AF, CF>, SF : ActionGeneratingSystemFactory<AF, CF, *, *, *, S>>(
+        private val systemFactory: SF,
+        private var systemDefinition: SystemDefinition
+    ) {
+
+        private val system = systemFactory.create(systemDefinition)
+
+        fun apply(iteration: SystemIteration) =
+            if (system is MutableSystem<*, *>) {
+                system.applyIteration(iteration)
+                system
+            } else {
+                systemDefinition = systemDefinition.copy(
+                    commands = systemDefinition.commands + iteration.commands,
+                    actionGenerators = iteration.actionGenerators,
+                )
+                systemFactory.create(systemDefinition)
+            }
+
+        fun destroy() {
+            if (system is MutableSystem<*, *>) {
+                system.destroy()
+            }
+        }
+    }
+
+    private fun generateScenario(resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>): OracleScenario<AF, QF, AGF> {
+        val actionGenerators = testInstance.runTask(TaskType.CreateActionGenerators, scenario) { implementation ->
+            val systemFactory =
+                implementation.createSystemFactory() as? ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>
+                    ?: throw IllegalStateException("Trying to generate actions, but system factory does not create systems with action generation capability")
+            scenario.givenActionGenerations(systemFactory.actionGeneratorFactory).map {
+                it to ActionGeneratorType.Given
+            } + scenario.whenActionGenerations(systemFactory.actionGeneratorFactory).map {
+                it to ActionGeneratorType.When
+            }
+        }.result!!
+        val generateTaskResult = testInstance.runTask(TaskType.GenerateActions, scenario) { implementation ->
+            val systemFactory =
+                implementation.createSystemFactory() as? ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>
+                    ?: throw IllegalStateException("Trying to generate actions, but system factory does not create systems with action generation capability")
+            val declarations = scenario.declarations(systemFactory.actionFactory)
+            val commands = scenario.commands(systemFactory.actionFactory)
+            val systemCursor = ActionGeneratingSystemCursor(systemFactory, SystemDefinition(
+                declarations = declarations,
+                commands = commands
+            ))
+            try {
+                actionGenerators.fold(scenario) { baseScenario, (generators, type) ->
+                    val commandsFromPreviousIteration =
+                        if (baseScenario is GeneratedScenario) {
+                            baseScenario.givenActionCreators.map { it(systemFactory.actionFactory) } +
+                                baseScenario.whenActionCreators.map { it(systemFactory.actionFactory) }
+                        } else {
+                            emptyList()
+                        }
+                    val actionCreators = generateActions(systemCursor, commandsFromPreviousIteration, generators)
+                    GeneratedScenario(
+                        base = baseScenario,
+                        givenActionCreators = if (type == ActionGeneratorType.Given) actionCreators else emptyList(),
+                        whenActionCreators = if (type == ActionGeneratorType.When) actionCreators else emptyList()
+                    )
+                }
+            } finally {
+                systemCursor.destroy()
+            }
+        }
+        resultBuilder.add(generateTaskResult)
+        return generateTaskResult.result ?: scenario
+    }
+
 
     private fun generateActions(
-        instance: ImplementationInstance<AF, CF, QF, AGF>,
-        scenario: OracleScenario<AF, QF, AGF>,
+        systemCursor: ActionGeneratingSystemCursor<AF, CF, ActionGeneratingSystem<AF, CF>, ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>>,
+        commands: List<Action>,
         generators: List<ActionGenerator>
-    ) = instance.runTask(TaskType.GenerateActions, scenario) { implementation ->
-        val systemFactory =
-            implementation.createSystemFactory() as? ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>
-                ?: throw IllegalStateException("Trying to generate actions, but system factory does not create systems with action generation capability")
-        val declarations = scenario.declarations(systemFactory.actionFactory)
-        val commands = scenario.commands(systemFactory.actionFactory)
-        if (UnsupportedActionGenerator in generators) {
+    ): List<(AF) -> Action> {
+        return if (UnsupportedActionGenerator in generators) {
             Log.warn("Unsupported action generator found!!")
             emptyList()
         } else try {
-            val system = systemFactory.create(SystemDefinition(
-                declarations = declarations,
-                commands = commands,
-                actionGenerators = generators,
-            ))
+            val system = systemCursor.apply(SystemIteration(commands = commands, actionGenerators = generators))
             system.generateActions()
         } catch (e: LateDetectUnsupportedActionException) {
             emptyList()
@@ -237,7 +280,11 @@ class MultiOracleScenarioRunner<
                     queries = queries.queries.filter { it !is UnsupportedQuery<*> },
                     forAllQueries = queries.forAllQueries,
                 ))
-                system.query()
+                try {
+                    system.query()
+                } finally {
+                    if (system is MutableSystem<*, *>) system.destroy()
+                }
             } catch (e: LateDetectUnsupportedActionException) {
                 Log.warn("Late detected unsupported action found")
                 emptyList()
@@ -259,9 +306,13 @@ class MultiOracleScenarioRunner<
             commands = commands,
             checks = answers.flatMap { it.createChecks(systemFactory.checkFactory) },
         ))
-        when (system.verify()) {
-            is VerificationResult.Verified -> true
-            else -> false
+        try {
+            when (system.verify()) {
+                is VerificationResult.Verified -> true
+                else -> false
+            }
+        } finally {
+            if (system is MutableSystem<*, *>) system.destroy()
         }
     }
 
@@ -306,8 +357,8 @@ class MultiOracleScenarioRunner<
 
     private class GeneratedScenario<AF : ActionFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
         private val base: OracleScenario<AF, QF, AGF>,
-        private val givenActionCreators: List<(AF) -> Action> = emptyList(),
-        private val whenActionCreators: List<(AF) -> Action> = emptyList(),
+        val givenActionCreators: List<(AF) -> Action> = emptyList(),
+        val whenActionCreators: List<(AF) -> Action> = emptyList(),
     ) : OracleScenario<AF, QF, AGF> {
 
         override fun declarations(actionFactory: AF) =
