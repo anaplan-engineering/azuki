@@ -15,7 +15,11 @@ class HasShortestPathCheck<V>(
 ) : JGraphTCheck, GetShortestPathBehaviour() {
 
     private val fullShortestPath by lazy {
-        listOf(from) + shortestPath + to
+        if (shortestPath == listOf(null)) {
+            listOf(null)
+        } else {
+            listOf(from) + shortestPath + to
+        }
     }
 
     override fun check(env: ExecutionEnvironment) =
