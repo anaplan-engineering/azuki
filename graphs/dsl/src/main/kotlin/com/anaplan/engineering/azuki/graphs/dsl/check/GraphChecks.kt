@@ -6,4 +6,6 @@ interface GraphChecks {
     fun hasShortestPath(graphName: String, from: Any, to: Any, vararg path: Any)
     fun hasCycles(graphName: String, hasCycle: Boolean)
     fun getSimpleCycleCount(graphName: String, count: Long)
+    fun hasPath(graphName: String, from: Any, to: Any, result: Boolean)
+
 }

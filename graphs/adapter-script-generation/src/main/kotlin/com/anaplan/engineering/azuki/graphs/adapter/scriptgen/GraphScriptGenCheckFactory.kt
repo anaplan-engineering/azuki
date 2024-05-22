@@ -1,9 +1,6 @@
 package com.anaplan.engineering.azuki.graphs.adapter.scriptgen
 
-import com.anaplan.engineering.azuki.graphs.adapter.api.GetCycleCountBehavior
-import com.anaplan.engineering.azuki.graphs.adapter.api.GetVertexCountBehaviour
-import com.anaplan.engineering.azuki.graphs.adapter.api.GraphCheckFactory
-import com.anaplan.engineering.azuki.graphs.adapter.api.HasCyclesBehavior
+import com.anaplan.engineering.azuki.graphs.adapter.api.*
 import com.anaplan.engineering.azuki.graphs.dsl.check.GraphChecks
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationCheck
 
@@ -28,6 +25,13 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         graphName: String,
         count: Long,
     ): ScriptGenerationCheck = GetSimpleCycleCountCheck(graphName, count)
+
+    override fun hasPath(
+        graphName: String,
+        from: Any,
+        to: Any,
+        result: Boolean,
+    ): ScriptGenerationCheck = HasPathCheck(graphName, from, to, result)
 
     private class HasVertexCountCheck(private val graphName: String, private val count: Long) :
         GetVertexCountBehaviour(), ScriptGenerationCheck {
@@ -62,6 +66,17 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         GetCycleCountBehavior(), ScriptGenerationCheck {
         override fun getCheckScript() =
             GraphScriptingHelper.scriptifyFunction(GraphChecks::getSimpleCycleCount, graphName, count)
+    }
+
+    private class HasPathCheck(
+        private val graphName: String,
+        private val from: Any,
+        private val to: Any,
+        private val result: Boolean
+    ) :
+        HasPathBehaviour(), ScriptGenerationCheck {
+        override fun getCheckScript() =
+            GraphScriptingHelper.scriptifyFunction(GraphChecks::hasPath, graphName, from, to, result)
     }
 
 }
