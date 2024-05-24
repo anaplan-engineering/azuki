@@ -1,12 +1,12 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check
 
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.GetPlayOrderBehaviour
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.GetPlayOrderBehavior
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.XOModule
 import com.anaplan.engineering.azuki.vdm.DefaultModuleBuilder
 
 class BoardIsCompleteCheck(
     private val gameName: String
-) : GetPlayOrderBehaviour(), DefaultVdmCheck {
+) : GetPlayOrderBehavior(), DefaultVdmCheck {
 
     override fun build(builder: DefaultModuleBuilder): DefaultModuleBuilder {
         val gameGetter = builder.getters[gameName] ?: throw IllegalStateException("Missing getter for game $gameName")

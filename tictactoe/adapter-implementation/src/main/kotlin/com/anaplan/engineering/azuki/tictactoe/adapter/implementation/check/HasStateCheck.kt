@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check
 
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.GetPlayOrderBehaviour
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.GetPlayOrderBehavior
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.MoveMap
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 class HasStateCheck(
     private val gameName: String,
     private val moves: MoveMap,
-) : GetPlayOrderBehaviour(), SampleCheck {
+) : GetPlayOrderBehavior(), SampleCheck {
 
     override fun check(env: ExecutionEnvironment): Boolean {
         return env.withGame(gameName) {

@@ -15,7 +15,7 @@ publishing {
         mavenJava(MavenPublication) {
             pom {
                 name = 'Azuki VDM tools'
-                description = 'Tools for adapting to VDM when using the Azuki framework for behaviour driven specification'
+                description = 'Tools for adapting to VDM when using the Azuki framework for behavior driven specification'
             }
         }
     }

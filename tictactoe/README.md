@@ -9,9 +9,9 @@ below.
 
 - 1 - A game of tic-tac-toe
 
-## Behaviours
+## Behaviors
 
-The following behaviours have been defined
+The following behaviors have been defined
 
 - 1 - Start a new game
 - 2 - Get the move count for a given player
@@ -22,11 +22,11 @@ The following behaviours have been defined
 
 ## The process
 
-1. Write a scenario that exemplifies the desired aspect of the behaviour being specified, either under
+1. Write a scenario that exemplifies the desired aspect of the behavior being specified, either under
    [eacs/.../eacs](eacs/src/test/kotlin/com/anaplan/engineering/azuki/tictactoe/eacs) or
    [eacs/.../analysis](eacs/src/test/kotlin/com/anaplan/engineering/azuki/tictactoe/analysis). You may need to add
    the relevant
-   [behaviour](adapter-api/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/api/TicTacToeBehaviours.kt)
+   [behavior](adapter-api/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/api/TicTacToeBehaviors.kt)
    and/or
    [functional element](adapter-api/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/api/TicTacToeFunctionalElements.kt)
    to the `adapter-api` if they have not been defined already. If no new DSL functions are needed, proceed to
@@ -39,7 +39,8 @@ The following behaviours have been defined
    [TicTacToeActionFactory](adapter-api/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/api/TicTacToeActionFactory.kt)
    (pre-conditions and actions), or
    [TicTacToeCheckFactory](adapter-api/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/api/TicTacToeCheckFactory.kt)
-   (post-conditions). To avoid compilation errors, these can be added to the adapter implementation as `UnsupportedAction`
+   (post-conditions). To avoid compilation errors, these can be added to the adapter implementation
+   as `UnsupportedAction`
    in [VdmActionFactory](adapter-vdm/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/vdm/action/VdmActionFactory.kt)
    and [VdmCheckFactory](adapter-vdm/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/vdm/check/VdmCheckFactory.kt),
    respectively.
@@ -70,14 +71,14 @@ override the `build` method. For example, see
 [PlayerMoveAction](adapter-vdm/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/vdm/action/PlayerMoveAction.kt).
 They should also either inherit from the corresponding
 [DeclarableAction](adapter-declaration/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/declaration/DeclarableAction.kt)
-(as in the case of `PlayerMoveAction`), or from the appropriate behaviour.
+(as in the case of `PlayerMoveAction`), or from the appropriate behavior.
 
 ### Checks
 
 Checks should inherit from [VdmCheck](../azuki-vdm/src/main/kotlin/com/anaplan/engineering/azuki/vdm/VdmCheck.kt) and
 override the `build` method. For example, see
 [BoardHasStateCheck](adapter-vdm/src/main/kotlin/com/anaplan/engineering/azuki/tictactoe/adapter/vdm/check/BoardHasStateCheck.kt).
-They should also inherit from the appropriate behaviour.
+They should also inherit from the appropriate behavior.
 
 ### Updating the specification
 
@@ -87,15 +88,18 @@ next acceptance criterion.
 
 ## Implementations
 
-A basic implementation is included in [implementation/](implementation) with an adapter in [adapter-implementation/](adapter-implementation).
+A basic implementation is included in [implementation/](implementation) with an adapter
+in [adapter-implementation/](adapter-implementation).
 
 This directory contains the common components that are used by two concrete versions of the implementation:
 
 - [implementation-v1/](implementation-v1)
 - [implementation-v2/](implementation-v2)
 
-These are used to simulate two versions of a single demonstration that enable the demonstration of roll-forward/roll-back through Azuki's persistence verification mechanism.
+These are used to simulate two versions of a single demonstration that enable the demonstration of
+roll-forward/roll-back through Azuki's persistence verification mechanism.
 
-In practice, these versions would typically contain almost identical code, but to avoid repetition and the associated maintenance costs we have shared much of the code.
+In practice, these versions would typically contain almost identical code, but to avoid repetition and the associated
+maintenance costs we have shared much of the code.
 We hope this does not distract from the typical use case, but illustrates how flexible the mechanism can be.
 As would be typical when working with two versions of the same code, the same adapter is used for both versions.

@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.graphs.adapter.jgrapht.check
 
-import com.anaplan.engineering.azuki.graphs.adapter.api.GetShortestPathBehaviour
+import com.anaplan.engineering.azuki.graphs.adapter.api.GetShortestPathBehavior
 import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionEnvironment
 import org.jgrapht.Graph
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath
@@ -12,7 +12,7 @@ class HasShortestPathCheck<V>(
     private val from: V,
     private val to: V,
     private val shortestPath: List<V>
-) : JGraphTCheck, GetShortestPathBehaviour() {
+) : JGraphTCheck, GetShortestPathBehavior() {
 
     private val fullShortestPath by lazy {
         listOf(from) + shortestPath + to

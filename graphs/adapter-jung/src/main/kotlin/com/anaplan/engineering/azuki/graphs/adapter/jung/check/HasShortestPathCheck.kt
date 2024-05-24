@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.graphs.adapter.jung.check
 
-import com.anaplan.engineering.azuki.graphs.adapter.api.GetShortestPathBehaviour
+import com.anaplan.engineering.azuki.graphs.adapter.api.GetShortestPathBehavior
 import com.anaplan.engineering.azuki.graphs.adapter.jung.execution.ExecutionEnvironment
 import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath
 
@@ -10,7 +10,7 @@ class HasShortestPathCheck<V>(
     private val from: V,
     private val to: V,
     private val shortestPath: List<V>
-) : JungCheck, GetShortestPathBehaviour() {
+) : JungCheck, GetShortestPathBehavior() {
 
     private val fullShortestPath by lazy {
         listOf(from) + shortestPath + to

@@ -2,12 +2,12 @@ package com.anaplan.engineering.azuki.graphs.eacs
 
 import com.anaplan.engineering.azuki.core.runner.Eac
 import com.anaplan.engineering.azuki.core.system.BEH
-import com.anaplan.engineering.azuki.graphs.adapter.api.GraphBehaviours
+import com.anaplan.engineering.azuki.graphs.adapter.api.GraphBehaviors
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphFunctions
 import com.anaplan.engineering.azuki.graphs.dsl.GraphScenario
 import com.anaplan.engineering.azuki.graphs.graphA
 
-@BEH(GraphBehaviours.HasCycles, GraphFunctions.HasCycles, """
+@BEH(GraphBehaviors.HasCycles, GraphFunctions.HasCycles, """
     Determine if a given graph contains one or more cycles
 """)
 class BEH6 : GraphScenario() {

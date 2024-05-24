@@ -2,12 +2,12 @@ package com.anaplan.engineering.azuki.tictactoe.eacs
 
 import com.anaplan.engineering.azuki.core.runner.Eac
 import com.anaplan.engineering.azuki.core.system.BEH
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeBehaviours
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeBehaviors
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeFunctionalElements
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeScenario
 
 
-@BEH(TicTacToeBehaviours.NewGame, TicTacToeFunctionalElements.Game, """
+@BEH(TicTacToeBehaviors.NewGame, TicTacToeFunctionalElements.Game, """
     Start a new game
 """)
 class BEH1 : TicTacToeScenario() {

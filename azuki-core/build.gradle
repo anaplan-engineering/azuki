@@ -24,7 +24,7 @@ publishing {
         mavenJava(MavenPublication) {
             pom {
                 name = 'Azuki'
-                description = 'The core library of the Azuki framework for behaviour driven specification'
+                description = 'The core library of the Azuki framework for behavior driven specification'
             }
         }
     }

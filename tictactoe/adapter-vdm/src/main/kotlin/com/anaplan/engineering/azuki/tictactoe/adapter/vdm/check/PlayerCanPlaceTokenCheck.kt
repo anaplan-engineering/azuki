@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check
 
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.PlaceATokenBehaviour
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.PlaceATokenBehavior
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.XOModule
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.toVdmPlayer
@@ -11,7 +11,7 @@ class PlayerCannotPlaceTokenCheck(
     private val gameName: String,
     private val playerName: String,
     private val position: Position
-) : PlaceATokenBehaviour(), DefaultVdmCheck {
+) : PlaceATokenBehavior(), DefaultVdmCheck {
 
     override fun build(builder: DefaultModuleBuilder): DefaultModuleBuilder {
         val gameGetter = builder.getters[gameName] ?: throw IllegalStateException("Missing getter for game $gameName")
@@ -32,6 +32,6 @@ class PlayerCannotPlaceTokenCheck(
                         return false
                 );
             """
-            )
+        )
     }
 }

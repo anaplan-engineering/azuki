@@ -2,12 +2,12 @@ package com.anaplan.engineering.azuki.graphs.eacs
 
 import com.anaplan.engineering.azuki.core.runner.Eac
 import com.anaplan.engineering.azuki.core.system.BEH
-import com.anaplan.engineering.azuki.graphs.adapter.api.GraphBehaviours
+import com.anaplan.engineering.azuki.graphs.adapter.api.GraphBehaviors
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphFunctions
 import com.anaplan.engineering.azuki.graphs.dsl.GraphScenario
 import com.anaplan.engineering.azuki.graphs.graphA
 
-@BEH(GraphBehaviours.GetSimpleCycleCount, GraphFunctions.GetSimpleCycleCount, """
+@BEH(GraphBehaviors.GetSimpleCycleCount, GraphFunctions.GetSimpleCycleCount, """
     Determine the number of simple cycles in a given graph
 """)
 class BEH7 : GraphScenario() {
