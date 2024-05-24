@@ -49,6 +49,10 @@ class BEH8 : GraphScenario() {
                 edge('d', 'e')
             }
         }
+        then {
+            hasVertexCount(graphA, 5)
+            //TODO -- implement everything is okay
+        }
     }
 
     @Eac("A directional graph is a graph that only contains directional edges",
@@ -62,8 +66,8 @@ class BEH8 : GraphScenario() {
             }
         }
         then {
-            //hasPath(graphA, 'a', 'b', true)
-            //hasPath(graphA, 'b', 'a', false)
+            //pathExists(graphA, from = 'a', to = 'b')
+            //noPathExists(graphA, from = 'b', to = 'a')
         }
     }
 
