@@ -16,7 +16,7 @@ class PathExistsCheck<V>(
     override fun check(env: ExecutionEnvironment) =
         checkEqual(result, env.get<V, Boolean>(graphName) {
             val path = DijkstraShortestPath(this as Graph<V, DefaultEdge>)
-            path.getPath(from, to) !== null
+            path.getPath(from, to) != null
         })
 
 }
