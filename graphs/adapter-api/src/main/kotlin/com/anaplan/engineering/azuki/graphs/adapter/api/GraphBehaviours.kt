@@ -11,7 +11,7 @@ object GraphBehaviours {
     const val HasCycles = 6
     const val GetSimpleCycleCount = 7
     const val CreateDirectedGraph = 8
-    const val HasPath = 9
+    const val PathExists = 9
 }
 
 open class CreateUndirectedGraphBehaviour : ReifiedBehavior {
@@ -46,6 +46,8 @@ open class CreateDirectedGraphBehaviour : ReifiedBehavior {
     override val behavior = GraphBehaviours.CreateDirectedGraph
 }
 
-open class HasPathBehaviour : ReifiedBehavior {
-    override val behavior = GraphBehaviours.HasPath
+open class PathExistsBehaviour : ReifiedBehavior {
+    override val behavior = GraphBehaviours.PathExists
 }
+
+//TODO -- standerdise Behaviour to either american or english spelling

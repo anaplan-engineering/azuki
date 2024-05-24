@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.core.runner.AnalysisScenario
 import com.anaplan.engineering.azuki.graphs.dsl.GraphScenario
 import com.anaplan.engineering.azuki.graphs.graphA
 
-class HasPath : GraphScenario() {
+class PathExists : GraphScenario() {
 
     @AnalysisScenario
     fun noPath() {
@@ -15,7 +15,7 @@ class HasPath : GraphScenario() {
             }
         }
         then {
-            hasPath(graphA, 'a', 'b', false)
+            noPathExists(graphA, from = 'a', to = 'b')
         }
     }
 
@@ -27,8 +27,8 @@ class HasPath : GraphScenario() {
             }
         }
         then {
-            hasPath(graphA, 'a', 'b', true)
-            hasPath(graphA, 'b', 'a', true)
+            pathExists(graphA, from = 'a', to = 'b')
+            pathExists(graphA, from = 'b', to = 'a')
         }
     }
 
@@ -40,8 +40,8 @@ class HasPath : GraphScenario() {
             }
         }
         then {
-            hasPath(graphA, 'a', 'b', true)
-            hasPath(graphA, 'b', 'a', false)
+            pathExists(graphA, from = 'a', to = 'b')
+            noPathExists(graphA, from = 'b', to = 'a')
         }
     }
 }

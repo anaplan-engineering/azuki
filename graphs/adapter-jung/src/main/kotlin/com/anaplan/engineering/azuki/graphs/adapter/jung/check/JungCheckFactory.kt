@@ -12,8 +12,12 @@ class JungCheckFactory : GraphCheckFactory {
     override fun hasShortestPath(graphName: String, from: Any, to: Any, shortestPath: List<Any>) =
         HasShortestPathCheck(graphName, from, to, shortestPath)
 
-    override fun hasPath(graphName: String, from: Any, to: Any, result: Boolean) =
-        HasPathCheck(graphName, from, to, result)
+    override fun pathExists(graphName: String, from: Any, to: Any) =
+        PathExistsCheck(graphName, from, to, true)
+
+    override fun noPathExists(graphName: String, from: Any, to: Any) =
+        PathExistsCheck(graphName, from, to, false)
+
 }
 
 interface JungCheck : Check {

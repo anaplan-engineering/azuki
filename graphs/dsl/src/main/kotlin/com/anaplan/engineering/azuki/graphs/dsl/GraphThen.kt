@@ -28,8 +28,12 @@ class GraphThen(private val checkFactory: GraphCheckFactory) : Then<GraphCheckFa
         checkList.add(checkFactory.getSimpleCycleCount(graphName, count))
     }
 
-    override fun hasPath(graphName: String, from: Any, to: Any, result: Boolean) {
-        checkList.add(checkFactory.hasPath(graphName, from, to, result))
+    override fun pathExists(graphName: String, from: Any, to: Any) {
+        checkList.add(checkFactory.pathExists(graphName, from, to))
+    }
+
+    override fun noPathExists(graphName: String, from: Any, to: Any) {
+        checkList.add(checkFactory.noPathExists(graphName, from, to))
     }
 
 }

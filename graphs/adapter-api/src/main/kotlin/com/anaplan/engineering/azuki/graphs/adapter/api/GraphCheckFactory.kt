@@ -9,5 +9,6 @@ interface GraphCheckFactory : CheckFactory {
     fun hasShortestPath(graphName: String, from: Any, to: Any, shortestPath: List<Any>): Check = UnsupportedCheck
     fun hasCycles(graphName: String, hasCycle: Boolean): Check = UnsupportedCheck
     fun getSimpleCycleCount(graphName: String, count: Long): Check = UnsupportedCheck
-    fun hasPath(graphName: String, from: Any, to: Any, result: Boolean): Check = UnsupportedCheck
+    fun pathExists(graphName: String, from: Any, to: Any): Check = UnsupportedCheck
+    fun noPathExists(graphName: String, from: Any, to: Any): Check = UnsupportedCheck
 }
