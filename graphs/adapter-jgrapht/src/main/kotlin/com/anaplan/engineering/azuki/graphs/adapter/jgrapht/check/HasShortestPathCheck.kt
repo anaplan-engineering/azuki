@@ -14,15 +14,15 @@ class HasShortestPathCheck<V>(
     private val shortestPath: List<V>
 ) : JGraphTCheck, GetShortestPathBehaviour() {
 
-    private val fullShortestPath by lazy {
-        listOf(from) + shortestPath + to
-    }
-
     override fun check(env: ExecutionEnvironment) =
-        checkEqual(fullShortestPath, env.get<V, List<V>>(graphName) {
+        checkEqual(shortestPath, env.get<V, List<V>>(graphName) {
             val pathAlg = DijkstraShortestPath(this as Graph<V, DefaultEdge>)
             val path = pathAlg.getPath(from, to)
-            path.vertexList
+            if (path == null) {
+                emptyList()
+            } else {
+                path.vertexList
+            }
         })
 
 }

@@ -12,15 +12,16 @@ class HasShortestPathCheck<V>(
     private val shortestPath: List<V>
 ) : JungCheck, GetShortestPathBehaviour() {
 
-    private val fullShortestPath by lazy {
-        listOf(from) + shortestPath + to
-    }
-
     override fun check(env: ExecutionEnvironment) =
-        checkEqual(fullShortestPath, env.get(graphName) {
+        checkEqual(shortestPath, env.get(graphName) {
             val shortestPath = DijkstraShortestPath(this)
             val edges = shortestPath.getPath(from, to)
             val edgeMap = shortestPath.getIncomingEdgeMap(from)
-            listOf(from) + edgeMap.filter { it.value in edges }.keys.toList()
+            val vertexList = edgeMap.filter { it.value in edges }.keys.toList()
+            if (vertexList == emptyList<V>()) {
+                vertexList
+            } else {
+                listOf(from) + vertexList
+            }
         })
 }
