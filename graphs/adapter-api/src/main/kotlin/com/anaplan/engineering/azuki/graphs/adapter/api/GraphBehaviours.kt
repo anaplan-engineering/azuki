@@ -49,5 +49,3 @@ open class CreateDirectedGraphBehaviour : ReifiedBehavior {
 open class PathExistsBehaviour : ReifiedBehavior {
     override val behavior = GraphBehaviours.PathExists
 }
-
-//TODO -- standerdise Behaviour to either american or english spelling
