@@ -7,20 +7,24 @@ import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath
 
 class HasShortestPathCheck<V>(
     private val graphName: String,
-    private val from: V,
     private val shortestPath: List<V>,
-    private val to: V,
 ) : JungCheck, GetShortestPathBehaviour() {
 
-    private val fullShortestPath by lazy {
-        listOf(from) + shortestPath + to
+    private val from = try {
+        shortestPath.first()
+    } catch (e: NoSuchElementException) {
+        error("hasShortestPath must has at least three arguments: graphName, startVertex, endVertex")
     }
+    private val to = shortestPath.last()
 
     override fun check(env: ExecutionEnvironment) =
-        checkEqual(fullShortestPath, env.get(graphName) {
-            val shortestPath = DijkstraShortestPath(this)
-            val edges = shortestPath.getPath(from, to)
-            val edgeMap = shortestPath.getIncomingEdgeMap(from)
+        checkEqual(shortestPath, env.get(graphName) {
+            if (shortestPath.size < 2) {
+                error("hasShortestPath must has at least three arguments: graphName, startVertex, endVertex")
+            }
+            val pathAlg = DijkstraShortestPath(this)
+            val edges = pathAlg.getPath(from, to)
+            val edgeMap = pathAlg.getIncomingEdgeMap(from)
             val vertexList = edgeMap.filter { it.value in edges }.keys.toList()
             if (vertexList == emptyList<V>()) {
                 vertexList

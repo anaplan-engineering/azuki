@@ -14,10 +14,8 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
 
     override fun hasShortestPath(
         graphName: String,
-        from: Any,
         shortestPath: List<Any>,
-        to: Any,
-    ): ScriptGenerationCheck = HasShortestPathCheck(graphName, from, shortestPath, to)
+    ): ScriptGenerationCheck = HasShortestPathCheck(graphName, shortestPath)
 
     override fun hasCycles(
         graphName: String,
@@ -37,13 +35,11 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
 
     private class HasShortestPathCheck(
         private val graphName: String,
-        private val from: Any,
         private val shortestPath: List<Any>,
-        private val to: Any,
     ) :
         GetVertexCountBehaviour(), ScriptGenerationCheck {
         override fun getCheckScript() =
-            GraphScriptingHelper.scriptifyFunction(GraphChecks::hasShortestPath, graphName, from, shortestPath, to)
+            GraphScriptingHelper.scriptifyFunction(GraphChecks::hasShortestPath, graphName, shortestPath)
     }
 
     private class HasCyclesCheck(

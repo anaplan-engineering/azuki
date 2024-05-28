@@ -9,17 +9,21 @@ import org.jgrapht.graph.DefaultEdge
 
 class HasShortestPathCheck<V>(
     private val graphName: String,
-    private val from: V,
     private val shortestPath: List<V>,
-    private val to: V,
 ) : JGraphTCheck, GetShortestPathBehaviour() {
 
-    private val fullShortestPath by lazy {
-        listOf(from) + shortestPath + to
+    private val from = try {
+        shortestPath.first()
+    } catch (e: NoSuchElementException) {
+        error("hasShortestPath must has at least three arguments: graphName, startVertex, endVertex")
     }
+    private val to = shortestPath.last()
 
     override fun check(env: ExecutionEnvironment) =
-        checkEqual(fullShortestPath, env.get<V, List<V>>(graphName) {
+        checkEqual(shortestPath, env.get<V, List<V>>(graphName) {
+            if (shortestPath.size < 2) {
+                error("hasShortestPath must has at least three arguments: graphName, startVertex, endVertex")
+            }
             val pathAlg = DijkstraShortestPath(this as Graph<V, DefaultEdge>)
             val path = pathAlg.getPath(from, to)
             if (path == null) {
