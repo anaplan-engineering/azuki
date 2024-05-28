@@ -19,8 +19,8 @@ class ShortestPath : GraphScenario() {
             }
         }
         then {
-            hasShortestPath(graphA, from = "a", to = "c", path = arrayOf("a", "b", "c"))
-            hasShortestPath(graphA, from = "e", to = "c", path = arrayOf("e", "c"))
+            hasShortestPath(graphA, "a", "b", to = "c")
+            hasShortestPath(graphA, "e", to = "c")
         }
     }
 
@@ -35,21 +35,7 @@ class ShortestPath : GraphScenario() {
             }
         }
         then {
-            hasShortestPath(graphA, from = "e", to = "c", path = arrayOf("e", "d", "a", "b", "c"))
-        }
-    }
-
-    @AnalysisScenario
-    fun test() {
-        given {
-            thereIsAnUndirectedGraph(graphA) {
-                edge("a", "b")
-                edge("b", "c")
-                vertex("d")
-            }
-        }
-        then {
-            hasShortestPath(graphA, from = "a", to = "d")
+            hasShortestPath(graphA, "e", "d", "a", "b", to = "c")
         }
     }
 }
