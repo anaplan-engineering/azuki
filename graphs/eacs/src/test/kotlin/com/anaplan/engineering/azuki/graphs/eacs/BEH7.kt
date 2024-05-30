@@ -25,7 +25,7 @@ class BEH7 : GraphScenario() {
             }
         }
         then {
-            getSimpleCycleCount(graphA, 2)
+            hasSimpleCycleCount(graphA, 2)
         }
     }
 
@@ -40,7 +40,7 @@ class BEH7 : GraphScenario() {
             }
         }
         then {
-            getSimpleCycleCount(graphA, 0)
+            hasSimpleCycleCount(graphA, 0)
         }
     }
 
@@ -59,7 +59,7 @@ class BEH7 : GraphScenario() {
             }
         }
         then {
-            getSimpleCycleCount(graphA, 0)
+            hasSimpleCycleCount(graphA, 0)
         }
     }
 
@@ -69,7 +69,7 @@ class BEH7 : GraphScenario() {
             thereIsADirectedGraph(graphA) {}
         }
         then {
-            getSimpleCycleCount(graphA, 0)
+            hasSimpleCycleCount(graphA, 0)
         }
     }
 
@@ -87,7 +87,7 @@ class BEH7 : GraphScenario() {
             }
         }
         then {
-            getSimpleCycleCount(graphA, 2)
+            hasSimpleCycleCount(graphA, 2)
         }
     }
 
@@ -101,7 +101,7 @@ class BEH7 : GraphScenario() {
             }
         }
         then {
-            getSimpleCycleCount(graphA, 1)
+            hasSimpleCycleCount(graphA, 1)
         }
     }
 
@@ -113,7 +113,7 @@ class BEH7 : GraphScenario() {
             }
         }
         then {
-            getSimpleCycleCount(graphA, 1)
+            hasSimpleCycleCount(graphA, 1)
         }
     }
 }

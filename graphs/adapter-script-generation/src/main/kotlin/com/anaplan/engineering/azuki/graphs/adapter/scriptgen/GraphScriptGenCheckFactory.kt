@@ -61,7 +61,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
     ) :
         GetCycleCountBehavior(), ScriptGenerationCheck {
         override fun getCheckScript() =
-            GraphScriptingHelper.scriptifyFunction(GraphChecks::getSimpleCycleCount, graphName, count)
+            GraphScriptingHelper.scriptifyFunction(GraphChecks::hasSimpleCycleCount, graphName, count)
     }
 
 }

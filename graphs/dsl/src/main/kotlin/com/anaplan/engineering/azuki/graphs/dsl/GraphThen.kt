@@ -24,7 +24,7 @@ class GraphThen(private val checkFactory: GraphCheckFactory) : Then<GraphCheckFa
         checkList.add(checkFactory.hasCycles(graphName, hasCycles))
     }
 
-    override fun getSimpleCycleCount(graphName: String, count: Long) {
+    override fun hasSimpleCycleCount(graphName: String, count: Long) {
         checkList.add(checkFactory.getSimpleCycleCount(graphName, count))
     }
 
