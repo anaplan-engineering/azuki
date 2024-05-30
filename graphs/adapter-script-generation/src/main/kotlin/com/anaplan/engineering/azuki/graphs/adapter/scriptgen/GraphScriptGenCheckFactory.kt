@@ -24,7 +24,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         hasCycles: Boolean,
     ): ScriptGenerationCheck = HasCyclesCheck(graphName, hasCycles)
 
-    override fun getSimpleCycleCount(
+    override fun hasSimpleCycleCount(
         graphName: String,
         count: Long,
     ): ScriptGenerationCheck = GetSimpleCycleCountCheck(graphName, count)
