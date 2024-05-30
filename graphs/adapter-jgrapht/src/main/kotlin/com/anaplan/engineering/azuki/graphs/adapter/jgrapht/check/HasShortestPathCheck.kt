@@ -24,9 +24,6 @@ class HasShortestPathCheck<V>(
 
     override fun check(env: ExecutionEnvironment) =
         checkEqual(shortestPath, env.get<V, List<V>>(graphName) {
-            if (shortestPath.size < 2) {
-                error("hasShortestPath must has at least three arguments: graphName, startVertex, endVertex")
-            }
             val pathAlg = DijkstraShortestPath(this as Graph<V, DefaultEdge>)
             pathAlg.getPath(from, to).vertexList
         })
