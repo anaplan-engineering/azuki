@@ -27,7 +27,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
     override fun hasSimpleCycleCount(
         graphName: String,
         count: Long,
-    ): ScriptGenerationCheck = GetSimpleCycleCountCheck(graphName, count)
+    ): ScriptGenerationCheck = HasSimpleCycleCountCheck(graphName, count)
 
     private class HasVertexCountCheck(private val graphName: String, private val count: Long) :
         GetVertexCountBehaviour(), ScriptGenerationCheck {
@@ -55,7 +55,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
             GraphScriptingHelper.scriptifyFunction(GraphChecks::hasCycles, graphName, hasCycles)
     }
 
-    private class GetSimpleCycleCountCheck(
+    private class HasSimpleCycleCountCheck(
         private val graphName: String,
         private val count: Long
     ) :
