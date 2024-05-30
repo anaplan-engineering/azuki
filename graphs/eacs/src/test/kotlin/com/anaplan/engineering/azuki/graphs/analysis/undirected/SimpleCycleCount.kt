@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.core.runner.AnalysisScenario
 import com.anaplan.engineering.azuki.graphs.dsl.GraphScenario
 import com.anaplan.engineering.azuki.graphs.graphA
 
-class GetCycleCount : GraphScenario() {
+class SimpleCycleCount : GraphScenario() {
 
     @AnalysisScenario
     fun graphWithCycle() {
@@ -18,7 +18,7 @@ class GetCycleCount : GraphScenario() {
             }
         }
         then {
-            getSimpleCycleCount(graphA, 1)
+            hasSimpleCycleCount(graphA, 1)
         }
     }
 
@@ -32,7 +32,7 @@ class GetCycleCount : GraphScenario() {
             }
         }
         then {
-            getSimpleCycleCount(graphA, 0)
+            hasSimpleCycleCount(graphA, 0)
         }
     }
 
@@ -50,7 +50,7 @@ class GetCycleCount : GraphScenario() {
             }
         }
         then {
-            getSimpleCycleCount(graphA, 2)
+            hasSimpleCycleCount(graphA, 2)
         }
     }
 }

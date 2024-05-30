@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.api.GetCycleCountBehavior
 import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionEnvironment
 import org.jgrapht.alg.cycle.HawickJamesSimpleCycles
 
-class GetSimpleCycleCountCheck(
+class HasSimpleCycleCountCheck(
     private val graphName: String,
     private val result: Long
 ) : JGraphTCheck, GetCycleCountBehavior() {

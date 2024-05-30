@@ -21,10 +21,10 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         hasCycles: Boolean,
     ): ScriptGenerationCheck = HasCyclesCheck(graphName, hasCycles)
 
-    override fun getSimpleCycleCount(
+    override fun hasSimpleCycleCount(
         graphName: String,
         count: Long,
-    ): ScriptGenerationCheck = GetSimpleCycleCountCheck(graphName, count)
+    ): ScriptGenerationCheck = HasSimpleCycleCountCheck(graphName, count)
 
     override fun pathExists(
         graphName: String,
@@ -64,13 +64,13 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
             GraphScriptingHelper.scriptifyFunction(GraphChecks::hasCycles, graphName, hasCycles)
     }
 
-    private class GetSimpleCycleCountCheck(
+    private class HasSimpleCycleCountCheck(
         private val graphName: String,
         private val count: Long
     ) :
         GetCycleCountBehavior(), ScriptGenerationCheck {
         override fun getCheckScript() =
-            GraphScriptingHelper.scriptifyFunction(GraphChecks::getSimpleCycleCount, graphName, count)
+            GraphScriptingHelper.scriptifyFunction(GraphChecks::hasSimpleCycleCount, graphName, count)
     }
 
     private class PathExistsCheck(

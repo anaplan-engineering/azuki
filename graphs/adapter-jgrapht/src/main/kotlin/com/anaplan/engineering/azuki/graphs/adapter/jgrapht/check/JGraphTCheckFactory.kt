@@ -15,17 +15,14 @@ class JGraphTCheckFactory : GraphCheckFactory {
     override fun hasCycles(graphName: String, hasCycles: Boolean) =
         HasCyclesCheck(graphName, hasCycles)
 
-    override fun getSimpleCycleCount(graphName: String, count: Long) =
-        GetSimpleCycleCountCheck(graphName, count)
+    override fun hasSimpleCycleCount(graphName: String, count: Long) =
+        HasSimpleCycleCountCheck(graphName, count)
 
     override fun pathExists(graphName: String, from: Any, to: Any) =
         PathExistsCheck(graphName, from, to, true)
 
     override fun noPathExists(graphName: String, from: Any, to: Any) =
         PathExistsCheck(graphName, from, to, false)
-
-
-}
 
 interface JGraphTCheck : Check {
     fun check(env: ExecutionEnvironment): Boolean
