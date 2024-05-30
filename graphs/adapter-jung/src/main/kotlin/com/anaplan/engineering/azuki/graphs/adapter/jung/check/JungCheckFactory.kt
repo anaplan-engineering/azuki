@@ -9,8 +9,8 @@ class JungCheckFactory : GraphCheckFactory {
 
     override fun hasVertexCount(graphName: String, count: Long) = HasVertexCountCheck(graphName, count)
 
-    override fun hasShortestPath(graphName: String, shortestPath: List<Any>) =
-        HasShortestPathCheck(graphName, shortestPath)
+    override fun hasShortestPath(graphName: String, path: List<Any>) =
+        HasShortestPathCheck(graphName, path)
 }
 
 interface JungCheck : Check {

@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.graphs.adapter.jgrapht.check
 
+import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedCheckException
 import com.anaplan.engineering.azuki.graphs.adapter.api.GetShortestPathBehaviour
 import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionEnvironment
 import org.jgrapht.Graph
@@ -12,11 +13,13 @@ class HasShortestPathCheck<V>(
     private val shortestPath: List<V>,
 ) : JGraphTCheck, GetShortestPathBehaviour() {
 
-    private val from = try {
-        shortestPath.first()
-    } catch (e: NoSuchElementException) {
-        error("hasShortestPath must has at least three arguments: graphName, startVertex, endVertex")
+    init {
+        if (shortestPath.size < 2) {
+            throw LateDetectUnsupportedCheckException("")
+        }
     }
+
+    private val from = shortestPath.first()
     private val to = shortestPath.last()
 
     override fun check(env: ExecutionEnvironment) =
@@ -25,12 +28,7 @@ class HasShortestPathCheck<V>(
                 error("hasShortestPath must has at least three arguments: graphName, startVertex, endVertex")
             }
             val pathAlg = DijkstraShortestPath(this as Graph<V, DefaultEdge>)
-            val path = pathAlg.getPath(from, to)
-            if (path == null) {
-                emptyList()
-            } else {
-                path.vertexList
-            }
+            pathAlg.getPath(from, to).vertexList
         })
 
 }
