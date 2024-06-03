@@ -1,6 +1,6 @@
 # Azuki
 
-Azuki is generic framework designed to assist with Behavior Driven Specification (BDS), in the same way that [Cucumber](https://cucumber.io/) assists with Behavior driven development (BDD).
+Azuki is generic framework designed to assist with Behavior Driven Specification (BDS), in the same way that [Cucumber](https://cucumber.io/) assists with Behavior Driven Development (BDD).
 
 ## Contents
 
