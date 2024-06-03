@@ -71,8 +71,22 @@ class BEH8 : GraphScenario() {
         }
     }
 
-    @Eac("")
-    fun foo() {
-
+    @Eac("Multiple directed graphs can exist and do not interfere with each other")
+    fun multipleGraphs() {
+        given {
+            thereIsADirectedGraph(graphA) {
+                vertex('a')
+                edge('b', 'c')
+            }
+            thereIsADirectedGraph("graphB") {
+                vertex('d')
+                edge('e', 'f')
+                vertex('g')
+            }
+        }
+        then {
+            hasVertexCount(graphA, 3)
+            hasVertexCount("graphB", 4)
+        }
     }
 }
