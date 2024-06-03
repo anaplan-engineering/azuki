@@ -15,7 +15,7 @@ class HasShortestPathCheck<V>(
 
     init {
         if (path.size < 2) {
-            throw LateDetectUnsupportedCheckException("hasShortestPath must take a start and end vertex in the path, as inputs")
+            throw LateDetectUnsupportedCheckException("path must contain at least its two endpoints")
         }
     }
 

@@ -13,12 +13,12 @@ class HasShortestPathCheck<V>(
 
     init {
         if (path.size < 2) {
-            throw LateDetectUnsupportedCheckException("hasShortestPath must take a start and end vertex in the path, as inputs")
+            throw LateDetectUnsupportedCheckException("path must contain at least its two endpoints")
         }
     }
 
-    private val from = path.first()
-    private val to = path.last()
+    private val from by lazy { path.first() }
+    private val to by lazy { path.last() }
 
     override fun check(env: ExecutionEnvironment) =
         checkEqual(path, env.get(graphName) {
