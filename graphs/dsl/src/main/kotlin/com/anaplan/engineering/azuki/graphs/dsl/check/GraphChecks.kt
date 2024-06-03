@@ -5,5 +5,7 @@ interface GraphChecks {
     fun hasVertexCount(graphName: String, count: Long)
     fun hasShortestPath(graphName: String, vararg path: Any)
     fun hasCycles(graphName: String, hasCycle: Boolean)
-    fun getSimpleCycleCount(graphName: String, count: Long)
+    fun hasSimpleCycleCount(graphName: String, count: Long)
+    fun pathExists(graphName: String, from: Any, to: Any)
+    fun noPathExists(graphName: String, from: Any, to: Any)
 }
