@@ -18,11 +18,10 @@ class JGraphTCheckFactory : GraphCheckFactory {
     override fun hasSimpleCycleCount(graphName: String, count: Long) =
         HasSimpleCycleCountCheck(graphName, count)
 
-    override fun pathExists(graphName: String, from: Any, to: Any) =
-        PathExistsCheck(graphName, from, to, true)
+    override fun pathExists(graphName: String, from: Any, to: Any, result: Boolean) =
+        PathExistsCheck(graphName, from, to, result)
 
-    override fun noPathExists(graphName: String, from: Any, to: Any) =
-        PathExistsCheck(graphName, from, to, false)
+}
 
 interface JGraphTCheck : Check {
     fun check(env: ExecutionEnvironment): Boolean

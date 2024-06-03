@@ -30,13 +30,8 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         graphName: String,
         from: Any,
         to: Any,
-    ): ScriptGenerationCheck = PathExistsCheck(graphName, from, to)
-
-    override fun noPathExists(
-        graphName: String,
-        from: Any,
-        to: Any,
-    ): ScriptGenerationCheck = NoPathExistsCheck(graphName, from, to)
+        result: Boolean
+    ): ScriptGenerationCheck = PathExistsCheck(graphName, from, to, result)
 
     private class HasVertexCountCheck(private val graphName: String, private val count: Long) :
         GetVertexCountBehaviour(), ScriptGenerationCheck {
@@ -52,7 +47,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
     ) :
         GetVertexCountBehaviour(), ScriptGenerationCheck {
         override fun getCheckScript() =
-            GraphScriptingHelper.scriptifyFunction(GraphChecks::hasShortestPath, graphName, from, to, shortestPath)
+            GraphScriptingHelper.scriptifyFunction(GraphChecks::hasVertexCount, graphName, from, to, shortestPath)
     }
 
     private class HasCyclesCheck(
@@ -77,19 +72,10 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         private val graphName: String,
         private val from: Any,
         private val to: Any,
+        private val result: Boolean,
     ) :
         PathExistsBehaviour(), ScriptGenerationCheck {
         override fun getCheckScript() =
-            GraphScriptingHelper.scriptifyFunction(GraphChecks::pathExists, graphName, from, to)
-    }
-
-    private class NoPathExistsCheck(
-        private val graphName: String,
-        private val from: Any,
-        private val to: Any,
-    ) :
-        PathExistsBehaviour(), ScriptGenerationCheck {
-        override fun getCheckScript() =
-            GraphScriptingHelper.scriptifyFunction(GraphChecks::noPathExists, graphName, from, to)
+            GraphScriptingHelper.scriptifyFunction(GraphChecks::pathExists, graphName, from, to, result)
     }
 }

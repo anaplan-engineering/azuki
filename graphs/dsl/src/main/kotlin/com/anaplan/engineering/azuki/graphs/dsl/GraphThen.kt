@@ -29,11 +29,11 @@ class GraphThen(private val checkFactory: GraphCheckFactory) : Then<GraphCheckFa
     }
 
     override fun pathExists(graphName: String, from: Any, to: Any) {
-        checkList.add(checkFactory.pathExists(graphName, from, to))
+        checkList.add(checkFactory.pathExists(graphName, from, to, true))
     }
 
     override fun noPathExists(graphName: String, from: Any, to: Any) {
-        checkList.add(checkFactory.noPathExists(graphName, from, to))
+        checkList.add(checkFactory.pathExists(graphName, from, to, false))
     }
 
 }
