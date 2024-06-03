@@ -1,14 +1,14 @@
 package com.anaplan.engineering.azuki.graphs.adapter.jgrapht.check
 
 import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedCheckException
-import com.anaplan.engineering.azuki.graphs.adapter.api.GetCycleCountBehavior
+import com.anaplan.engineering.azuki.graphs.adapter.api.GetCycleCountBehaviour
 import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionEnvironment
 import org.jgrapht.alg.cycle.HawickJamesSimpleCycles
 
 class HasSimpleCycleCountCheck(
     private val graphName: String,
     private val result: Long
-) : JGraphTCheck, GetCycleCountBehavior() {
+) : JGraphTCheck, GetCycleCountBehaviour() {
 
     override fun check(env: ExecutionEnvironment) =
         checkEqual(result, env.get<String, Long>(graphName) {

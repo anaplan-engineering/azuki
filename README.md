@@ -1,8 +1,9 @@
 # Azuki
 
-Azuki is generic framework designed to assist with Behaviour Driven Specification (BDS), in the same way that [Cucumber](https://cucumber.io/) assists with Behaviour driven development (BDD).
+Azuki is generic framework designed to assist with Behavior Driven Specification (BDS), in the same way that [Cucumber](https://cucumber.io/) assists with Behavior driven development (BDD).
 
 ## Contents
+
 - [Introduction](#introduction)
 - [Project structure](#project-structure)
 - [Using the library](#using-the-plugin)
@@ -24,11 +25,11 @@ BDS was introduced in [Behaviour Driven Specification - Fraser, Pezzoni - 2021](
 The BDS process is much like BDD, and it too requires a DSL in which to write scenarios.
 However, unlike BDD, where the inputs are ACs and the output is code, with BDS we look to establish ACs and use those to drive the creation of the specification, with both being valuable artifacts of the process.
 
-For each behaviour, we first determine a basic AC and then write a natural language description of that AC.
+For each behavior, we first determine a basic AC and then write a natural language description of that AC.
 A scenario is then created to exemplify the AC; this may involve the extension of the DSL if new language is needed to express the criterion.
-This scenario now forms an executable acceptance criterion (EAC) that we can use to validate the behaviour of both the specification and the target implementation.
+This scenario now forms an executable acceptance criterion (EAC), that we can use to validate the behavior of both the specification and the target implementation.
 We then create/extend the specification to ensure that the EAC is satisfied.
-This process is repeated until we have identified all ACs for the behaviour and have constructed a specification that can be shown to satisfy them.
+This process is repeated until we have identified all ACs for the behavior and have constructed a specification that can be shown to satisfy them.
 
 Running scenarios requires a DSL in which to express the actions and checks of the system in the stakeholder's language, and means by which to translate that language into commands and queries that the implementation can execute.
 Cucumber is synonymous with BDD, but we found it unsuitable for use with BDS.
@@ -64,7 +65,8 @@ A custom task is provided to publish all of the necessary artifacts from the pro
 ./gradlew publishAllToMavenLocal -Pversion=X.X.X
 ```
 
-(A `publishAll` task also exists for publishing to a remote Maven repository. This requires various environment variables and properties to be set to configure the remote repository. These can easily be derived from examination from the publishing configuration of [build.gradle](build.gradle).)
+(A `publishAll` task also exists for publishing to a remote Maven repository. This requires various environment variables and properties to be set to configure the remote repository.
+These can easily be derived from examination from the publishing configuration of [build.gradle](build.gradle).)
 
 N.B. A composite build is necessary for publishing and consuming gradle plugins in the same build.
 
@@ -90,6 +92,7 @@ dependencies {
     implementation group: 'com.anaplan.engineering', name: 'azuki-core', version: 'X.X.X'
 }
 ```
+
 The use of the artifacts required for different aspects is exemplified in the tic-tac-toe example.
 
 ### Using Azuki and BDS on a project

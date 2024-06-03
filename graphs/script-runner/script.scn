@@ -9,6 +9,6 @@ verifiableScenario {
         }
     }
     then {
-        hasShortestPath("graphA", "a", "c", "b")
+        hasShortestPath("graphA", "a", "b", "c")
     }
 }

@@ -19,7 +19,7 @@ class ShortestPath : GraphScenario() {
             }
         }
         then {
-            hasShortestPath(graphA, "a", "c", "b")
+            hasShortestPath(graphA, "a", "b", "c")
             hasShortestPath(graphA, "e", "c")
         }
     }
@@ -35,7 +35,7 @@ class ShortestPath : GraphScenario() {
             }
         }
         then {
-            hasShortestPath(graphA, "e", "c", "d", "a", "b")
+            hasShortestPath(graphA, "e", "d", "a", "b", "c")
         }
     }
 }

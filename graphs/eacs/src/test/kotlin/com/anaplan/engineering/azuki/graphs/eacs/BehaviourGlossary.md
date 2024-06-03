@@ -1,8 +1,8 @@
-BEH1 : Able to create undirected unweighted graphs TODO(Add EACs)
-BEH2 : Determine the amount vertices in a given graph TODO(Add EACs)
-BEH3 : Able to add one or more vertices to a graph TODO(Add EACs)
-BEH4 : Able to add one or more edges to a graph TODO(Add EACs)
-BEH5 : Determine the shortest path between two vertices in a given graph TODO(Add EACs)
-BEH6 : Determine if one or more cycles exist in a given graph
-BEH7 : Determine the amount cycles in a given graph
-BEH8 : Able to create directed unweighted graphs TODO(Add EACs)
+- BEH1 : Able to create undirected unweighted graphs TODO(Add EACs)
+- BEH2 : Determine the amount vertices in a given graph TODO(Add EACs)
+- BEH3 : Able to add one or more vertices to a graph TODO(Add EACs)
+- BEH4 : Able to add one or more edges to a graph TODO(Add EACs)
+- BEH5 : Determine the shortest path between two vertices in a given graph TODO(Add EACs)
+- BEH6 : Determine if one or more cycles exist in a given graph
+- BEH7 : Determine the amount cycles in a given graph
+- BEH8 : Able to create directed unweighted graphs TODO(Add EACs)
