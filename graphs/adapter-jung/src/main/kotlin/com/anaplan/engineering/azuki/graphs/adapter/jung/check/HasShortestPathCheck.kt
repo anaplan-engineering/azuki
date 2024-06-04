@@ -25,6 +25,6 @@ class HasShortestPathCheck<V>(
             val pathAlg = DijkstraShortestPath(this)
             val edges = pathAlg.getPath(from, to)
             val edgeMap = pathAlg.getIncomingEdgeMap(from)
-            edgeMap.filter { it.value in edges }.keys.toList()
+            listOf(from) + edgeMap.filter { it.value in edges }.keys.toList()
         })
 }
