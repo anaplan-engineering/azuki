@@ -13,6 +13,22 @@ import com.anaplan.engineering.azuki.graphs.graphA
 """)
 class BEH8 : GraphScenario() {
 
+    @Eac("A directional graph is a graph that only contains directional edges",
+        """When a directional edge is declared a path can be walked one way but cannot be walked in the opposite path
+            TODO -- improve grammar of this sentence.
+        """)
+    fun directionalEdge() {
+        given {
+            thereIsADirectedGraph(graphA) {
+                edge('a', 'b')
+            }
+        }
+        then {
+            pathExists(graphA, from = 'a', to = 'b')
+            noPathExists(graphA, from = 'b', to = 'a')
+        }
+    }
+
     @Eac("A directed graph is a graph with any number of vertices")
     fun withVertices() {
         given {
@@ -52,22 +68,6 @@ class BEH8 : GraphScenario() {
         then {
             hasVertexCount(graphA, 5)
             //TODO -- implement everything is okay
-        }
-    }
-
-    @Eac("A directional graph is a graph that only contains directional edges",
-        """When a directional edge is declared a path can be walked one way but cannot be walked in the opposite path
-            |TODO -- improve grammar of this sentence.
-        """)
-    fun directionalEdge() {
-        given {
-            thereIsADirectedGraph(graphA) {
-                edge('a', 'b')
-            }
-        }
-        then {
-            //pathExists(graphA, from = 'a', to = 'b')
-            //noPathExists(graphA, from = 'b', to = 'a')
         }
     }
 
