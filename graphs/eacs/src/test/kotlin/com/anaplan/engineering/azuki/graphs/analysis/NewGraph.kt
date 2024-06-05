@@ -25,4 +25,18 @@ class NewGraph : GraphScenario() {
             hasVertexCount(graphA, 0)
         }
     }
+
+    fun directedWithEdges() {
+        given {
+            thereIsADirectedGraph(graphA) {
+                edge('a', 'b')
+                edge('b', 'c')
+                edge('c', 'a')
+                edge('d', 'e')
+            }
+        }
+        then {
+            hasVertexCount(graphA, 5)
+        }
+    }
 }

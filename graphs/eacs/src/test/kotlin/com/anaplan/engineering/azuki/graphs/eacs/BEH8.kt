@@ -42,21 +42,4 @@ class BEH8 : GraphScenario() {
             hasVertexCount(graphA, 3)
         }
     }
-
-    @Eac("A directed graph can contain any number of edges",
-        "These edges can be connected or independent of other edges"
-    )
-    fun withEdges() {
-        given {
-            thereIsADirectedGraph(graphA) {
-                edge('a', 'b')
-                edge('b', 'c')
-                edge('c', 'a')
-                edge('d', 'e')
-            }
-        }
-        then {
-            hasVertexCount(graphA, 5)
-        }
-    }
 }
