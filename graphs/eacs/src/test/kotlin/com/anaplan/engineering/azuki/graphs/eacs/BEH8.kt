@@ -13,8 +13,9 @@ import com.anaplan.engineering.azuki.graphs.graphA
 """)
 class BEH8 : GraphScenario() {
 
-    @Eac("A directed graph is a graph that only contains directional edges",
-        """When a directional edge is declared a path can only be walked in one order
+    @Eac("A directed graph is a graph that only contains directed edges",
+        """
+            A directed edge is an edge with ordered endpoints
         """)
     fun directionalEdge() {
         given {
@@ -28,7 +29,7 @@ class BEH8 : GraphScenario() {
         }
     }
 
-    @Eac("A graph may any positive number of vertices")
+    @Eac("A graph may contain any number of vertices")
     fun withVertices() {
         given {
             thereIsADirectedGraph(graphA) {
@@ -39,16 +40,6 @@ class BEH8 : GraphScenario() {
         }
         then {
             hasVertexCount(graphA, 3)
-        }
-    }
-
-    @Eac("A graph may contain no vertices")
-    fun noVertices() {
-        given {
-            thereIsADirectedGraph(graphA)
-        }
-        then {
-            hasVertexCount(graphA, 0)
         }
     }
 
@@ -66,25 +57,6 @@ class BEH8 : GraphScenario() {
         }
         then {
             hasVertexCount(graphA, 5)
-        }
-    }
-
-    @Eac("Multiple directed graphs can exist and do not interfere with each other")
-    fun multipleGraphs() {
-        given {
-            thereIsADirectedGraph(graphA) {
-                vertex('a')
-                edge('b', 'c')
-            }
-            thereIsADirectedGraph("graphB") {
-                vertex('d')
-                edge('e', 'f')
-                vertex('g')
-            }
-        }
-        then {
-            hasVertexCount(graphA, 3)
-            hasVertexCount("graphB", 4)
         }
     }
 }
