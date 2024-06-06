@@ -62,7 +62,7 @@ class BEH8 : GraphScenario() {
             }
         }
         then {
-            hasVertexCount(graphA, 3)
+            hasEdgeCount(graphA, 4)
         }
     }
 }
