@@ -13,19 +13,13 @@ import com.anaplan.engineering.azuki.graphs.graphA
 """)
 class BEH8 : GraphScenario() {
 
-    @Eac("A directed graph is a graph that only contains directed edges",
-        """
-            A directed edge is an edge with ordered endpoints
-        """)
-    fun directionalEdge() {
+    @Eac("when first initialised graph has no edges or vertices")
+    fun newGraph() {
         given {
-            thereIsADirectedGraph(graphA) {
-                edge('a', 'b')
-            }
+            thereIsADirectedGraph(graphA)
         }
         then {
-            pathExists(graphA, from = 'a', to = 'b')
-            noPathExists(graphA, from = 'b', to = 'a')
+            hasVertexCount(graphA, 0)
         }
     }
 
@@ -40,6 +34,34 @@ class BEH8 : GraphScenario() {
         }
         then {
             hasVertexCount(graphA, 3)
+        }
+    }
+
+    @Eac("graph multiple edges")
+    fun withEdges() {
+        given {
+            thereIsADirectedGraph(graphA) {
+                edge("a", "b")
+                edge("b", "c")
+                edge("d", "e")
+            }
+        }
+        then {
+            hasVertexCount(graphA, 5)
+        }
+    }
+
+    @Eac("A directed graph is a graph that only contains directed edges",
+        "A directed edge is an edge with ordered endpoints")
+    fun directionalEdge() {
+        given {
+            thereIsADirectedGraph(graphA) {
+                edge('a', 'b')
+            }
+        }
+        then {
+            pathExists(graphA, from = 'a', to = 'b')
+            noPathExists(graphA, from = 'b', to = 'a')
         }
     }
 }
