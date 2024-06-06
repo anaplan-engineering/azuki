@@ -21,6 +21,8 @@ class JGraphTCheckFactory : GraphCheckFactory {
     override fun pathExists(graphName: String, from: Any, to: Any, result: Boolean) =
         PathExistsCheck(graphName, from, to, result)
 
+    override fun hasEdgeCount(graphName: String, count: Long) = HasEdgeCountCheck(graphName, count)
+
 }
 
 interface JGraphTCheck : Check {

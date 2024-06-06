@@ -8,4 +8,5 @@ interface GraphChecks {
     fun hasSimpleCycleCount(graphName: String, count: Long)
     fun pathExists(graphName: String, from: Any, to: Any)
     fun noPathExists(graphName: String, from: Any, to: Any)
+    fun hasEdgeCount(graphName: String, count: Long)
 }

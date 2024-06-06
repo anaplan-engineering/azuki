@@ -12,6 +12,7 @@ object GraphBehaviours {
     const val GetSimpleCycleCount = 7
     const val CreateDirectedGraph = 8
     const val PathExists = 9
+    const val GetEdgeCount = 10
 }
 
 open class CreateUndirectedGraphBehaviour : ReifiedBehavior {
@@ -48,4 +49,8 @@ open class CreateDirectedGraphBehaviour : ReifiedBehavior {
 
 open class PathExistsBehaviour : ReifiedBehavior {
     override val behavior = GraphBehaviours.PathExists
+}
+
+open class GetEdgeCountBehaviour : ReifiedBehavior {
+    override val behavior = GraphBehaviours.GetEdgeCount
 }

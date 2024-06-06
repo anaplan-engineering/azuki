@@ -10,4 +10,5 @@ interface GraphCheckFactory : CheckFactory {
     fun hasCycles(graphName: String, hasCycle: Boolean): Check = UnsupportedCheck
     fun hasSimpleCycleCount(graphName: String, count: Long): Check = UnsupportedCheck
     fun pathExists(graphName: String, from: Any, to: Any, result: Boolean): Check = UnsupportedCheck
+    fun hasEdgeCount(graphName: String, count: Long): Check = UnsupportedCheck
 }

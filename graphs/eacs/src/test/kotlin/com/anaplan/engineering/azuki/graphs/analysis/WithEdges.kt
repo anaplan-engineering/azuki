@@ -14,7 +14,8 @@ class WithEdges : GraphScenario() {
             }
         }
         then {
-            hasVertexCount(graphA, 2)
+            hasEdgeCount(graphA, 1)
+
         }
     }
 
@@ -26,7 +27,7 @@ class WithEdges : GraphScenario() {
             }
         }
         then {
-            hasVertexCount(graphA, 2)
+            hasEdgeCount(graphA, 1)
         }
     }
 }

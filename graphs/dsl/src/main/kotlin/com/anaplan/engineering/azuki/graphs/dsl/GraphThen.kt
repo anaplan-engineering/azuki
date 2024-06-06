@@ -36,4 +36,8 @@ class GraphThen(private val checkFactory: GraphCheckFactory) : Then<GraphCheckFa
         checkList.add(checkFactory.pathExists(graphName, from, to, false))
     }
 
+    override fun hasEdgeCount(graphName: String, count: Long) {
+        checkList.add(checkFactory.hasEdgeCount(graphName, count))
+    }
+
 }

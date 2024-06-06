@@ -31,6 +31,11 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         result: Boolean
     ): ScriptGenerationCheck = PathExistsCheck(graphName, from, to, result)
 
+    override fun hasEdgeCount(
+        graphName: String,
+        count: Long
+    ): ScriptGenerationCheck = HasEdgeCount(graphName, count)
+
     private class HasVertexCountCheck(private val graphName: String, private val count: Long) :
         GetVertexCountBehaviour(), ScriptGenerationCheck {
         override fun getCheckScript() =
@@ -73,5 +78,14 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         PathExistsBehaviour(), ScriptGenerationCheck {
         override fun getCheckScript() =
             GraphScriptingHelper.scriptifyFunction(GraphChecks::pathExists, graphName, from, to, result)
+    }
+
+    private class HasEdgeCount(
+        private val graphName: String,
+        private val count: Long
+    ) :
+        GetEdgeCountBehaviour(), ScriptGenerationCheck {
+        override fun getCheckScript() =
+            GraphScriptingHelper.scriptifyFunction(GraphChecks::hasEdgeCount, graphName, count)
     }
 }
