@@ -13,7 +13,7 @@ import com.anaplan.engineering.azuki.graphs.graphA
 """)
 class BEH8 : GraphScenario() {
 
-    @Eac("When a graph is first initialised it contains no edges or vertices")
+    @Eac("When a graph is created, it contains no edges nor vertices")
     fun newGraph() {
         given {
             thereIsADirectedGraph(graphA)
