@@ -28,6 +28,8 @@ class BEH6 : GraphScenario() {
         }
     }
 
+    // Random change do not merge
+
     @Eac("When there are no cycles in the given graph, return false")
     fun hasNoCyclesDirected() {
         given {
