@@ -25,4 +25,7 @@ object GraphFunctions {
     @IsA(GraphFunction)
     const val GetSimpleCycleCount = 5
 
+    @IsA(GraphFunction)
+    const val GetShortestPath = 6
+
 }

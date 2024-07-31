@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.graphs.adapter.jgrapht.check
 
-import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedCheckException
 import com.anaplan.engineering.azuki.graphs.adapter.api.GetShortestPathBehaviour
 import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionEnvironment
 import org.jgrapht.Graph
@@ -12,12 +11,6 @@ class HasShortestPathCheck<V>(
     private val graphName: String,
     private val path: List<V>,
 ) : JGraphTCheck, GetShortestPathBehaviour() {
-
-    init {
-        if (path.size < 2) {
-            throw LateDetectUnsupportedCheckException("path must contain at least its two endpoints")
-        }
-    }
 
     private val from = path.first()
     private val to = path.last()
