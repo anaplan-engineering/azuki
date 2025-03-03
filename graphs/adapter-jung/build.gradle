@@ -8,5 +8,5 @@ repositories {
 
 dependencies {
     api project(":graphs:adapter-declaration")
-    implementation "com.github.jrtom:jung:master-SNAPSHOT"
+    implementation "com.github.jrtom:jung:5bbc4f026ef94dcd3bafa7ef66317cb52007fd41"
 }
