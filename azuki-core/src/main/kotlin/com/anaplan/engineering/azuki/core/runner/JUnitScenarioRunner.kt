@@ -134,22 +134,26 @@ class JUnitScenarioRunner<
             return true
         }
         val knownBug = child.method.getAnnotation(KnownBug::class.java)
+            ?: child.parameters?.filterIsInstance<KnownBug>()?.singleOrNull()
         val implementationName = child.implementationInstance.implementationName
         if (knownBug != null && !runKnownBugs && implementationName in knownBug.issues.map { it.implementation }) {
             Log.warn("Skipping ${child.method.declaringClass.name}.${child.method.name} as this exhibits a known bug in $implementationName")
             return true
         }
         val toBeDone = child.method.getAnnotation(ToBeDone::class.java)
+            ?: child.parameters?.filterIsInstance<ToBeDone>()?.singleOrNull()
         if (toBeDone != null && implementationName in toBeDone.issues.map { it.implementation }) {
             Log.warn("Skipping ${child.method.declaringClass.name}.${child.method.name} as this is still TBD in $implementationName")
             return true
         }
         val unsupported = child.method.getAnnotation(Unsupported::class.java)
+            ?: child.parameters?.filterIsInstance<Unsupported>()?.singleOrNull()
         if (unsupported != null && implementationName in unsupported.implementation) {
             Log.warn("Skipping ${child.method.declaringClass.name}.${child.method.name} as unsupported in $implementationName")
             return true
         }
         val restrictTo = child.method.getAnnotation(RestrictTo::class.java)
+            ?: child.parameters?.filterIsInstance<RestrictTo>()?.singleOrNull()
         return restrictTo != null && restrictTo.implementationName != implementationName
     }
 
@@ -195,15 +199,18 @@ class JUnitScenarioRunner<
             object : ReflectiveCallable() {
                 override fun runReflectiveCall(): Any {
                     try {
-                        val scenario = if (parameters == null) {
+                        val nonSpecialParameters = parameters
+                            ?.filterNot { it is Since || it is KnownBug || it is ToBeDone || it is Unsupported || it is RestrictTo }
+                            ?.toTypedArray()
+                        val scenario = if (nonSpecialParameters == null || nonSpecialParameters.isEmpty()) {
                             testClass.primaryConstructor!!.call()
                         } else {
-                            testClass.primaryConstructor!!.call(*parameters)
+                            testClass.primaryConstructor!!.call(*nonSpecialParameters)
                         }
-                        val sinceAnnotation = build.getAnnotation(Since::class.java)
+                        val since: Since? = build.getAnnotation(Since::class.java)
+                            ?: parameters?.filterIsInstance<Since>()?.singleOrNull()
                         val scenarioVersion =
-                            sinceAnnotation?.implementationVersion?.filter { it.name == implementationInstance.implementationName }
-                                ?.singleOrNull()
+                            since?.implementationVersion?.singleOrNull { it.name == implementationInstance.implementationName }
                         if (implementationInstance.supportsScenarioVersion(scenario, scenarioVersion) == false) {
                             unsupported("Skipping - scenario version incompatible with implementation instance")
                         }
