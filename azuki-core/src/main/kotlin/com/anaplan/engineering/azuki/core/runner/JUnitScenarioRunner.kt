@@ -374,7 +374,7 @@ class JUnitScenarioRunner<
     }
 
     private fun parameterize(baseRuns: List<ScenarioRun<AF, CF, QF, AGF>>): List<ScenarioRun<AF, CF, QF, AGF>> {
-        @Suppress("UNCHECKED_CAST") val parameterPermutations =
+        val parameterPermutations =
             parameterMethod!!.method.invoke(kClass.companionObjectInstance!!) as? Collection<Array<Any>>
                 ?: throw IllegalStateException("Parameter method $parameterMethod. returns object with invalid type")
         Log.debug("Test is parameterized, parameter method: ${parameterMethod?.name}, permutation count: ${parameterPermutations.size}")
