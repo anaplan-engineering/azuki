@@ -14,20 +14,35 @@ class HasStateCheck(
     override fun check(env: ExecutionEnvironment): Boolean {
         return env.withGame(gameName) {
             Log.info("Game:\n$this")
-            moves == mutableMapOf<Position, String>().apply {
+            val actual = mutableMapOf<Position, String>().apply {
                 (0 until height).forEach<Int> { y ->
                     (0 until width).forEach<Int> { x ->
-                        val token = board[x][y]
+                        val token = board[y][x]
                         if (token != null) {
                             put(Position(y + 1, x + 1), token.symbol)
                         }
                     }
                 }
             }
+            val equals = moves == actual
+            if (!equals) {
+                Log.error("Actual:\n${actual.pretty(height, width)}")
+            }
+            equals
         }
     }
 
     companion object {
         private val Log = LoggerFactory.getLogger(HasStateCheck::class.java)
+    }
+}
+
+private fun MoveMap.pretty(rowMax:Int, colMax: Int): String = buildString {
+    (1..rowMax).forEach { row ->
+        (1 until colMax).forEach { col ->
+            append(getOrDefault(Position(row, col), "."))
+            append(" | ")
+        }
+        append("${getOrDefault(Position(row, colMax), ".")}\n")
     }
 }
