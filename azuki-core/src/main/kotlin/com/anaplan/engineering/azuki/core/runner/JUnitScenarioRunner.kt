@@ -199,10 +199,13 @@ class JUnitScenarioRunner<
             object : ReflectiveCallable() {
                 override fun runReflectiveCall(): Any {
                     try {
-                        val scenario = if (parameters == null) {
+                        val nonSpecialParameters = parameters
+                            ?.filterNot { it is Since || it is KnownBug || it is ToBeDone || it is Unsupported || it is RestrictTo }
+                            ?.toTypedArray()
+                        val scenario = if (nonSpecialParameters == null || nonSpecialParameters.isEmpty()) {
                             testClass.primaryConstructor!!.call()
                         } else {
-                            testClass.primaryConstructor!!.call(*parameters)
+                            testClass.primaryConstructor!!.call(*nonSpecialParameters)
                         }
                         val since: Since? = build.getAnnotation(Since::class.java)
                             ?: parameters?.filterIsInstance<Since>()?.singleOrNull()
