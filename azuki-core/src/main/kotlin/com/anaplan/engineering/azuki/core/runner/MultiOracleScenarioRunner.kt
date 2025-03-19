@@ -93,8 +93,6 @@ class MultiOracleScenarioRunner<
         return VerificationContext(queryTaskResult.result, generatedScenario)
     }
 
-    private enum class ActionGeneratorType { Given, When }
-
     private fun verifyWithOracle(
         oracleInstance: ImplementationInstance<AF, CF, QF, AGF>,
         resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>,
@@ -173,90 +171,121 @@ class MultiOracleScenarioRunner<
 
     private class ActionGeneratingSystemCursor<AF : ActionFactory, CF : CheckFactory, S : ActionGeneratingSystem<AF, CF>, SF : ActionGeneratingSystemFactory<AF, CF, *, *, *, S>>(
         private val systemFactory: SF,
-        private var systemDefinition: SystemDefinition
+        private val declarations: List<Action>,
     ) {
 
-        private val system = systemFactory.create(systemDefinition)
+        private val systemDefinition: SystemDefinition = SystemDefinition(declarations = declarations)
+        private var system = systemFactory.create(systemDefinition)
+        private val unappliedCommands = mutableListOf<Action>()
+        private val commands = mutableListOf<Action>()
+        private val declarationCreators = mutableListOf<(AF) -> Action>()
+        private val commandCreators = mutableListOf<(AF) -> Action>()
 
-        fun apply(iteration: SystemIteration) =
-            if (system is MutableSystem<*, *>) {
-                system.applyIteration(iteration)
-                system
-            } else {
-                systemDefinition = systemDefinition.copy(
-                    commands = systemDefinition.commands + iteration.commands,
-                    actionGenerators = iteration.actionGenerators,
-                )
-                systemFactory.create(systemDefinition)
+        fun generateDeclarations(actionGenerators: List<ActionGenerator>) {
+            checkForUnsupported(actionGenerators)
+            system = systemFactory.create(systemDefinition.copy(
+                declarations = systemDefinition.declarations + declarationCreators.map { it(systemFactory.actionFactory) },
+                actionGenerators = actionGenerators,
+            ))
+            try {
+                declarationCreators.addAll(system.generateActions())
+            } catch (e: LateDetectUnsupportedActionException) {
+                throw ActionGenerationException("Unsupported action generated", e)
+            } catch (e: Exception) {
+                throw ActionGenerationException("Error in declaration action generation", e)
+            }
+        }
+
+        private fun checkForUnsupported(actionGenerators: List<ActionGenerator>) {
+            if (actionGenerators.filterIsInstance<UnsupportedActionGenerator>().isNotEmpty()) {
+                throw ActionGenerationException("Unsupported action generator present")
+            }
+        }
+
+        fun applyCommands(commands: List<Action>) {
+            unappliedCommands.addAll(commands)
+            this.commands.addAll(commands)
+        }
+
+        fun generateCommands(actionGenerators: List<ActionGenerator>) {
+            checkForUnsupported(actionGenerators)
+            system.let {
+                try {
+                    if (it is MutableSystem<*, *>) {
+                        it.applyIteration(SystemIteration(commands = unappliedCommands,
+                            actionGenerators = actionGenerators))
+                    } else {
+                        system = systemFactory.create(systemDefinition.copy(
+                            declarations = systemDefinition.declarations + declarationCreators.map { it(systemFactory.actionFactory) },
+                            commands = systemDefinition.commands + commands + commandCreators.map { it(systemFactory.actionFactory) },
+                            actionGenerators = actionGenerators,
+                        ))
+                    }
+                    val blockCommandCreators = system.generateActions()
+                    commandCreators.addAll(blockCommandCreators)
+                    unappliedCommands.clear()
+                    unappliedCommands.addAll(blockCommandCreators.map { it(systemFactory.actionFactory) })
+                } catch (e: LateDetectUnsupportedActionException) {
+                    throw ActionGenerationException("Unsupported action generated", e)
+                } catch (e: Exception) {
+                    throw ActionGenerationException("Error in command action generation", e)
+                }
             }
 
+        }
+
+        fun getGeneratedActions() = GeneratedActions(declarationCreators, commandCreators)
+
         fun destroy() {
-            if (system is MutableSystem<*, *>) {
-                system.destroy()
+            system.let {
+                if (it is MutableSystem<*, *>) {
+                    it.destroy()
+                }
             }
         }
     }
 
+    private class ActionGenerationException(msg: String, e: Exception? = null) : RuntimeException(msg, e)
+
+    private data class GeneratedActions<AF : ActionFactory>(
+        val declarationCreators: List<(AF) -> Action>,
+        val commandCreators: List<(AF) -> Action>
+    )
+
     private fun generateScenario(resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>): OracleScenario<AF, QF, AGF> {
-        val actionGenerators = testInstance.runTask(TaskType.CreateActionGenerators, scenario) { implementation ->
-            val systemFactory =
-                implementation.createSystemFactory() as? ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>
-                    ?: throw IllegalStateException("Trying to generate actions, but system factory does not create systems with action generation capability")
-            scenario.givenActionGenerations(systemFactory.actionGeneratorFactory).map {
-                it to ActionGeneratorType.Given
-            } + scenario.whenActionGenerations(systemFactory.actionGeneratorFactory).map {
-                it to ActionGeneratorType.When
-            }
+        fun getActionGeneratingSystemFactory(implementation: Implementation<AF, CF, QF, AGF, *>) =
+            implementation.createSystemFactory() as? ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>
+                ?: throw IllegalStateException("Trying to generate actions, but system factory does not create systems with action generation capability")
+        val (declarationActionGenerators, commandActionGenerators) = testInstance.runTask(TaskType.CreateActionGenerators,
+            scenario) { implementation ->
+            val systemFactory = getActionGeneratingSystemFactory(implementation)
+            scenario.givenActionGenerations(systemFactory.actionGeneratorFactory) to scenario.whenActionGenerations(
+                systemFactory.actionGeneratorFactory)
         }.result!!
         val generateTaskResult = testInstance.runTask(TaskType.GenerateActions, scenario) { implementation ->
-            val systemFactory =
-                implementation.createSystemFactory() as? ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>
-                    ?: throw IllegalStateException("Trying to generate actions, but system factory does not create systems with action generation capability")
+            val systemFactory = getActionGeneratingSystemFactory(implementation)
             val declarations = scenario.declarations(systemFactory.actionFactory)
-            val commands = scenario.commands(systemFactory.actionFactory)
-            val systemCursor = ActionGeneratingSystemCursor(systemFactory, SystemDefinition(
-                declarations = declarations,
-                commands = commands
-            ))
+            val systemCursor =
+                ActionGeneratingSystemCursor(systemFactory, declarations)
             try {
-                actionGenerators.fold(scenario) { baseScenario, (generators, type) ->
-                    val commandsFromPreviousIteration =
-                        if (baseScenario is GeneratedScenario) {
-                            baseScenario.givenActionCreators.map { it(systemFactory.actionFactory) } +
-                                baseScenario.whenActionCreators.map { it(systemFactory.actionFactory) }
-                        } else {
-                            emptyList()
-                        }
-                    val actionCreators = generateActions(systemCursor, commandsFromPreviousIteration, generators)
-                    GeneratedScenario(
-                        base = baseScenario,
-                        givenActionCreators = if (type == ActionGeneratorType.Given) actionCreators else emptyList(),
-                        whenActionCreators = if (type == ActionGeneratorType.When) actionCreators else emptyList()
-                    )
+                declarationActionGenerators.forEach { actionGenerators ->
+                    Log.trace("Processing given block generators={}", actionGenerators)
+                    systemCursor.generateDeclarations(actionGenerators)
                 }
+                val commands = scenario.commands(systemFactory.actionFactory)
+                systemCursor.applyCommands(commands)
+                commandActionGenerators.forEach { actionGenerators ->
+                    Log.trace("Processing when block generators={}", actionGenerators)
+                    systemCursor.generateCommands(actionGenerators)
+                }
+                val generatedActions = systemCursor.getGeneratedActions()
+                GeneratedScenario(base = scenario, generatedActions = generatedActions)
             } finally {
                 systemCursor.destroy()
             }
         }
         resultBuilder.add(generateTaskResult)
         return generateTaskResult.result ?: scenario
-    }
-
-
-    private fun generateActions(
-        systemCursor: ActionGeneratingSystemCursor<AF, CF, ActionGeneratingSystem<AF, CF>, ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>>,
-        commands: List<Action>,
-        generators: List<ActionGenerator>
-    ): List<(AF) -> Action> {
-        return if (UnsupportedActionGenerator in generators) {
-            Log.warn("Unsupported action generator found!!")
-            emptyList()
-        } else try {
-            val system = systemCursor.apply(SystemIteration(commands = commands, actionGenerators = generators))
-            system.generateActions()
-        } catch (e: LateDetectUnsupportedActionException) {
-            emptyList()
-        }
     }
 
     private fun query(instance: ImplementationInstance<AF, CF, QF, AGF>, scenario: OracleScenario<AF, QF, AGF>) =
@@ -349,7 +378,7 @@ class MultiOracleScenarioRunner<
         val verifiedBy = oracleResults.find { it.verified }?.instance
 
         override fun toString() = if (verified) {
-            "Scenario verifed by $verifiedBy"
+            "Scenario verified by $verifiedBy"
         } else {
             "Scenario not verified"
         }
@@ -357,24 +386,21 @@ class MultiOracleScenarioRunner<
 
     private class GeneratedScenario<AF : ActionFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
         private val base: OracleScenario<AF, QF, AGF>,
-        val givenActionCreators: List<(AF) -> Action> = emptyList(),
-        val whenActionCreators: List<(AF) -> Action> = emptyList(),
+        private val generatedActions: GeneratedActions<AF>,
     ) : OracleScenario<AF, QF, AGF> {
 
         override fun declarations(actionFactory: AF) =
-            base.declarations(actionFactory) + givenActionCreators.map { it(actionFactory) }
-
+            base.declarations(actionFactory) + generatedActions.declarationCreators.map { it(actionFactory )}
 
         override fun commands(actionFactory: AF) =
-            base.commands(actionFactory) + whenActionCreators.map { it(actionFactory) }
+            base.commands(actionFactory) + generatedActions.commandCreators.map { it(actionFactory )}
 
         override fun queries(queryFactory: QF) = base.queries(queryFactory)
 
-        // TODO --- for completeness these could/should include unresolved generators
         override fun givenActionGenerations(actionGeneratorFactory: AGF): List<List<ActionGenerator>> = emptyList()
 
-        // TODO --- for completeness these could/should include unresolved generators
         override fun whenActionGenerations(actionGeneratorFactory: AGF): List<List<ActionGenerator>> = emptyList()
+
     }
 
 }
