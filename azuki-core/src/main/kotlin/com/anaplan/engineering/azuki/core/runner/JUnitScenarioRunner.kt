@@ -381,10 +381,10 @@ class JUnitScenarioRunner<
             }
         }
         val nonParameterizedRuns = eacs + adapterTests + analysisScenarios + generatedScenarios + modellingExamples
-        return (if (parameterMethod == null) nonParameterizedRuns else parametrize(nonParameterizedRuns)).toMutableList()
+        return (if (parameterMethod == null) nonParameterizedRuns else parameterize(nonParameterizedRuns)).toMutableList()
     }
 
-    private fun parametrize(baseRuns: List<ScenarioRun<AF, CF, QF, AGF>>): List<ScenarioRun<AF, CF, QF, AGF>> {
+    private fun parameterize(baseRuns: List<ScenarioRun<AF, CF, QF, AGF>>): List<ScenarioRun<AF, CF, QF, AGF>> {
         val parameterPermutations =
             parameterMethod!!.method.invoke(kClass.companionObjectInstance!!) as? Collection<Array<Any>>
                 ?: throw IllegalStateException("Parameter method $parameterMethod. returns object with invalid type")
