@@ -193,6 +193,8 @@ class MultiOracleScenarioRunner<
                 throw ActionGenerationException("Unsupported action generated", e)
             } catch (e: Exception) {
                 throw ActionGenerationException("Error in declaration action generation", e)
+            } finally {
+                destroy()
             }
         }
 
@@ -203,6 +205,13 @@ class MultiOracleScenarioRunner<
         }
 
         fun applyCommands(commands: List<Action>) {
+            system.let {
+                if (it is MutableSystem<*, *>) {
+                    system = systemFactory.create(systemDefinition.copy(
+                        declarations = systemDefinition.declarations + declarationCreators.map { it(systemFactory.actionFactory) },
+                    ))
+                }
+            }
             unappliedCommands.addAll(commands)
             this.commands.addAll(commands)
         }
@@ -390,10 +399,10 @@ class MultiOracleScenarioRunner<
     ) : OracleScenario<AF, QF, AGF> {
 
         override fun declarations(actionFactory: AF) =
-            base.declarations(actionFactory) + generatedActions.declarationCreators.map { it(actionFactory )}
+            base.declarations(actionFactory) + generatedActions.declarationCreators.map { it(actionFactory) }
 
         override fun commands(actionFactory: AF) =
-            base.commands(actionFactory) + generatedActions.commandCreators.map { it(actionFactory )}
+            base.commands(actionFactory) + generatedActions.commandCreators.map { it(actionFactory) }
 
         override fun queries(queryFactory: QF) = base.queries(queryFactory)
 
