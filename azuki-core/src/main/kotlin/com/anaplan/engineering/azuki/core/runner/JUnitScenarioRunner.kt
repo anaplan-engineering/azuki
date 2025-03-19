@@ -20,6 +20,7 @@ import org.junit.runners.model.TestClass
 import org.slf4j.LoggerFactory
 import java.lang.System
 import java.lang.reflect.Method
+import java.text.MessageFormat
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
@@ -82,6 +83,7 @@ data class ScenarioRun<
     val ignoreWhenUnsupported: Boolean = true,
     val expectSkip: Boolean = false,
     val parameters: Array<Any>? = null,
+    val descriptionFormat: String? = null,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -370,19 +372,28 @@ class JUnitScenarioRunner<
             }
         }
         val nonParameterizedRuns = eacs + adapterTests + analysisScenarios + generatedScenarios + modellingExamples
-        return (if (parameterMethod == null) nonParameterizedRuns else parameterize(nonParameterizedRuns)).toMutableList()
+        return (if (parameterMethod == null) nonParameterizedRuns else parametrize(nonParameterizedRuns)).toMutableList()
     }
 
-    private fun parameterize(baseRuns: List<ScenarioRun<AF, CF, QF, AGF>>): List<ScenarioRun<AF, CF, QF, AGF>> {
+    private fun parametrize(baseRuns: List<ScenarioRun<AF, CF, QF, AGF>>): List<ScenarioRun<AF, CF, QF, AGF>> {
         val parameterPermutations =
             parameterMethod!!.method.invoke(kClass.companionObjectInstance!!) as? Collection<Array<Any>>
                 ?: throw IllegalStateException("Parameter method $parameterMethod. returns object with invalid type")
         Log.debug("Test is parameterized, parameter method: ${parameterMethod?.name}, permutation count: ${parameterPermutations.size}")
-        return baseRuns.flatMap { baseRun -> parameterPermutations.map { perm -> baseRun.copy(parameters = perm) } }
+        val descriptionFormat = parameterMethod!!.annotations.filterIsInstance<Parameters>().singleOrNull()?.name
+        return baseRuns.flatMap { baseRun -> parameterPermutations.map { perm ->
+            baseRun.copy(parameters = perm, descriptionFormat = if (name == "{index}") null else descriptionFormat)
+        } }
     }
 
     override fun describeChild(child: ScenarioRun<AF, CF, QF, AGF>): Description {
-        val parameterSuffix = if (child.parameters == null) "" else "${child.parameters.toList()}"
+        val parameterSuffix = if (child.parameters == null) {
+            ""
+        } else if (child.descriptionFormat != null) {
+            " <- ${MessageFormat.format(child.descriptionFormat, *child.parameters)}"
+        } else {
+            "${child.parameters.toList()}"
+        }
         val methodName = "${child.method.name}$parameterSuffix"
         return if (excludeImplFromDescription) {
             Description.createTestDescription(testClass.name, methodName)
