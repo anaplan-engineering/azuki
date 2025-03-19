@@ -186,6 +186,12 @@ class JarImplementationInstance<
         val runner = object : Runnable {
             var result: TaskResult<S, R>? = null
 
+            /**
+             * The beginning of the name of the JAR file must match `implementationName`.
+             * This enables selecting and loading an individual instance from a JAR file that contains instances of
+             * multiple distinct implementations.
+             * A JAR file is not allowed to contain multiple instances of the same implementation.
+             */
             override fun run() {
                 val implementations = Implementation.locateImplementations<AF, CF, QF, AGF>()
                     .filter { it.name.split("-").first() == implementationName }
@@ -196,7 +202,7 @@ class JarImplementationInstance<
                     implementationTask.run(scenario)
                 } else {
                     val exception =
-                        IllegalStateException("Implementation instance jar should contain exactly one implementation with base name ${implementationName}, but ${implementations.size} found")
+                        IllegalStateException("Implementation instance jar should contain exactly one implementation with name ${implementationName}, but ${implementations.size} found")
                     Log.error("Error running task type=$taskType instance=${instanceName}", exception)
                     TaskResult(
                         taskType = taskType,
