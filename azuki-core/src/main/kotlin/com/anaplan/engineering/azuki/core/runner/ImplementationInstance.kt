@@ -188,6 +188,7 @@ class JarImplementationInstance<
 
             override fun run() {
                 val implementations = Implementation.locateImplementations<AF, CF, QF, AGF>()
+                    .filter { it.name.split("-").first() == implementationName }
                 result = if (implementations.size == 1) {
                     val implementation = implementations.single()
                     Log.debug("Running task type={} implementation={}", taskType, implementation.name)
@@ -195,7 +196,7 @@ class JarImplementationInstance<
                     implementationTask.run(scenario)
                 } else {
                     val exception =
-                        IllegalStateException("Implementation instance jar should contain exactly one implementation, but ${implementations.size} found")
+                        IllegalStateException("Implementation instance jar should contain exactly one implementation with base name ${implementationName}, but ${implementations.size} found")
                     Log.error("Error running task type=$taskType instance=${instanceName}", exception)
                     TaskResult(
                         taskType = taskType,
