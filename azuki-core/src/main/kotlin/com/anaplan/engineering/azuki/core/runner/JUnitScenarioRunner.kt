@@ -20,6 +20,7 @@ import org.junit.runners.model.TestClass
 import org.slf4j.LoggerFactory
 import java.lang.System
 import java.lang.reflect.Method
+import java.text.MessageFormat
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
@@ -82,6 +83,7 @@ data class ScenarioRun<
     val ignoreWhenUnsupported: Boolean = true,
     val expectSkip: Boolean = false,
     val parameters: Array<Any>? = null,
+    val descriptionFormat: String? = null,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -129,6 +131,15 @@ class JUnitScenarioRunner<
         System.getProperty(forceKnownBugsPropertyName, "false").toBoolean()
     }
 
+    private fun String.matches(pattern: String) = if (pattern.endsWith('*')) {
+        this.startsWith(pattern.dropLast(1))
+    } else {
+        this == pattern
+    }
+
+    private fun Array<out Issue>.anyMatches(name: String) = any { name.matches(it.implementation) }
+    private fun Array<out String>.anyMatches(name: String) = any { name.matches(it) }
+
     override fun isIgnored(child: ScenarioRun<AF, CF, QF, AGF>): Boolean {
         if (child.method.getAnnotation(Ignore::class.java) != null) {
             return true
@@ -136,25 +147,25 @@ class JUnitScenarioRunner<
         val knownBug = child.method.getAnnotation(KnownBug::class.java)
             ?: child.parameters?.filterIsInstance<KnownBug>()?.singleOrNull()
         val implementationName = child.implementationInstance.implementationName
-        if (knownBug != null && !runKnownBugs && implementationName in knownBug.issues.map { it.implementation }) {
+        if (knownBug != null && !runKnownBugs && knownBug.issues.anyMatches(implementationName)) {
             Log.warn("Skipping ${child.method.declaringClass.name}.${child.method.name} as this exhibits a known bug in $implementationName")
             return true
         }
         val toBeDone = child.method.getAnnotation(ToBeDone::class.java)
             ?: child.parameters?.filterIsInstance<ToBeDone>()?.singleOrNull()
-        if (toBeDone != null && implementationName in toBeDone.issues.map { it.implementation }) {
+        if (toBeDone != null && toBeDone.issues.anyMatches(implementationName)) {
             Log.warn("Skipping ${child.method.declaringClass.name}.${child.method.name} as this is still TBD in $implementationName")
             return true
         }
         val unsupported = child.method.getAnnotation(Unsupported::class.java)
             ?: child.parameters?.filterIsInstance<Unsupported>()?.singleOrNull()
-        if (unsupported != null && implementationName in unsupported.implementation) {
+        if (unsupported != null && unsupported.implementation.anyMatches(implementationName)) {
             Log.warn("Skipping ${child.method.declaringClass.name}.${child.method.name} as unsupported in $implementationName")
             return true
         }
         val restrictTo = child.method.getAnnotation(RestrictTo::class.java)
             ?: child.parameters?.filterIsInstance<RestrictTo>()?.singleOrNull()
-        return restrictTo != null && restrictTo.implementationName != implementationName
+        return restrictTo != null && !restrictTo.implementationName.matches(implementationName)
     }
 
     override fun runChild(child: ScenarioRun<AF, CF, QF, AGF>, notifier: RunNotifier) {
@@ -378,11 +389,20 @@ class JUnitScenarioRunner<
             parameterMethod!!.method.invoke(kClass.companionObjectInstance!!) as? Collection<Array<Any>>
                 ?: throw IllegalStateException("Parameter method $parameterMethod. returns object with invalid type")
         Log.debug("Test is parameterized, parameter method: ${parameterMethod?.name}, permutation count: ${parameterPermutations.size}")
-        return baseRuns.flatMap { baseRun -> parameterPermutations.map { perm -> baseRun.copy(parameters = perm) } }
+        val descriptionFormat = parameterMethod!!.annotations.filterIsInstance<Parameters>().singleOrNull()?.name
+        return baseRuns.flatMap { baseRun -> parameterPermutations.map { perm ->
+            baseRun.copy(parameters = perm, descriptionFormat = if (name == "{index}") null else descriptionFormat)
+        } }
     }
 
     override fun describeChild(child: ScenarioRun<AF, CF, QF, AGF>): Description {
-        val parameterSuffix = if (child.parameters == null) "" else "${child.parameters.toList()}"
+        val parameterSuffix = if (child.parameters == null) {
+            ""
+        } else if (child.descriptionFormat != null) {
+            " <- ${MessageFormat.format(child.descriptionFormat, *child.parameters)}"
+        } else {
+            "${child.parameters.toList()}"
+        }
         val methodName = "${child.method.name}$parameterSuffix"
         return if (excludeImplFromDescription) {
             Description.createTestDescription(testClass.name, methodName)

@@ -15,40 +15,43 @@ class MoveOrder(private val testCase: TestCase) : TicTacToeScenario() {
 
     companion object {
 
-        data class TestCase(val moves: TicTacToeWhen.() -> Unit)
+        data class TestCase(val description: String, val moves: TicTacToeWhen.() -> Unit) {
+            override fun toString() = description
+        }
 
-        @Parameterized.Parameters
+        private fun testCase(
+            description: String,
+            knownBug: KnownBug? = null,
+            toBeDone: ToBeDone? = null,
+            moves: TicTacToeWhen.() -> Unit,
+        ): Array<Any> = arrayOf(TestCase(description, moves), *listOfNotNull(knownBug, toBeDone).toTypedArray())
+
+        @Parameterized.Parameters(name = "{0}")
         fun actions() = listOf(
-            TestCase {
+            testCase("1:1 2:2 1:3 1:2") {
                 placeToken(gameA, X, 1 to 1)
                 placeToken(gameA, O, 2 to 2)
                 placeToken(gameA, X, 1 to 3)
                 placeToken(gameA, O, 1 to 2)
             },
-            TestCase {
+            testCase("1:1 1:2 1:3 2:2") {
                 placeToken(gameA, X, 1 to 1)
                 placeToken(gameA, O, 1 to 2)
                 placeToken(gameA, X, 1 to 3)
                 placeToken(gameA, O, 2 to 2)
+            },
+            testCase("1:3 2:2 1:1 1:2", KnownBug(Issue("SampleImpl", "FOO-123"), Issue("VDM", "FOO-234"))) {
+                placeToken(gameA, X, 1 to 3)
+                placeToken(gameA, O, 2 to 2)
+                placeToken(gameA, X, 1 to 1)
+                placeToken(gameA, O, 1 to 2)
+            },
+            testCase("1:3 1:2 1:1 2:2", toBeDone = ToBeDone(Issue("SampleImpl", "BAR-567"))) {
+                placeToken(gameA, X, 1 to 3)
+                placeToken(gameA, O, 1 to 2)
+                placeToken(gameA, X, 1 to 1)
+                placeToken(gameA, O, 2 to 2)
             }
-        ).map { arrayOf(it) } + listOf(
-            arrayOf(
-                TestCase {
-                    placeToken(gameA, X, 1 to 3)
-                    placeToken(gameA, O, 2 to 2)
-                    placeToken(gameA, X, 1 to 1)
-                    placeToken(gameA, O, 1 to 2)
-                },
-                KnownBug(Issue("SampleImpl", "FOO-123"), Issue("VDM", "FOO-234"))
-            ),
-            arrayOf(
-                TestCase {
-                    placeToken(gameA, X, 1 to 3)
-                    placeToken(gameA, O, 1 to 2)
-                    placeToken(gameA, X, 1 to 1)
-                    placeToken(gameA, O, 2 to 2)
-                }, ToBeDone(Issue("SampleImpl", "BAR-567"))
-            )
         )
     }
 
