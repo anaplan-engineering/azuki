@@ -1,1 +1,2 @@
-com.anaplan.engineering.azuki.graphs.adapter.scriptgen.GraphDeclarationBuilderFactory
+com.anaplan.engineering.azuki.graphs.adapter.scriptgen.UndirectedGraphDeclarationBuilderFactory
+com.anaplan.engineering.azuki.graphs.adapter.scriptgen.DirectedGraphDeclarationBuilderFactory

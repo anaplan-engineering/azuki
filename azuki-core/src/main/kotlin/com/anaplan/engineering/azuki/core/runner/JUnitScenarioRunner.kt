@@ -391,7 +391,8 @@ class JUnitScenarioRunner<
         Log.debug("Test is parameterized, parameter method: ${parameterMethod?.name}, permutation count: ${parameterPermutations.size}")
         val descriptionFormat = parameterMethod!!.annotations.filterIsInstance<Parameters>().singleOrNull()?.name
         return baseRuns.flatMap { baseRun -> parameterPermutations.map { perm ->
-            baseRun.copy(parameters = perm, descriptionFormat = if (name == "{index}") null else descriptionFormat)
+            baseRun.copy(parameters = perm,
+                descriptionFormat = if (descriptionFormat == "{index}") null else descriptionFormat)
         } }
     }
 
