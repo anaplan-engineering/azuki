@@ -122,6 +122,15 @@ class JUnitScenarioRunner<
             Timeout(System.getProperty(junitTimeoutPropertyName, "3").toLong(), TimeUnit.MINUTES)
 
         private val Log = LoggerFactory.getLogger(JUnitScenarioRunner::class.java)
+
+        internal fun String.matches(pattern: String) = if (pattern.endsWith('*')) {
+            this.startsWith(pattern.dropLast(1))
+        } else {
+            this == pattern
+        }
+
+        internal fun Array<out Issue>.anyMatches(name: String) = any { name.matches(it.implementation) }
+        internal fun Array<out String>.anyMatches(name: String) = any { name.matches(it) }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -130,15 +139,6 @@ class JUnitScenarioRunner<
     private val runKnownBugs by lazy {
         System.getProperty(forceKnownBugsPropertyName, "false").toBoolean()
     }
-
-    private fun String.matches(pattern: String) = if (pattern.endsWith('*')) {
-        this.startsWith(pattern.dropLast(1))
-    } else {
-        this == pattern
-    }
-
-    private fun Array<out Issue>.anyMatches(name: String) = any { name.matches(it.implementation) }
-    private fun Array<out String>.anyMatches(name: String) = any { name.matches(it) }
 
     override fun isIgnored(child: ScenarioRun<AF, CF, QF, AGF>): Boolean {
         if (child.method.getAnnotation(Ignore::class.java) != null) {
@@ -221,7 +221,7 @@ class JUnitScenarioRunner<
                         val since: Since? = build.getAnnotation(Since::class.java)
                             ?: parameters?.filterIsInstance<Since>()?.singleOrNull()
                         val scenarioVersion =
-                            since?.implementationVersion?.singleOrNull { it.name == implementationInstance.implementationName }
+                            since?.implementationVersion?.singleOrNull { implementationInstance.implementationName.matches(it.name) }
                         if (implementationInstance.supportsScenarioVersion(scenario, scenarioVersion) == false) {
                             unsupported("Skipping - scenario version incompatible with implementation instance")
                         }
