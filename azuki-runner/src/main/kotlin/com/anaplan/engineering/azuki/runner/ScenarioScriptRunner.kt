@@ -2,8 +2,8 @@ package com.anaplan.engineering.azuki.runner
 
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
-import com.anaplan.engineering.azuki.core.runner.MultiOracleScenarioRunner
 import com.anaplan.engineering.azuki.core.runner.VerifiableScenarioRunner
+import com.anaplan.engineering.azuki.core.runner.oracle.MultiOracleScenarioRunner
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.scenario.OracleScenario
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
@@ -48,17 +48,22 @@ class ScenarioScriptRunner<
             when (result) {
                 VerifiableScenarioRunner.Result.Unverified -> exit("Scenario was unverified",
                     ExitCode.VerificationFailed)
+
                 VerifiableScenarioRunner.Result.UnsupportedCommand,
                 VerifiableScenarioRunner.Result.UnsupportedDeclaration,
                 VerifiableScenarioRunner.Result.UnsupportedCheck,
                 VerifiableScenarioRunner.Result.NoSupportedChecks,
                 VerifiableScenarioRunner.Result.NotVerifiable -> exit("Invalid scenario", ExitCode.InvalidScenario)
+
                 VerifiableScenarioRunner.Result.IncompatibleSystem -> exit("System does not support verify/report",
                     ExitCode.InvalidSystem)
+
                 VerifiableScenarioRunner.Result.UnknownError -> exit("There was an unexpected error",
                     ExitCode.UnknownError)
+
                 VerifiableScenarioRunner.Result.NotPersistable -> exit("There was a configuration issue: a persistable system was expected",
                     ExitCode.NotPersistable)
+
                 VerifiableScenarioRunner.Result.Verified,
                 VerifiableScenarioRunner.Result.Reported -> Log.info("Run completed successfully")
             }
