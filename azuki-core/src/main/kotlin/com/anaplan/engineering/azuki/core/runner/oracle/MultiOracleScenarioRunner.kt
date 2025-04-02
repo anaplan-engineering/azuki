@@ -1,9 +1,36 @@
-package com.anaplan.engineering.azuki.core.runner
+package com.anaplan.engineering.azuki.core.runner.oracle
 
+import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
+import com.anaplan.engineering.azuki.core.runner.TaskResult
+import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.core.scenario.OracleScenario
-import com.anaplan.engineering.azuki.core.system.*
+import com.anaplan.engineering.azuki.core.system.ActionFactory
+import com.anaplan.engineering.azuki.core.system.ActionGeneratingSystem
+import com.anaplan.engineering.azuki.core.system.ActionGeneratingSystemFactory
+import com.anaplan.engineering.azuki.core.system.ActionGenerator
+import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
+import com.anaplan.engineering.azuki.core.system.Answer
+import com.anaplan.engineering.azuki.core.system.CheckFactory
+import com.anaplan.engineering.azuki.core.system.DefaultImplementationSystemWriter
+import com.anaplan.engineering.azuki.core.system.Implementation
+import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedActionException
+import com.anaplan.engineering.azuki.core.system.MutableSystem
+import com.anaplan.engineering.azuki.core.system.QueryFactory
+import com.anaplan.engineering.azuki.core.system.QueryableSystem
+import com.anaplan.engineering.azuki.core.system.QueryableSystemFactory
+import com.anaplan.engineering.azuki.core.system.SystemWriter
+import com.anaplan.engineering.azuki.core.system.SystemDefinition
+import com.anaplan.engineering.azuki.core.system.UnsupportedAction
+import com.anaplan.engineering.azuki.core.system.UnsupportedQuery
+import com.anaplan.engineering.azuki.core.system.VerifiableSystem
+import com.anaplan.engineering.azuki.core.system.VerifiableSystemFactory
+import com.anaplan.engineering.azuki.core.system.VerificationResult
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import kotlin.collections.drop
+import kotlin.collections.first
+import kotlin.collections.flatMap
+import kotlin.collections.isNotEmpty
 
 class MultiOracleScenarioRunner<
     AF : ActionFactory,
@@ -116,6 +143,12 @@ class MultiOracleScenarioRunner<
             Log.debug("Declarations contain unsupported action")
             false
         } else {
+            val dclSystemWriter = systemWriter ?: DefaultImplementationSystemWriter(implementation)
+            dclSystemWriter.write(SystemDefinition(
+                declarations = scenario.declarations(dclSystemWriter.actionFactory),
+                commands = emptyList(),
+                checks = listOf(dclSystemWriter.checkFactory.systemValid()),
+            ), "declarationValidation")
             val system = systemFactory.create(SystemDefinition(
                 declarations = declarations,
                 commands = emptyList(),
@@ -148,6 +181,12 @@ class MultiOracleScenarioRunner<
         } else if (commands.any { it is UnsupportedAction }) {
             false
         } else {
+            val cmdSystemWriter = systemWriter ?: DefaultImplementationSystemWriter(implementation)
+            cmdSystemWriter.write(SystemDefinition(
+                declarations = scenario.declarations(cmdSystemWriter.actionFactory),
+                commands = scenario.commands(cmdSystemWriter.actionFactory),
+                checks = listOf(cmdSystemWriter.checkFactory.systemValid()),
+            ), "commandValidation")
             val system = systemFactory.create(SystemDefinition(
                 declarations = declarations,
                 commands = commands,
@@ -169,124 +208,25 @@ class MultiOracleScenarioRunner<
         }
     }
 
-    private class ActionGeneratingSystemCursor<AF : ActionFactory, CF : CheckFactory, S : ActionGeneratingSystem<AF, CF>, SF : ActionGeneratingSystemFactory<AF, CF, *, *, *, S>>(
-        private val systemFactory: SF,
-        private val declarations: List<Action>,
-    ) {
-
-        private val systemDefinition: SystemDefinition = SystemDefinition(declarations = declarations)
-        private var system = systemFactory.create(systemDefinition)
-        private val unappliedCommands = mutableListOf<Action>()
-        private val commands = mutableListOf<Action>()
-        private val declarationCreators = mutableListOf<(AF) -> Action>()
-        private val commandCreators = mutableListOf<(AF) -> Action>()
-
-        fun generateDeclarations(actionGenerators: List<ActionGenerator>) {
-            checkForUnsupported(actionGenerators)
-            system = systemFactory.create(systemDefinition.copy(
-                declarations = systemDefinition.declarations + declarationCreators.map { it(systemFactory.actionFactory) },
-                actionGenerators = actionGenerators,
-            ))
-            try {
-                declarationCreators.addAll(system.generateActions())
-            } catch (e: LateDetectUnsupportedActionException) {
-                throw ActionGenerationException("Unsupported action generated", e)
-            } catch (e: Exception) {
-                throw ActionGenerationException("Error in declaration action generation", e)
-            } finally {
-                destroy()
-            }
-        }
-
-        private fun checkForUnsupported(actionGenerators: List<ActionGenerator>) {
-            if (actionGenerators.filterIsInstance<UnsupportedActionGenerator>().isNotEmpty()) {
-                throw ActionGenerationException("Unsupported action generator present")
-            }
-        }
-
-        fun applyCommands(commands: List<Action>) {
-            system.let {
-                if (it is MutableSystem<*, *>) {
-                    system = systemFactory.create(systemDefinition.copy(
-                        declarations = systemDefinition.declarations + declarationCreators.map { it(systemFactory.actionFactory) },
-                    ))
-                }
-            }
-            unappliedCommands.addAll(commands)
-            this.commands.addAll(commands)
-        }
-
-        fun generateCommands(actionGenerators: List<ActionGenerator>) {
-            checkForUnsupported(actionGenerators)
-            system.let {
-                try {
-                    if (it is MutableSystem<*, *>) {
-                        it.applyIteration(SystemIteration(commands = unappliedCommands,
-                            actionGenerators = actionGenerators))
-                    } else {
-                        system = systemFactory.create(systemDefinition.copy(
-                            declarations = systemDefinition.declarations + declarationCreators.map { it(systemFactory.actionFactory) },
-                            commands = systemDefinition.commands + commands + commandCreators.map { it(systemFactory.actionFactory) },
-                            actionGenerators = actionGenerators,
-                        ))
-                    }
-                    val blockCommandCreators = system.generateActions()
-                    commandCreators.addAll(blockCommandCreators)
-                    unappliedCommands.clear()
-                    unappliedCommands.addAll(blockCommandCreators.map { it(systemFactory.actionFactory) })
-                } catch (e: LateDetectUnsupportedActionException) {
-                    throw ActionGenerationException("Unsupported action generated", e)
-                } catch (e: Exception) {
-                    throw ActionGenerationException("Error in command action generation", e)
-                }
-            }
-
-        }
-
-        fun getGeneratedActions() = GeneratedActions(declarationCreators, commandCreators)
-
-        fun destroy() {
-            system.let {
-                if (it is MutableSystem<*, *>) {
-                    it.destroy()
-                }
-            }
-        }
-    }
-
-    private class ActionGenerationException(msg: String, e: Exception? = null) : RuntimeException(msg, e)
-
-    private data class GeneratedActions<AF : ActionFactory>(
-        val declarationCreators: List<(AF) -> Action>,
-        val commandCreators: List<(AF) -> Action>
-    )
+    private val systemWriter = SystemWriter.locateScenarioWriter<AF, CF, QF, AGF>()
 
     private fun generateScenario(resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>): OracleScenario<AF, QF, AGF> {
         fun getActionGeneratingSystemFactory(implementation: Implementation<AF, CF, QF, AGF, *>) =
             implementation.createSystemFactory() as? ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>
                 ?: throw IllegalStateException("Trying to generate actions, but system factory does not create systems with action generation capability")
-        val (declarationActionGenerators, commandActionGenerators) = testInstance.runTask(TaskType.CreateActionGenerators,
-            scenario) { implementation ->
-            val systemFactory = getActionGeneratingSystemFactory(implementation)
-            scenario.givenActionGenerations(systemFactory.actionGeneratorFactory) to scenario.whenActionGenerations(
-                systemFactory.actionGeneratorFactory)
-        }.result!!
+
         val generateTaskResult = testInstance.runTask(TaskType.GenerateActions, scenario) { implementation ->
             val systemFactory = getActionGeneratingSystemFactory(implementation)
-            val declarations = scenario.declarations(systemFactory.actionFactory)
-            val systemCursor =
-                ActionGeneratingSystemCursor(systemFactory, declarations)
+            val systemCursor = ActionGeneratingSystemCursor(
+                systemFactory,
+                scenario::declarations,
+                scenario::commands,
+                scenario::givenActionGenerations,
+                scenario::whenActionGenerations,
+                systemWriter ?: DefaultImplementationSystemWriter(implementation)
+            )
             try {
-                declarationActionGenerators.forEach { actionGenerators ->
-                    Log.trace("Processing given block generators={}", actionGenerators)
-                    systemCursor.generateDeclarations(actionGenerators)
-                }
-                val commands = scenario.commands(systemFactory.actionFactory)
-                systemCursor.applyCommands(commands)
-                commandActionGenerators.forEach { actionGenerators ->
-                    Log.trace("Processing when block generators={}", actionGenerators)
-                    systemCursor.generateCommands(actionGenerators)
-                }
+                while (systemCursor.hasNext()) { systemCursor.next() }
                 val generatedActions = systemCursor.getGeneratedActions()
                 GeneratedScenario(base = scenario, generatedActions = generatedActions)
             } finally {
@@ -312,6 +252,14 @@ class MultiOracleScenarioRunner<
                 if (queries.isEmpty()) {
                     Log.warn("No queries found!!")
                 }
+                val querySystemWriter = systemWriter ?: DefaultImplementationSystemWriter(implementation)
+                val queriesToWrite = scenario.queries(querySystemWriter.queryFactory)
+                querySystemWriter.write(SystemDefinition(
+                    declarations = scenario.declarations(querySystemWriter.actionFactory),
+                    commands = scenario.commands(querySystemWriter.actionFactory),
+                    queries = queriesToWrite.queries.filter { it !is UnsupportedQuery<*> },
+                    forAllQueries = queriesToWrite.forAllQueries,
+                ), "query")
                 val system = systemFactory.create(SystemDefinition(
                     declarations = declarations,
                     commands = commands,
@@ -339,6 +287,12 @@ class MultiOracleScenarioRunner<
                 ?: throw IllegalStateException("Trying to verify, but system factory does not create verifiable systems")
         val declarations = scenario.declarations(systemFactory.actionFactory)
         val commands = scenario.commands(systemFactory.actionFactory)
+        val checkSystemWriter = systemWriter ?: DefaultImplementationSystemWriter(implementation)
+        checkSystemWriter.write(SystemDefinition(
+            declarations = scenario.declarations(checkSystemWriter.actionFactory),
+            commands = scenario.commands(checkSystemWriter.actionFactory),
+            checks = answers.flatMap { it.createChecks(checkSystemWriter.checkFactory) },
+        ), "check")
         val system = systemFactory.create(SystemDefinition(
             declarations = declarations,
             commands = commands,
