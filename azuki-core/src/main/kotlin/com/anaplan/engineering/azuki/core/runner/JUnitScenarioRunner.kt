@@ -165,7 +165,7 @@ class JUnitScenarioRunner<
         }
         val restrictTo = child.method.getAnnotation(RestrictTo::class.java)
             ?: child.parameters?.filterIsInstance<RestrictTo>()?.singleOrNull()
-        return restrictTo != null && !restrictTo.implementationName.matches(implementationName)
+        return restrictTo != null && !implementationName.matches(restrictTo.implementationName)
     }
 
     override fun runChild(child: ScenarioRun<AF, CF, QF, AGF>, notifier: RunNotifier) {
