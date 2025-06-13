@@ -4,33 +4,9 @@ import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
 import com.anaplan.engineering.azuki.core.runner.TaskResult
 import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.core.scenario.OracleScenario
-import com.anaplan.engineering.azuki.core.system.ActionFactory
-import com.anaplan.engineering.azuki.core.system.ActionGeneratingSystem
-import com.anaplan.engineering.azuki.core.system.ActionGeneratingSystemFactory
-import com.anaplan.engineering.azuki.core.system.ActionGenerator
-import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
-import com.anaplan.engineering.azuki.core.system.Answer
-import com.anaplan.engineering.azuki.core.system.CheckFactory
-import com.anaplan.engineering.azuki.core.system.DefaultImplementationSystemWriter
-import com.anaplan.engineering.azuki.core.system.Implementation
-import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedActionException
-import com.anaplan.engineering.azuki.core.system.MutableSystem
-import com.anaplan.engineering.azuki.core.system.QueryFactory
-import com.anaplan.engineering.azuki.core.system.QueryableSystem
-import com.anaplan.engineering.azuki.core.system.QueryableSystemFactory
-import com.anaplan.engineering.azuki.core.system.SystemWriter
-import com.anaplan.engineering.azuki.core.system.SystemDefinition
-import com.anaplan.engineering.azuki.core.system.UnsupportedAction
-import com.anaplan.engineering.azuki.core.system.UnsupportedQuery
-import com.anaplan.engineering.azuki.core.system.VerifiableSystem
-import com.anaplan.engineering.azuki.core.system.VerifiableSystemFactory
-import com.anaplan.engineering.azuki.core.system.VerificationResult
+import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import kotlin.collections.drop
-import kotlin.collections.first
-import kotlin.collections.flatMap
-import kotlin.collections.isNotEmpty
 
 class MultiOracleScenarioRunner<
     AF : ActionFactory,
@@ -226,7 +202,9 @@ class MultiOracleScenarioRunner<
                 systemWriter ?: DefaultImplementationSystemWriter(implementation)
             )
             try {
-                while (systemCursor.hasNext()) { systemCursor.next() }
+                while (systemCursor.hasNext()) {
+                    systemCursor.next()
+                }
                 val generatedActions = systemCursor.getGeneratedActions()
                 GeneratedScenario(base = scenario, generatedActions = generatedActions)
             } finally {
@@ -291,12 +269,24 @@ class MultiOracleScenarioRunner<
         checkSystemWriter.write(SystemDefinition(
             declarations = scenario.declarations(checkSystemWriter.actionFactory),
             commands = scenario.commands(checkSystemWriter.actionFactory),
-            checks = answers.flatMap { it.createChecks(checkSystemWriter.checkFactory) },
+            checks = answers.flatMap {
+                if (it is ValidatableAnswer<*, *>) {
+                    (it as ValidatableAnswer<*, CF>).createValidationChecks(checkSystemWriter.checkFactory)
+                } else {
+                    it.createChecks(checkSystemWriter.checkFactory)
+                }
+            },
         ), "check")
         val system = systemFactory.create(SystemDefinition(
             declarations = declarations,
             commands = commands,
-            checks = answers.flatMap { it.createChecks(systemFactory.checkFactory) },
+            checks = answers.flatMap {
+                if (it is ValidatableAnswer<*, *>) {
+                    (it as ValidatableAnswer<*, CF>).createValidationChecks(systemFactory.checkFactory)
+                } else {
+                    it.createChecks(systemFactory.checkFactory)
+                }
+            },
         ))
         try {
             when (system.verify()) {
