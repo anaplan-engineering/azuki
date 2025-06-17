@@ -1,13 +1,12 @@
 plugins {
-    id 'groovy'
-    id 'java-library'
-    id 'azuki.common-conventions'
+    id 'azuki.kotlin-conventions'
     id 'azuki.jar-publishing-conventions'
 }
 
 dependencies {
-    api 'org.codehaus.groovy:groovy:3.0.8'
-    implementation 'com.pinterest:ktlint:0.40.0'
+    // 1.5.0+ require Kotlin 2.1
+    implementation 'com.pinterest.ktlint:ktlint-rule-engine:1.4.0'
+    implementation 'com.pinterest.ktlint:ktlint-ruleset-standard:1.4.0'
 }
 
 publishing {
