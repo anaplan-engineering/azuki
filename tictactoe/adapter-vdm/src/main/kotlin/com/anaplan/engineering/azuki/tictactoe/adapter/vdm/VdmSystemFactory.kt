@@ -1,13 +1,10 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm
 
-import com.anaplan.engineering.azuki.declaration.Declaration
-import com.anaplan.engineering.azuki.declaration.DeclarationBuilderFactory
 import com.anaplan.engineering.azuki.core.system.*
+import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarableAction
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarationBuilder
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.toDeclarableAction
+import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.action.VdmActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check.DefaultVdmCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check.VdmCheckFactory
@@ -31,7 +28,7 @@ class VdmSystemFactory :
             throw UnsupportedOperationException("Specification should not support regardless of checks")
         }
         return VdmSystem(
-            systemDefinition.declarations.map(toDeclarableAction),
+            systemDefinition.declarations.map(::toDeclarableAction),
             systemDefinition.commands.map(toDefaultVdmAction),
             systemDefinition.checks.map(toDefaultVdmCheck),
         )
@@ -43,13 +40,13 @@ class VdmSystemFactory :
 }
 
 data class VdmSystem(
-    private val declarableActions: List<DeclarableAction>,
+    private val declarableActions: List<DeclarableAction<TicTacToeDeclarationState>>,
     private val buildActions: List<DefaultVdmAction>,
     private val checks: List<DefaultVdmCheck>
 ) : VerifiableSystem<TicTacToeActionFactory, TicTacToeCheckFactory> {
 
     private fun createAnimationModule(specification: SpecificationStructure): AnimationModule {
-        val vdmDeclarationBuilders = DeclarationBuilder(declarableActions).build().map { declarationBuilder(it) }
+        val vdmDeclarationBuilders = declarationStateBuilder.build(declarableActions).map { declarationBuilder(it) }
         val moduleBuilder =
             checks.fold(
                 buildActions.fold(
@@ -78,5 +75,7 @@ data class VdmSystem(
 
     companion object {
         private val declarationBuilderFactory = DeclarationBuilderFactory(VdmDeclarationBuilderFactory::class.java)
+
+        private val declarationStateBuilder = DeclarationStateBuilder(TicTacToeDeclarationState.Factory)
     }
 }

@@ -1,13 +1,13 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.declaration.action
 
+import com.anaplan.engineering.azuki.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.StartAGameBehaviour
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarableAction
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 
 open class StartAGameDeclarableAction(protected val gameName: String, protected val orderName: String) :
-    StartAGameBehaviour(), DeclarableAction {
+    StartAGameBehaviour(), DeclarableAction<TicTacToeDeclarationState> {
 
-    override fun declare(builder: DeclarationBuilder) {
-        builder.declareGame(gameName, orderName)
+    override fun declare(state: TicTacToeDeclarationState) {
+        state.declareGame(gameName, orderName)
     }
 }
