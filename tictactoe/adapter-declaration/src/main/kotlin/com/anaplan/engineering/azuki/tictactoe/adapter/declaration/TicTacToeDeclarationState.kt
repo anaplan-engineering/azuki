@@ -6,7 +6,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.GameDeclaration
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.PlayOrderDeclaration
 
-class TicTacToeDeclarationState(): DeclarationState() {
+class TicTacToeDeclarationState : DeclarationState() {
     fun declarePlayOrder(orderName: String, playOrder: List<String>, standalone: Boolean = true) {
         checkForDuplicate(orderName)
         declarations[orderName] = PlayOrderDeclaration(orderName, playOrder, standalone)
@@ -15,7 +15,7 @@ class TicTacToeDeclarationState(): DeclarationState() {
     fun declareGame(boardName: String, orderName: String) {
         checkForDuplicate(boardName)
         checkExists(orderName)
-        declarations[boardName] = GameDeclaration(boardName, orderName, emptyMap(),true)
+        declarations[boardName] = GameDeclaration(boardName, orderName, emptyMap(), true)
     }
 
     fun playerMove(gameName: String, playerName: String, position: Position) {
@@ -24,6 +24,6 @@ class TicTacToeDeclarationState(): DeclarationState() {
     }
 
     object Factory : DeclarationStateFactory<TicTacToeDeclarationState> {
-        override fun create(): TicTacToeDeclarationState = TicTacToeDeclarationState()
+        override fun create() = TicTacToeDeclarationState()
     }
 }
