@@ -7,7 +7,5 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDecl
 open class StartAGameDeclarableAction(protected val gameName: String, protected val orderName: String) :
     StartAGameBehaviour(), DeclarableAction<TicTacToeDeclarationState> {
 
-    override fun declare(state: TicTacToeDeclarationState) {
-        state.declareGame(gameName, orderName)
-    }
+    override fun declare(state: TicTacToeDeclarationState) = state.declareGame(gameName, orderName)
 }
