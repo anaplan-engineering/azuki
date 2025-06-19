@@ -2,7 +2,6 @@ package com.anaplan.engineering.azuki.graphs.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.graphs.dsl.GraphBuildableScenario
-import com.anaplan.engineering.azuki.graphs.dsl.GraphScenario
 import org.junit.Assert
 import org.slf4j.LoggerFactory
 
@@ -24,10 +23,12 @@ object ScenarioScriptingTestUtils {
         val generatedScript = GraphScriptGenerator.generateScript(scenario)
         Log.debug("Generated:\n$generatedScript")
 
-        val parsedScenario = SimpleScenarioParser<GraphBuildableScenario>().parse(generatedScript, """
-            import com.anaplan.engineering.azuki.graphs.dsl.*
-            import com.anaplan.engineering.azuki.graphs.*
-        """)
+        val parsedScenario = SimpleScenarioParser<GraphBuildableScenario>().parse(
+            generatedScript,
+            requiredImportLines = listOf(
+                "com.anaplan.engineering.azuki.graphs.dsl.*",
+            ),
+        )
 
         Log.debug("Regenerating script")
         val regeneratedScript = GraphScriptGenerator.generateScript(parsedScenario)
