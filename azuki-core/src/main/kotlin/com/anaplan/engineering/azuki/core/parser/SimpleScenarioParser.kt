@@ -2,7 +2,6 @@ package com.anaplan.engineering.azuki.core.parser
 
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.reflect.KClass
 import kotlin.script.experimental.annotations.KotlinScript
 import kotlin.script.experimental.api.ResultValue
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
@@ -23,23 +22,22 @@ class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
 
     override fun parse(
         scenarioString: String, requiredImports: String
-    ): S = parse(scenarioString, requiredImportLines = requiredImports.split("\n").map {
-        it.trim().removePrefix("import").trim()
-    }.filter { it.isNotBlank() }.toList())
+    ): S = parse(scenarioString) {
+        requireImportsFromString(requiredImports)
+    }
 
-    fun parse(
+    override fun parse(
         scenarioString: String,
-        requiredImportLines: List<String> = listOf(),
-        requiredImportClasses: List<KClass<*>> = listOf(),
+        init: ScenarioParsingContext.() -> Unit
     ): S {
         val script = scenarioString.toScriptSource()
+        val context = ScenarioParsingContext().apply(init)
 
         // TODO: do we need this lock for the Kotlin host?
         val evalResult = try {
             lock.lock()
             engine.evalWithTemplate<SimpleScenario>(script, {
-                defaultImports(requiredImportLines)
-                defaultImports(*requiredImportClasses.toTypedArray())
+                defaultImports(context.imports)
             })
         } finally {
             lock.unlock()

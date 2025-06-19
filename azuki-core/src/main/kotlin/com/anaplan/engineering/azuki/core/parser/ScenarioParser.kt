@@ -2,11 +2,47 @@ package com.anaplan.engineering.azuki.core.parser
 
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 
-interface ScenarioParser<S: BuildableScenario<*>> {
+interface ScenarioParser<S : BuildableScenario<*>> {
 
     fun parse(
-        scenarioString: String,
-        requiredImports: String
+        scenarioString: String, requiredImports: String
     ): S
 
+    /**
+     * Parses a scenario from a string.
+     *
+     * Supply extra context, such as implicit imports to include into the
+     * script, as a lambda expression following the
+     */
+    fun parse(
+        scenarioString: String, init: ScenarioParsingContext.() -> Unit
+    ): S {
+        val requiredImports = ScenarioParsingContext().apply(init).toImportString()
+
+        return parse(scenarioString, requiredImports)
+    }
+}
+
+class ScenarioParsingContext(private val requiredImports: MutableList<String> = mutableListOf()) {
+    val imports: List<String> get() = requiredImports
+
+    /**
+     * Parses a block of top-level imports and adds them to the context.
+     */
+    fun requireImportsFromString(string: String) {
+        val toAdd = string.split("\n").map {
+            it.trim().removePrefix("import").trim()
+        }.filter { it.isNotBlank() }
+
+        requiredImports.addAll(toAdd)
+    }
+
+    /**
+     * Adds one or more imports to the script before parsing it.
+     */
+    fun import(vararg imports: String) {
+        requiredImports.addAll(imports)
+    }
+
+    fun toImportString(): String = requiredImports.joinToString("\n") { "import $it" }
 }

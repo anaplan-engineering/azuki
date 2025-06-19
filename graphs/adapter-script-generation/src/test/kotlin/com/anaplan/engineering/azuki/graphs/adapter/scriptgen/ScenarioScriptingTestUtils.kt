@@ -24,11 +24,10 @@ object ScenarioScriptingTestUtils {
         Log.debug("Generated:\n$generatedScript")
 
         val parsedScenario = SimpleScenarioParser<GraphBuildableScenario>().parse(
-            generatedScript,
-            requiredImportLines = listOf(
-                "com.anaplan.engineering.azuki.graphs.dsl.*",
-            ),
-        )
+            generatedScript
+        ) {
+            import("com.anaplan.engineering.azuki.graphs.dsl.*")
+        }
 
         Log.debug("Regenerating script")
         val regeneratedScript = GraphScriptGenerator.generateScript(parsedScenario)
