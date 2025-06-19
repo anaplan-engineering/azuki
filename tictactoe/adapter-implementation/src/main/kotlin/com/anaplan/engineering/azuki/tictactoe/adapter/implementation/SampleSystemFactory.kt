@@ -1,14 +1,10 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.implementation
 
 import com.anaplan.engineering.azuki.core.system.*
-import com.anaplan.engineering.azuki.core.system.System
-import com.anaplan.engineering.azuki.declaration.Declaration
-import com.anaplan.engineering.azuki.declaration.DeclarationBuilderFactory
+import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarableAction
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarationBuilder
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.toDeclarableAction
+import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.action.SampleAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.action.SampleActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.SampleCheck
@@ -21,7 +17,6 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
-import kotlin.UnsupportedOperationException
 import com.fasterxml.jackson.module.kotlin.readValue
 
 class SampleSystemFactory :
@@ -29,7 +24,7 @@ class SampleSystemFactory :
 
     override fun create(systemDefinition: SystemDefinition) =
         SampleSystem(
-            systemDefinition.declarations.map(toDeclarableAction),
+            systemDefinition.declarations.map(::toDeclarableAction),
             systemDefinition.commands.map(toSampleAction),
             systemDefinition.checks.map(toSampleCheck),
             systemDefinition.regardlessOfActions.map { it.map(toSampleAction) },
@@ -50,15 +45,14 @@ class SampleSystemFactory :
 }
 
 class SampleSystem(
-    private val declarableActions: List<DeclarableAction>,
+    private val declarableActions: List<DeclarableAction<TicTacToeDeclarationState>>,
     private val buildActions: List<SampleAction>,
     private val checks: List<SampleCheck>,
     private val regardlessOfActions: List<List<SampleAction>>,
 ) : PersistableSystem<TicTacToeActionFactory, TicTacToeCheckFactory> {
 
     private fun build(env: ExecutionEnvironment) {
-        val declarationBuilders =
-            DeclarationBuilder(declarableActions).build().map { declarationBuilder(it) }
+        val declarationBuilders = declarationStateBuilder.build(declarableActions).map { declarationBuilder(it) }
         declarationBuilders.forEach { it.build(env) }
         buildActions.forEach { it.act(env) }
     }
@@ -104,6 +98,8 @@ class SampleSystem(
         private val Log = LoggerFactory.getLogger(this::class.java)
 
         private val declarationBuilderFactory = DeclarationBuilderFactory(SampleDeclarationBuilderFactory::class.java)
+
+        private val declarationStateBuilder = DeclarationStateBuilder(TicTacToeDeclarationState.Factory)
     }
 
     private val objectMapper = ObjectMapper()
