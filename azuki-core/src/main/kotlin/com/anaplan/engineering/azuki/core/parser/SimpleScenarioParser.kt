@@ -43,16 +43,12 @@ class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
             lock.unlock()
         }
 
-        val returnValue = evalResult.valueOrThrow().returnValue
-        if (returnValue !is ResultValue.Value) {
-            throw IllegalArgumentException("Script did not return a value")
+        val result = evalResult.valueOrThrow().returnValue
+        if (result !is ResultValue.Value || result.value !is BuildableScenario<*>) {
+            throw IllegalArgumentException("Script does not evaluate to scenario (got $result)")
         }
 
-        val scenario = returnValue.value
-        if (scenario !is BuildableScenario<*>) {
-            throw IllegalArgumentException("Script does not evaluate to scenario")
-        }
-        @Suppress("UNCHECKED_CAST") return scenario as S
+        @Suppress("UNCHECKED_CAST") return result.value as S
     }
 
 }
