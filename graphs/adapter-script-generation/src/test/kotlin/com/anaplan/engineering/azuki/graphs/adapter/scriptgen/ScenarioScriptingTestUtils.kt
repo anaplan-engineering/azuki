@@ -27,6 +27,7 @@ object ScenarioScriptingTestUtils {
             generatedScript
         ) {
             import("com.anaplan.engineering.azuki.graphs.dsl.*")
+            import("com.anaplan.engineering.azuki.graphs.*")
         }
 
         Log.debug("Regenerating script")
