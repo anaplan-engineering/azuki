@@ -11,8 +11,8 @@ interface ScenarioParser<S : BuildableScenario<*>> {
     /**
      * Parses a scenario from a string.
      *
-     * Supply extra context, such as implicit imports to include into the
-     * script, as a lambda expression following the
+     * Supply extra implicit imports to include into the script as a lambda
+     * expression following the scenario itself.
      */
     fun parse(
         scenarioString: String, init: ScenarioParsingContext.() -> Unit
@@ -26,9 +26,6 @@ interface ScenarioParser<S : BuildableScenario<*>> {
 class ScenarioParsingContext(private val requiredImports: MutableList<String> = mutableListOf()) {
     val imports: List<String> get() = requiredImports
 
-    /**
-     * Parses a block of top-level imports and adds them to the context.
-     */
     fun requireImportsFromString(string: String) {
         val toAdd = string.split("\n").map {
             it.trim().removePrefix("import").trim()
@@ -37,9 +34,6 @@ class ScenarioParsingContext(private val requiredImports: MutableList<String> = 
         requiredImports.addAll(toAdd)
     }
 
-    /**
-     * Adds one or more imports to the script before parsing it.
-     */
     fun import(vararg imports: String) {
         requiredImports.addAll(imports)
     }
