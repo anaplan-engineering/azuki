@@ -3,7 +3,20 @@ package com.anaplan.engineering.azuki.core.parser
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 
 interface ScenarioParser<S : BuildableScenario<*>> {
-
+    /**
+     * Parses a scenario from a string and additional imports prefix.
+     *
+     * New implementors of ScenarioParser should implement this by calling
+     * `parse(scenarioString) { requireImportsFromString(requiredImports) }`.
+     */
+    @Deprecated(
+        "Passing required imports as a string is deprecated and may disappear in a future major revision",
+        ReplaceWith(
+            "parse(scenarioString) { requireImportsFromString(requiredImports) }",
+            "com.anaplan.engineering.azuki.core.parser.ScenarioParser",
+            "com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext"
+        )
+    )
     fun parse(
         scenarioString: String, requiredImports: String
     ): S
@@ -13,12 +26,16 @@ interface ScenarioParser<S : BuildableScenario<*>> {
      *
      * Supply extra implicit imports to include into the script as a lambda
      * expression following the scenario itself.
+     *
+     * New implementors of ScenarioParser should implement this method
+     * directly.
      */
     fun parse(
         scenarioString: String, init: ScenarioParsingContext.() -> Unit
     ): S {
         val requiredImports = ScenarioParsingContext().apply(init).toImportString()
 
+        @Suppress("DEPRECATION")
         return parse(scenarioString, requiredImports)
     }
 }
