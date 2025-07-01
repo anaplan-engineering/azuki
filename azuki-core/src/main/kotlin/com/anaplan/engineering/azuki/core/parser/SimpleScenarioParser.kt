@@ -20,6 +20,10 @@ class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
 
     private val lock = ReentrantLock()
 
+    @Deprecated("Passing required imports as a string is deprecated and may disappear in a future major revision",
+        replaceWith = ReplaceWith("parse(scenarioString) { requireImportsFromString(requiredImports) }",
+            "com.anaplan.engineering.azuki.core.parser.ScenarioParser",
+            "com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext"))
     override fun parse(
         scenarioString: String, requiredImports: String
     ): S = parse(scenarioString) {
