@@ -57,7 +57,7 @@ class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
 
 }
 
-@KotlinScript(fileExtension = "scn.kts", compilationConfiguration = SimpleScenarioCompilationConfiguration::class)
+@KotlinScript(fileExtension = "scn", compilationConfiguration = SimpleScenarioCompilationConfiguration::class)
 abstract class SimpleScenario
 
 object SimpleScenarioCompilationConfiguration : ScriptCompilationConfiguration({
