@@ -12,7 +12,8 @@ import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
-class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
+class SimpleScenarioParser<S : BuildableScenario<*>>(initContext: ScenarioParsingContext.() -> Unit = {}) : ScenarioParser<S> {
+    private val commonContext = ScenarioParsingContext().apply(initContext)
 
     private val engine by lazy {
         BasicJvmScriptingHost()
@@ -32,16 +33,17 @@ class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
 
     override fun parse(
         scenarioString: String,
-        init: ScenarioParsingContext.() -> Unit
+        initContext: ScenarioParsingContext.() -> Unit
     ): S {
         val script = scenarioString.toScriptSource()
-        val context = ScenarioParsingContext().apply(init)
+        val scenarioContext = ScenarioParsingContext().apply(initContext)
 
         // TODO: do we need this lock for the Kotlin host?
         val evalResult = try {
             lock.lock()
             engine.evalWithTemplate<SimpleScenario>(script, {
-                defaultImports(context.imports)
+                defaultImports(commonContext.imports)
+                defaultImports(scenarioContext.imports)
             })
         } finally {
             lock.unlock()

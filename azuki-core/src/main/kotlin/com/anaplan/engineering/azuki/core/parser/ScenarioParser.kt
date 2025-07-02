@@ -31,9 +31,9 @@ interface ScenarioParser<S : BuildableScenario<*>> {
      * directly.
      */
     fun parse(
-        scenarioString: String, init: ScenarioParsingContext.() -> Unit
+        scenarioString: String, initContext: ScenarioParsingContext.() -> Unit
     ): S {
-        val requiredImports = ScenarioParsingContext().apply(init).toImportString()
+        val requiredImports = ScenarioParsingContext().apply(initContext).toImportString()
 
         @Suppress("DEPRECATION")
         return parse(scenarioString, requiredImports)
