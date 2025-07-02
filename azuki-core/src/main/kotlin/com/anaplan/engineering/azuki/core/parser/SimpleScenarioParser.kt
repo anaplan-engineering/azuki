@@ -12,9 +12,7 @@ import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
-class SimpleScenarioParser<S : BuildableScenario<*>>(initContext: ScenarioParsingContext.() -> Unit = {}) : ScenarioParser<S> {
-    private val commonContext = ScenarioParsingContext().apply(initContext)
-
+open class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
     private val engine by lazy {
         BasicJvmScriptingHost()
     }
@@ -25,7 +23,7 @@ class SimpleScenarioParser<S : BuildableScenario<*>>(initContext: ScenarioParsin
         replaceWith = ReplaceWith("parse(scenarioString) { requireImportsFromString(requiredImports) }",
             "com.anaplan.engineering.azuki.core.parser.ScenarioParser",
             "com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext"))
-    override fun parse(
+    final override fun parse(
         scenarioString: String, requiredImports: String
     ): S = parse(scenarioString) {
         requireImportsFromString(requiredImports)
@@ -42,7 +40,6 @@ class SimpleScenarioParser<S : BuildableScenario<*>>(initContext: ScenarioParsin
         val evalResult = try {
             lock.lock()
             engine.evalWithTemplate<SimpleScenario>(script, {
-                defaultImports(commonContext.imports)
                 defaultImports(scenarioContext.imports)
             })
         } finally {
