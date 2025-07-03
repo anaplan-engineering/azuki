@@ -19,6 +19,11 @@ open class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
 
     private val lock = ReentrantLock()
 
+    /**
+     * Imports that are pulled into every scenario in addition to those specified in the call to `parse`.
+     */
+    protected open val defaultImports: ScenarioParsingContext.() -> Unit = {}
+
     @Deprecated("Passing required imports as a string is deprecated and may disappear in a future major revision",
         replaceWith = ReplaceWith("parse(scenarioString) { requireImportsFromString(requiredImports) }",
             "com.anaplan.engineering.azuki.core.parser.ScenarioParser",
@@ -29,12 +34,12 @@ open class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
         requireImportsFromString(requiredImports)
     }
 
-    override fun parse(
+    final override fun parse(
         scenarioString: String,
         initContext: ScenarioParsingContext.() -> Unit
     ): S {
         val script = scenarioString.toScriptSource()
-        val scenarioContext = ScenarioParsingContext().apply(initContext)
+        val scenarioContext = ScenarioParsingContext().apply(defaultImports).apply(initContext)
 
         // TODO: do we need this lock for the Kotlin host?
         val evalResult = try {
