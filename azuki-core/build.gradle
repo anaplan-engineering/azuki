@@ -10,13 +10,10 @@ dependencies {
     implementation 'org.semver4j:semver4j:5.2.2'
     implementation 'org.slf4j:slf4j-api:1.7.36'
 
-    runtimeOnly 'org.jetbrains.kotlin:kotlin-script-runtime'
     runtimeOnly 'org.jetbrains.kotlin:kotlin-compiler-embeddable'
-    runtimeOnly 'org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable'
-    runtimeOnly 'org.jetbrains.kotlin:kotlin-scripting-common'
-    runtimeOnly 'org.jetbrains.kotlin:kotlin-scripting-jvm'
-    runtimeOnly 'org.jetbrains.kotlin:kotlin-scripting-dependencies'
-    runtimeOnly 'org.jetbrains.kotlin:kotlin-scripting-jsr223'
+    implementation 'org.jetbrains.kotlin:kotlin-scripting-common'
+    implementation 'org.jetbrains.kotlin:kotlin-scripting-jvm'
+    implementation 'org.jetbrains.kotlin:kotlin-scripting-jvm-host'
 }
 
 publishing {

@@ -14,7 +14,6 @@ import com.anaplan.engineering.azuki.core.system.QueryFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
-import javax.script.ScriptException
 import kotlin.reflect.KClass
 import kotlin.system.exitProcess
 
@@ -92,8 +91,10 @@ class ScenarioScriptRunner<
     fun runScenario(scenarioScript: String) {
         try {
             val scenario = try {
-                SimpleScenarioParser<BuildableScenario<AF>>().parse(scenarioScript, scenarioImports)
-            } catch (e: ScriptException) {
+                SimpleScenarioParser<BuildableScenario<AF>>().parse(scenarioScript) {
+                    requireImportsFromString(scenarioImports)
+                }
+            } catch (e: RuntimeException) {
                 resultProcessor.handleError(InvalidScenarioException(e))
                 return
             }
@@ -155,7 +156,7 @@ class ScenarioScriptRunner<
         }
     }
 
-    class InvalidScenarioException(e: ScriptException) : RuntimeException(e)
+    class InvalidScenarioException(e: RuntimeException) : RuntimeException(e)
     class UnsupportedScenarioTypeException(val type: KClass<*>) : RuntimeException()
 }
 

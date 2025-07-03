@@ -9,7 +9,6 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.io.File
 import java.util.*
-import javax.script.ScriptException
 
 class GuidedScenarioBatch<S : BuildableScenario<*>, RC : ScenarioResultContext>:
     OrchestratableScenarioBatch<GuidedScenario, RC> {
@@ -51,8 +50,8 @@ class GuidedScenarioBatch<S : BuildableScenario<*>, RC : ScenarioResultContext>:
     private fun checkAllBaseScenariosCanBeParsed() {
         batchState.baseScenarios.forEach {
             try {
-                scenarioParser.parse(it.readText(), "")
-            } catch (e: ScriptException) {
+                scenarioParser.parse(it.readText()) {}
+            } catch (e: RuntimeException) {
                 throw IllegalStateException("Scenario in file ${it.absolutePath} is invalid", e)
             }
         }

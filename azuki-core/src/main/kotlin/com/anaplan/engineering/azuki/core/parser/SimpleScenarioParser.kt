@@ -2,37 +2,73 @@ package com.anaplan.engineering.azuki.core.parser
 
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import java.util.concurrent.locks.ReentrantLock
-import javax.script.ScriptEngineManager
+import kotlin.script.experimental.annotations.KotlinScript
+import kotlin.script.experimental.api.ResultValue
+import kotlin.script.experimental.api.ScriptCompilationConfiguration
+import kotlin.script.experimental.api.defaultImports
+import kotlin.script.experimental.api.valueOrThrow
+import kotlin.script.experimental.host.toScriptSource
+import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
+import kotlin.script.experimental.jvm.jvm
+import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
-class SimpleScenarioParser<S: BuildableScenario<*>>: ScenarioParser<S> {
-
+open class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
     private val engine by lazy {
-        ScriptEngineManager().getEngineByExtension("kts")
+        BasicJvmScriptingHost()
     }
 
     private val lock = ReentrantLock()
 
-    override fun parse(
-        scenarioString: String,
-        requiredImports: String
-    ): S {
-        val script = """
-            $requiredImports
+    /**
+     * Imports that are pulled into every scenario in addition to those specified in the call to `parse`.
+     */
+    protected open val defaultImports: ScenarioParsingContext.() -> Unit = {}
 
-            $scenarioString
-        """
-        // KotlinJsr223JvmLocalScriptEngine is not thread safe
+    @Deprecated("Passing required imports as a string is deprecated and may disappear in a future major revision",
+        replaceWith = ReplaceWith("parse(scenarioString) { requireImportsFromString(requiredImports) }",
+            "com.anaplan.engineering.azuki.core.parser.ScenarioParser",
+            "com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext"))
+    final override fun parse(
+        scenarioString: String, requiredImports: String
+    ): S = parse(scenarioString) {
+        requireImportsFromString(requiredImports)
+    }
+
+    final override fun parse(
+        scenarioString: String,
+        initContext: ScenarioParsingContext.() -> Unit
+    ): S {
+        val script = scenarioString.toScriptSource()
+        val scenarioContext = ScenarioParsingContext().apply(defaultImports).apply(initContext)
+
+        // TODO: do we need this lock for the Kotlin host?
         val evalResult = try {
             lock.lock()
-            engine.eval(script)
+            engine.evalWithTemplate<SimpleScenario>(script, {
+                defaultImports(scenarioContext.imports)
+            })
         } finally {
             lock.unlock()
         }
-        if (evalResult !is BuildableScenario<*>) {
-            throw IllegalArgumentException("Script does not evaluate to scenario")
+
+        val result = evalResult.valueOrThrow().returnValue
+        if (result !is ResultValue.Value || result.value !is BuildableScenario<*>) {
+            throw IllegalArgumentException("Script does not evaluate to scenario (got $result)")
         }
-        @Suppress("UNCHECKED_CAST")
-        return evalResult as S
+
+        @Suppress("UNCHECKED_CAST") return result.value as S
     }
 
+}
+
+@KotlinScript(fileExtension = "scn", compilationConfiguration = SimpleScenarioCompilationConfiguration::class)
+abstract class SimpleScenario
+
+object SimpleScenarioCompilationConfiguration : ScriptCompilationConfiguration({
+    jvm {
+        // Extract the whole classpath from context classloader and use it as dependencies
+        dependenciesFromCurrentContext(wholeClasspath = true)
+    }
+}) {
+    private fun readResolve(): Any = SimpleScenarioCompilationConfiguration
 }
