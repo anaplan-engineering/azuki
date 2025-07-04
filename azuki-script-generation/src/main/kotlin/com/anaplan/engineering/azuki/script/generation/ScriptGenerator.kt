@@ -61,17 +61,23 @@ abstract class ScriptGenerator<
     open fun getChecks(scenario: VerifiableScenario<AF, CF>): List<ScriptGenerationCheck> =
         scenario.checks(checkFactory).map { it as ScriptGenerationCheck }
 
+    open fun getValidationChecks(answer: ValidatableAnswer<*, CF>): List<ScriptGenerationCheck> =
+        answer.createValidationChecks(checkFactory).map { it as ScriptGenerationCheck }
+
+    open fun getChecksFromAnswer(answer: Answer<*, CF>): List<ScriptGenerationCheck> =
+        answer.createChecks(checkFactory).map { it as ScriptGenerationCheck }
+
     fun generateThenScript(scenario: VerifiableScenario<AF, CF>) =
         generateThenScriptFromChecks(getChecks(scenario))
 
     fun generateThenScript(answers: List<Answer<*, CF>>, useValidationChecks: Boolean = false) =
         generateThenScriptFromChecks(answers.flatMap {
             if (useValidationChecks && it is ValidatableAnswer<*, *>) {
-                (it as ValidatableAnswer<*, CF>).createValidationChecks(checkFactory)
+                getValidationChecks(it as ValidatableAnswer<*, CF>)
             } else {
-                it.createChecks(checkFactory)
+                getChecksFromAnswer(it)
             }
-        }.map { it as ScriptGenerationCheck })
+        })
 
     private fun generateThenScriptFromChecks(checks: List<ScriptGenerationCheck>) =
         if (checks.isEmpty()) {
