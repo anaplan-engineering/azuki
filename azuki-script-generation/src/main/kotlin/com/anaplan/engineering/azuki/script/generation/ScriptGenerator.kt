@@ -51,6 +51,8 @@ abstract class ScriptGenerator<
     open fun getChecksFromAnswer(answer: Answer<*, CF>): List<ScriptGenerationCheck> =
         answer.createChecks(checkFactory).map { it as ScriptGenerationCheck }
 
+    protected open fun thenBuilder(): ThenBuilder = SimpleThenBuilder()
+
     private fun generateThenScript(scenario: VerifiableScenario<AF, CF>) =
         generateThenScriptFromChecks(getChecks(scenario))
 
@@ -63,16 +65,19 @@ abstract class ScriptGenerator<
             }
         })
 
-    fun generateThenScriptFromChecks(checks: List<ScriptGenerationCheck>) =
-        if (checks.isEmpty()) {
+    fun generateThenScriptFromChecks(checks: List<Check>): String {
+        val body = thenBuilder().apply { addChecks(checks) }.build()
+
+        return if (body.isEmpty()) {
             throw IllegalArgumentException("No checks to generate!")
         } else {
             """
                 then {
-                    ${checks.joinToString("\n") { it.getCheckScript() }}
+                    ${body.joinToString("\n") { it.getCheckScript() }}
                 }
             """
         }
+    }
 
     fun generateVerifiableScenarioScript(given: String, whenever: String, then: String): String {
         return """
