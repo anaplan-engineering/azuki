@@ -26,9 +26,8 @@ abstract class ScriptGenerator<
         val given = generateGivenScript(scenario)
         val whenever = generateWheneverScript(scenario)
 
-        @Suppress("UNCHECKED_CAST")
         return if (scenario is VerifiableScenario<*, *>) {
-            val then = generateThenScript(scenario as VerifiableScenario<AF, CF>)
+            @Suppress("UNCHECKED_CAST") val then = generateThenScript(scenario as VerifiableScenario<AF, CF>)
             generateVerifiableScenarioScript(given, whenever, then)
         } else {
             generateNonVerifiableScenario(given, whenever, scenario)
@@ -36,20 +35,17 @@ abstract class ScriptGenerator<
     }
 
     protected open fun generateNonVerifiableScenario(
-        given: String,
-        whenever: String,
-        scenario: BuildableScenario<AF>
-    ): String =
-        throw IllegalArgumentException("Unsupported scenario $scenario")
+        given: String, whenever: String, scenario: BuildableScenario<AF>
+    ): String = throw IllegalArgumentException("Unsupported scenario $scenario")
 
-    open fun getChecks(scenario: VerifiableScenario<AF, CF>): List<ScriptGenerationCheck> =
-        scenario.checks(checkFactory).map { it as ScriptGenerationCheck }
+    open fun getChecks(scenario: VerifiableScenario<AF, CF>): List<Check> =
+        scenario.checks(checkFactory)
 
-    open fun getValidationChecks(answer: ValidatableAnswer<*, CF>): List<ScriptGenerationCheck> =
-        answer.createValidationChecks(checkFactory).map { it as ScriptGenerationCheck }
+    open fun getValidationChecks(answer: ValidatableAnswer<*, CF>): List<Check> =
+        answer.createValidationChecks(checkFactory)
 
-    open fun getChecksFromAnswer(answer: Answer<*, CF>): List<ScriptGenerationCheck> =
-        answer.createChecks(checkFactory).map { it as ScriptGenerationCheck }
+    open fun getChecksFromAnswer(answer: Answer<*, CF>): List<Check> =
+        answer.createChecks(checkFactory)
 
     protected open fun thenBuilder(): ThenBuilder = SimpleThenBuilder()
 
