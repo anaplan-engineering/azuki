@@ -15,10 +15,6 @@ abstract class ScriptGenerator<
     private val actionFactory: AF,
     private val checkFactory: CF,
     private val declarationStateFactory: DeclarationStateFactory<S>,
-    // These factories are needed only if generating oracle scenarios or scenarios with queries
-    private val actionGeneratorFactory: AGF? = null,
-    private val queryQueryFactory: QF? = null,
-    private val verifyQueryFactory: QF? = null
 ) {
 
     fun generateScript(scenario: BuildableScenario<AF>): String {
@@ -29,34 +25,22 @@ abstract class ScriptGenerator<
     private fun generateUnformattedScript(scenario: BuildableScenario<AF>): String {
         val given = generateGivenScript(scenario)
         val whenever = generateWheneverScript(scenario)
+
         @Suppress("UNCHECKED_CAST")
-        return when (scenario) {
-            is VerifiableScenario<*, *> -> {
-                val then = generateThenScript(scenario as VerifiableScenario<AF, CF>)
-                generateVerifiableScenarioScript(given, whenever, then)
-            }
-            is OracleScenario<*, *, *> -> {
-                val agf = checkNotNull(actionGeneratorFactory) {
-                    "tried to generate an oracle scenario but no action generator factory was supplied"
-                }
-
-                val oracleScenario =
-                    scenario as OracleScenario<AF, QF, AGF>
-                val givenGenerate = generateGenerateScript(oracleScenario.givenActionGenerations(agf))
-                val whenGenerate = generateGenerateScript(oracleScenario.whenActionGenerations(agf))
-
-                val verify = generateVerifyScript(oracleScenario)
-
-                generateOracleScenarioScript(given, whenever, givenGenerate, whenGenerate, verify)
-            }
-            is ScenarioWithQueries<*, *> -> {
-                val query =
-                    generateQueryScript(scenario as ScenarioWithQueries<AF, QF>)
-                generateQueryScenarioScript(given, whenever, query)
-            }
-            else -> throw IllegalArgumentException("Unsupported scenario $scenario")
+        return if (scenario is VerifiableScenario<*, *>) {
+            val then = generateThenScript(scenario as VerifiableScenario<AF, CF>)
+            generateVerifiableScenarioScript(given, whenever, then)
+        } else {
+            generateNonVerifiableScenario(given, whenever, scenario)
         }
     }
+
+    protected open fun generateNonVerifiableScenario(
+        given: String,
+        whenever: String,
+        scenario: BuildableScenario<AF>
+    ): String =
+        throw IllegalArgumentException("Unsupported scenario $scenario")
 
     open fun getChecks(scenario: VerifiableScenario<AF, CF>): List<ScriptGenerationCheck> =
         scenario.checks(checkFactory).map { it as ScriptGenerationCheck }
@@ -67,7 +51,7 @@ abstract class ScriptGenerator<
     open fun getChecksFromAnswer(answer: Answer<*, CF>): List<ScriptGenerationCheck> =
         answer.createChecks(checkFactory).map { it as ScriptGenerationCheck }
 
-    fun generateThenScript(scenario: VerifiableScenario<AF, CF>) =
+    private fun generateThenScript(scenario: VerifiableScenario<AF, CF>) =
         generateThenScriptFromChecks(getChecks(scenario))
 
     fun generateThenScript(answers: List<Answer<*, CF>>, useValidationChecks: Boolean = false) =
@@ -145,6 +129,56 @@ abstract class ScriptGenerator<
             """
         }
 
+
+
+    companion object {
+        private val declarationBuilderFactory =
+            DeclarationBuilderFactory(ScriptGenDeclarationBuilderFactory::class.java)
+    }
+}
+
+abstract class VerificationCapableScriptGenerator<
+    AF : ActionFactory,
+    CF : CheckFactory,
+    QF : QueryFactory,
+    AGF : ActionGeneratorFactory,
+    S : DeclarationState,
+    >(
+    actionFactory: AF,
+    checkFactory: CF,
+    declarationStateFactory: DeclarationStateFactory<S>,
+    private val actionGeneratorFactory: AGF,
+    private val queryQueryFactory: QF,
+    private val verifyQueryFactory: QF
+    ): ScriptGenerator<AF, CF, QF, AGF, S>(
+        actionFactory,
+        checkFactory,
+        declarationStateFactory,
+    ) {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun generateNonVerifiableScenario(
+        given: String,
+        whenever: String,
+        scenario: BuildableScenario<AF>
+    ): String =
+        when (scenario) {
+            is OracleScenario<*, *, *> -> {
+                val oracleScenario = scenario as OracleScenario<AF, QF, AGF>
+                val givenGenerate =
+                    generateGenerateScript(oracleScenario.givenActionGenerations(actionGeneratorFactory))
+                val whenGenerate = generateGenerateScript(oracleScenario.whenActionGenerations(actionGeneratorFactory))
+                val verify = generateVerifyScript(oracleScenario)
+                generateOracleScenarioScript(given, whenever, givenGenerate, whenGenerate, verify)
+            }
+            is ScenarioWithQueries<*, *> -> {
+                val query =
+                    generateQueryScript(scenario as ScenarioWithQueries<AF, QF>)
+                generateQueryScenarioScript(given, whenever, query)
+            }
+            else -> throw IllegalArgumentException("Unsupported scenario $scenario")
+        }
+
     fun generateOracleScenarioScript(given: String, whenever: String, givenGenerate: String, whenGenerate: String, verify: String) =
         """
             oracleScenario {
@@ -216,10 +250,5 @@ abstract class ScriptGenerator<
         val forAllQueries =
             scenarioQueries.forAllQueries.joinToString("\n") { (it as ScriptGenerationDerivedQuery<*>).getDerivedQueryScript() }
         return queries + "\n" + forAllQueries
-    }
-
-    companion object {
-        private val declarationBuilderFactory =
-            DeclarationBuilderFactory(ScriptGenDeclarationBuilderFactory::class.java)
     }
 }
