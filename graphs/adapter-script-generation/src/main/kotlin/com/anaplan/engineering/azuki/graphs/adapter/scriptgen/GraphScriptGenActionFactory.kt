@@ -13,6 +13,8 @@ import com.anaplan.engineering.azuki.graphs.adapter.declaration.action.CreateUnd
 import com.anaplan.engineering.azuki.graphs.dsl.action.DirectedGraphActions
 import com.anaplan.engineering.azuki.graphs.dsl.action.UndirectedGraphActions
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationAction
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationParallelAction
+import com.anaplan.engineering.azuki.script.generation.toScriptGenAction
 
 object GraphScriptGenActionFactory : GraphActionFactory<ScriptGenerationAction> {
 
@@ -21,31 +23,7 @@ object GraphScriptGenActionFactory : GraphActionFactory<ScriptGenerationAction> 
     override val directed: DirectedGraphActionFactory = DirectedGraphScriptGenActionFactory
 
     override fun createParallelAction(actions: List<List<Action>>): ParallelAction<ScriptGenerationAction> =
-        ScriptGenParallelAction(actions.map { it.map(toScriptGenAction) })
-}
-
-internal fun Action.toScriptGenAction() =
-    this as? ScriptGenerationAction ?: throw IllegalArgumentException("Incompatible action: $this")
-
-internal val toScriptGenAction: (Action) -> ScriptGenerationAction = { it.toScriptGenAction() }
-
-private class ScriptGenParallelAction(actions: List<List<ScriptGenerationAction>>) :
-    ParallelAction<ScriptGenerationAction>(actions),
-    ScriptGenerationAction {
-
-    override fun getActionScript() = """
-       parallel(
-        ${
-        runActionsSequentially { it.getActionScript() }.joinToString(", ") {
-            """ {
-                    ${it.joinToString("\n")}
-                }
-            """
-        }
-    }
-       )
-    """
-
+        ScriptGenerationParallelAction(actions.map { it.map(Action::toScriptGenAction) })
 }
 
 private object UndirectedGraphScriptGenActionFactory : UndirectedGraphActionFactory {
