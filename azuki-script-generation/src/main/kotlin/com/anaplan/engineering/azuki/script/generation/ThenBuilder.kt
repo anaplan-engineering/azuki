@@ -15,11 +15,9 @@ import org.slf4j.LoggerFactory
 interface ThenBuilder {
     fun addCheck(check: Check)
 
-    fun build(): List<ScriptGenerationCheck>
-}
+    fun addChecks(checks: List<Check>) = checks.forEach { addCheck(it) }
 
-fun ThenBuilder.addChecks(checks: List<Check>) {
-    checks.forEach { addCheck(it) }
+    fun build(): List<ScriptGenerationCheck>
 }
 
 /**

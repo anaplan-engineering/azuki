@@ -129,8 +129,6 @@ abstract class ScriptGenerator<
             """
         }
 
-
-
     companion object {
         private val declarationBuilderFactory =
             DeclarationBuilderFactory(ScriptGenDeclarationBuilderFactory::class.java)
