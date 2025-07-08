@@ -211,10 +211,8 @@ abstract class VerificationCapableScriptGenerator<
             }
         }
 
-    fun generateVerifyScript(scenario: OracleScenario<AF, QF, AGF>): String {
-        val qf = checkNotNull(verifyQueryFactory) { "Tried to generate a verify script but no query factory was supplied" }
-        return generateVerifyScriptFromQueries(scenario.queries(qf))
-    }
+    fun generateVerifyScript(scenario: OracleScenario<AF, QF, AGF>) =
+        generateVerifyScriptFromQueries(scenario.queries(verifyQueryFactory))
 
     fun generateVerifyScriptFromQueries(scenarioQueries: ScenarioQueries) =
         if (scenarioQueries.isEmpty()) {
@@ -227,10 +225,8 @@ abstract class VerificationCapableScriptGenerator<
             """
         }
 
-    fun generateQueryScript(scenario: ScenarioWithQueries<AF, QF>): String {
-        val qf = checkNotNull(queryQueryFactory) { "Tried to generate a query script but no query factory was supplied" }
-        return generateQueryScriptFromQueries(scenario.queries(qf))
-    }
+    fun generateQueryScript(scenario: ScenarioWithQueries<AF, QF>) =
+        generateQueryScriptFromQueries(scenario.queries(queryQueryFactory))
 
     fun generateQueryScriptFromQueries(scenarioQueries: ScenarioQueries) =
         if (scenarioQueries.isEmpty()) {
