@@ -11,16 +11,15 @@ class ScriptGenerationParallelAction(actions: List<List<ScriptGenerationAction>>
     ParallelAction<ScriptGenerationAction>(actions), ScriptGenerationAction {
 
     override fun getActionScript() = """
-       parallel(
-        ${
+        parallel(${
         runActionsSequentially { it.getActionScript() }.joinToString(", ") {
-            """ {
-                    ${it.joinToString("\n")}
-                }
+            """
+            {
+                ${it.joinToString("\n")}
+            }
             """
         }
-    }
-       )
+    })
     """
 }
 
