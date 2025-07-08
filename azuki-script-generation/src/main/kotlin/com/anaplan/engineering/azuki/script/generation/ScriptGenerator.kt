@@ -89,8 +89,7 @@ abstract class ScriptGenerator<
         scenario.declarations(actionFactory)
 
     open fun getBuildActions(scenario: BuildableScenario<AF>): List<ScriptGenerationAction> =
-        scenario.commands(actionFactory).map { it as ScriptGenerationAction }
-
+        scenario.commands(actionFactory).map(Action::toScriptGenAction)
 
     fun generateGivenScript(scenario: BuildableScenario<AF>): String =
         generateGivenScriptFromActions(getDeclarationActions(scenario))
@@ -208,7 +207,7 @@ abstract class VerificationCapableScriptGenerator<
             } else {
                 """
                 generate {
-                    ${actionGenerators.joinToString("\n") { it.getActionGeneratorString() }}
+                    ${actionGenerators.joinToString("\n") { it.getActionGeneratorScript() }}
                 }
             """
             }
