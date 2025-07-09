@@ -129,6 +129,33 @@ abstract class ScriptGenerator<
             """
         }
 
+    @Deprecated(
+        message="Use the version with separate generate blocks",
+        replaceWith = ReplaceWith("""generateOracleScenarioScript(given, whenever, "", generate, verify)""")
+    )
+    fun generateOracleScenarioScript(given: String, whenever: String, generate: String, verify: String) =
+        generateOracleScenarioScript(given, whenever, "", generate, verify)
+
+    fun generateOracleScenarioScript(given: String, whenever: String, givenGenerate: String, whenGenerate: String, verify: String) =
+        """
+            oracleScenario {
+                $given
+                $givenGenerate
+                $whenever
+                $whenGenerate
+                $verify
+            }
+        """
+
+    fun generateQueryScenarioScript(given: String, whenever: String, query: String) =
+        """
+            queryScenario {
+                $given
+                $whenever
+                $query
+            }
+        """
+
     companion object {
         private val declarationBuilderFactory =
             DeclarationBuilderFactory(ScriptGenDeclarationBuilderFactory::class.java)
@@ -176,26 +203,6 @@ abstract class VerificationCapableScriptGenerator<
             }
             else -> throw IllegalArgumentException("Unsupported scenario $scenario")
         }
-
-    fun generateOracleScenarioScript(given: String, whenever: String, givenGenerate: String, whenGenerate: String, verify: String) =
-        """
-            oracleScenario {
-                $given
-                $givenGenerate
-                $whenever
-                $whenGenerate
-                $verify
-            }
-        """
-
-    fun generateQueryScenarioScript(given: String, whenever: String, query: String) =
-        """
-            queryScenario {
-                $given
-                $whenever
-                $query
-            }
-        """
 
     fun generateGenerateScript(generations: List<List<ActionGenerator>>) =
         generations.joinToString("\n") { generation ->
