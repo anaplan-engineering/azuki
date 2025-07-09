@@ -5,18 +5,19 @@ import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 
-abstract class ScriptGenerator<
+abstract class ScriptGeneratorWithCheckState<
     AF : ActionFactory,
     CF : CheckFactory,
     QF : QueryFactory,
     AGF : ActionGeneratorFactory,
     S : DeclarationState,
+    CS : ScriptGenerationCheckState,
     >(
     private val actionFactory: AF,
     private val checkFactory: CF,
     private val declarationStateFactory: DeclarationStateFactory<S>,
+    private val checkStateFactory: ScriptGenerationCheckStateFactory<CS>,
 ) {
-
     fun generateScript(scenario: BuildableScenario<AF>): String {
         val script = generateUnformattedScript(scenario)
         return ScenarioFormatter.formatScenario(script)
@@ -47,8 +48,6 @@ abstract class ScriptGenerator<
     open fun getChecksFromAnswer(answer: Answer<*, CF>): List<Check> =
         answer.createChecks(checkFactory)
 
-    protected open fun thenBuilder(): ThenBuilder = SimpleThenBuilder()
-
     private fun generateThenScript(scenario: VerifiableScenario<AF, CF>) =
         generateThenScriptFromChecks(getChecks(scenario))
 
@@ -62,7 +61,7 @@ abstract class ScriptGenerator<
         })
 
     fun generateThenScriptFromChecks(checks: List<Check>): String {
-        val body = thenBuilder().apply { addChecks(checks) }.build()
+        val body = ScriptGenerationCheckStateBuilder(checkStateFactory).build(checks)
 
         return if (body.isEmpty()) {
             throw IllegalArgumentException("No checks to generate!")
@@ -162,7 +161,8 @@ abstract class ScriptGenerator<
     }
 }
 
-abstract class VerificationCapableScriptGenerator<
+// TODO: consider merging this and ScriptGeneratorWithCheckState
+abstract class ScriptGenerator<
     AF : ActionFactory,
     CF : CheckFactory,
     QF : QueryFactory,
@@ -172,13 +172,32 @@ abstract class VerificationCapableScriptGenerator<
     actionFactory: AF,
     checkFactory: CF,
     declarationStateFactory: DeclarationStateFactory<S>,
+) : ScriptGeneratorWithCheckState<AF, CF, QF, AGF, S, SimpleScriptGenerationCheckState>(actionFactory,
+    checkFactory,
+    declarationStateFactory,
+    SimpleScriptGenerationCheckState.Factory)
+
+
+abstract class VerificationCapableScriptGenerator<
+    AF : ActionFactory,
+    CF : CheckFactory,
+    QF : QueryFactory,
+    AGF : ActionGeneratorFactory,
+    S : DeclarationState,
+    CS : ScriptGenerationCheckState,
+    >(
+    actionFactory: AF,
+    checkFactory: CF,
+    declarationStateFactory: DeclarationStateFactory<S>,
+    checkStateFactory: ScriptGenerationCheckStateFactory<CS>,
     private val actionGeneratorFactory: AGF,
     private val queryQueryFactory: QF,
     private val verifyQueryFactory: QF
-    ): ScriptGenerator<AF, CF, QF, AGF, S>(
+    ): ScriptGeneratorWithCheckState<AF, CF, QF, AGF, S, CS>(
         actionFactory,
         checkFactory,
         declarationStateFactory,
+        checkStateFactory,
     ) {
 
     @Suppress("UNCHECKED_CAST")
