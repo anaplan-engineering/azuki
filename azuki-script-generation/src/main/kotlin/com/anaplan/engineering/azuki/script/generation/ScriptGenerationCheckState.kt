@@ -70,10 +70,6 @@ abstract class AbstractScriptGenerationCheckState : ScriptGenerationCheckState {
 class SimpleScriptGenerationCheckState : AbstractScriptGenerationCheckState() {
 
     override fun getChecks(): List<ScriptGenerationCheck> = finishedChecks
-
-    object Factory : ScriptGenerationCheckStateFactory<SimpleScriptGenerationCheckState> {
-        override fun create() = SimpleScriptGenerationCheckState()
-    }
 }
 
 /**
