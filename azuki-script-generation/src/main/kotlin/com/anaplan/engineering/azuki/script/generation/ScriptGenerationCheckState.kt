@@ -4,12 +4,15 @@ import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
 
 /**
- * State used to build a 'then' block out of a stream of low-level generator or generable checks.
+ * State used to compose together checks before script generation.
+ *
+ * While some checks are directly suitable for generation, efficiency and DSL support concerns mean that others need to
+ * be merged, rewritten, or otherwise processed in advance.  A check state permits this.
  */
 interface ScriptGenerationCheckState {
 
     /**
-     * Adds a check to the set of checks to be output directly into the resulting 'then' block.
+     * Adds a check directly to the state's output, without performing any composition.
      */
     fun addCheck(check: ScriptGenerationCheck)
 
@@ -33,22 +36,25 @@ class ScriptGenerationCheckStateBuilder<S : ScriptGenerationCheckState>(private 
         val checkState = factory.create()
 
         checks.forEach {
-            if (it !is ScriptGenerationCheck && it !is GenerableCheck<*> && it !is UnsupportedCheck) throw IllegalArgumentException(
+            if (it !is ScriptGenerationCheck && it !is ComposableCheck<*> && it !is UnsupportedCheck) throw IllegalArgumentException(
                 "unsupported check: $it")
         }
 
         val passThrough = checks.filterIsInstance<ScriptGenerationCheck>()
-        val toGenerate = checks.filterIsInstance<GenerableCheck<S>>()
+        val toCompose = checks.filterIsInstance<ComposableCheck<S>>()
         val unsupported = checks.filterIsInstance<UnsupportedCheck>()
 
         checkState.addChecks(passThrough)
-        toGenerate.forEach { it.generate(checkState) }
+        toCompose.forEach { it.composeInto(checkState) }
         repeat(unsupported.size) { checkState.unsupportedCheck() }
 
         return checkState.getChecks()
     }
 }
 
+/**
+ * Check state with most of the common functionality already provided.
+ */
 abstract class AbstractScriptGenerationCheckState : ScriptGenerationCheckState {
 
     protected val finishedChecks: MutableList<ScriptGenerationCheck> = mutableListOf()
@@ -73,9 +79,9 @@ class SimpleScriptGenerationCheckState : AbstractScriptGenerationCheckState() {
 }
 
 /**
- * A check that can't be generated directly, but instead needs to be fed into a check state.
+ * A check that can't be generated directly, but instead needs to be composed using a check state.
  */
-interface GenerableCheck<S : ScriptGenerationCheckState> : Check {
+interface ComposableCheck<S : ScriptGenerationCheckState> : Check {
 
-    fun generate(state: S)
+    fun composeInto(state: S)
 }
