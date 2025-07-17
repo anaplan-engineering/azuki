@@ -9,16 +9,20 @@ import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
 interface ScriptGenerationCheckState {
 
     /**
-     * Pass through a check that doesn't need any special handling in the check state.
+     * Adds a check to the set of checks to be output directly into the resulting 'then' block.
      */
     fun addCheck(check: ScriptGenerationCheck)
+
+    fun addChecks(checks: Iterable<ScriptGenerationCheck>) {
+        checks.forEach { addCheck(it) }
+    }
 
     fun unsupportedCheck()
 
     fun getChecks(): List<ScriptGenerationCheck>
 }
 
-interface ScriptGenerationCheckStateFactory<S: ScriptGenerationCheckState> {
+fun interface ScriptGenerationCheckStateFactory<S : ScriptGenerationCheckState> {
 
     fun create(): S
 }
@@ -27,35 +31,47 @@ class ScriptGenerationCheckStateBuilder<S : ScriptGenerationCheckState>(private 
 
     fun build(checks: List<Check>): List<ScriptGenerationCheck> {
         val checkState = factory.create()
+
         checks.forEach {
-            @Suppress("UNCHECKED_CAST")
-            when(it) {
-                is ScriptGenerationCheck -> checkState.addCheck(it)
-                is GenerableCheck<*> -> (it as GenerableCheck<S>).generate(checkState)
-                is UnsupportedCheck -> checkState.unsupportedCheck()
-                else -> throw IllegalArgumentException("invalid check for script generation: $it")
-            }
+            if (it !is ScriptGenerationCheck && it !is GenerableCheck<*> && it !is UnsupportedCheck) throw IllegalArgumentException(
+                "unsupported check: $it")
         }
+
+        val passThrough = checks.filterIsInstance<ScriptGenerationCheck>()
+        val toGenerate = checks.filterIsInstance<GenerableCheck<S>>()
+        val unsupported = checks.filterIsInstance<UnsupportedCheck>()
+
+        checkState.addChecks(passThrough)
+        toGenerate.forEach { it.generate(checkState) }
+        repeat(unsupported.size) { checkState.unsupportedCheck() }
+
         return checkState.getChecks()
     }
+}
+
+abstract class AbstractScriptGenerationCheckState : ScriptGenerationCheckState {
+
+    protected val finishedChecks: MutableList<ScriptGenerationCheck> = mutableListOf()
+
+    override fun addCheck(check: ScriptGenerationCheck) {
+        finishedChecks.add(check)
+    }
+
+    override fun addChecks(checks: Iterable<ScriptGenerationCheck>) {
+        finishedChecks.addAll(checks)
+    }
+
+    override fun unsupportedCheck() = throw IllegalArgumentException("unsupported check detected")
 }
 
 /**
  * Check state for script generation adapters that don't need generable checks.
  */
-class SimpleScriptGenerationCheckState(private val checks: MutableList<ScriptGenerationCheck> = mutableListOf()):
-    ScriptGenerationCheckState {
+class SimpleScriptGenerationCheckState : AbstractScriptGenerationCheckState() {
 
-    override fun addCheck(check: ScriptGenerationCheck) {
-        checks.add(check)
-    }
+    override fun getChecks(): List<ScriptGenerationCheck> = finishedChecks
 
-    override fun unsupportedCheck() =
-        throw IllegalArgumentException("unsupported check detected")
-
-    override fun getChecks(): List<ScriptGenerationCheck> = checks
-
-    object Factory: ScriptGenerationCheckStateFactory<SimpleScriptGenerationCheckState> {
+    object Factory : ScriptGenerationCheckStateFactory<SimpleScriptGenerationCheckState> {
         override fun create() = SimpleScriptGenerationCheckState()
     }
 }
@@ -63,6 +79,7 @@ class SimpleScriptGenerationCheckState(private val checks: MutableList<ScriptGen
 /**
  * A check that can't be generated directly, but instead needs to be fed into a check state.
  */
-interface GenerableCheck<S: ScriptGenerationCheckState> : Check {
+interface GenerableCheck<S : ScriptGenerationCheckState> : Check {
+
     fun generate(state: S)
 }
