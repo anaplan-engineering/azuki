@@ -37,7 +37,7 @@ abstract class ScriptGeneratorWithCheckState<
 
     protected open fun generateNonVerifiableScenario(
         given: String, whenever: String, scenario: BuildableScenario<AF>
-    ): String = throw IllegalArgumentException("Unsupported scenario $scenario")
+    ): String = throw UnsupportedOperationException("Unsupported scenario type ${scenario::class}")
 
     open fun getChecks(scenario: VerifiableScenario<AF, CF>): List<Check> =
         scenario.checks(checkFactory)
