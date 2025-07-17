@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 
-abstract class ScriptGeneratorWithCheckState<
+abstract class ScriptGenerator<
     AF : ActionFactory,
     CF : CheckFactory,
     QF : QueryFactory,
@@ -74,15 +74,14 @@ abstract class ScriptGeneratorWithCheckState<
         }
     }
 
-    fun generateVerifiableScenarioScript(given: String, whenever: String, then: String): String {
-        return """
+    fun generateVerifiableScenarioScript(given: String, whenever: String, then: String) =
+        """
             verifiableScenario {
                 $given
                 $whenever
                 $then
             }
         """
-    }
 
     open fun getDeclarationActions(scenario: BuildableScenario<AF>): List<Action> =
         scenario.declarations(actionFactory)
@@ -161,23 +160,6 @@ abstract class ScriptGeneratorWithCheckState<
     }
 }
 
-// TODO: consider merging this and ScriptGeneratorWithCheckState
-abstract class ScriptGenerator<
-    AF : ActionFactory,
-    CF : CheckFactory,
-    QF : QueryFactory,
-    AGF : ActionGeneratorFactory,
-    S : DeclarationState,
-    >(
-    actionFactory: AF,
-    checkFactory: CF,
-    declarationStateFactory: DeclarationStateFactory<S>,
-) : ScriptGeneratorWithCheckState<AF, CF, QF, AGF, S, SimpleScriptGenerationCheckState>(actionFactory,
-    checkFactory,
-    declarationStateFactory,
-    SimpleScriptGenerationCheckState.Factory)
-
-
 abstract class VerificationCapableScriptGenerator<
     AF : ActionFactory,
     CF : CheckFactory,
@@ -193,7 +175,7 @@ abstract class VerificationCapableScriptGenerator<
     private val actionGeneratorFactory: AGF,
     private val queryQueryFactory: QF,
     private val verifyQueryFactory: QF
-    ): ScriptGeneratorWithCheckState<AF, CF, QF, AGF, S, CS>(
+    ): ScriptGenerator<AF, CF, QF, AGF, S, CS>(
         actionFactory,
         checkFactory,
         declarationStateFactory,
