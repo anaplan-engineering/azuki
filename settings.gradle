@@ -12,6 +12,7 @@ include(
     "tictactoe:dsl",
     "tictactoe:adapter-api",
     "tictactoe:adapter-declaration",
+    "tictactoe:adapter-script-generation",
     "tictactoe:adapter-vdm",
     "tictactoe:implementation",
     "tictactoe:implementation-v1",
