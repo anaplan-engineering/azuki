@@ -20,6 +20,8 @@ object SamplePlayerCheckFactory : PlayerCheckFactory {
 
 object SampleGameCheckFactory : GameCheckFactory {
     override fun hasPlayOrder(gameName: String, players: List<String>) = HasPlayOrderCheck(gameName, players)
+    override fun hasToken(gameName: String, playerName: String, position: Position) = HasTokenCheck(gameName, playerName, position)
+    override fun hasSpace(gameName: String, position: Position) = HasSpaceCheck(gameName, position)
     override fun hasState(gameName: String, moves: MoveMap) = HasStateCheck(gameName, moves)
     override fun isComplete(gameName: String) = IsCompleteCheck(gameName)
     override fun isDraw(gameName: String) = IsDrawnCheck(gameName)

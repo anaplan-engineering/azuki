@@ -28,6 +28,14 @@ class TicTacToeThen(private val checkFactory: TicTacToeCheckFactory): Then<TicTa
         checkList.add(checkFactory.game.hasState(gameName, TicTacToeBoardAscii.parse(boardData)))
     }
 
+    fun boardHasToken(gameName: String, playerName: String, position: Pair<Int, Int>) {
+        checkList.add(checkFactory.game.hasToken(gameName, playerName, Position(position)))
+    }
+
+    fun boardHasSpace(gameName: String, position: Pair<Int, Int>) {
+        checkList.add(checkFactory.game.hasSpace(gameName, Position(position)))
+    }
+
     fun boardIsComplete(gameName: String) {
         checkList.add(checkFactory.game.isComplete(gameName))
     }

@@ -21,6 +21,8 @@ object VdmPlayerCheckFactory : PlayerCheckFactory {
 
 object VdmGameCheckFactory : GameCheckFactory {
     override fun hasPlayOrder(gameName: String, players: List<String>) = GameHasPlayOrderCheck(gameName, players)
+    override fun hasToken(gameName: String, playerName: String, position: Position) = BoardHasTokenCheck(gameName, playerName, position)
+    override fun hasSpace(gameName: String, position: Position) = BoardHasSpaceCheck(gameName, position)
     override fun hasState(gameName: String, moves: MoveMap) = BoardHasStateCheck(gameName, moves)
     override fun isComplete(gameName: String) = BoardIsCompleteCheck(gameName)
     override fun isDraw(gameName: String) = GameIsDrawCheck(gameName)

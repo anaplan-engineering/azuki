@@ -24,10 +24,22 @@ object GameScriptGenCheckFactory : GameCheckFactory {
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameHasPlayOrder, gameName, players)
     }
 
+    override fun hasToken(gameName: String, playerName: String, position: Position) = object : ScriptGenCheck() {
+
+        override fun getCheckScript() =
+            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasToken, gameName, playerName, position)
+    }
+
+    override fun hasSpace(gameName: String, position: Position) = object : ScriptGenCheck() {
+
+        override fun getCheckScript() =
+            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasSpace, gameName, position)
+    }
+
     override fun hasState(gameName: String, moves: MoveMap) = object : ScriptGenCheck() {
 
         override fun getCheckScript() =
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasState, gameName, moves.toAscii())
+            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasState, gameName, moves.pretty(3, 3))
     }
 
     override fun isComplete(gameName: String) = object : ScriptGenCheck() {

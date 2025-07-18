@@ -2,6 +2,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.script.generation.ScriptGenDeclarationBuilder
 import com.anaplan.engineering.azuki.script.generation.ScriptGenDeclarationBuilderFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.pretty
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.GameDeclaration
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeGiven
 
@@ -22,7 +23,7 @@ class GameScriptGenDeclarationBuilder(declaration: GameDeclaration) :
                 gameOrder,
                 declaration.name,
                 declaration.orderName,
-                declaration.moves.toAscii(),
+                declaration.moves.pretty(3, 3),
             )
         }
 

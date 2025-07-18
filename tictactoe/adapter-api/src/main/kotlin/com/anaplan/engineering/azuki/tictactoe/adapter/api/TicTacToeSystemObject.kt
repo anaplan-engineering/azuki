@@ -5,3 +5,13 @@ data class Position(val row: Int, val col: Int) {
 }
 
 typealias MoveMap = Map<Position, String>
+
+fun MoveMap.pretty(rowMax:Int, colMax: Int): String = buildString {
+    (1..rowMax).forEach { row ->
+        (1 until colMax).forEach { col ->
+            append(getOrDefault(Position(row, col), "."))
+            append(" | ")
+        }
+        append("${getOrDefault(Position(row, colMax), ".")}\n")
+    }
+}

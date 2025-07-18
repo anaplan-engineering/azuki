@@ -17,6 +17,8 @@ interface PlayerCheckFactory {
 
 interface GameCheckFactory {
     fun hasPlayOrder(gameName: String, players: List<String>): Check
+    fun hasToken(gameName: String, playerName: String, position: Position): Check
+    fun hasSpace(gameName: String, position: Position): Check
     fun hasState(gameName: String, moves: MoveMap): Check
     fun isComplete(gameName: String): Check
     fun isDraw(gameName: String): Check
