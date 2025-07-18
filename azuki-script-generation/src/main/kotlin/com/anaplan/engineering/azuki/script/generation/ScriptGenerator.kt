@@ -48,7 +48,7 @@ abstract class ScriptGenerator<
     open fun getChecksFromAnswer(answer: Answer<*, CF>): List<Check> =
         answer.createChecks(checkFactory)
 
-    private fun generateThenScript(scenario: VerifiableScenario<AF, CF>) =
+    fun generateThenScript(scenario: VerifiableScenario<AF, CF>) =
         generateThenScriptFromChecks(getChecks(scenario))
 
     fun generateThenScript(answers: List<Answer<*, CF>>, useValidationChecks: Boolean = false) =
