@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
+import com.anaplan.engineering.azuki.script.generation.ComposableCheck
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeThen
@@ -9,6 +10,11 @@ object TicTacToeScriptGenCheckFactory : TicTacToeCheckFactory {
 
     override val game = GameScriptGenCheckFactory
     override val player = PlayerScriptGenCheckFactory
+}
+
+abstract class TicTacToeComposableCheck : ComposableCheck<TicTacToeCheckState> {
+
+    override val behavior = unsupportedBehavior
 }
 
 abstract class ScriptGenCheck : ScriptGenerationCheck {
@@ -24,16 +30,18 @@ object GameScriptGenCheckFactory : GameCheckFactory {
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameHasPlayOrder, gameName, players)
     }
 
-    override fun hasToken(gameName: String, playerName: String, position: Position) = object : ScriptGenCheck() {
+    override fun hasToken(gameName: String, playerName: String, position: Position) = object : TicTacToeComposableCheck() {
 
-        override fun getCheckScript() =
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasToken, gameName, playerName, position)
+        override fun composeInto(state: TicTacToeCheckState) {
+            state.addToken(gameName, playerName, position)
+        }
     }
 
-    override fun hasSpace(gameName: String, position: Position) = object : ScriptGenCheck() {
+    override fun hasSpace(gameName: String, position: Position) = object : TicTacToeComposableCheck() {
 
-        override fun getCheckScript() =
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasSpace, gameName, position)
+        override fun composeInto(state: TicTacToeCheckState) {
+            state.addSpace(gameName, position)
+        }
     }
 
     override fun hasState(gameName: String, moves: MoveMap) = object : ScriptGenCheck() {
