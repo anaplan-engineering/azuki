@@ -70,7 +70,6 @@ class TicTacToeScriptGeneratorTest {
         }
 
         val script = TicTacToeScriptGenerator.generateScript(scenario)
-        val triple = "\"\"\""
 
         assertContains(script.normalise(), """
             then {
@@ -82,7 +81,14 @@ class TicTacToeScriptGeneratorTest {
         """.normalise())
     }
 
-    private fun String.normalise(): String = replace(Regex("[ \n]+"), " ").replace(Regex(" *\"\"\" *"), "\"\"\"")
+    private fun String.normalise(): String {
+        val noNewlines = replace(Regex("[ \n]+"), " ")
+        val noTripleQuoteSpace = noNewlines.replace(Regex(" *${triple} *"), triple)
+        val noTrailingComma = noTripleQuoteSpace.replace(Regex(", +\\)"), ")")
+        return noTrailingComma
+    }
+
+    private val triple = "\"\"\""
 
     @Test
     fun moves() {
