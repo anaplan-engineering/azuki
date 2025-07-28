@@ -1,5 +1,10 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
+import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
+import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTestHelper
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
+import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.verifiableScenario
 import org.junit.Test
 import kotlin.test.assertContains
@@ -15,6 +20,14 @@ class TicTacToeScriptGeneratorTest {
 
         const val X = "X"
         const val O = "O"
+
+        val scenarioScriptingTestUtils = ScriptGenerationTestHelper(generator = TicTacToeScriptGenerator,
+            parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
+                override val defaultImports: ScenarioParsingContext.() -> Unit = {
+                    import("com.anaplan.engineering.azuki.tictactoe.dsl.*")
+                    import("com.anaplan.engineering.azuki.tictactoe.*")
+                }
+            })
     }
 
 
@@ -92,7 +105,7 @@ class TicTacToeScriptGeneratorTest {
 
     @Test
     fun moves() {
-        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        scenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAPlayOrder(orderA, O, X)
                 thereIsAGame(gameA, orderA, """
@@ -114,7 +127,7 @@ class TicTacToeScriptGeneratorTest {
 
     @Test
     fun movesAndOnlyTheMoves() {
-        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        scenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAPlayOrder(orderA, O, X)
                 thereIsAGame(gameA, orderA, """
