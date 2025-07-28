@@ -1,5 +1,9 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
+import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
+import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTestHelper
+import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.verifiableScenario
 import org.junit.Test
 import kotlin.test.assertContains
@@ -15,6 +19,14 @@ class TicTacToeScriptGeneratorTest {
 
         const val X = "X"
         const val O = "O"
+
+        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generator = TicTacToeScriptGenerator,
+            parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
+                override val defaultImports: ScenarioParsingContext.() -> Unit = {
+                    import("com.anaplan.engineering.azuki.tictactoe.dsl.*")
+                    import("com.anaplan.engineering.azuki.tictactoe.*")
+                }
+            })
     }
 
 
@@ -70,7 +82,6 @@ class TicTacToeScriptGeneratorTest {
         }
 
         val script = TicTacToeScriptGenerator.generateScript(scenario)
-        val triple = "\"\"\""
 
         assertContains(script.normalise(), """
             then {
@@ -82,7 +93,14 @@ class TicTacToeScriptGeneratorTest {
         """.normalise())
     }
 
-    private fun String.normalise(): String = replace(Regex("[ \n]+"), " ").replace(Regex(" *\"\"\" *"), "\"\"\"")
+    private fun String.normalise(): String {
+        val noNewlines = replace(Regex("[ \n]+"), " ")
+        val noTripleQuoteSpace = noNewlines.replace(Regex(" *${triple} *"), triple)
+        val noTrailingComma = noTripleQuoteSpace.replace(Regex(", +\\)"), ")")
+        return noTrailingComma
+    }
+
+    private val triple = "\"\"\""
 
     @Test
     fun moves() {
