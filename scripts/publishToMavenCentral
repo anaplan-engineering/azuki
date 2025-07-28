@@ -2,7 +2,7 @@
 
 # This script will upload the contained artifacts to the Maven Central staging repository
 
-# To run this script you will need to have ossrhUsername and ossrhPassword properties defined in your user gradle.properties with your credentials for Nexus
+# To run this script you will need to have centralPortalUsername and centralPortalPassword properties defined in your user gradle.properties with your credentials for Nexus
 
 # Note that, using a gradle task similar to publishAllToMavenLocal does not work as it tries to upload the same artifact more than once
 
