@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.GetPlayOrderBehaviour
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.MoveMap
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.pretty
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
 import org.slf4j.LoggerFactory
 
@@ -34,15 +35,5 @@ class HasStateCheck(
 
     companion object {
         private val Log = LoggerFactory.getLogger(HasStateCheck::class.java)
-    }
-}
-
-private fun MoveMap.pretty(rowMax:Int, colMax: Int): String = buildString {
-    (1..rowMax).forEach { row ->
-        (1 until colMax).forEach { col ->
-            append(getOrDefault(Position(row, col), "."))
-            append(" | ")
-        }
-        append("${getOrDefault(Position(row, colMax), ".")}\n")
     }
 }

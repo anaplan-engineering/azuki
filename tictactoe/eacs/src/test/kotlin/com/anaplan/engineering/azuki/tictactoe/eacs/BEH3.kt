@@ -25,6 +25,19 @@ class BEH3 : TicTacToeScenario() {
         }
     }
 
+    @Eac("When a player places a single token, the board contains that token")
+    fun place() {
+        given {
+            thereIsANewGame(gameA)
+        }
+        whenever {
+            placeToken(gameA, X, 2 to 2)
+        }
+        then {
+            boardHasToken(gameA, X, 2 to 2)
+        }
+    }
+
     @Eac("When a player places a token, the board is updated")
     fun turns() {
         given {

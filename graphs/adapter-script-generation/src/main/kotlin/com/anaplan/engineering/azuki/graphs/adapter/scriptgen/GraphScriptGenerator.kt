@@ -7,12 +7,14 @@ import com.anaplan.engineering.azuki.graphs.adapter.api.GraphCheckFactory
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.GraphDeclarationState
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerator
 import com.anaplan.engineering.azuki.script.generation.ScriptingHelper
+import com.anaplan.engineering.azuki.script.generation.SimpleScriptGenerationCheckState
 
 object GraphScriptGenerator :
-    ScriptGenerator<GraphActionFactory<*>, GraphCheckFactory, NoQueryFactory, NoActionGeneratorFactory, GraphDeclarationState>(
+    ScriptGenerator<GraphActionFactory<*>, GraphCheckFactory, NoQueryFactory, NoActionGeneratorFactory, GraphDeclarationState, SimpleScriptGenerationCheckState>(
         GraphScriptGenActionFactory,
         GraphScriptGenCheckFactory,
         GraphDeclarationState.Factory,
+        ::SimpleScriptGenerationCheckState
     )
 
 val GraphScriptingHelper = ScriptingHelper(mapOf(

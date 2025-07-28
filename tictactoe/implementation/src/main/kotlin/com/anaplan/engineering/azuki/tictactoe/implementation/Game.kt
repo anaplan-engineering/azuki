@@ -83,4 +83,5 @@ abstract class Game protected constructor(
         }
     }
 
+    fun tokenAt(x: Int, y: Int): Token? = board[y][x]
 }
