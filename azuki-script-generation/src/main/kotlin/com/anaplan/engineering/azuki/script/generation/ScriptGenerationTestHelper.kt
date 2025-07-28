@@ -13,15 +13,14 @@ open class ScriptGenerationTestHelper<S: BuildableScenario<AF>, AF: ActionFactor
     private val parser: ScenarioParser<S> = SimpleScenarioParser(),
 ) {
     /**
-     * Verify script correctness by generating, parsing and regenerating.
+     * Round-trip the generator and parser by generating, parsing, and regenerating.
      *
-     * If there are no exceptions then all constructs in initial scenario will have been supported. If the two scripts
-     * generated are identical then we know the initial scenario and parsed scenario are semantically equivalent.
+     * This checks that the generator handles all the constructs in the scenario, the parser can process the generated
+     * script, and the generator converts the parsed scenario to a script identical to the one from which it came.
      *
-     * Note that, there may be some differences between the initial dsl and that generated, but they will produce the
-     * same actions, checks, and queries.
-     *
-     * printScript will print the initially generated script to assist debugging
+     * The initial and parsed scenario are not necessarily syntactically equivalent, as generation may have produced a
+     * different DSL.  The two should be semantically equivalent (have the same actions, checks, queries, and so on),
+     * but we can't check that here.
      */
     fun checkScenarioGeneration(scenario: S, initContext: ScenarioParsingContext.() -> Unit = {}) {
         Log.debug("Generating script")
@@ -38,7 +37,7 @@ open class ScriptGenerationTestHelper<S: BuildableScenario<AF>, AF: ActionFactor
     }
 
     companion object {
-        private val Log = LoggerFactory.getLogger(ScriptGenerationTestHelper::class.java)
+        private val Log = LoggerFactory.getLogger(this::class.java.declaringClass)
     }
 }
 
