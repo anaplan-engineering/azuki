@@ -12,7 +12,7 @@ class GraphScriptGeneratorTest {
     companion object {
         const val graphA = "graphA"
 
-        val scenarioScriptingTestUtils = ScriptGenerationTestHelper(generator = GraphScriptGenerator,
+        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generator = GraphScriptGenerator,
             parser = object : SimpleScenarioParser<GraphBuildableScenario>() {
                 override val defaultImports: ScenarioParsingContext.() -> Unit = {
                     import("com.anaplan.engineering.azuki.graphs.dsl.*")
@@ -23,7 +23,7 @@ class GraphScriptGeneratorTest {
 
     @Test
     fun graphWithEdges() {
-        scenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAnUndirectedGraph(graphA) {
                     edge("a", "b")
@@ -37,7 +37,7 @@ class GraphScriptGeneratorTest {
 
     @Test
     fun graphWithParallelBlock() {
-        scenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAnUndirectedGraph(graphA)
             }
@@ -56,7 +56,7 @@ class GraphScriptGeneratorTest {
 
     @Test
     fun directedGraph() {
-        scenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsADirectedGraph("graphA") {}
             }

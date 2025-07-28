@@ -3,7 +3,6 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTestHelper
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.verifiableScenario
 import org.junit.Test
@@ -21,7 +20,7 @@ class TicTacToeScriptGeneratorTest {
         const val X = "X"
         const val O = "O"
 
-        val scenarioScriptingTestUtils = ScriptGenerationTestHelper(generator = TicTacToeScriptGenerator,
+        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generator = TicTacToeScriptGenerator,
             parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
                 override val defaultImports: ScenarioParsingContext.() -> Unit = {
                     import("com.anaplan.engineering.azuki.tictactoe.dsl.*")
@@ -105,7 +104,7 @@ class TicTacToeScriptGeneratorTest {
 
     @Test
     fun moves() {
-        scenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAPlayOrder(orderA, O, X)
                 thereIsAGame(gameA, orderA, """
@@ -127,7 +126,7 @@ class TicTacToeScriptGeneratorTest {
 
     @Test
     fun movesAndOnlyTheMoves() {
-        scenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAPlayOrder(orderA, O, X)
                 thereIsAGame(gameA, orderA, """
