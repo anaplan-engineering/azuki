@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.core.parser
 
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
+import org.slf4j.LoggerFactory
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.script.experimental.annotations.KotlinScript
 import kotlin.script.experimental.api.ResultValue
@@ -51,14 +52,20 @@ open class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
             lock.unlock()
         }
 
-        val result = evalResult.valueOrThrow().returnValue
-        if (result !is ResultValue.Value || result.value !is BuildableScenario<*>) {
-            throw IllegalArgumentException("Script does not evaluate to scenario (got $result)")
+        when (val result = evalResult.valueOrThrow().returnValue) {
+            is ResultValue.Unit ->
+                throw IllegalArgumentException("Script does not evaluate to scenario: it returned nothing")
+            is ResultValue.Error -> {
+                throw IllegalArgumentException("Script threw an exception while evaluating: $result", result.error)
+            }
+            else -> {
+                if (result !is ResultValue.Value || result.value !is BuildableScenario<*>) {
+                    throw IllegalArgumentException("Script does not evaluate to scenario: got $result")
+                }
+                @Suppress("UNCHECKED_CAST") return result.value as S
+            }
         }
-
-        @Suppress("UNCHECKED_CAST") return result.value as S
     }
-
 }
 
 @KotlinScript(fileExtension = "scn", compilationConfiguration = SimpleScenarioCompilationConfiguration::class)
