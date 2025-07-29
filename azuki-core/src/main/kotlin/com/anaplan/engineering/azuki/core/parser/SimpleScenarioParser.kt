@@ -53,18 +53,29 @@ open class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
         }
 
         when (val result = evalResult.valueOrThrow().returnValue) {
-            is ResultValue.Unit ->
+            is ResultValue.Unit -> {
+                Log.error("Unit returned by the following script:\n\n{}", scenarioString)
+
                 throw IllegalArgumentException("Script does not evaluate to scenario: it returned nothing")
+            }
             is ResultValue.Error -> {
+                Log.error("Exception thrown in the following script:\n\n{}", scenarioString)
+
                 throw IllegalArgumentException("Script threw an exception while evaluating: $result", result.error)
             }
             else -> {
                 if (result !is ResultValue.Value || result.value !is BuildableScenario<*>) {
+                    Log.error("Non-scenario value returned by the following script:\n\n{}", scenarioString)
+
                     throw IllegalArgumentException("Script does not evaluate to scenario: got $result")
                 }
                 @Suppress("UNCHECKED_CAST") return result.value as S
             }
         }
+    }
+
+    companion object {
+        val Log = LoggerFactory.getLogger(SimpleScenarioParser::class.java)
     }
 }
 
