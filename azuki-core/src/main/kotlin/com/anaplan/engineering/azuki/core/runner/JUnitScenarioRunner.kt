@@ -68,6 +68,34 @@ annotation class RestrictTo(
     val implementationName: String
 )
 
+enum class JUnitScenarioType {
+    Eac,
+    ModellingExample,
+    AdapterTest,
+    AnalysisScenario,
+    GeneratedScenario,
+}
+
+enum class JUnitScenarioResult(val category: Category) {
+    Verified(Category.Pass),
+    Unverified(Category.Fail),
+    KnownBug(Category.Skip),
+    ToBeDone(Category.Skip),
+    Unsupported(Category.Skip),
+    IncompatibleVersion(Category.Skip),
+    UnsupportedCommand(Category.Skip),
+    UnsupportedDeclaration(Category.Skip),
+    UnsupportedCheck(Category.Skip),
+    NoSupportedChecks(Category.Skip),
+    UnexpectedSkip(Category.Fail),
+    UnknownError(Category.Error),
+    InvalidScenario(Category.Error),
+    InvalidSystem(Category.Error);
+
+    enum class Category {
+        Pass, Fail, Skip, Error
+    }
+}
 
 data class ScenarioRun<
     AF : ActionFactory,
@@ -76,6 +104,7 @@ data class ScenarioRun<
     AGF : ActionGeneratorFactory,
     >(
     val name: String,
+    val type: JUnitScenarioType,
     val method: FrameworkMethod,
     val implementationInstance: ImplementationInstance<AF, CF, QF, AGF>,
     val persistenceVerificationInstance: ImplementationInstance<AF, CF, QF, AGF>?,
@@ -168,6 +197,13 @@ class JUnitScenarioRunner<
         return restrictTo != null && !implementationName.matches(restrictTo.implementationName)
     }
 
+    override fun run(notifier: RunNotifier) {
+        if (AzukiJUnitRunListener.hasListeners) {
+            notifier.addListener(AzukiJUnitRunListener)
+        }
+        super.run(notifier)
+    }
+
     override fun runChild(child: ScenarioRun<AF, CF, QF, AGF>, notifier: RunNotifier) {
         val description = describeChild(child)
         if (isIgnored(child)) {
@@ -221,12 +257,18 @@ class JUnitScenarioRunner<
                         val since: Since? = build.getAnnotation(Since::class.java)
                             ?: parameters?.filterIsInstance<Since>()?.singleOrNull()
                         val scenarioVersion =
-                            since?.implementationVersion?.singleOrNull { implementationInstance.implementationName.matches(it.name) }
+                            since?.implementationVersion?.singleOrNull {
+                                implementationInstance.implementationName.matches(it.name)
+                            }
                         if (implementationInstance.supportsScenarioVersion(scenario, scenarioVersion) == false) {
-                            unsupported("Skipping - scenario version incompatible with implementation instance")
+                            unsupported("Skipping - scenario version incompatible with implementation instance",
+                                ::IncompatibleVersionException)
                         }
-                        if (persistenceVerificationInstance?.supportsScenarioVersion(scenario, scenarioVersion) == false) {
-                            unsupported("Skipping - scenario version incompatible with persistence verification implementation instance")
+                        if (persistenceVerificationInstance?.supportsScenarioVersion(scenario,
+                                scenarioVersion) == false
+                        ) {
+                            unsupported("Skipping - scenario version incompatible with persistence verification implementation instance",
+                                ::IncompatibleVersionException)
                         }
                         build.invoke(scenario)
                         val scenarioName = eacMetadata?.scenarioName ?: "${build.declaringClass.name}-${build.name}"
@@ -236,15 +278,31 @@ class JUnitScenarioRunner<
                                 scenario,
                                 scenarioName)
                         when (verifiableScenarioRunner.run()) {
-                            VerifiableScenarioRunner.Result.UnsupportedCommand -> unsupported("Skipping - unsupported action found")
-                            VerifiableScenarioRunner.Result.UnsupportedDeclaration -> unsupported("Skipping - unsupported declaration found")
-                            VerifiableScenarioRunner.Result.UnsupportedCheck -> unsupported("Skipping - unsupported check found")
-                            VerifiableScenarioRunner.Result.NoSupportedChecks -> unsupported("Skipping - no supported checks found")
+                            VerifiableScenarioRunner.Result.UnsupportedCommand -> unsupported("Skipping - unsupported action found",
+                                ::UnsupportedCommandException)
+
+                            VerifiableScenarioRunner.Result.UnsupportedDeclaration -> unsupported("Skipping - unsupported declaration found",
+                                ::UnsupportedDeclarationException)
+
+                            VerifiableScenarioRunner.Result.UnsupportedCheck -> unsupported("Skipping - unsupported check found",
+                                ::UnsupportedCheckException)
+
+                            VerifiableScenarioRunner.Result.NoSupportedChecks -> unsupported("Skipping - no supported checks found",
+                                ::NoSupportedChecksException)
+
                             VerifiableScenarioRunner.Result.Unverified -> throw AssertionError("Verification checks failed")
-                            VerifiableScenarioRunner.Result.IncompatibleSystem -> throw SkippedException("Skipping - system does not support verify or report")
-                            VerifiableScenarioRunner.Result.UnknownError -> throw IllegalStateException("Unexpected error running scenario")
-                            VerifiableScenarioRunner.Result.NotPersistable -> throw IllegalStateException("Invalid configuration: unpersistable system found")
-                            VerifiableScenarioRunner.Result.NotVerifiable -> throw IllegalStateException("Invalid scenario: not verifiable")
+                            VerifiableScenarioRunner.Result.IncompatibleSystem -> throw ScenarioRunException("Skipping - system does not support verify or report",
+                                JUnitScenarioResult.InvalidSystem)
+
+                            VerifiableScenarioRunner.Result.UnknownError -> throw ScenarioRunException("Unexpected error running scenario",
+                                JUnitScenarioResult.UnknownError)
+
+                            VerifiableScenarioRunner.Result.NotPersistable -> throw ScenarioRunException("Invalid configuration: unpersistable system found",
+                                JUnitScenarioResult.InvalidSystem)
+
+                            VerifiableScenarioRunner.Result.NotVerifiable -> throw ScenarioRunException("Invalid scenario: not verifiable",
+                                JUnitScenarioResult.InvalidScenario)
+
                             VerifiableScenarioRunner.Result.Verified,
                             VerifiableScenarioRunner.Result.Reported -> {
                             } // success!
@@ -256,7 +314,7 @@ class JUnitScenarioRunner<
                             EacMetadataRecorder.record(eacMetadata)
                         }
                     } catch (e: Throwable) {
-                        if (e !is SkippedException || !expectSkip) {
+                        if (e !is UnexpectedSkipException || !expectSkip) {
                             throw e
                         }
                     }
@@ -273,21 +331,48 @@ class JUnitScenarioRunner<
                 implementation.versionFilter.canVerify(scenarioVersion?.version)
             }.result
 
-        private fun unsupported(msg: String) {
+        private fun unsupported(msg: String, aveCreator: (msg: String) -> AssumptionViolatedException) {
             // was previously checking if implementation was total as part of this.. should we move that into runner?
             if (ignoreWhenUnsupported) {
                 Log.debug(msg)
-                throw AssumptionViolatedException(msg)
+                throw aveCreator(msg)
             } else {
-                throw SkippedException(msg)
+                throw UnexpectedSkipException(msg)
             }
         }
 
     }
 
-    class SkippedException(msg: String) : Exception(msg)
+    internal interface ScenarioResultHolder {
+        val result: JUnitScenarioResult
+    }
 
-    private val parameterMethod: FrameworkMethod? by lazy {
+    internal class ScenarioRunException(msg: String, override val result: JUnitScenarioResult) :
+        Exception(msg), ScenarioResultHolder
+
+    internal abstract class ScenarioUnsupportedException(msg: String, override val result: JUnitScenarioResult) :
+        AssumptionViolatedException(msg), ScenarioResultHolder
+
+    internal class UnsupportedDeclarationException(msg: String) :
+        ScenarioUnsupportedException(msg, JUnitScenarioResult.UnsupportedDeclaration)
+
+    internal class UnsupportedCommandException(msg: String) :
+        ScenarioUnsupportedException(msg, JUnitScenarioResult.UnsupportedCommand)
+
+    internal class UnsupportedCheckException(msg: String) :
+        ScenarioUnsupportedException(msg, JUnitScenarioResult.UnsupportedCheck)
+
+    internal class NoSupportedChecksException(msg: String) :
+        ScenarioUnsupportedException(msg, JUnitScenarioResult.NoSupportedChecks)
+
+    internal class IncompatibleVersionException(msg: String) :
+        ScenarioUnsupportedException(msg, JUnitScenarioResult.IncompatibleVersion)
+
+    internal class UnexpectedSkipException(msg: String) : Exception(msg), ScenarioResultHolder {
+        override val result: JUnitScenarioResult = JUnitScenarioResult.UnexpectedSkip
+    }
+
+    val parameterMethod: FrameworkMethod? by lazy {
         val companionObject = kClass.companionObjectInstance
         if (companionObject == null) {
             null
@@ -309,7 +394,6 @@ class JUnitScenarioRunner<
             Timeout(annotation.timeout, annotation.timeUnit)
         }
     }
-
 
     override fun getChildren(): MutableList<ScenarioRun<AF, CF, QF, AGF>> {
         Log.debug("Getting children: {}", testClass)
@@ -340,6 +424,7 @@ class JUnitScenarioRunner<
                 }
                 ScenarioRun(
                     eac.summary,
+                    JUnitScenarioType.Eac,
                     method,
                     implementationInstance,
                     persistenceVerificationInstance,
@@ -352,6 +437,7 @@ class JUnitScenarioRunner<
             implementationInstances.map { implementationInstance ->
                 ScenarioRun(
                     modellingExample.summary,
+                    JUnitScenarioType.ModellingExample,
                     method,
                     implementationInstance,
                     persistenceVerificationInstance
@@ -363,6 +449,7 @@ class JUnitScenarioRunner<
             implementationInstances.map { implementationInstance ->
                 ScenarioRun(
                     method.name,
+                    JUnitScenarioType.AdapterTest,
                     method,
                     implementationInstance,
                     persistenceVerificationInstance,
@@ -372,12 +459,20 @@ class JUnitScenarioRunner<
         }
         val analysisScenarios = getTestClass().getAnnotatedMethods(AnalysisScenario::class.java).flatMap { method ->
             implementationInstances.map { implementationInstance ->
-                ScenarioRun(method.name, method, implementationInstance, persistenceVerificationInstance)
+                ScenarioRun(method.name,
+                    JUnitScenarioType.AnalysisScenario,
+                    method,
+                    implementationInstance,
+                    persistenceVerificationInstance)
             }
         }
         val generatedScenarios = getTestClass().getAnnotatedMethods(GeneratedScenario::class.java).flatMap { method ->
             implementationInstances.map { implementationInstance ->
-                ScenarioRun(method.name, method, implementationInstance, persistenceVerificationInstance)
+                ScenarioRun(method.name,
+                    JUnitScenarioType.GeneratedScenario,
+                    method,
+                    implementationInstance,
+                    persistenceVerificationInstance)
             }
         }
         val nonParameterizedRuns = eacs + adapterTests + analysisScenarios + generatedScenarios + modellingExamples
@@ -390,10 +485,12 @@ class JUnitScenarioRunner<
                 ?: throw IllegalStateException("Parameter method $parameterMethod. returns object with invalid type")
         Log.debug("Test is parameterized, parameter method: ${parameterMethod?.name}, permutation count: ${parameterPermutations.size}")
         val descriptionFormat = parameterMethod!!.annotations.filterIsInstance<Parameters>().singleOrNull()?.name
-        return baseRuns.flatMap { baseRun -> parameterPermutations.map { perm ->
-            baseRun.copy(parameters = perm,
-                descriptionFormat = if (descriptionFormat == "{index}") null else descriptionFormat)
-        } }
+        return baseRuns.flatMap { baseRun ->
+            parameterPermutations.map { perm ->
+                baseRun.copy(parameters = perm,
+                    descriptionFormat = if (descriptionFormat == "{index}") null else descriptionFormat)
+            }
+        }
     }
 
     override fun describeChild(child: ScenarioRun<AF, CF, QF, AGF>): Description {
@@ -405,11 +502,35 @@ class JUnitScenarioRunner<
             "${child.parameters.toList()}"
         }
         val methodName = "${child.method.name}$parameterSuffix"
+        val implementationName = child.implementationInstance.implementationName
+
+        val issues = mutableListOf<Issue>()
+        val toBeDone = child.method.getAnnotation(ToBeDone::class.java)
+            ?: child.parameters?.filterIsInstance<ToBeDone>()?.singleOrNull()
+        val hasToBeDone = toBeDone != null
+        val tbdIssues = toBeDone?.issues?.filter { implementationName.matches(it.implementation) }
+        if (tbdIssues != null) issues.addAll(tbdIssues)
+        val knownBug = child.method.getAnnotation(KnownBug::class.java)
+            ?: child.parameters?.filterIsInstance<KnownBug>()?.singleOrNull()
+        val hasKnownBug = knownBug != null
+        val kbIssues = knownBug?.issues?.filter { implementationName.matches(it.implementation) }
+        if (kbIssues != null) issues.addAll(kbIssues)
+        val annotations = mutableListOf(
+            TestImplementation(implementationName, child.implementationInstance.version ?: ""),
+            ScenarioInfo(child.type, hasKnownBug, hasToBeDone, issues.flatMap { it.jiraIds.toList() }.toTypedArray())
+        ).apply {
+            child.persistenceVerificationInstance.let {
+                if (it != null) {
+                    add(PersistenceImplementation(it.implementationName, it.version ?: ""))
+                }
+            }
+        }.toTypedArray()
+
         return if (excludeImplFromDescription) {
-            Description.createTestDescription(testClass.name, methodName)
+            Description.createTestDescription(testClass.name, methodName, *annotations)
         } else {
-            Description.createTestDescription("${child.implementationInstance.implementationName}-${testClass.name}",
-                methodName)
+            Description.createTestDescription("$implementationName-${testClass.name}",
+                methodName, *annotations)
         }
     }
 

@@ -1,0 +1,21 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'azuki.jar-publishing-conventions'
+}
+
+dependencies {
+    implementation project(':azuki-core')
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Azuki Listeners'
+                description = 'Listeners that track Azuki events and perform common tasks'
+            }
+        }
+    }
+}
+

@@ -7,7 +7,7 @@ package com.anaplan.engineering.azuki.core.runner
 // Can't use repeatable due to https://youtrack.jetbrains.com/issue/KT-12794
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class ToBeDone(vararg val issues: com.anaplan.engineering.azuki.core.runner.Issue)
+annotation class ToBeDone(vararg val issues: Issue)
 
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Issue(val implementation: String, vararg val jiraIds: String)

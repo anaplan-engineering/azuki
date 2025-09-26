@@ -8,6 +8,8 @@ dependencies {
     constraints {
         api "com.anaplan.engineering:azuki-core:$version"
         api "com.anaplan.engineering:azuki-declaration:$version"
+        api "com.anaplan.engineering:azuki-listeners:$version"
+        api "com.anaplan.engineering:azuki-result-reporter:$version"
         api "com.anaplan.engineering:azuki-script-formatter:$version"
         api "com.anaplan.engineering:azuki-script-generation:$version"
         api "com.anaplan.engineering:azuki-runner:$version"

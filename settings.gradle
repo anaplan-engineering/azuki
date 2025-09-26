@@ -2,6 +2,8 @@ include(
     "azuki-core",
     "azuki-vdm",
     "azuki-declaration",
+    "azuki-listeners",
+    "azuki-result-reporter",
     "azuki-runner",
     "azuki-script-formatter",
     "azuki-script-generation",
