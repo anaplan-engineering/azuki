@@ -39,7 +39,7 @@ cd "$STUB_DIR"
 echo "Publishing Azuki"
 
 cd "$PROJECT_DIR"
-"$GRADLEW" publish -Pversion="$VERSION"
+"$GRADLEW" publish publishPlugins -Pversion="$VERSION"
 
 echo "Publishing Azuki platform"
 

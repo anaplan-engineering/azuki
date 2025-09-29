@@ -1,0 +1,79 @@
+plugins {
+    id 'azuki.publishing-conventions'
+    id 'azuki.kotlin-conventions'
+    id 'java-gradle-plugin'
+    id 'com.gradle.plugin-publish' version '1.2.0'
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation project(':azuki-core')
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
+    implementation 'org.jetbrains.kotlinx:kotlinx-html-jvm:0.12.0'
+}
+
+gradlePlugin {
+    website = 'https://github.com/anaplan-engineering/azuki'
+    vcsUrl = 'https://github.com/anaplan-engineering/azuki'
+    plugins {
+        azukiResultReporter {
+            id = "${group}.azuki-result-reporter"
+            displayName = 'Azuki scenario result reporter'
+            description = 'A Gradle plugin to generate HTML report of Azuki scenario results'
+            implementationClass = "com.anaplan.engineering.azuki.resultreporter.JsonResultReporterPlugin"
+            tags.set(['Azuki'])
+        }
+    }
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+publishing {
+    afterEvaluate {
+        publications {
+            withType(MavenPublication) {
+                pom {
+                    url = 'https://github.com/anaplan-engineering/azuki'
+                    name = 'Azuki scenario result reporter'
+                    description = 'A Gradle plugin to generate HTML report of Azuki scenario results'
+
+                    scm {
+                        connection = 'scm:git:git://github.com/anaplan-engineering/azuki.git'
+                        developerConnection = 'scm:git:git@github.com:anaplan-engineering/azuki.git'
+                        url = 'https://github.com/anaplan-engineering/azuki'
+                    }
+
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://github.com/anaplan-engineering/azuki/blob/main/LICENCE.txt'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'sifraser'
+                            name = 'Simon Fraser'
+                            email = 'simon.fraser@anaplan.com'
+                            url = "https://github.com/sifraser"
+                            organization = "Anaplan Ltd"
+                            organizationUrl = "http://www.anaplan.com"
+                            roles = ['architect', 'senior principal engineer']
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.withType(MavenPublication)
+}
+
+
+
+
