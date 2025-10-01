@@ -517,7 +517,14 @@ class JUnitScenarioRunner<
         if (kbIssues != null) issues.addAll(kbIssues)
         val annotations = mutableListOf(
             TestImplementation(implementationName, child.implementationInstance.version ?: ""),
-            ScenarioInfo(child.type, hasKnownBug, hasToBeDone, issues.flatMap { it.jiraIds.toList() }.toTypedArray())
+            ScenarioInfo(
+                testClass.name,
+                methodName,
+                child.type,
+                hasKnownBug,
+                hasToBeDone,
+                issues.flatMap { it.jiraIds.toList() }.toTypedArray()
+            )
         ).apply {
             child.persistenceVerificationInstance.let {
                 if (it != null) {
