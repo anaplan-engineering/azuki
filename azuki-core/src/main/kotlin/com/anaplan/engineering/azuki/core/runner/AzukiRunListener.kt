@@ -24,12 +24,12 @@ internal object AzukiJUnitRunListener : RunListener() {
     ) {
         fun toResult() =
             ScenarioResult(
-                className = description.className,
-                scenarioName = description.methodName,
+                className = scenarioInfo.className,
+                scenarioName = scenarioInfo.methodName,
                 implementationName = testImplementation.name,
                 implementationVersion = testImplementation.version.ifBlank { null },
                 persistenceImplementationName = persistenceImplementation?.name,
-                persistenceImplementationVersion = persistenceImplementation?.version,
+                persistenceImplementationVersion = persistenceImplementation?.version?.ifBlank { null },
                 state = state,
                 durationNs = System.nanoTime() - start,
                 scenarioType = scenarioInfo.type,

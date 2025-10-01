@@ -33,7 +33,7 @@ abstract class ScenarioReportGeneratorTask : DefaultTask() {
     fun apply() {
         val config = project.extensions.findByType(JsonResultReporterPluginExtension::class.java) ?: Config.Default
         val sourceFiles = config.sourceDirs.map { File(it) }.flatMap { project.fileTree(it).filter { f ->
-            f.name.startsWith("scenario-results") && f.name.endsWith("json")
+            f.name.endsWith("json")
         } }
         val reportDir = File(config.reportDir).apply { mkdirs() }
         ScenarioReportGenerator(sourceFiles, reportDir).generate()

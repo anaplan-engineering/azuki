@@ -35,19 +35,27 @@ class JsonResultRecorder : AzukiRunListener {
         }
         if (suiteResults.isNotEmpty()) {
             resultDir.mkdirs()
-            val file = File(resultDir, "scenario-results-$suiteName.json")
-            objectMapper.writeValue(file, suiteResults.toTypedArray())
+            suiteResults.groupBy {
+                StringBuilder().apply {
+                    append(it.implementationName)
+                    if (it.implementationVersion != null) {
+                        append("-${it.implementationVersion}")
+                    }
+                    if (it.persistenceImplementationName != null) {
+                        append("-${it.persistenceImplementationName}")
+                    }
+                    if (it.persistenceImplementationVersion != null) {
+                        append("-${it.persistenceImplementationVersion}")
+                    }
+                }.toString()
+            }.forEach { (name, results) ->
+                val file = File(resultDir, "$name-$suiteName.json")
+                objectMapper.writeValue(file, results.toTypedArray())
+            }
         }
     }
 
     override fun runComplete() {
-        val runResults = mutableListOf<ScenarioResult>().apply {
-            results.drainTo(this)
-        }
-        if (runResults.isNotEmpty()) {
-            resultDir.mkdirs()
-            val file = File(resultDir, "scenario-results.json")
-            objectMapper.writeValue(file, runResults.toTypedArray())
-        }
+        suiteComplete("run")
     }
 }
