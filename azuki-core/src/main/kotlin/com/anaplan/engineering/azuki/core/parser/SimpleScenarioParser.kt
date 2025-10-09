@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.core.parser
 
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
+import org.slf4j.LoggerFactory
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.script.experimental.annotations.KotlinScript
 import kotlin.script.experimental.api.ResultValue
@@ -51,14 +52,31 @@ open class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
             lock.unlock()
         }
 
-        val result = evalResult.valueOrThrow().returnValue
-        if (result !is ResultValue.Value || result.value !is BuildableScenario<*>) {
-            throw IllegalArgumentException("Script does not evaluate to scenario (got $result)")
-        }
+        when (val result = evalResult.valueOrThrow().returnValue) {
+            is ResultValue.Unit -> {
+                Log.error("Unit returned by the following script:\n\n{}", scenarioString)
 
-        @Suppress("UNCHECKED_CAST") return result.value as S
+                throw IllegalArgumentException("Script does not evaluate to scenario: it returned nothing")
+            }
+            is ResultValue.Error -> {
+                Log.error("Exception thrown in the following script:\n\n{}", scenarioString)
+
+                throw IllegalArgumentException("Script threw an exception while evaluating: $result", result.error)
+            }
+            else -> {
+                if (result !is ResultValue.Value || result.value !is BuildableScenario<*>) {
+                    Log.error("Non-scenario value returned by the following script:\n\n{}", scenarioString)
+
+                    throw IllegalArgumentException("Script does not evaluate to scenario: got $result")
+                }
+                @Suppress("UNCHECKED_CAST") return result.value as S
+            }
+        }
     }
 
+    companion object {
+        val Log = LoggerFactory.getLogger(SimpleScenarioParser::class.java)
+    }
 }
 
 @KotlinScript(fileExtension = "scn", compilationConfiguration = SimpleScenarioCompilationConfiguration::class)
