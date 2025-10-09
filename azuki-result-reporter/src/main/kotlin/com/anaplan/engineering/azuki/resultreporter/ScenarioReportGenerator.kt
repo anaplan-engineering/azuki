@@ -41,19 +41,24 @@ class ScenarioReportGenerator(
     private fun String?.version() = if (this == null) "" else " ($this)"
 
     private fun buildResultModel(results: List<ScenarioResult>, isPersistence: Boolean): ResultModel =
-        results.groupBy {
-            if (isPersistence) {
-                "${it.implementationName}${it.implementationVersion.version()} -> ${it.persistenceImplementationName}${it.persistenceImplementationVersion.version()}"
-            } else {
-                "${it.implementationName}${it.implementationVersion.version()}"
-            }
-        }.entries.associate { (impl, r) ->
-            impl to r.groupBy { it.scenarioType }.entries.associate { (type, s) ->
-                type to s.groupBy { it.state }.entries.associate { (state, t) ->
-                    state to t.size
+        ResultModel(
+            results.groupBy {
+                if (isPersistence) {
+                    "${it.implementationName}${it.implementationVersion.version()} -> ${it.persistenceImplementationName}${it.persistenceImplementationVersion.version()}"
+                } else {
+                    "${it.implementationName}${it.implementationVersion.version()}"
                 }
+            }.entries.associate { (impl, r) ->
+                impl to r.groupBy { it.scenarioType }.entries.associate { (type, s) ->
+                    type to s.groupBy { it.state }.entries.associate { (state, t) ->
+                        state to t.size
+                    }
+                }
+            },
+            JUnitScenarioResult.values().filter { resultType ->
+                results.any { it.state == resultType }
             }
-        }
+        )
 
 
     data class Model(
@@ -81,53 +86,125 @@ class ScenarioReportGenerator(
         }.toString())
     }
 
+    data class ResultModel(
+        val results: Map<String, Map<JUnitScenarioType, Map<JUnitScenarioResult, Int>>>,
+        val resultTypes: List<JUnitScenarioResult>
+    ) {
+        fun isNotEmpty() = results.isNotEmpty()
 
-    // nedd to merge cells etc
+        val categoryCounts = JUnitScenarioResult.Category.values().associateWith { category ->
+            resultTypes.count { category == it.category }
+        }.filter { (_, v) -> v != 0 }
+
+    }
+
     private fun BODY.addResultTable(resultModel: ResultModel) {
-        table {
-            tr {
-                th { +"Implementation" }
-                th { +"Scenario type" }
-                // TODO group by category
-                JUnitScenarioResult.values().forEach {
-                    th { +it.name }
+
+        val cellStyle = "border: 1px solid black; border-collapse: collapse;padding-left: 5px;padding-right: 5px;"
+
+        fun TR.ths(block : TH.() -> Unit = {}) {
+            th {
+                style = "$cellStyle;text-align: left;background-color:#eeeeee"
+                block()
+            }
+        }
+
+        fun TR.tds(block : TD.() -> Unit = {}) {
+            td {
+                style = cellStyle
+                block()
+            }
+        }
+
+        fun TR.tdt(block : TD.() -> Unit = {}) {
+            td {
+                style = "$cellStyle;font-style: italic;background-color:#eeeeee"
+                block()
+            }
+        }
+
+        fun TR.addCounts(counts: Map<JUnitScenarioResult, Int>, isTotal: Boolean = false) {
+            val total = counts.values.sum()
+            resultModel.resultTypes.forEach {
+                val count = counts[it] ?: 0
+                val pc = if (count == 0) "" else " (${(count * 100) / total}%)"
+                val text = "$count$pc"
+                if (isTotal) {
+                    tdt { +text }
+                } else {
+                    tds { +text }
                 }
             }
-            resultModel.entries.forEach { (impl, r) ->
-                r.entries.forEach { (type, counts) ->
-                    tr {
-                        td { +impl }
-                        td { +type.name }
-                        val total = counts.values.sum()
-                        JUnitScenarioResult.values().forEach {
-                            val count = counts[it] ?: 0
-                            val pc = if (count == 0) "" else " (${(count * 100) / total}%)"
-                            td { +"$count$pc" }
-                        }
+        }
+
+        table {
+            style = "border: 1px solid black; border-collapse: collapse;"
+            tr {
+                ths {
+                    rowSpan = "2"
+                    +"Implementation"
+                }
+                ths {
+                    rowSpan = "2"
+                    +"Scenario type"
+                }
+                resultModel.categoryCounts.forEach { (cat, count) ->
+                    ths {
+                        colSpan = "$count"
+                        +cat.name
                     }
                 }
             }
             tr {
-                th { +"Total"}
+                resultModel.resultTypes.forEach {
+                    ths { +it.name }
+                }
+            }
+            resultModel.results.entries.sortedBy { it.key }.forEach { (impl, r) ->
+                val sortedResults = r.entries.sortedBy { it.key }
+                sortedResults.first().let { (type, counts) ->
+                    tr {
+                        ths {
+                            rowSpan = "${r.size + 1}"
+                            +impl
+                        }
+                        tds { +type.name }
+                        addCounts(counts)
+                    }
+                }
+                sortedResults.drop(1).forEach { (type, counts) ->
+                    tr {
+                        tds { +type.name }
+                        addCounts(counts)
+                    }
+                }
                 val totals = mutableMapOf<JUnitScenarioResult, Int>()
-                resultModel.entries.forEach { (_, r) ->
+                    r.entries.forEach { (_, counts) ->
+                        counts.forEach { (result, count) ->
+                            totals[result] = (totals[result] ?: 0) + count
+                        }
+                    }
+                tr {
+                    tdt { +"Total" }
+                    addCounts(totals, isTotal = true)
+                }
+            }
+            tr {
+                tdt { +"Total" }
+                val totals = mutableMapOf<JUnitScenarioResult, Int>()
+                resultModel.results.entries.forEach { (_, r) ->
                     r.entries.forEach { (_, counts) ->
                         counts.forEach { (result, count) ->
                             totals[result] = (totals[result] ?: 0) + count
                         }
                     }
                 }
-                td { +"-" } // TODO might want totals by type
-                val grandTotal = totals.values.sum()
-                JUnitScenarioResult.values().forEach {
-                    val count = totals[it] ?: 0
-                    val pc = if (count == 0) "" else " (${(count * 100) / grandTotal}%)"
-                    td { +"$count$pc" }
-                }
+                tdt { +"-" }
+                addCounts(totals, isTotal = true)
             }
         }
     }
 
 }
 
-typealias ResultModel = Map<String, Map<JUnitScenarioType, Map<JUnitScenarioResult, Int>>>
+
