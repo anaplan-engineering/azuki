@@ -4,10 +4,10 @@ import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.Dire
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.GraphDeclaration
 import com.anaplan.engineering.azuki.graphs.dsl.DirectedGraphBlock
 import com.anaplan.engineering.azuki.graphs.dsl.UndirectedGraphBlock
-import com.anaplan.engineering.azuki.script.generation.ScriptGenDeclarationBuilder
+import com.anaplan.engineering.azuki.script.generation.NoEnvScriptGenerationDeclarationBuilder
 
 internal class GraphDeclarationBuilder<T : GraphDeclaration<*>>(declaration: T) :
-    ScriptGenDeclarationBuilder<T>(declaration) {
+    NoEnvScriptGenerationDeclarationBuilder<T>(declaration) {
 
     override fun getDeclarationScript(): String {
         val edges = declaration.edges.joinToString("\n") {

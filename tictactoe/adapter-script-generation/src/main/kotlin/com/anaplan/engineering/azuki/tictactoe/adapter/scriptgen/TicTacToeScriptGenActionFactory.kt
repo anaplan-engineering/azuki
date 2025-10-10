@@ -2,7 +2,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.system.UnsupportedAction
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
-import com.anaplan.engineering.azuki.script.generation.ScriptGenerationAction
+import com.anaplan.engineering.azuki.script.generation.NoEnvScriptGenerationAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.GameActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.PlayOrderActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
@@ -19,7 +19,7 @@ object TicTacToeScriptGenActionFactory : TicTacToeActionFactory {
     override val playOrder = PlayOrderScriptGenActionFactory
 }
 
-abstract class ScriptGenAction : ScriptGenerationAction {
+abstract class ScriptGenerationAction : NoEnvScriptGenerationAction {
 
     override val behavior = unsupportedBehavior
 }
@@ -27,19 +27,19 @@ abstract class ScriptGenAction : ScriptGenerationAction {
 object GameScriptGenActionFactory : GameActionFactory {
 
     override fun start(gameName: String, orderName: String) = StartAGameDeclarableAction(gameName, orderName)
-    override fun save(gameName: String) = object : ScriptGenAction() {
+    override fun save(gameName: String) = object : ScriptGenerationAction() {
 
         override fun getActionScript() =
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeRegardlessOf::saveGame, gameName)
     }
 
-    override fun close(gameName: String) = object : ScriptGenAction() {
+    override fun close(gameName: String) = object : ScriptGenerationAction() {
 
         override fun getActionScript() =
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeRegardlessOf::closeGame, gameName)
     }
 
-    override fun load(gameName: String) = object : ScriptGenAction() {
+    override fun load(gameName: String) = object : ScriptGenerationAction() {
 
         override fun getActionScript() =
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeRegardlessOf::loadGame, gameName)
@@ -49,7 +49,7 @@ object GameScriptGenActionFactory : GameActionFactory {
     override fun move(gameName: String, playerName: String, position: Position) = Move(gameName, playerName, position)
 
     class Move(gameName: String, playerName: String, position: Position) :
-        PlayerMoveDeclarableAction(gameName, playerName, position), ScriptGenerationAction {
+        PlayerMoveDeclarableAction(gameName, playerName, position), NoEnvScriptGenerationAction {
 
         override fun getActionScript() =
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeWhen::placeToken, gameName, playerName, position)

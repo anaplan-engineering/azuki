@@ -25,15 +25,15 @@ interface ScriptGenerationCheckState {
     fun getChecks(): List<ScriptGenerationCheck>
 }
 
-fun interface ScriptGenerationCheckStateFactory<S : ScriptGenerationCheckState> {
+fun interface ScriptGenerationCheckStateFactory<S : ScriptGenerationCheckState, E : ScriptGenerationEnvironment> {
 
-    fun create(): S
+    fun create(environment: E): S
 }
 
-class ScriptGenerationCheckStateBuilder<S : ScriptGenerationCheckState>(private val factory: ScriptGenerationCheckStateFactory<S>) {
+class ScriptGenerationCheckStateBuilder<S : ScriptGenerationCheckState, E : ScriptGenerationEnvironment>(private val factory: ScriptGenerationCheckStateFactory<S, E>) {
 
-    fun build(checks: List<Check>): List<ScriptGenerationCheck> {
-        val checkState = factory.create()
+    fun build(environment: E, checks: List<Check>): List<ScriptGenerationCheck> {
+        val checkState = factory.create(environment)
 
         checks.forEach {
             if (it !is ScriptGenerationCheck && it !is ComposableCheck<*> && it !is UnsupportedCheck) throw IllegalArgumentException(

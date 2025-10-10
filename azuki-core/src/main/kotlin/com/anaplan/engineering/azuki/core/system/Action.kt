@@ -7,11 +7,11 @@ interface ActionFactory
 
 interface Action : ReifiedBehavior
 
-interface ParallelActionFactory<T : Action> {
+interface ParallelActionFactory<out T : Action> {
     fun createParallelAction(actions: List<List<Action>>): ParallelAction<T>
 }
 
-abstract class ParallelAction<T : Action>(
+abstract class ParallelAction<out T : Action>(
     val actions: List<List<T>>
 ) : Action {
     override val behavior: Behavior = parallel

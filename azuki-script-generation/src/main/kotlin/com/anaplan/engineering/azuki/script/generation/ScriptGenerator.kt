@@ -12,11 +12,13 @@ abstract class ScriptGenerator<
     AGF : ActionGeneratorFactory,
     S : DeclarationState,
     CS : ScriptGenerationCheckState,
+    E: ScriptGenerationEnvironment,
     >(
     private val actionFactory: AF,
     private val checkFactory: CF,
     private val declarationStateFactory: DeclarationStateFactory<S>,
-    private val checkStateFactory: ScriptGenerationCheckStateFactory<CS>,
+    private val checkStateFactory: ScriptGenerationCheckStateFactory<CS, E>,
+    private val environment: E,
 ) {
     fun generateScript(scenario: BuildableScenario<AF>): String {
         val script = generateUnformattedScript(scenario)
@@ -39,17 +41,13 @@ abstract class ScriptGenerator<
         given: String, whenever: String, scenario: BuildableScenario<AF>
     ): String = throw UnsupportedOperationException("Unsupported scenario type ${scenario::class}")
 
-    open fun getChecks(scenario: VerifiableScenario<AF, CF>): List<Check> =
-        scenario.checks(checkFactory)
+    fun getChecks(scenario: VerifiableScenario<AF, CF>): List<Check> = scenario.checks(checkFactory)
 
-    open fun getValidationChecks(answer: ValidatableAnswer<*, CF>): List<Check> =
-        answer.createValidationChecks(checkFactory)
+    fun getValidationChecks(answer: ValidatableAnswer<*, CF>): List<Check> = answer.createValidationChecks(checkFactory)
 
-    open fun getChecksFromAnswer(answer: Answer<*, CF>): List<Check> =
-        answer.createChecks(checkFactory)
+    fun getChecksFromAnswer(answer: Answer<*, CF>): List<Check> = answer.createChecks(checkFactory)
 
-    fun generateThenScript(scenario: VerifiableScenario<AF, CF>) =
-        generateThenScriptFromChecks(getChecks(scenario))
+    fun generateThenScript(scenario: VerifiableScenario<AF, CF>) = generateThenScriptFromChecks(getChecks(scenario))
 
     fun generateThenScript(answers: List<Answer<*, CF>>, useValidationChecks: Boolean = false) =
         generateThenScriptFromChecks(answers.flatMap {
@@ -61,7 +59,7 @@ abstract class ScriptGenerator<
         })
 
     fun generateThenScriptFromChecks(checks: List<Check>): String {
-        val body = ScriptGenerationCheckStateBuilder(checkStateFactory).build(checks)
+        val body = ScriptGenerationCheckStateBuilder(checkStateFactory).build(environment, checks)
 
         return if (body.isEmpty()) {
             throw IllegalArgumentException("No checks to generate!")
@@ -74,8 +72,7 @@ abstract class ScriptGenerator<
         }
     }
 
-    fun generateVerifiableScenarioScript(given: String, whenever: String, then: String) =
-        """
+    fun generateVerifiableScenarioScript(given: String, whenever: String, then: String) = """
             verifiableScenario {
                 $given
                 $whenever
@@ -83,10 +80,9 @@ abstract class ScriptGenerator<
             }
         """
 
-    open fun getDeclarationActions(scenario: BuildableScenario<AF>): List<Action> =
-        scenario.declarations(actionFactory)
+    fun getDeclarationActions(scenario: BuildableScenario<AF>): List<Action> = scenario.declarations(actionFactory)
 
-    open fun getBuildActions(scenario: BuildableScenario<AF>): List<ScriptGenerationAction> =
+    fun getBuildActions(scenario: BuildableScenario<AF>): List<ScriptGenerationAction<E>> =
         scenario.commands(actionFactory).map(Action::toScriptGenAction)
 
     fun generateGivenScript(scenario: BuildableScenario<AF>): String =
@@ -98,51 +94,44 @@ abstract class ScriptGenerator<
             throw IllegalArgumentException("Scriptgen is missing action")
         }
         val declarableActions = definitions.map { toDeclarableAction<S>(it) }
-        val declarationBuilders = DeclarationStateBuilder(declarationStateFactory).build(declarableActions).map { declarationBuilder(it) }
-        declarationBuilders.forEach { onDeclarationBuilder(it) }
+        val declarationBuilders =
+            DeclarationStateBuilder(declarationStateFactory).build(declarableActions).map { declarationBuilder(it) }
 
         return if (declarationBuilders.isEmpty()) {
             ""
         } else {
             """
                 given {
-                    ${declarationBuilders.joinToString("\n") { it.getDeclarationScript() }}
+                    ${declarationBuilders.joinToString("\n") { it.getDeclarationScript(environment) }}
                 }
             """
         }
     }
 
     private fun <D : Declaration> declarationBuilder(declaration: D) =
-        declarationBuilderFactory.createBuilder<D, ScriptGenDeclarationBuilder<D>>(declaration)
-
-    /**
-     * Hook called every time the script generator processes a declaration, containing the respective builder.
-     */
-    protected open fun <D: Declaration> onDeclarationBuilder(declarationBuilder: ScriptGenDeclarationBuilder<D>) {}
+        declarationBuilderFactory.createBuilder<D, ScriptGenerationDeclarationBuilder<E, D>>(declaration)
 
     fun generateWheneverScript(scenario: BuildableScenario<AF>) =
         generateWheneverScriptFromActions(getBuildActions(scenario))
 
-    fun generateWheneverScriptFromActions(buildActions: List<ScriptGenerationAction>) =
-        if (buildActions.isEmpty()) {
-            ""
-        } else {
-            """
-                whenever {
-                    ${buildActions.joinToString("\n") { it.getActionScript() }}
-                }
-            """
-        }
+    fun generateWheneverScriptFromActions(buildActions: List<ScriptGenerationAction<E>>) = if (buildActions.isEmpty()) {
+        ""
+    } else {
+        """
+            whenever {
+                ${buildActions.joinToString("\n") { it.getActionScript(environment) }}
+            }
+        """
+    }
 
-    @Deprecated(
-        message="Use the version with separate generate blocks",
-        replaceWith = ReplaceWith("""generateOracleScenarioScript(given, whenever, "", generate, verify)""")
-    )
+    @Deprecated(message = "Use the version with separate generate blocks",
+        replaceWith = ReplaceWith("""generateOracleScenarioScript(given, whenever, "", generate, verify)"""))
     fun generateOracleScenarioScript(given: String, whenever: String, generate: String, verify: String) =
         generateOracleScenarioScript(given, whenever, "", generate, verify)
 
-    fun generateOracleScenarioScript(given: String, whenever: String, givenGenerate: String, whenGenerate: String, verify: String) =
-        """
+    fun generateOracleScenarioScript(
+        given: String, whenever: String, givenGenerate: String, whenGenerate: String, verify: String
+    ) = """
             oracleScenario {
                 $given
                 $givenGenerate
@@ -152,8 +141,7 @@ abstract class ScriptGenerator<
             }
         """
 
-    fun generateQueryScenarioScript(given: String, whenever: String, query: String) =
-        """
+    fun generateQueryScenarioScript(given: String, whenever: String, query: String) = """
             queryScenario {
                 $given
                 $whenever
@@ -163,7 +151,7 @@ abstract class ScriptGenerator<
 
     companion object {
         private val declarationBuilderFactory =
-            DeclarationBuilderFactory(ScriptGenDeclarationBuilderFactory::class.java)
+            DeclarationBuilderFactory(ScriptGenerationDeclarationBuilderFactory::class.java)
     }
 }
 
@@ -174,43 +162,43 @@ abstract class VerificationCapableScriptGenerator<
     AGF : ActionGeneratorFactory,
     S : DeclarationState,
     CS : ScriptGenerationCheckState,
+    E: ScriptGenerationEnvironment,
     >(
     actionFactory: AF,
     checkFactory: CF,
     declarationStateFactory: DeclarationStateFactory<S>,
-    checkStateFactory: ScriptGenerationCheckStateFactory<CS>,
+    checkStateFactory: ScriptGenerationCheckStateFactory<CS, E>,
+    environment: E,
     private val actionGeneratorFactory: AGF,
     private val queryQueryFactory: QF,
     private val verifyQueryFactory: QF
-    ): ScriptGenerator<AF, CF, QF, AGF, S, CS>(
-        actionFactory,
-        checkFactory,
-        declarationStateFactory,
-        checkStateFactory,
-    ) {
+) : ScriptGenerator<AF, CF, QF, AGF, S, CS, E>(
+    actionFactory,
+    checkFactory,
+    declarationStateFactory,
+    checkStateFactory,
+    environment
+) {
 
     @Suppress("UNCHECKED_CAST")
     override fun generateNonVerifiableScenario(
-        given: String,
-        whenever: String,
-        scenario: BuildableScenario<AF>
-    ): String =
-        when (scenario) {
-            is OracleScenario<*, *, *> -> {
-                val oracleScenario = scenario as OracleScenario<AF, QF, AGF>
-                val givenGenerate =
-                    generateGenerateScript(oracleScenario.givenActionGenerations(actionGeneratorFactory))
-                val whenGenerate = generateGenerateScript(oracleScenario.whenActionGenerations(actionGeneratorFactory))
-                val verify = generateVerifyScript(oracleScenario)
-                generateOracleScenarioScript(given, whenever, givenGenerate, whenGenerate, verify)
-            }
-            is ScenarioWithQueries<*, *> -> {
-                val query =
-                    generateQueryScript(scenario as ScenarioWithQueries<AF, QF>)
-                generateQueryScenarioScript(given, whenever, query)
-            }
-            else -> throw IllegalArgumentException("Unsupported scenario $scenario")
+        given: String, whenever: String, scenario: BuildableScenario<AF>
+    ): String = when (scenario) {
+        is OracleScenario<*, *, *> -> {
+            val oracleScenario = scenario as OracleScenario<AF, QF, AGF>
+            val givenGenerate = generateGenerateScript(oracleScenario.givenActionGenerations(actionGeneratorFactory))
+            val whenGenerate = generateGenerateScript(oracleScenario.whenActionGenerations(actionGeneratorFactory))
+            val verify = generateVerifyScript(oracleScenario)
+            generateOracleScenarioScript(given, whenever, givenGenerate, whenGenerate, verify)
         }
+
+        is ScenarioWithQueries<*, *> -> {
+            val query = generateQueryScript(scenario as ScenarioWithQueries<AF, QF>)
+            generateQueryScenarioScript(given, whenever, query)
+        }
+
+        else -> throw IllegalArgumentException("Unsupported scenario $scenario")
+    }
 
     fun generateGenerateScript(generations: List<List<ActionGenerator>>) =
         generations.joinToString("\n") { generation ->
@@ -229,30 +217,28 @@ abstract class VerificationCapableScriptGenerator<
     fun generateVerifyScript(scenario: OracleScenario<AF, QF, AGF>) =
         generateVerifyScriptFromQueries(scenario.queries(verifyQueryFactory))
 
-    fun generateVerifyScriptFromQueries(scenarioQueries: ScenarioQueries) =
-        if (scenarioQueries.isEmpty()) {
-            throw IllegalArgumentException("No queries for oracle scenario")
-        } else {
-            """
+    fun generateVerifyScriptFromQueries(scenarioQueries: ScenarioQueries) = if (scenarioQueries.isEmpty()) {
+        throw IllegalArgumentException("No queries for oracle scenario")
+    } else {
+        """
             verify {
                 ${generateVerifyOrQueryScriptBody(scenarioQueries)}
             }
             """
-        }
+    }
 
     fun generateQueryScript(scenario: ScenarioWithQueries<AF, QF>) =
         generateQueryScriptFromQueries(scenario.queries(queryQueryFactory))
 
-    fun generateQueryScriptFromQueries(scenarioQueries: ScenarioQueries) =
-        if (scenarioQueries.isEmpty()) {
-            throw IllegalArgumentException("No queries for verify script")
-        } else {
-            """
+    fun generateQueryScriptFromQueries(scenarioQueries: ScenarioQueries) = if (scenarioQueries.isEmpty()) {
+        throw IllegalArgumentException("No queries for verify script")
+    } else {
+        """
             query {
                 ${generateVerifyOrQueryScriptBody(scenarioQueries)}
             }
             """
-        }
+    }
 
     private fun generateVerifyOrQueryScriptBody(scenarioQueries: ScenarioQueries): String {
         val queries = scenarioQueries.queries.joinToString("\n") { (it as ScriptGenerationQuery<*>).getQueryScript() }

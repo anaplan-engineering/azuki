@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.core.system.ActionFactory
 import com.anaplan.engineering.azuki.core.system.ParallelActionFactory
 import com.anaplan.engineering.azuki.core.system.UnsupportedAction
 
-interface GraphActionFactory<A : Action> : ActionFactory, ParallelActionFactory<A> {
+interface GraphActionFactory<out A : Action> : ActionFactory, ParallelActionFactory<A> {
 
     val undirected: UndirectedGraphActionFactory
     val directed: DirectedGraphActionFactory

@@ -10,11 +10,12 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDecl
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeThen
 
 object TicTacToeScriptGenerator :
-    ScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeCheckState>(
+    ScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeCheckState, NoScriptGenerationEnvironment>(
         TicTacToeScriptGenActionFactory,
         TicTacToeScriptGenCheckFactory,
         TicTacToeDeclarationState.Factory,
-        ::TicTacToeCheckState)
+        { TicTacToeCheckState() },
+        NoScriptGenerationEnvironment)
 
 internal const val Width = 3
 internal const val Height = 3

@@ -1,13 +1,14 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
-import com.anaplan.engineering.azuki.script.generation.ScriptGenDeclarationBuilder
-import com.anaplan.engineering.azuki.script.generation.ScriptGenDeclarationBuilderFactory
+import com.anaplan.engineering.azuki.script.generation.NoEnvScriptGenerationDeclarationBuilder
+import com.anaplan.engineering.azuki.script.generation.NoScriptGenerationEnvironment
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationDeclarationBuilderFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.pretty
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.declaration.GameDeclaration
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeGiven
 
-class GameScriptGenDeclarationBuilder(declaration: GameDeclaration) :
-    ScriptGenDeclarationBuilder<GameDeclaration>(declaration) {
+class GameScriptGenerationDeclarationBuilder(declaration: GameDeclaration) :
+    NoEnvScriptGenerationDeclarationBuilder<GameDeclaration>(declaration) {
     private val newGameOrder: kotlin.reflect.KFunction3<TicTacToeGiven, String, String, Unit> = TicTacToeGiven::thereIsANewGame
     private val gameOrder: kotlin.reflect.KFunction4<TicTacToeGiven, String, String, String, Unit> = TicTacToeGiven::thereIsAGame
 
@@ -27,11 +28,11 @@ class GameScriptGenDeclarationBuilder(declaration: GameDeclaration) :
             )
         }
 
-    class Factory : ScriptGenDeclarationBuilderFactory<GameDeclaration> {
+    class Factory : ScriptGenerationDeclarationBuilderFactory<NoScriptGenerationEnvironment, GameDeclaration> {
 
         override val declarationClass = GameDeclaration::class.java
 
-        override fun create(declaration: GameDeclaration): ScriptGenDeclarationBuilder<GameDeclaration> =
-            GameScriptGenDeclarationBuilder(declaration)
+        override fun create(declaration: GameDeclaration): NoEnvScriptGenerationDeclarationBuilder<GameDeclaration> =
+            GameScriptGenerationDeclarationBuilder(declaration)
     }
 }
