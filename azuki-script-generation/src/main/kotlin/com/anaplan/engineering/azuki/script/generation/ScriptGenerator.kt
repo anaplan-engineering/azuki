@@ -99,6 +99,7 @@ abstract class ScriptGenerator<
         }
         val declarableActions = definitions.map { toDeclarableAction<S>(it) }
         val declarationBuilders = DeclarationStateBuilder(declarationStateFactory).build(declarableActions).map { declarationBuilder(it) }
+        declarationBuilders.forEach { onDeclarationBuilder(it) }
 
         return if (declarationBuilders.isEmpty()) {
             ""
@@ -111,8 +112,13 @@ abstract class ScriptGenerator<
         }
     }
 
-    protected open fun <D : Declaration> declarationBuilder(declaration: D) =
+    private fun <D : Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, ScriptGenDeclarationBuilder<D>>(declaration)
+
+    /**
+     * Hook called every time the script generator processes a declaration, containing the respective builder.
+     */
+    protected open fun <D: Declaration> onDeclarationBuilder(declarationBuilder: ScriptGenDeclarationBuilder<D>) {}
 
     fun generateWheneverScript(scenario: BuildableScenario<AF>) =
         generateWheneverScriptFromActions(getBuildActions(scenario))
