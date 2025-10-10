@@ -98,19 +98,20 @@ abstract class ScriptGenerator<
             throw IllegalArgumentException("Scriptgen is missing action")
         }
         val declarableActions = definitions.map { toDeclarableAction<S>(it) }
-        val declarations = DeclarationStateBuilder(declarationStateFactory).build(declarableActions)
-        return if (declarations.isEmpty()) {
+        val declarationBuilders = DeclarationStateBuilder(declarationStateFactory).build(declarableActions).map { declarationBuilder(it) }
+
+        return if (declarationBuilders.isEmpty()) {
             ""
         } else {
             """
                 given {
-                    ${declarations.joinToString("\n") { declarationBuilder(it).getDeclarationScript() }}
+                    ${declarationBuilders.joinToString("\n") { it.getDeclarationScript() }}
                 }
             """
         }
     }
 
-    private fun <D : Declaration> declarationBuilder(declaration: D) =
+    protected open fun <D : Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, ScriptGenDeclarationBuilder<D>>(declaration)
 
     fun generateWheneverScript(scenario: BuildableScenario<AF>) =
