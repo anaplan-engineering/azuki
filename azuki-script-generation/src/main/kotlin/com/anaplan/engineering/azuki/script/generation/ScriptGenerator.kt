@@ -61,25 +61,24 @@ abstract class ScriptGenerator<
     fun generateThenScriptFromChecks(checks: List<Check>, customEnvironment: E? = null): String {
         val environment = customEnvironment ?: environmentFactory.createForThen()
 
-        val body = processChecks(checks, environment)
-        return if (body.isEmpty()) {
+        checks.forEach {
+            require(it !is UnsupportedCheck) { "unsupported check: $it" }
+            require(it is ScriptGenerationCheck) { "check $it is not a ScriptGenerationCheck" }
+        }
+        checks.filterIsInstance<ComposableScriptGenerationCheck<E>>().forEach { it.composeInto(environment) }
+        val basicChecks = checks.filterIsInstance<BasicScriptGenerationCheck>() + environment.composedChecks
+        val envChecks = checks.filterIsInstance<EnvScriptGenerationCheck<E>>()
+
+        return if (basicChecks.isEmpty() && envChecks.isEmpty()) {
             throw IllegalArgumentException("No checks to generate!")
         } else {
             """
                 then {
-                    ${body.joinToString("\n") { it.getCheckScript() }}
+                    ${basicChecks.joinToString("\n") { it.getCheckScript() }}
+                    ${envChecks.joinToString("\n") { it.getCheckScript(environment) }}
                 }
             """
         }
-    }
-
-    private fun processChecks(checks: List<Check>, environment: E): List<ScriptGenerationCheck> {
-        checks.forEach {
-            require(it !is UnsupportedCheck) { "unsupported check: $it" }
-            require(it is ScriptGenerationCheck || it is ComposableCheck<*>) { "check $it is not generable" }
-        }
-        checks.filterIsInstance<ComposableCheck<E>>().forEach { it.composeInto(environment) }
-        return checks.filterIsInstance<ScriptGenerationCheck>() + environment.composedChecks
     }
 
     fun generateVerifiableScenarioScript(given: String, whenever: String, then: String) = """

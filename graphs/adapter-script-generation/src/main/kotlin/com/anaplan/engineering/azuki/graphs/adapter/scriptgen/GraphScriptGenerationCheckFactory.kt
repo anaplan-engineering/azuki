@@ -2,42 +2,42 @@ package com.anaplan.engineering.azuki.graphs.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.graphs.adapter.api.*
 import com.anaplan.engineering.azuki.graphs.dsl.check.GraphChecks
-import com.anaplan.engineering.azuki.script.generation.ScriptGenerationCheck
+import com.anaplan.engineering.azuki.script.generation.BasicScriptGenerationCheck
 
-object GraphScriptGenCheckFactory : GraphCheckFactory {
+object GraphScriptGenerationCheckFactory : GraphCheckFactory {
 
-    override fun hasVertexCount(graphName: String, count: Long): ScriptGenerationCheck =
+    override fun hasVertexCount(graphName: String, count: Long): BasicScriptGenerationCheck =
         HasVertexCountCheck(graphName, count)
 
     override fun hasShortestPath(
         graphName: String,
         path: List<Any>,
-    ): ScriptGenerationCheck = HasShortestPathCheck(graphName, path)
+    ): BasicScriptGenerationCheck = HasShortestPathCheck(graphName, path)
 
     override fun hasCycles(
         graphName: String,
         hasCycles: Boolean,
-    ): ScriptGenerationCheck = HasCyclesCheck(graphName, hasCycles)
+    ): BasicScriptGenerationCheck = HasCyclesCheck(graphName, hasCycles)
 
     override fun hasSimpleCycleCount(
         graphName: String,
         count: Long,
-    ): ScriptGenerationCheck = HasSimpleCycleCountCheck(graphName, count)
+    ): BasicScriptGenerationCheck = HasSimpleCycleCountCheck(graphName, count)
 
     override fun pathExists(
         graphName: String,
         from: Any,
         to: Any,
         result: Boolean
-    ): ScriptGenerationCheck = PathExistsCheck(graphName, from, to, result)
+    ): BasicScriptGenerationCheck = PathExistsCheck(graphName, from, to, result)
 
     override fun hasEdgeCount(
         graphName: String,
         count: Long
-    ): ScriptGenerationCheck = HasEdgeCount(graphName, count)
+    ): BasicScriptGenerationCheck = HasEdgeCount(graphName, count)
 
     private class HasVertexCountCheck(private val graphName: String, private val count: Long) :
-        GetVertexCountBehaviour(), ScriptGenerationCheck {
+        GetVertexCountBehaviour(), BasicScriptGenerationCheck {
         override fun getCheckScript() =
             GraphScriptingHelper.scriptifyFunction(GraphChecks::hasVertexCount, graphName, count)
     }
@@ -46,7 +46,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         private val graphName: String,
         private val path: List<Any>,
     ) :
-        GetShortestPathBehaviour(), ScriptGenerationCheck {
+        GetShortestPathBehaviour(), BasicScriptGenerationCheck {
         override fun getCheckScript() =
             GraphScriptingHelper.scriptifyFunction(GraphChecks::hasShortestPath, graphName, path)
     }
@@ -55,7 +55,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         private val graphName: String,
         private val hasCycles: Boolean,
     ) :
-        HasCyclesBehaviour(), ScriptGenerationCheck {
+        HasCyclesBehaviour(), BasicScriptGenerationCheck {
         override fun getCheckScript() =
             GraphScriptingHelper.scriptifyFunction(GraphChecks::hasCycles, graphName, hasCycles)
     }
@@ -64,7 +64,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         private val graphName: String,
         private val count: Long
     ) :
-        GetCycleCountBehaviour(), ScriptGenerationCheck {
+        GetCycleCountBehaviour(), BasicScriptGenerationCheck {
         override fun getCheckScript() =
             GraphScriptingHelper.scriptifyFunction(GraphChecks::hasSimpleCycleCount, graphName, count)
     }
@@ -75,7 +75,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         private val to: Any,
         private val result: Boolean,
     ) :
-        PathExistsBehaviour(), ScriptGenerationCheck {
+        PathExistsBehaviour(), BasicScriptGenerationCheck {
         override fun getCheckScript() =
             GraphScriptingHelper.scriptifyFunction(GraphChecks::pathExists, graphName, from, to, result)
     }
@@ -84,7 +84,7 @@ object GraphScriptGenCheckFactory : GraphCheckFactory {
         private val graphName: String,
         private val count: Long
     ) :
-        GetEdgeCountBehaviour(), ScriptGenerationCheck {
+        GetEdgeCountBehaviour(), BasicScriptGenerationCheck {
         override fun getCheckScript() =
             GraphScriptingHelper.scriptifyFunction(GraphChecks::hasEdgeCount, graphName, count)
     }

@@ -1,7 +1,5 @@
 package com.anaplan.engineering.azuki.script.generation
 
-import com.anaplan.engineering.azuki.core.system.Check
-
 /**
  * Environment persisted through the script generation process.
  */
@@ -9,8 +7,9 @@ interface ScriptGenerationEnvironment {
 
     /**
      * The list of checks produced from composing ComposableChecks through this environment.
+     * Having been composed through the environment, they do not need access to it again.
      */
-    val composedChecks: List<ScriptGenerationCheck>
+    val composedChecks: List<BasicScriptGenerationCheck>
 }
 
 /**
@@ -18,7 +17,7 @@ interface ScriptGenerationEnvironment {
  */
 object NoScriptGenerationEnvironment : ScriptGenerationEnvironment {
 
-    override val composedChecks = listOf<ScriptGenerationCheck>()
+    override val composedChecks = listOf<BasicScriptGenerationCheck>()
 }
 
 fun interface ScriptGenerationEnvironmentFactory<E : ScriptGenerationEnvironment> {
@@ -45,16 +44,4 @@ fun interface ScriptGenerationEnvironmentFactory<E : ScriptGenerationEnvironment
      * Creates a throwaway environment for scriptifying a 'then' block in isolation.
      */
     fun createForThen(): E = create()
-}
-
-/**
- * A check that can't be generated directly, but instead needs to be composed using an environment
- */
-interface ComposableCheck<E : ScriptGenerationEnvironment> : Check {
-
-    /**
-     * Composes the check into the environment.
-     * The final check resulting from this check (and possibly other checks) will be available in its composableChecks.
-     */
-    fun composeInto(environment: E)
 }

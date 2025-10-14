@@ -13,9 +13,9 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.action.StartA
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeRegardlessOf
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeWhen
 
-object TicTacToeScriptGenActionFactory : TicTacToeActionFactory {
+object TicTacToeScriptGenerationActionFactory : TicTacToeActionFactory {
 
-    override val game = GameScriptGenActionFactory
+    override val game = GameScriptGenerationActionFactory
     override val playOrder = PlayOrderScriptGenActionFactory
 }
 
@@ -24,7 +24,7 @@ abstract class TicTacToeScriptGenerationAction : IgnoreEnvScriptGenerationAction
     override val behavior = unsupportedBehavior
 }
 
-object GameScriptGenActionFactory : GameActionFactory {
+object GameScriptGenerationActionFactory : GameActionFactory {
 
     override fun start(gameName: String, orderName: String) = StartAGameDeclarableAction(gameName, orderName)
     override fun save(gameName: String) = object : TicTacToeScriptGenerationAction() {
