@@ -9,7 +9,7 @@ import org.junit.Assert
 import org.slf4j.LoggerFactory
 
 open class ScriptGenerationTestHelper<S: BuildableScenario<AF>, AF: ActionFactory>(
-    private val generator: ScriptGenerator<AF, *, *, *, *, *, *>,
+    private val generator: ScriptGenerator<AF, *, *, *, *, *>,
     private val parser: ScenarioParser<S> = SimpleScenarioParser(),
 ) {
     /**

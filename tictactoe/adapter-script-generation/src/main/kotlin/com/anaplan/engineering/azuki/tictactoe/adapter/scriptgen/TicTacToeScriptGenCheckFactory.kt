@@ -12,7 +12,7 @@ object TicTacToeScriptGenCheckFactory : TicTacToeCheckFactory {
     override val player = PlayerScriptGenCheckFactory
 }
 
-abstract class TicTacToeComposableCheck : ComposableCheck<TicTacToeCheckState> {
+abstract class TicTacToeComposableCheck : ComposableCheck<TicTacToeGenerationEnvironment> {
 
     override val behavior = unsupportedBehavior
 }
@@ -32,15 +32,15 @@ object GameScriptGenCheckFactory : GameCheckFactory {
 
     override fun hasToken(gameName: String, playerName: String, position: Position) = object : TicTacToeComposableCheck() {
 
-        override fun composeInto(state: TicTacToeCheckState) {
-            state.addToken(gameName, playerName, position)
+        override fun composeInto(state: TicTacToeGenerationEnvironment) {
+            state.boardCheck(gameName) { addToken(playerName, position) }
         }
     }
 
     override fun hasSpace(gameName: String, position: Position) = object : TicTacToeComposableCheck() {
 
-        override fun composeInto(state: TicTacToeCheckState) {
-            state.addSpace(gameName, position)
+        override fun composeInto(state: TicTacToeGenerationEnvironment) {
+            state.boardCheck(gameName) { addSpace(position) }
         }
     }
 

@@ -99,7 +99,7 @@ class SampleSystem(
 
         private val declarationBuilderFactory = DeclarationBuilderFactory(SampleDeclarationBuilderFactory::class.java)
 
-        private val declarationStateBuilder = DeclarationStateBuilder(TicTacToeDeclarationState.Factory)
+        private val declarationStateBuilder = DeclarationStateBuilder(::TicTacToeDeclarationState)
     }
 
     private val objectMapper = ObjectMapper()

@@ -25,33 +25,6 @@ interface ScriptGenerationCheckState {
     fun getChecks(): List<ScriptGenerationCheck>
 }
 
-fun interface ScriptGenerationCheckStateFactory<S : ScriptGenerationCheckState, E : ScriptGenerationEnvironment> {
-
-    fun create(environment: E): S
-}
-
-class ScriptGenerationCheckStateBuilder<S : ScriptGenerationCheckState, E : ScriptGenerationEnvironment>(private val factory: ScriptGenerationCheckStateFactory<S, E>) {
-
-    fun build(environment: E, checks: List<Check>): List<ScriptGenerationCheck> {
-        val checkState = factory.create(environment)
-
-        checks.forEach {
-            if (it !is ScriptGenerationCheck && it !is ComposableCheck<*> && it !is UnsupportedCheck) throw IllegalArgumentException(
-                "unsupported check: $it")
-        }
-
-        val passThrough = checks.filterIsInstance<ScriptGenerationCheck>()
-        val toCompose = checks.filterIsInstance<ComposableCheck<S>>()
-        val unsupported = checks.filterIsInstance<UnsupportedCheck>()
-
-        checkState.addChecks(passThrough)
-        toCompose.forEach { it.composeInto(checkState) }
-        repeat(unsupported.size) { checkState.unsupportedCheck() }
-
-        return checkState.getChecks()
-    }
-}
-
 /**
  * Check state with most of the common functionality already provided.
  */
@@ -76,12 +49,4 @@ abstract class AbstractScriptGenerationCheckState : ScriptGenerationCheckState {
 class SimpleScriptGenerationCheckState : AbstractScriptGenerationCheckState() {
 
     override fun getChecks(): List<ScriptGenerationCheck> = finishedChecks
-}
-
-/**
- * A check that can't be generated directly, but instead needs to be composed using a check state.
- */
-interface ComposableCheck<S : ScriptGenerationCheckState> : Check {
-
-    fun composeInto(state: S)
 }

@@ -3,19 +3,24 @@ package com.anaplan.engineering.azuki.script.generation
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.core.system.ParallelAction
 
-interface ScriptGenerationAction<in E: ScriptGenerationEnvironment> : Action {
+interface ScriptGenerationAction<in E : ScriptGenerationEnvironment> : Action {
 
     fun getActionScript(environment: E): String
 }
 
-interface NoEnvScriptGenerationAction : ScriptGenerationAction<NoScriptGenerationEnvironment> {
+/**
+ * Script generation action that doesn't use its environment.
+ */
+interface IgnoreEnvScriptGenerationAction<in E : ScriptGenerationEnvironment> : ScriptGenerationAction<E> {
 
     fun getActionScript(): String
 
-    override fun getActionScript(environment: NoScriptGenerationEnvironment) = getActionScript()
+    override fun getActionScript(environment: E) = getActionScript()
 }
 
-class ScriptGenerationParallelAction<in E: ScriptGenerationEnvironment>(actions: List<List<ScriptGenerationAction<E>>>) :
+typealias NoEnvScriptGenerationAction = IgnoreEnvScriptGenerationAction<NoScriptGenerationEnvironment>
+
+class ScriptGenerationParallelAction<in E : ScriptGenerationEnvironment>(actions: List<List<ScriptGenerationAction<E>>>) :
     ParallelAction<ScriptGenerationAction<E>>(actions), ScriptGenerationAction<E> {
 
     override fun getActionScript(environment: E) = """
@@ -32,5 +37,5 @@ class ScriptGenerationParallelAction<in E: ScriptGenerationEnvironment>(actions:
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <E: ScriptGenerationEnvironment> Action.toScriptGenAction() =
+fun <E : ScriptGenerationEnvironment> Action.toScriptGenAction() =
     this as? ScriptGenerationAction<E> ?: throw IllegalArgumentException("Incompatible action: $this")

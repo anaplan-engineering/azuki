@@ -18,16 +18,17 @@ abstract class ScriptGenerationDeclarationBuilder<E : ScriptGenerationEnvironmen
      * The given generation environment may be referenced or updated with information from the declaration.
      */
     abstract fun getDeclarationScript(environment: E): String
-
 }
 
 /**
- * Simplified declaration builder stub for when we don't need an environment.
+ * Simplified declaration builder stub for when we don't need to use an environment.
  */
-abstract class NoEnvScriptGenerationDeclarationBuilder<D : Declaration>(declaration: D) :
-    ScriptGenerationDeclarationBuilder<NoScriptGenerationEnvironment, D>(declaration) {
+abstract class IgnoreEnvScriptGenerationDeclarationBuilder<E: ScriptGenerationEnvironment, D : Declaration>(declaration: D) :
+    ScriptGenerationDeclarationBuilder<E, D>(declaration) {
 
     abstract fun getDeclarationScript(): String
 
-    override fun getDeclarationScript(environment: NoScriptGenerationEnvironment) = getDeclarationScript()
+    override fun getDeclarationScript(environment: E) = getDeclarationScript()
 }
+
+typealias NoEnvScriptGenerationDeclarationBuilder<D> = IgnoreEnvScriptGenerationDeclarationBuilder<NoScriptGenerationEnvironment, D>

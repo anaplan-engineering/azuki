@@ -10,12 +10,16 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDecl
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeThen
 
 object TicTacToeScriptGenerator :
-    ScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeCheckState, NoScriptGenerationEnvironment>(
+    ScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(
         TicTacToeScriptGenActionFactory,
         TicTacToeScriptGenCheckFactory,
-        TicTacToeDeclarationState.Factory,
-        { TicTacToeCheckState() },
-        NoScriptGenerationEnvironment)
+        ::TicTacToeDeclarationState,
+        ::TicTacToeGenerationEnvironment,
+    )
+
+// None of the declaration builders for TicTacToe use the environment:
+typealias TicTacToeScriptGenerationDeclarationBuilder<D> = IgnoreEnvScriptGenerationDeclarationBuilder<TicTacToeGenerationEnvironment, D>
+typealias TicTacToeScriptGenerationDeclarationBuilderFactory<D> = ScriptGenerationDeclarationBuilderFactory<TicTacToeGenerationEnvironment, D>
 
 internal const val Width = 3
 internal const val Height = 3
@@ -27,36 +31,35 @@ val TicTacToeScriptingHelper = ScriptingHelper(mapOf(
     Long::class to { v: Any? -> v.toString() },
 ))
 
-class TicTacToeCheckState : AbstractScriptGenerationCheckState() {
+class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
 
     // We want to collapse individual board-has-X checks into a single board-has-state check,
     // but only if the entire board is covered by them.
-    private val boards: MutableMap<String, Board> = mutableMapOf()
+    private val boardCheckStates: MutableMap<String, BoardCheckState> = mutableMapOf()
 
-    fun addToken(gameName: String, player: String, position: Position) {
-        boards.merge(gameName, Board(tokens = mapOf(position to player), spaces = emptySet()), Board::plus)
+    fun boardCheck(gameName: String, apply: BoardCheckState.() -> BoardCheckState) {
+        apply(boardCheckStates.getOrPut(gameName) { BoardCheckState(gameName) })
     }
 
-    fun addSpace(gameName: String, position: Position) {
-        boards.merge(gameName, Board(tokens = emptyMap(), spaces = setOf(position)), Board::plus)
-    }
+    override val composedChecks get() = boardCheckStates.values.flatMap { it.composedChecks }
 
-    override fun getChecks() = finishedChecks + getBoardChecks()
+    class BoardCheckState(private val gameName: String) {
 
-    private fun getBoardChecks() = boards.flatMap { (gameName, board) ->
-        if (board.isFullySpecified) {
-            listOf(GameScriptGenCheckFactory.hasState(gameName, board.tokens))
+        private val tokens = mutableMapOf<Position, String>()
+        private val spaces = mutableSetOf<Position>()
+
+        val composedChecks get() = if (isFullySpecified) {
+            listOf(GameScriptGenCheckFactory.hasState(gameName, tokens))
         } else {
-            val spaces = board.spaces.map { pos -> UnderspecifiedHasSpaceCheck(gameName, pos) }
-            val tokens = board.tokens.map { (pos, player) -> UnderspecifiedHasTokenCheck(gameName, player, pos) }
+            val spaces = spaces.map { pos -> UnderspecifiedHasSpaceCheck(gameName, pos) }
+            val tokens = tokens.map { (pos, player) -> UnderspecifiedHasTokenCheck(gameName, player, pos) }
             tokens + spaces
         }
-    }
 
-    private data class Board(val tokens: Map<Position, String>, val spaces: Set<Position>) {
-        val isFullySpecified get() = tokens.size * spaces.size >= Width * Height
+        private val isFullySpecified get() = tokens.size * spaces.size >= Width * Height
 
-        operator fun plus(other: Board) = Board(tokens + other.tokens, spaces + other.spaces)
+        fun addToken(player: String, position: Position) = apply { tokens[position] = player }
+        fun addSpace(position: Position) = apply { spaces.add(position) }
     }
 
     // These are generated if we try to construct board checks but don't have enough to compose into a board state:
