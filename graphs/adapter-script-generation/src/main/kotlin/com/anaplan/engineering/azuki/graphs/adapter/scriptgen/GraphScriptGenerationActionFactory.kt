@@ -13,7 +13,7 @@ import com.anaplan.engineering.azuki.graphs.dsl.action.DirectedGraphActions
 import com.anaplan.engineering.azuki.graphs.dsl.action.UndirectedGraphActions
 import com.anaplan.engineering.azuki.script.generation.*
 
-object GraphScriptGenActionFactory : GraphActionFactory<ScriptGenerationAction<NoScriptGenerationEnvironment>> {
+object GraphScriptGenerationActionFactory : GraphActionFactory<ScriptGenerationAction<NoScriptGenerationEnvironment>> {
 
     override val undirected: UndirectedGraphActionFactory = UndirectedGraphScriptGenActionFactory
 

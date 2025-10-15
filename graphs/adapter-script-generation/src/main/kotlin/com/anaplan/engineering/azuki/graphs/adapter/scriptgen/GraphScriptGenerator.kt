@@ -11,7 +11,7 @@ import com.anaplan.engineering.azuki.script.generation.ScriptingHelper
 
 object GraphScriptGenerator :
     ScriptGenerator<GraphActionFactory<*>, GraphCheckFactory, NoQueryFactory, NoActionGeneratorFactory, GraphDeclarationState, NoScriptGenerationEnvironment>(
-        GraphScriptGenActionFactory,
+        GraphScriptGenerationActionFactory,
         GraphScriptGenerationCheckFactory,
         ::GraphDeclarationState,
         { NoScriptGenerationEnvironment },

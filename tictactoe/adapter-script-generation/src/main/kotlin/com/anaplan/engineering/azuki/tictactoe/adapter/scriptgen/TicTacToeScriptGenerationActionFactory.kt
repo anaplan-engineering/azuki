@@ -19,37 +19,32 @@ object TicTacToeScriptGenerationActionFactory : TicTacToeActionFactory {
     override val playOrder = PlayOrderScriptGenActionFactory
 }
 
-abstract class TicTacToeScriptGenerationAction : IgnoreEnvScriptGenerationAction<TicTacToeGenerationEnvironment> {
+fun interface TicTacToeScriptGenerationAction : IgnoreEnvScriptGenerationAction<TicTacToeGenerationEnvironment> {
 
-    override val behavior = unsupportedBehavior
+    override val behavior get() = unsupportedBehavior
 }
 
 object GameScriptGenerationActionFactory : GameActionFactory {
 
     override fun start(gameName: String, orderName: String) = StartAGameDeclarableAction(gameName, orderName)
-    override fun save(gameName: String) = object : TicTacToeScriptGenerationAction() {
-
-        override fun getActionScript() =
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeRegardlessOf::saveGame, gameName)
+    override fun save(gameName: String) = TicTacToeScriptGenerationAction {
+        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeRegardlessOf::saveGame, gameName)
     }
 
-    override fun close(gameName: String) = object : TicTacToeScriptGenerationAction() {
-
-        override fun getActionScript() =
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeRegardlessOf::closeGame, gameName)
+    override fun close(gameName: String) = TicTacToeScriptGenerationAction {
+        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeRegardlessOf::closeGame, gameName)
     }
 
-    override fun load(gameName: String) = object : TicTacToeScriptGenerationAction() {
-
-        override fun getActionScript() =
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeRegardlessOf::loadGame, gameName)
+    override fun load(gameName: String) = TicTacToeScriptGenerationAction {
+        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeRegardlessOf::loadGame, gameName)
     }
 
     // Move is complex as it can be used both in 'given' and 'when' positions
     override fun move(gameName: String, playerName: String, position: Position) = Move(gameName, playerName, position)
 
     class Move(gameName: String, playerName: String, position: Position) :
-        PlayerMoveDeclarableAction(gameName, playerName, position), IgnoreEnvScriptGenerationAction<TicTacToeGenerationEnvironment> {
+        PlayerMoveDeclarableAction(gameName, playerName, position),
+        IgnoreEnvScriptGenerationAction<TicTacToeGenerationEnvironment> {
 
         override fun getActionScript() =
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeWhen::placeToken, gameName, playerName, position)
