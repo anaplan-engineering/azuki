@@ -17,7 +17,7 @@ interface ScriptGenerationEnvironment {
  */
 object NoScriptGenerationEnvironment : ScriptGenerationEnvironment {
 
-    override val composedChecks = listOf<BasicScriptGenerationCheck>()
+    override val composedChecks = emptyList<BasicScriptGenerationCheck>()
 }
 
 fun interface ScriptGenerationEnvironmentFactory<E : ScriptGenerationEnvironment> {
