@@ -2,7 +2,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.system.UnsupportedAction
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
-import com.anaplan.engineering.azuki.script.generation.IgnoreEnvScriptGenerationAction
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.GameActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.PlayOrderActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
@@ -19,7 +19,7 @@ object TicTacToeScriptGenerationActionFactory : TicTacToeActionFactory {
     override val playOrder = PlayOrderScriptGenActionFactory
 }
 
-fun interface TicTacToeScriptGenerationAction : IgnoreEnvScriptGenerationAction<TicTacToeGenerationEnvironment> {
+fun interface TicTacToeScriptGenerationAction : ScriptGenerationAction<TicTacToeGenerationEnvironment> {
 
     override val behavior get() = unsupportedBehavior
 }
@@ -44,9 +44,9 @@ object GameScriptGenerationActionFactory : GameActionFactory {
 
     class Move(gameName: String, playerName: String, position: Position) :
         PlayerMoveDeclarableAction(gameName, playerName, position),
-        IgnoreEnvScriptGenerationAction<TicTacToeGenerationEnvironment> {
+        ScriptGenerationAction<TicTacToeGenerationEnvironment> {
 
-        override fun getActionScript() =
+        override fun getActionScript(environment: TicTacToeGenerationEnvironment) =
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeWhen::placeToken, gameName, playerName, position)
     }
 

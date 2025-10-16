@@ -8,18 +8,6 @@ interface ScriptGenerationAction<in E : ScriptGenerationEnvironment> : Action {
     fun getActionScript(environment: E): String
 }
 
-/**
- * Script generation action that doesn't use its environment.
- */
-interface IgnoreEnvScriptGenerationAction<in E : ScriptGenerationEnvironment> : ScriptGenerationAction<E> {
-
-    fun getActionScript(): String
-
-    override fun getActionScript(environment: E) = getActionScript()
-}
-
-typealias NoEnvScriptGenerationAction = IgnoreEnvScriptGenerationAction<NoScriptGenerationEnvironment>
-
 class ScriptGenerationParallelAction<in E : ScriptGenerationEnvironment>(actions: List<List<ScriptGenerationAction<E>>>) :
     ParallelAction<ScriptGenerationAction<E>>(actions), ScriptGenerationAction<E> {
 

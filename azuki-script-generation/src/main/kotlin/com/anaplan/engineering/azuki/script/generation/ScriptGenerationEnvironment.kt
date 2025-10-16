@@ -2,22 +2,34 @@ package com.anaplan.engineering.azuki.script.generation
 
 /**
  * Environment persisted through the script generation process.
+ *
+ * The environment type has itself as a parameter, as it returns various self-referential types.
  */
 interface ScriptGenerationEnvironment {
 
+    // More things may be added to this later.
+}
+
+/**
+ * A script generation environment that can compose multiple checks into one check.
+ *
+ * The environment type has itself as a parameter, as it returns self-referential types.
+ */
+interface CheckComposingScriptGenerationEnvironment<E: CheckComposingScriptGenerationEnvironment<E>>: ScriptGenerationEnvironment {
+
     /**
-     * The list of checks produced from composing ComposableChecks through this environment.
+     * The list of checks produced from composing checks through this environment.
      * Having been composed through the environment, they do not need access to it again.
      */
-    val composedChecks: List<BasicScriptGenerationCheck>
+    val composedChecks: List<ScriptGenerationCheck<E>>
 }
 
 /**
  * Dummy environment for users that don't need one.
  */
-object NoScriptGenerationEnvironment : ScriptGenerationEnvironment {
+object NoScriptGenerationEnvironment : CheckComposingScriptGenerationEnvironment<NoScriptGenerationEnvironment> {
 
-    override val composedChecks = emptyList<BasicScriptGenerationCheck>()
+    override val composedChecks = emptyList<ScriptGenerationCheck<NoScriptGenerationEnvironment>>()
 }
 
 fun interface ScriptGenerationEnvironmentFactory<E : ScriptGenerationEnvironment> {

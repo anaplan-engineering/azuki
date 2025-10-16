@@ -7,7 +7,6 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
-import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeThen
 
 object TicTacToeScriptGenerator :
     ScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(
@@ -18,7 +17,7 @@ object TicTacToeScriptGenerator :
     )
 
 // None of the declaration builders for TicTacToe use the environment:
-typealias TicTacToeScriptGenerationDeclarationBuilder<D> = IgnoreEnvScriptGenerationDeclarationBuilder<TicTacToeGenerationEnvironment, D>
+typealias TicTacToeScriptGenerationDeclarationBuilder<D> = ScriptGenerationDeclarationBuilder<TicTacToeGenerationEnvironment, D>
 typealias TicTacToeScriptGenerationDeclarationBuilderFactory<D> = ScriptGenerationDeclarationBuilderFactory<TicTacToeGenerationEnvironment, D>
 
 internal const val Width = 3
@@ -31,7 +30,7 @@ val TicTacToeScriptingHelper = ScriptingHelper(mapOf(
     Long::class to { v: Any? -> v.toString() },
 ))
 
-class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
+class TicTacToeGenerationEnvironment : CheckComposingScriptGenerationEnvironment<TicTacToeGenerationEnvironment> {
 
     // We want to collapse individual board-has-X checks into a single board-has-state check,
     // but only if the entire board is covered by them.
@@ -51,31 +50,17 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
         val composedChecks
             get() = if (isFullySpecified) {
                 listOf(GameScriptGenerationCheckFactory.hasState(gameName, tokens))
-            } else {
-                val spaces = spaces.map { pos -> UnderspecifiedHasSpaceCheck(gameName, pos) }
-                val tokens = tokens.map { (pos, player) -> UnderspecifiedHasTokenCheck(gameName, player, pos) }
-                tokens + spaces
+            } else decomposedChecks
+
+        private val decomposedChecks
+            get() = buildList {
+                spaces.mapTo(this) { pos -> GameScriptGenerationCheckFactory.hasSpace(gameName, pos) }
+                tokens.mapTo(this) { (pos, player) -> GameScriptGenerationCheckFactory.hasToken(gameName, player, pos) }
             }
 
         private val isFullySpecified get() = tokens.size * spaces.size >= Width * Height
 
         fun addToken(player: String, position: Position) = apply { tokens[position] = player }
         fun addSpace(position: Position) = apply { spaces.add(position) }
-    }
-
-    // These are generated if we try to construct board checks but don't have enough to compose into a board state:
-
-    data class UnderspecifiedHasSpaceCheck(val gameName: String, val position: Position) :
-        TicTacToeBasicScriptGenerationCheck() {
-
-        override fun getCheckScript() =
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasSpace, gameName, position)
-    }
-
-    data class UnderspecifiedHasTokenCheck(val gameName: String, val player: String, val position: Position) :
-        TicTacToeBasicScriptGenerationCheck() {
-
-        override fun getCheckScript() =
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasToken, gameName, player, position)
     }
 }

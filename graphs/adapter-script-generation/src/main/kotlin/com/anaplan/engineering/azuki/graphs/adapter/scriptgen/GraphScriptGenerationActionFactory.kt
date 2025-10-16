@@ -1,9 +1,13 @@
 package com.anaplan.engineering.azuki.graphs.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.system.Action
+import com.anaplan.engineering.azuki.core.system.Behavior
+import com.anaplan.engineering.azuki.core.system.ReifiedBehavior
+import com.anaplan.engineering.azuki.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.graphs.adapter.api.DirectedGraphActionFactory
 import com.anaplan.engineering.azuki.graphs.adapter.api.GraphActionFactory
 import com.anaplan.engineering.azuki.graphs.adapter.api.UndirectedGraphActionFactory
+import com.anaplan.engineering.azuki.graphs.adapter.declaration.GraphDeclarationState
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.action.AddEdgeToDirectedGraphDeclarableAction
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.action.AddEdgeToUndirectedGraphDeclarableAction
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.action.AddVertexToDirectedGraphDeclarableAction
@@ -13,22 +17,24 @@ import com.anaplan.engineering.azuki.graphs.dsl.action.DirectedGraphActions
 import com.anaplan.engineering.azuki.graphs.dsl.action.UndirectedGraphActions
 import com.anaplan.engineering.azuki.script.generation.*
 
-object GraphScriptGenerationActionFactory : GraphActionFactory<ScriptGenerationAction<NoScriptGenerationEnvironment>> {
+object GraphScriptGenerationActionFactory : GraphActionFactory<GraphScriptGenerationAction> {
 
     override val undirected: UndirectedGraphActionFactory = UndirectedGraphScriptGenActionFactory
 
     override val directed: DirectedGraphActionFactory = DirectedGraphScriptGenActionFactory
 
-    override fun createParallelAction(actions: List<List<Action>>) =
+    override fun createParallelAction(actions: List<List<Action>>): ScriptGenerationParallelAction<NoScriptGenerationEnvironment> =
         ScriptGenerationParallelAction(actions.map { it.map(Action::toScriptGenAction) })
 }
+
+typealias GraphScriptGenerationAction = ScriptGenerationAction<NoScriptGenerationEnvironment>
 
 private object UndirectedGraphScriptGenActionFactory : UndirectedGraphActionFactory {
 
     private class AddEdgeToUndirectedGraphScriptGenerationAction<V>(graphName: String, source: V, target: V) :
-        AddEdgeToUndirectedGraphDeclarableAction<V>(graphName, source, target), NoEnvScriptGenerationAction {
+        AddEdgeToUndirectedGraphDeclarableAction<V>(graphName, source, target), GraphScriptGenerationAction {
 
-        override fun getActionScript() =
+        override fun getActionScript(environment: NoScriptGenerationEnvironment) =
             GraphScriptingHelper.scriptifyFunction(UndirectedGraphActions::addEdgeToUndirectedGraph,
                 graphName,
                 source,
@@ -36,27 +42,27 @@ private object UndirectedGraphScriptGenActionFactory : UndirectedGraphActionFact
     }
 
     private class AddVertexToUndirectedGraphScriptGenerationAction<V>(graphName: String, vertex: V) :
-        AddVertexToUndirectedGraphDeclarableAction<V>(graphName, vertex), NoEnvScriptGenerationAction {
+        AddVertexToUndirectedGraphDeclarableAction<V>(graphName, vertex), GraphScriptGenerationAction {
 
-        override fun getActionScript() =
+        override fun getActionScript(environment: NoScriptGenerationEnvironment) =
             GraphScriptingHelper.scriptifyFunction(UndirectedGraphActions::addVertexToUndirectedGraph,
                 graphName,
                 vertex)
     }
 
     private class CreateUndirectedGraphScriptGenerationAction(graphName: String) :
-        CreateUndirectedGraphDeclarableAction(graphName), NoEnvScriptGenerationAction {
+        CreateUndirectedGraphDeclarableAction(graphName), ScriptGenerationAction<NoScriptGenerationEnvironment> {
 
-        override fun getActionScript() =
+        override fun getActionScript(environment: NoScriptGenerationEnvironment) =
             GraphScriptingHelper.scriptifyFunction(UndirectedGraphActions::createUndirected, graphName)
     }
 
-    override fun create(graphName: String): NoEnvScriptGenerationAction = CreateUndirectedGraphScriptGenerationAction(graphName)
+    override fun create(graphName: String): ScriptGenerationAction<NoScriptGenerationEnvironment> = CreateUndirectedGraphScriptGenerationAction(graphName)
 
-    override fun <V> addEdge(graphName: String, source: V, target: V): NoEnvScriptGenerationAction =
+    override fun <V> addEdge(graphName: String, source: V, target: V): GraphScriptGenerationAction =
         AddEdgeToUndirectedGraphScriptGenerationAction(graphName, source, target)
 
-    override fun <V> addVertex(graphName: String, vertex: V): NoEnvScriptGenerationAction =
+    override fun <V> addVertex(graphName: String, vertex: V): GraphScriptGenerationAction =
         AddVertexToUndirectedGraphScriptGenerationAction(graphName, vertex)
 }
 
@@ -64,15 +70,15 @@ private object DirectedGraphScriptGenActionFactory : DirectedGraphActionFactory 
 
     private class CreateDirectedGraphScriptGenerationAction(graphName: String) :
 
-        CreateUndirectedGraphDeclarableAction(graphName), NoEnvScriptGenerationAction {
-        override fun getActionScript() =
+        CreateUndirectedGraphDeclarableAction(graphName), GraphScriptGenerationAction {
+        override fun getActionScript(environment: NoScriptGenerationEnvironment) =
             GraphScriptingHelper.scriptifyFunction(DirectedGraphActions::createDirected, graphName)
     }
 
     private class AddEdgeToDirectedGraphScriptGenerationAction<V>(graphName: String, source: V, target: V) :
-        AddEdgeToDirectedGraphDeclarableAction<V>(graphName, source, target), NoEnvScriptGenerationAction {
+        AddEdgeToDirectedGraphDeclarableAction<V>(graphName, source, target), GraphScriptGenerationAction {
 
-        override fun getActionScript() =
+        override fun getActionScript(environment: NoScriptGenerationEnvironment) =
             GraphScriptingHelper.scriptifyFunction(DirectedGraphActions::addEdgeToDirectedGraph,
                 graphName,
                 source,
@@ -80,18 +86,18 @@ private object DirectedGraphScriptGenActionFactory : DirectedGraphActionFactory 
     }
 
     private class AddVertexToDirectedGraphScriptGenerationAction<V>(graphName: String, vertex: V) :
-        AddVertexToDirectedGraphDeclarableAction<V>(graphName, vertex), NoEnvScriptGenerationAction {
+        AddVertexToDirectedGraphDeclarableAction<V>(graphName, vertex), GraphScriptGenerationAction {
 
-        override fun getActionScript() =
+        override fun getActionScript(environment: NoScriptGenerationEnvironment) =
             GraphScriptingHelper.scriptifyFunction(DirectedGraphActions::addVertexToDirectedGraph, graphName, vertex)
     }
 
-    override fun create(graphName: String): NoEnvScriptGenerationAction =
+    override fun create(graphName: String): GraphScriptGenerationAction =
         CreateDirectedGraphScriptGenerationAction(graphName)
 
-    override fun <V> addEdge(graphName: String, source: V, target: V): NoEnvScriptGenerationAction =
+    override fun <V> addEdge(graphName: String, source: V, target: V): GraphScriptGenerationAction =
         AddEdgeToDirectedGraphScriptGenerationAction(graphName, source, target)
 
-    override fun <V> addVertex(graphName: String, vertex: V): NoEnvScriptGenerationAction =
+    override fun <V> addVertex(graphName: String, vertex: V): GraphScriptGenerationAction =
         AddVertexToDirectedGraphScriptGenerationAction(graphName, vertex)
 }

@@ -11,7 +11,7 @@ abstract class ScriptGenerator<
     QF : QueryFactory,
     AGF : ActionGeneratorFactory,
     S : DeclarationState,
-    E : ScriptGenerationEnvironment,
+    E : CheckComposingScriptGenerationEnvironment<E>,
     >(
     private val actionFactory: AF,
     private val checkFactory: CF,
@@ -63,19 +63,25 @@ abstract class ScriptGenerator<
 
         checks.forEach {
             require(it !is UnsupportedCheck) { "unsupported check: $it" }
-            require(it is ScriptGenerationCheck) { "check $it is not a ScriptGenerationCheck" }
+            require(it is ScriptGenerationCheck<*>) { "check $it is not a ScriptGenerationCheck" }
         }
-        checks.filterIsInstance<ComposableScriptGenerationCheck<E>>().forEach { it.composeInto(environment) }
-        val basicChecks = checks.filterIsInstance<BasicScriptGenerationCheck>() + environment.composedChecks
-        val envChecks = checks.filterIsInstance<EnvScriptGenerationCheck<E>>()
 
-        return if (basicChecks.isEmpty() && envChecks.isEmpty()) {
+        val basicChecks = checks.filterIsInstance<ScriptGenerationCheck<E>>().mapNotNull {
+            if (it is ComposableScriptGenerationCheck<E>) {
+                it.composeInto(environment)
+                null
+            } else {
+                it
+            }
+        }
+
+        val allChecks = environment.composedChecks + basicChecks
+        return if (allChecks.isEmpty()) {
             throw IllegalArgumentException("No checks to generate!")
         } else {
             """
                 then {
-                    ${basicChecks.joinToString("\n") { it.getCheckScript() }}
-                    ${envChecks.joinToString("\n") { it.getCheckScript(environment) }}
+                    ${allChecks.joinToString("\n") { it.getCheckScript(environment) }}
                 }
             """
         }
@@ -175,7 +181,7 @@ abstract class VerificationCapableScriptGenerator<
     QF : QueryFactory,
     AGF : ActionGeneratorFactory,
     S : DeclarationState,
-    E : ScriptGenerationEnvironment,
+    E : CheckComposingScriptGenerationEnvironment<E>,
     >(
     actionFactory: AF,
     checkFactory: CF,

@@ -2,7 +2,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import com.anaplan.engineering.azuki.script.generation.ComposableScriptGenerationCheck
-import com.anaplan.engineering.azuki.script.generation.BasicScriptGenerationCheck
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeThen
 
@@ -12,64 +12,72 @@ object TicTacToeScriptGenerationCheckFactory : TicTacToeCheckFactory {
     override val player = PlayerScriptGenCheckFactory
 }
 
-fun interface TicTacToeComposableScriptGenerationCheck :
-    ComposableScriptGenerationCheck<TicTacToeGenerationEnvironment> {
+fun interface TicTacToeScriptGenerationCheck : ScriptGenerationCheck<TicTacToeGenerationEnvironment> {
 
     override val behavior get() = unsupportedBehavior
 }
 
-fun interface TicTacToeBasicScriptGenerationCheck : BasicScriptGenerationCheck {
+interface TicTacToeComposableScriptGenerationCheck : ComposableScriptGenerationCheck<TicTacToeGenerationEnvironment> {
 
     override val behavior get() = unsupportedBehavior
 }
 
 object GameScriptGenerationCheckFactory : GameCheckFactory {
 
-    override fun hasPlayOrder(gameName: String, players: List<String>) = TicTacToeBasicScriptGenerationCheck {
+    override fun hasPlayOrder(gameName: String, players: List<String>) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameHasPlayOrder, gameName, players)
     }
 
-    override fun hasToken(gameName: String, playerName: String, position: Position) =
-        TicTacToeComposableScriptGenerationCheck {
-            it.composeBoardCheck(gameName) { addToken(playerName, position) }
+    override fun hasToken(gameName: String, playerName: String, position: Position) = object : TicTacToeComposableScriptGenerationCheck {
+        override fun composeInto(environment: TicTacToeGenerationEnvironment) {
+            environment.composeBoardCheck(gameName) { addToken(playerName, position) }
         }
 
-    override fun hasSpace(gameName: String, position: Position) = TicTacToeComposableScriptGenerationCheck {
-        it.composeBoardCheck(gameName) { addSpace(position) }
+        override fun getCheckScript(environment: TicTacToeGenerationEnvironment) =
+            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasToken, gameName, playerName, position)
     }
 
-    override fun hasState(gameName: String, moves: MoveMap) = TicTacToeBasicScriptGenerationCheck {
+    override fun hasSpace(gameName: String, position: Position) = object : TicTacToeComposableScriptGenerationCheck {
+        override fun composeInto(environment: TicTacToeGenerationEnvironment) {
+            environment.composeBoardCheck(gameName) { addSpace(position) }
+        }
+
+        override fun getCheckScript(environment: TicTacToeGenerationEnvironment) =
+            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasSpace, gameName, position)
+    }
+
+    override fun hasState(gameName: String, moves: MoveMap) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasState, gameName, moves.pretty(3, 3))
     }
 
-    override fun isComplete(gameName: String) = TicTacToeBasicScriptGenerationCheck {
+    override fun isComplete(gameName: String) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardIsComplete, gameName)
     }
 
-    override fun isDraw(gameName: String) = TicTacToeBasicScriptGenerationCheck {
+    override fun isDraw(gameName: String) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameIsDraw, gameName)
     }
 }
 
 object PlayerScriptGenCheckFactory : PlayerCheckFactory {
 
-    override fun moveCount(gameName: String, playerName: String, times: Int) = TicTacToeBasicScriptGenerationCheck {
+    override fun moveCount(gameName: String, playerName: String, times: Int) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerHasMoved, gameName, playerName, times)
     }
 
     override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) =
-        TicTacToeBasicScriptGenerationCheck {
+        TicTacToeScriptGenerationCheck {
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerCannotPlaceToken,
                 gameName,
                 playerName,
                 position)
         }
 
-    override fun hasWon(gameName: String, playerName: String) = TicTacToeBasicScriptGenerationCheck {
+    override fun hasWon(gameName: String, playerName: String) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerHasWon, gameName, playerName)
     }
 
-    override fun hasLost(gameName: String, playerName: String) = TicTacToeBasicScriptGenerationCheck {
+    override fun hasLost(gameName: String, playerName: String) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerHasLost, gameName, playerName)
     }
 }
