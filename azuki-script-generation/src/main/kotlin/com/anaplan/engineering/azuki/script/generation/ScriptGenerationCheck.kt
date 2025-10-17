@@ -18,7 +18,6 @@ interface ScriptGenerationCheck<E : ScriptGenerationEnvironment> : Check {
     fun getCheckScript(environment: E): String
 }
 
-
 fun interface ComposedCheckResolver<E: ScriptGenerationEnvironment> {
 
     /**
