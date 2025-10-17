@@ -9,7 +9,7 @@ interface ScriptGenerationCheck<E : ScriptGenerationEnvironment> : Check {
      * Returns a resolver which we can later use to get any composed checks for this check from the environment.
      * The default skips composition entirely.
      */
-    fun composeInto(environment: E): ComposedCheckResolver<E> = ComposedCheckResolver { this }
+    fun composeInto(environment: E): ComposedCheckResolver<E> = ComposedCheckResolver { listOf(this) }
 
     /**
      * Gets the script for this check without trying to compose it.
@@ -21,9 +21,9 @@ interface ScriptGenerationCheck<E : ScriptGenerationEnvironment> : Check {
 fun interface ComposedCheckResolver<E: ScriptGenerationEnvironment> {
 
     /**
-     * Resolve the final composed check to substitute for the original check submitted for composition.
+     * Resolve the final composed checks to substitute for the original check submitted for composition.
      * This should be called once all checks have been composed into the environment.
      * This may be null if the check was already accounted for in another resolution.
      */
-    fun resolveComposedCheck(): ScriptGenerationCheck<E>?
+    fun resolveComposedCheck(): List<ScriptGenerationCheck<E>>
 }
