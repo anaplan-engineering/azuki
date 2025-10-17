@@ -15,12 +15,13 @@ interface ScriptGenerationEnvironment {
  *
  * The environment type has itself as a parameter, as it returns self-referential types.
  */
-interface CheckComposingScriptGenerationEnvironment<out C: ScriptGenerationCheck<*>>: ScriptGenerationEnvironment {
+interface CheckComposingScriptGenerationEnvironment<C: ScriptGenerationCheck<*>>: ScriptGenerationEnvironment {
 
     /**
-     * The list of checks produced so far from composing checks through this environment.
+     * Checks to see if this environment has composed checks to substitute for the given check.
+     * If so, return those; if not, return the empty list.
      */
-    val composedChecks: List<C>
+    fun compositionOf(check: C): List<C>
 }
 
 /**
@@ -28,7 +29,7 @@ interface CheckComposingScriptGenerationEnvironment<out C: ScriptGenerationCheck
  */
 object NoScriptGenerationEnvironment : CheckComposingScriptGenerationEnvironment<ScriptGenerationCheck<NoScriptGenerationEnvironment>> {
 
-    override val composedChecks = emptyList<ScriptGenerationCheck<NoScriptGenerationEnvironment>>()
+    override fun compositionOf(check: ScriptGenerationCheck<NoScriptGenerationEnvironment>) = listOf(check)
 }
 
 fun interface ScriptGenerationEnvironmentFactory<E : ScriptGenerationEnvironment> {

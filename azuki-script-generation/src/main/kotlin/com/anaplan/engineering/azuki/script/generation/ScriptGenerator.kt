@@ -11,7 +11,7 @@ abstract class ScriptGenerator<
     QF : QueryFactory,
     AGF : ActionGeneratorFactory,
     S : DeclarationState,
-    E : CheckComposingScriptGenerationEnvironment<ScriptGenerationCheck<E>>,
+    E : ScriptGenerationEnvironment,
     >(
     private val actionFactory: AF,
     private val checkFactory: CF,
@@ -63,23 +63,16 @@ abstract class ScriptGenerator<
             require(it !is UnsupportedCheck) { "unsupported check: $it" }
             require(it is ScriptGenerationCheck<*>) { "check $it is not a ScriptGenerationCheck" }
         }
+        // compose everything maximally before we start trying to resolve the checks
+        val resolvers = checks.filterIsInstance<ScriptGenerationCheck<E>>().map { it.composeInto(environment) }
+        val composedChecks = resolvers.flatMap { it.resolveComposedChecks(environment) }
 
-        val basicChecks = checks.filterIsInstance<ScriptGenerationCheck<E>>().mapNotNull {
-            if (it is ComposableScriptGenerationCheck<E>) {
-                it.composeInto(environment)
-                null
-            } else {
-                it
-            }
-        }
-
-        val allChecks = environment.composedChecks + basicChecks
-        return if (allChecks.isEmpty()) {
+        return if (composedChecks.isEmpty()) {
             throw IllegalArgumentException("No checks to generate!")
         } else {
             """
                 then {
-                    ${allChecks.joinToString("\n") { it.getCheckScript(environment) }}
+                    ${composedChecks.joinToString("\n") { it.getCheckScript(environment) }}
                 }
             """
         }

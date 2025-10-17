@@ -30,17 +30,22 @@ val TicTacToeScriptingHelper = ScriptingHelper(mapOf(
     Long::class to { v: Any? -> v.toString() },
 ))
 
-class TicTacToeGenerationEnvironment : CheckComposingScriptGenerationEnvironment<TicTacToeScriptGenerationCheck> {
+class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
 
     // We want to collapse individual board-has-X checks into a single board-has-state check,
     // but only if the entire board is covered by them.
     private val boardCheckStates: MutableMap<String, BoardCheckState> = mutableMapOf()
 
-    fun composeBoardCheck(gameName: String, apply: BoardCheckState.() -> BoardCheckState) {
+    fun composeBoardCheck(gameName: String, apply: BoardCheckState.() -> BoardCheckState): ComposedCheckResolver<TicTacToeGenerationEnvironment> {
         apply(boardCheckStates.getOrPut(gameName) { BoardCheckState(gameName) })
+
+        return ComposedCheckResolver {
+            it.getComposedBoardChecks(gameName)
+        }
     }
 
-    override val composedChecks get() = boardCheckStates.values.flatMap { it.composedChecks }
+    // It's important to remove the checkstate when we ask for it; otherwise, we'll expand the composition out multiple times.
+    private fun getComposedBoardChecks(gameName: String) = boardCheckStates.remove(gameName)?.composedChecks ?: emptyList()
 
     class BoardCheckState(private val gameName: String) {
 
