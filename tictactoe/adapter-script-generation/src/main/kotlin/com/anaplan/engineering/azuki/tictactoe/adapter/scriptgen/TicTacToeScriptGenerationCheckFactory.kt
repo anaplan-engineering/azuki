@@ -17,10 +17,7 @@ fun interface TicTacToeScriptGenerationCheck : ScriptGenerationCheck<TicTacToeGe
     override val behavior get() = unsupportedBehavior
 }
 
-interface TicTacToeComposableScriptGenerationCheck : ComposableScriptGenerationCheck<TicTacToeGenerationEnvironment> {
-
-    override val behavior get() = unsupportedBehavior
-}
+interface TicTacToeComposableScriptGenerationCheck : TicTacToeScriptGenerationCheck, ComposableScriptGenerationCheck<TicTacToeGenerationEnvironment>
 
 object GameScriptGenerationCheckFactory : GameCheckFactory {
 

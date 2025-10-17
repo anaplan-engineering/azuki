@@ -11,7 +11,7 @@ abstract class ScriptGenerator<
     QF : QueryFactory,
     AGF : ActionGeneratorFactory,
     S : DeclarationState,
-    E : CheckComposingScriptGenerationEnvironment<E>,
+    E : CheckComposingScriptGenerationEnvironment<ScriptGenerationCheck<E>>,
     >(
     private val actionFactory: AF,
     private val checkFactory: CF,
@@ -181,7 +181,7 @@ abstract class VerificationCapableScriptGenerator<
     QF : QueryFactory,
     AGF : ActionGeneratorFactory,
     S : DeclarationState,
-    E : CheckComposingScriptGenerationEnvironment<E>,
+    E : CheckComposingScriptGenerationEnvironment<ScriptGenerationCheck<E>>,
     >(
     actionFactory: AF,
     checkFactory: CF,

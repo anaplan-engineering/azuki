@@ -30,7 +30,7 @@ val TicTacToeScriptingHelper = ScriptingHelper(mapOf(
     Long::class to { v: Any? -> v.toString() },
 ))
 
-class TicTacToeGenerationEnvironment : CheckComposingScriptGenerationEnvironment<TicTacToeGenerationEnvironment> {
+class TicTacToeGenerationEnvironment : CheckComposingScriptGenerationEnvironment<TicTacToeScriptGenerationCheck> {
 
     // We want to collapse individual board-has-X checks into a single board-has-state check,
     // but only if the entire board is covered by them.
