@@ -40,7 +40,7 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
         gameName: String, decomposeTo: TicTacToeScriptGenerationCheck, apply: BoardCheckState.() -> BoardCheckState
     ): ComposedCheckResolver<TicTacToeGenerationEnvironment> {
         apply(boardCheckStates.getOrPut(gameName) { BoardCheckState(gameName) })
-        return ComposedCheckResolver { it.resolveComposedBoardCheck(gameName, decomposeTo) }
+        return ComposedCheckResolver { resolveComposedBoardCheck(gameName, decomposeTo) }
     }
 
     private fun resolveComposedBoardCheck(gameName: String, decomposeTo: TicTacToeScriptGenerationCheck) =

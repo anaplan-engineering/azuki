@@ -65,7 +65,7 @@ abstract class ScriptGenerator<
         }
         // compose everything maximally before we start trying to resolve the checks
         val resolvers = checks.filterIsInstance<ScriptGenerationCheck<E>>().map { it.composeInto(environment) }
-        val composedChecks = resolvers.mapNotNull { it.resolveComposedCheck(environment) }
+        val composedChecks = resolvers.mapNotNull { it.resolveComposedCheck() }
 
         return if (composedChecks.isEmpty()) {
             throw IllegalArgumentException("No checks to generate!")

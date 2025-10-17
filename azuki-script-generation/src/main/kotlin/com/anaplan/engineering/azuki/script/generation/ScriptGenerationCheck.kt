@@ -21,8 +21,9 @@ interface ScriptGenerationCheck<E : ScriptGenerationEnvironment> : Check {
 fun interface ComposedCheckResolver<E: ScriptGenerationEnvironment> {
 
     /**
-     * Ask the environment for a final composed check to substitute for the original check submitted for composition.
+     * Resolve the final composed check to substitute for the original check submitted for composition.
+     * This should be called once all checks have been composed into the environment.
      * This may be null if the check was already accounted for in another resolution.
      */
-    fun resolveComposedCheck(environment: E): ScriptGenerationCheck<E>?
+    fun resolveComposedCheck(): ScriptGenerationCheck<E>?
 }
