@@ -18,8 +18,8 @@ abstract class ScriptGenerator<
     private val declarationStateFactory: DeclarationStateFactory<S>,
     private val environmentFactory: ScriptGenerationEnvironmentFactory<E>,
 ) {
-    fun generateScript(scenario: BuildableScenario<AF>, customEnvironment: E? = null): String {
-        val script = generateUnformattedScript(scenario, customEnvironment ?: environmentFactory.create())
+    fun generateScript(scenario: BuildableScenario<AF>): String {
+        val script = generateUnformattedScript(scenario, environmentFactory.create())
         return ScenarioFormatter.formatScenario(script)
     }
 
@@ -46,21 +46,19 @@ abstract class ScriptGenerator<
 
     fun getChecksFromAnswer(answer: Answer<*, CF>): List<Check> = answer.createChecks(checkFactory)
 
-    fun generateThenScript(scenario: VerifiableScenario<AF, CF>, customEnvironment: E? = null) =
-        generateThenScriptFromChecks(getChecks(scenario), customEnvironment)
+    fun generateThenScript(scenario: VerifiableScenario<AF, CF>, environment: E) =
+        generateThenScriptFromChecks(getChecks(scenario), environment)
 
-    fun generateThenScript(answers: List<Answer<*, CF>>, customEnvironment: E? = null, useValidationChecks: Boolean = false) =
+    fun generateThenScript(answers: List<Answer<*, CF>>, environment: E, useValidationChecks: Boolean = false) =
         generateThenScriptFromChecks(answers.flatMap {
             if (useValidationChecks && it is ValidatableAnswer<*, *>) {
                 getValidationChecks(it as ValidatableAnswer<*, CF>)
             } else {
                 getChecksFromAnswer(it)
             }
-        }, customEnvironment)
+        }, environment)
 
-    fun generateThenScriptFromChecks(checks: List<Check>, customEnvironment: E? = null): String {
-        val environment = customEnvironment ?: environmentFactory.createForThen()
-
+    fun generateThenScriptFromChecks(checks: List<Check>, environment: E): String {
         checks.forEach {
             require(it !is UnsupportedCheck) { "unsupported check: $it" }
             require(it is ScriptGenerationCheck<*>) { "check $it is not a ScriptGenerationCheck" }
@@ -100,12 +98,10 @@ abstract class ScriptGenerator<
     fun getBuildActions(scenario: BuildableScenario<AF>): List<ScriptGenerationAction<E>> =
         scenario.commands(actionFactory).map(Action::toScriptGenAction)
 
-    fun generateGivenScript(scenario: BuildableScenario<AF>, customEnvironment: E? = null): String =
-        generateGivenScriptFromActions(getDeclarationActions(scenario), customEnvironment)
+    fun generateGivenScript(scenario: BuildableScenario<AF>, environment: E): String =
+        generateGivenScriptFromActions(getDeclarationActions(scenario), environment)
 
-    fun generateGivenScriptFromActions(definitions: List<Action>, customEnvironment: E? = null): String {
-        val environment = customEnvironment ?: environmentFactory.createForGiven()
-
+    fun generateGivenScriptFromActions(definitions: List<Action>, environment: E): String {
         if (definitions.filterIsInstance<UnsupportedAction>().isNotEmpty()) {
             definitions.forEach { println(" * $it") }
             throw IllegalArgumentException("Scriptgen is missing action")
@@ -128,14 +124,13 @@ abstract class ScriptGenerator<
     private fun <D : Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, ScriptGenerationDeclarationBuilder<E, D>>(declaration)
 
-    fun generateWheneverScript(scenario: BuildableScenario<AF>, customEnvironment: E? = null) =
-        generateWheneverScriptFromActions(getBuildActions(scenario), customEnvironment)
+    fun generateWheneverScript(scenario: BuildableScenario<AF>, environment: E) =
+        generateWheneverScriptFromActions(getBuildActions(scenario), environment)
 
-    fun generateWheneverScriptFromActions(buildActions: List<ScriptGenerationAction<E>>, customEnvironment: E? = null) =
+    fun generateWheneverScriptFromActions(buildActions: List<ScriptGenerationAction<E>>, environment: E) =
         if (buildActions.isEmpty()) {
             ""
         } else {
-            val environment = customEnvironment ?: environmentFactory.createForWhenever()
             """
             whenever {
                 ${buildActions.joinToString("\n") { it.getActionScript(environment) }}

@@ -37,22 +37,4 @@ fun interface ScriptGenerationEnvironmentFactory<E : ScriptGenerationEnvironment
      * Creates a fresh environment.
      */
     fun create(): E
-
-    // Creating throwaway environments is supported by default, but implementors can choose to set up specific types
-    // of environment (or throw an exception!) if necessary.
-
-    /**
-     * Creates a throwaway environment for scriptifying a 'given' block in isolation.
-     */
-    fun createForGiven(): E = create()
-
-    /**
-     * Creates a throwaway environment for scriptifying a 'whenever' block in isolation.
-     */
-    fun createForWhenever(): E = create()
-
-    /**
-     * Creates a throwaway environment for scriptifying a 'then' block in isolation.
-     */
-    fun createForThen(): E = create()
 }
