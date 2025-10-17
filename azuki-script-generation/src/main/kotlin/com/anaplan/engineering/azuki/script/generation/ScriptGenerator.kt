@@ -169,7 +169,7 @@ abstract class VerificationCapableScriptGenerator<
     QF : QueryFactory,
     AGF : ActionGeneratorFactory,
     S : DeclarationState,
-    E : CheckComposingScriptGenerationEnvironment<ScriptGenerationCheck<E>>,
+    E : ScriptGenerationEnvironment,
     >(
     actionFactory: AF,
     checkFactory: CF,
