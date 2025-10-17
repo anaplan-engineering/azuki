@@ -38,7 +38,7 @@ object GameScriptGenerationCheckFactory : GameCheckFactory {
         compose: TicTacToeGenerationEnvironment.BoardCheckState.() -> TicTacToeGenerationEnvironment.BoardCheckState
     ) = object : TicTacToeScriptGenerationCheck {
         override fun composeInto(environment: TicTacToeGenerationEnvironment) =
-            environment.composeBoardCheck(gameName, compose)
+            environment.composeBoardCheck(gameName, this, compose)
 
         override fun getCheckScript(environment: TicTacToeGenerationEnvironment) =
             TicTacToeScriptingHelper.scriptifyFunction(fn, gameName, *args)

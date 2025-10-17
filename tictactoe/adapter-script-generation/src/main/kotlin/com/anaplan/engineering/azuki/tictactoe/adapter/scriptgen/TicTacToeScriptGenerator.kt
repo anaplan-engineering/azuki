@@ -36,32 +36,32 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
     // but only if the entire board is covered by them.
     private val boardCheckStates: MutableMap<String, BoardCheckState> = mutableMapOf()
 
-    fun composeBoardCheck(gameName: String, apply: BoardCheckState.() -> BoardCheckState): ComposedCheckResolver<TicTacToeGenerationEnvironment> {
+    fun composeBoardCheck(
+        gameName: String, decomposeTo: TicTacToeScriptGenerationCheck, apply: BoardCheckState.() -> BoardCheckState
+    ): ComposedCheckResolver<TicTacToeGenerationEnvironment> {
         apply(boardCheckStates.getOrPut(gameName) { BoardCheckState(gameName) })
-
-        return ComposedCheckResolver {
-            it.getComposedBoardChecks(gameName)
-        }
+        return ComposedCheckResolver { it.resolveComposedBoardCheck(gameName, decomposeTo) }
     }
 
-    // It's important to remove the checkstate when we ask for it; otherwise, we'll expand the composition out multiple times.
-    private fun getComposedBoardChecks(gameName: String) = boardCheckStates.remove(gameName)?.composedChecks ?: emptyList()
+    private fun resolveComposedBoardCheck(gameName: String, decomposeTo: TicTacToeScriptGenerationCheck) =
+        boardCheckStates[gameName].let { if (it == null) decomposeTo else it.resolveComposedCheck(decomposeTo) }
 
     class BoardCheckState(private val gameName: String) {
 
         private val tokens = mutableMapOf<Position, String>()
         private val spaces = mutableSetOf<Position>()
+        private var isTaken = false
 
-        val composedChecks
-            get() = if (isFullySpecified) {
-                listOf(GameScriptGenerationCheckFactory.hasState(gameName, tokens))
-            } else decomposedChecks
-
-        private val decomposedChecks
-            get() = buildList {
-                spaces.mapTo(this) { pos -> GameScriptGenerationCheckFactory.hasSpace(gameName, pos) }
-                tokens.mapTo(this) { (pos, player) -> GameScriptGenerationCheckFactory.hasToken(gameName, player, pos) }
-            }
+        fun resolveComposedCheck(decomposeTo: TicTacToeScriptGenerationCheck) = if (isTaken) {
+            null
+        } else if (isFullySpecified) {
+            // only allow the composed form to appear in the final script once
+            isTaken = true
+            GameScriptGenerationCheckFactory.hasState(gameName, tokens)
+        } else {
+            // if we're not fully specified, return the original check every time
+            decomposeTo
+        }
 
         private val isFullySpecified get() = tokens.size * spaces.size >= Width * Height
 
