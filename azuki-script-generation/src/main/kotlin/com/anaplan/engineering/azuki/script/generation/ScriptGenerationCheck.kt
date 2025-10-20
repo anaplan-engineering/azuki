@@ -25,5 +25,5 @@ fun interface ComposedCheckResolver<E: ScriptGenerationEnvironment> {
      * This should be called once all checks have been composed into the environment.
      * This may be null if the check was already accounted for in another resolution.
      */
-    fun resolveComposedCheck(): List<ScriptGenerationCheck<E>>
+    fun resolveComposedCheck(environment: E): List<ScriptGenerationCheck<E>>
 }
