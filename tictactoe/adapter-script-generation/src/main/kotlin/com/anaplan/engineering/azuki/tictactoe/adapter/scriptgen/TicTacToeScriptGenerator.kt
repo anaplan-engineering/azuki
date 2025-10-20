@@ -7,6 +7,8 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
+import kotlin.Result.Companion.failure
+import kotlin.Result.Companion.success
 
 class TicTacToeScriptGenerator(environment: TicTacToeGenerationEnvironment = TicTacToeGenerationEnvironment()) :
     ScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(
@@ -37,27 +39,23 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
     private val boardCheckStates: MutableMap<String, BoardCheckState> = mutableMapOf()
 
     fun composeBoardCheck(
-        gameName: String, decomposeTo: TicTacToeScriptGenerationCheck, apply: BoardCheckState.() -> BoardCheckState
-    ): ComposedCheckResolver<TicTacToeGenerationEnvironment> {
-        apply(boardCheckStates.getOrPut(gameName) { BoardCheckState(gameName) })
-        return ComposedCheckResolver { it.boardCheckStates[gameName]?.resolveComposedCheck() ?: listOf(decomposeTo) }
-    }
+        gameName: String, check: BoardCheckState.() -> BoardCheckState
+    ) = boardCheckStates.getOrPut(gameName) { BoardCheckState(gameName) }.apply { check() }
 
-    class BoardCheckState(private val gameName: String) {
+    class BoardCheckState(private val gameName: String) : ComposedCheckResolver<TicTacToeGenerationEnvironment> {
 
         private val tokens = mutableMapOf<Position, String>()
         private val spaces = mutableSetOf<Position>()
         private var isTaken = false
 
-        fun resolveComposedCheck() = if (isTaken) {
-            emptyList()
+        override fun resolveComposedCheck(environment: TicTacToeGenerationEnvironment) = if (isTaken) {
+            success(emptyList())
         } else if (isFullySpecified) {
             // only allow the composed form to appear in the final script once
             isTaken = true
-            listOf(GameScriptGenerationCheckFactory.hasState(gameName, tokens))
+            success(listOf(GameScriptGenerationCheckFactory.hasState(gameName, tokens)))
         } else {
-            // if we're not fully specified, decompose
-            null
+            failure(IllegalStateException("board has not been fully specified"))
         }
 
         private val isFullySpecified get() = tokens.size * spaces.size >= Width * Height
