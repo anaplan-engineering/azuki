@@ -12,7 +12,7 @@ class GraphScriptGeneratorTest {
     companion object {
         const val graphA = "graphA"
 
-        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generator = GraphScriptGenerator,
+        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generatorFactory = { GraphScriptGenerator },
             parser = object : SimpleScenarioParser<GraphBuildableScenario>() {
                 override val defaultImports: ScenarioParsingContext.() -> Unit = {
                     import("com.anaplan.engineering.azuki.graphs.dsl.*")

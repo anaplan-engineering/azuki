@@ -20,7 +20,7 @@ class TicTacToeScriptGeneratorTest {
         const val X = "X"
         const val O = "O"
 
-        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generator = TicTacToeScriptGenerator,
+        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generatorFactory = ::TicTacToeScriptGenerator,
             parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
                 override val defaultImports: ScenarioParsingContext.() -> Unit = {
                     import("com.anaplan.engineering.azuki.tictactoe.dsl.*")
@@ -51,7 +51,7 @@ class TicTacToeScriptGeneratorTest {
         }
 
         assertFalse {
-            TicTacToeScriptGenerator.generateScript(scenario).contains("boardHasState")
+            TicTacToeScriptGenerator().generateScript(scenario).contains("boardHasState")
         }
     }
 
@@ -81,7 +81,7 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val script = TicTacToeScriptGenerator.generateScript(scenario)
+        val script = TicTacToeScriptGenerator().generateScript(scenario)
 
         assertContains(script.normalise(), """
             then {

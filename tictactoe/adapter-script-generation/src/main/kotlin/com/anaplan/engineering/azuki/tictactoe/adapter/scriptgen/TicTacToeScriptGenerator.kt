@@ -8,12 +8,12 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactor
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 
-object TicTacToeScriptGenerator :
+class TicTacToeScriptGenerator(environment: TicTacToeGenerationEnvironment = TicTacToeGenerationEnvironment()) :
     ScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(
         TicTacToeScriptGenerationActionFactory,
         TicTacToeScriptGenerationCheckFactory,
         ::TicTacToeDeclarationState,
-        ::TicTacToeGenerationEnvironment,
+        environment,
     )
 
 // None of the declaration builders for TicTacToe use the environment:

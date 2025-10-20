@@ -14,7 +14,7 @@ object GraphScriptGenerator :
         GraphScriptGenerationActionFactory,
         GraphScriptGenerationCheckFactory,
         ::GraphDeclarationState,
-        { NoScriptGenerationEnvironment },
+        NoScriptGenerationEnvironment,
     )
 
 val GraphScriptingHelper = ScriptingHelper(mapOf(

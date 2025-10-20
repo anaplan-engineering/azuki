@@ -9,7 +9,7 @@ import org.junit.Assert
 import org.slf4j.LoggerFactory
 
 open class ScriptGenerationTestHelper<S: BuildableScenario<AF>, AF: ActionFactory>(
-    private val generator: ScriptGenerator<AF, *, *, *, *, *>,
+    private val generatorFactory: () -> ScriptGenerator<AF, *, *, *, *, *>,
     private val parser: ScenarioParser<S> = SimpleScenarioParser(),
 ) {
     /**
@@ -24,13 +24,14 @@ open class ScriptGenerationTestHelper<S: BuildableScenario<AF>, AF: ActionFactor
      */
     fun checkScenarioGeneration(scenario: S, initContext: ScenarioParsingContext.() -> Unit = {}) {
         Log.debug("Generating script")
-        val generatedScript = generator.generateScript(scenario)
+        val generatedScript = generatorFactory().generateScript(scenario)
         Log.debug("Generated:\n$generatedScript")
 
         val parsedScenario = parser.parse(generatedScript, initContext)
 
+        // The two generators need to be separate to avoid sharing environment
         Log.debug("Regenerating script")
-        val regeneratedScript = generator.generateScript(parsedScenario)
+        val regeneratedScript = generatorFactory().generateScript(parsedScenario)
         Log.debug("Regenerated:\n$regeneratedScript")
 
         Assert.assertEquals(generatedScript, regeneratedScript)
