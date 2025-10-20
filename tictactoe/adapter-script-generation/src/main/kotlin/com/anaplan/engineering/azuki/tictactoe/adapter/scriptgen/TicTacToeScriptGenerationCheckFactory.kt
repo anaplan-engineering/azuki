@@ -2,9 +2,9 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationCheck
+import com.anaplan.engineering.azuki.script.generation.composeAs
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeThen
-import kotlin.reflect.KFunction
 
 object TicTacToeScriptGenerationCheckFactory : TicTacToeCheckFactory {
 
@@ -23,26 +23,13 @@ object GameScriptGenerationCheckFactory : GameCheckFactory {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameHasPlayOrder, gameName, players)
     }
 
-    override fun hasToken(gameName: String, playerName: String, position: Position) =
-        composableBoardCheck(gameName, TicTacToeThen::boardHasToken, playerName, position) {
-            addToken(playerName, position)
-        }
+    override fun hasToken(gameName: String, playerName: String, position: Position) = TicTacToeScriptGenerationCheck {
+        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasToken, gameName, playerName, position)
+    }.composeAs { e -> e.composeBoardCheck(gameName, decomposeTo = this) { addToken(playerName, position) } }
 
-    override fun hasSpace(gameName: String, position: Position) =
-        composableBoardCheck(gameName, TicTacToeThen::boardHasSpace, position) { addSpace(position) }
-
-    private fun composableBoardCheck(
-        gameName: String,
-        fn: KFunction<*>,
-        vararg args: Any,
-        compose: TicTacToeGenerationEnvironment.BoardCheckState.() -> TicTacToeGenerationEnvironment.BoardCheckState
-    ) = object : TicTacToeScriptGenerationCheck {
-        override fun composeInto(environment: TicTacToeGenerationEnvironment) =
-            environment.composeBoardCheck(gameName, this, compose)
-
-        override fun getCheckScript(environment: TicTacToeGenerationEnvironment) =
-            TicTacToeScriptingHelper.scriptifyFunction(fn, gameName, *args)
-    }
+    override fun hasSpace(gameName: String, position: Position) = TicTacToeScriptGenerationCheck {
+        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasSpace, gameName, position)
+    }.composeAs { e -> e.composeBoardCheck(gameName, decomposeTo = this) { addSpace(position) } }
 
     override fun hasState(gameName: String, moves: MoveMap) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasState, gameName, moves.pretty(3, 3))
