@@ -4,6 +4,8 @@ import com.anaplan.engineering.azuki.core.scenario.*
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 abstract class ScriptGenerator<
     AF : ActionFactory,
@@ -65,8 +67,29 @@ abstract class ScriptGenerator<
         val resolvers = checks.filterIsInstance<ScriptGenerationCheck<E>>().map {
             it to (it as? ComposableScriptGenerationCheck<E>)?.registerComposable(environment)
         }
-        val composedChecks = resolvers.flatMap { (original, composed) ->
-            composed?.compose(environment)?.getOrNull() ?: listOf(original)
+        val usedComposers = mutableSetOf<CheckComposer<E>>()
+        val failedComposers = mutableSetOf<CheckComposer<E>>()
+        val composedChecks = resolvers.flatMap { (original, composer) ->
+            if (composer in usedComposers) {
+                // only allow a previously-successful composer to be composed once, to avoid duplicates
+                emptyList()
+            } else if (composer == null || composer in failedComposers) {
+                // short-circuit to avoid re-evaluating the same failed composition multiple times
+                listOf(original)
+            } else {
+                composer.compose(environment).fold(
+                    onSuccess = {
+                        usedComposers.add(composer)
+                        it
+                    },
+                    onFailure = {
+                        Log.info("check {} failed to compose: {} ({})", original, it::class.simpleName, it.message)
+                        failedComposers.add(composer)
+                        listOf(original)
+                    }
+                )
+            }
+
         }.distinct()
 
         return if (composedChecks.isEmpty()) {
@@ -161,6 +184,8 @@ abstract class ScriptGenerator<
 
         private val declarationBuilderFactory =
             DeclarationBuilderFactory(ScriptGenerationDeclarationBuilderFactory::class.java)
+
+        private val Log: Logger = LoggerFactory.getLogger(ScriptGenerator::class.java)
     }
 }
 
