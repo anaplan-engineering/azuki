@@ -1,13 +1,15 @@
 package com.anaplan.engineering.azuki.script.generation
 
 import com.anaplan.engineering.azuki.core.system.Check
+import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 
 interface ScriptGenerationCheck<E : ScriptGenerationEnvironment> : Check {
 
     /**
      * Gets the script for this check without trying to compose it.
-     * May fail if the check is impossible to express as DSL without composition.
+     * May throw if the check is impossible to express as DSL without composition.
      */
+    @Throws(IllegalStateException::class)
     fun getCheckScript(environment: E): String
 }
 
@@ -34,3 +36,13 @@ inline fun <E : ScriptGenerationEnvironment> ScriptGenerationCheck<E>.asComposab
         override fun toString() = this@asComposable.toString()
     }
 
+/**
+ * Produces a composable-only check.
+ */
+inline fun <E : ScriptGenerationEnvironment> onlyComposable(crossinline register: E.() -> CheckComposer<E>): ComposableScriptGenerationCheck<E> =
+    object : ComposableScriptGenerationCheck<E> {
+
+        override val behavior = unsupportedBehavior
+        override fun getCheckScript(environment: E) = error("This check cannot be scriptified directly and must be composed")
+        override fun registerComposable(environment: E) = environment.register()
+    }
