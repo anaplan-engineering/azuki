@@ -22,12 +22,12 @@ interface ComposableScriptGenerationCheck<E : ScriptGenerationEnvironment> : Scr
 }
 
 /**
- * Attaches a composition step to a check that doesn't have one.
+ * Lifts a check to a composable check by applying the given composition step.
  */
-inline fun <C : ScriptGenerationCheck<E>, E : ScriptGenerationEnvironment> C.composeAs(crossinline compose: C.(E) -> ComposedCheckResolver<E>): ComposableScriptGenerationCheck<E> =
+inline fun <E : ScriptGenerationEnvironment> ScriptGenerationCheck<E>.asComposable(crossinline compose: E.() -> ComposedCheckResolver<E>): ComposableScriptGenerationCheck<E> =
     object : ComposableScriptGenerationCheck<E>, ScriptGenerationCheck<E> by this {
 
-        override fun composeInto(environment: E) = this@composeAs.compose(environment)
+        override fun composeInto(environment: E) = environment.compose()
     }
 
 fun interface ComposedCheckResolver<E : ScriptGenerationEnvironment> {

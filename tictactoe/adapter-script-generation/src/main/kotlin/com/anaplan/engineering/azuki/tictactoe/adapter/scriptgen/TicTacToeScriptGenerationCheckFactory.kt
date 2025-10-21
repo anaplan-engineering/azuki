@@ -2,7 +2,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationCheck
-import com.anaplan.engineering.azuki.script.generation.composeAs
+import com.anaplan.engineering.azuki.script.generation.asComposable
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeThen
 
@@ -25,11 +25,11 @@ object GameScriptGenerationCheckFactory : GameCheckFactory {
 
     override fun hasToken(gameName: String, playerName: String, position: Position) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasToken, gameName, playerName, position)
-    }.composeAs { e -> e.composeBoardCheck(gameName) { addToken(playerName, position) } }
+    }.asComposable { composeBoardCheck(gameName) { addToken(playerName, position) } }
 
     override fun hasSpace(gameName: String, position: Position) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasSpace, gameName, position)
-    }.composeAs { e -> e.composeBoardCheck(gameName) { addSpace(position) } }
+    }.asComposable { composeBoardCheck(gameName) { addSpace(position) } }
 
     override fun hasState(gameName: String, moves: MoveMap) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasState, gameName, moves.pretty(3, 3))
