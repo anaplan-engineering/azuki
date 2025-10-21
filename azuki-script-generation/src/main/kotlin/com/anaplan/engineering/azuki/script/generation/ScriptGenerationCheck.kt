@@ -16,7 +16,7 @@ interface ScriptGenerationCheck<E : ScriptGenerationEnvironment> : Check {
 interface ComposableScriptGenerationCheck<E : ScriptGenerationEnvironment> : ScriptGenerationCheck<E> {
 
     /**
-     * Registers a composable check with the environment.
+     * Registers this composable check with the environment.
      * Returns an object that, after all registrations are done, can be used to get any composed results for this check.
      */
     fun registerComposable(environment: E): CheckComposer<E>
