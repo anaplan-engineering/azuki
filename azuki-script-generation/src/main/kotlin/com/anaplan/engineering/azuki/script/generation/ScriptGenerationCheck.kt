@@ -27,5 +27,10 @@ inline fun <E : ScriptGenerationEnvironment> ScriptGenerationCheck<E>.asComposab
     object : ComposableScriptGenerationCheck<E>, ScriptGenerationCheck<E> by this {
 
         override fun registerComposable(environment: E) = environment.register()
+
+        // Allow distinctiveness checks etc. to ignore this wrapper
+        override fun equals(other: Any?) = this@asComposable == other
+        override fun hashCode() = this@asComposable.hashCode()
+        override fun toString() = this@asComposable.toString()
     }
 
