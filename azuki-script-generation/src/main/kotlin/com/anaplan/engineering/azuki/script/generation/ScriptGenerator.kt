@@ -67,7 +67,7 @@ abstract class ScriptGenerator<
         }
         val composedChecks = resolvers.flatMap { (original, composed) ->
             composed?.compose(environment)?.getOrNull() ?: listOf(original)
-        }
+        }.distinct()
 
         return if (composedChecks.isEmpty()) {
             throw IllegalArgumentException("No checks to generate!")
