@@ -36,19 +36,15 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
 
     // We want to collapse individual board-has-X checks into a single board-has-state check,
     // but only if the entire board is covered by them.
-    private val boardCheckStates: MutableMap<String, BoardCheckState> = mutableMapOf()
+    val boardCheckStates = CheckComposerMap(::BoardCheckState)
 
-    fun composeBoardCheck(
-        gameName: String, check: BoardCheckState.() -> BoardCheckState
-    ) = boardCheckStates.getOrPut(gameName) { BoardCheckState(gameName) }.apply { check() }
-
-    class BoardCheckState(private val gameName: String) : ComposedCheckResolver<TicTacToeGenerationEnvironment> {
+    class BoardCheckState(private val gameName: String) : CheckComposer<TicTacToeGenerationEnvironment> {
 
         private val tokens = mutableMapOf<Position, String>()
         private val spaces = mutableSetOf<Position>()
         private var isTaken = false
 
-        override fun resolveComposedCheck(environment: TicTacToeGenerationEnvironment) = if (isTaken) {
+        override fun compose(environment: TicTacToeGenerationEnvironment) = if (isTaken) {
             success(emptyList())
         } else if (isFullySpecified) {
             // only allow the composed form to appear in the final script once

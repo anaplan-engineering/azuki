@@ -4,7 +4,6 @@ import com.anaplan.engineering.azuki.core.scenario.*
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
-import kotlin.Result.Companion.success
 
 abstract class ScriptGenerator<
     AF : ActionFactory,
@@ -64,10 +63,10 @@ abstract class ScriptGenerator<
         }
         // compose everything maximally before we start trying to resolve the checks
         val resolvers = checks.filterIsInstance<ScriptGenerationCheck<E>>().map {
-            it to (it as? ComposableScriptGenerationCheck<E>)?.composeInto(environment)
+            it to (it as? ComposableScriptGenerationCheck<E>)?.registerComposable(environment)
         }
         val composedChecks = resolvers.flatMap { (original, composed) ->
-            composed?.resolveComposedCheck(environment)?.getOrNull() ?: listOf(original)
+            composed?.compose(environment)?.getOrNull() ?: listOf(original)
         }
 
         return if (composedChecks.isEmpty()) {
