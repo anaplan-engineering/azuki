@@ -70,5 +70,5 @@ class CheckComposerMap<E: ScriptGenerationEnvironment, K, S : CheckComposer<E>>(
 
     fun stateAt(key: K): S? = map[key]?.state
 
-    val states = map.values.map { it.state }
+    val states get() = map.values.map { it.state }
 }
