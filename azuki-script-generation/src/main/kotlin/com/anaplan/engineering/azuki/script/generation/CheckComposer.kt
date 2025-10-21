@@ -32,7 +32,7 @@ class StateBasedCheckComposer<E: ScriptGenerationEnvironment, S: CheckComposer<E
     /**
      * Registers a check, in the form of a transition on the composer's state.
      */
-    fun registerCheck(effect: S.() -> S): CheckComposer<E> = apply {
+    fun register(effect: S.() -> S): CheckComposer<E> = apply {
         require(!taken) { "tried to compose a check but we've already taken the composed checks for this check state" }
         _state = _state.effect()
     }
@@ -64,9 +64,9 @@ class CheckComposerMap<E: ScriptGenerationEnvironment, K, S : CheckComposer<E>>(
      * Registers a check for composition under the check state addressed by the given key.
      * Applies the given transformation to the check state to capture the knowledge added from the check.
      */
-    fun registerCheck(key: K, effect: S.() -> S): CheckComposer<E> = map.getOrPut(key) {
+    fun register(key: K, effect: S.() -> S): CheckComposer<E> = map.getOrPut(key) {
         StateBasedCheckComposer(constructor(key))
-    }.registerCheck(effect)
+    }.register(effect)
 
     fun stateAt(key: K): S? = map[key]?.state
 
