@@ -49,7 +49,7 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
             failure(IllegalStateException("board has not been fully specified"))
         }
 
-        private val isFullySpecified get() = tokens.size * spaces.size >= Width * Height
+        private val isFullySpecified get() = tokens.size + spaces.size == Width * Height
 
         fun addToken(player: String, position: Position) = apply { tokens[position] = player }
         fun addSpace(position: Position) = apply { spaces.add(position) }

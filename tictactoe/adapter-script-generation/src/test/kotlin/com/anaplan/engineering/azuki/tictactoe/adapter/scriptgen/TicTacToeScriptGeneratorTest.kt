@@ -5,9 +5,10 @@ import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTestHelper
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.verifiableScenario
-import org.junit.Test
+import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertFalse
+import kotlin.test.expect
 
 class TicTacToeScriptGeneratorTest {
 
@@ -53,6 +54,37 @@ class TicTacToeScriptGeneratorTest {
         assertFalse {
             TicTacToeScriptGenerator().generateScript(scenario).contains("boardHasState")
         }
+    }
+
+    @Test
+    fun boardHasStateNotReconstructedIfSlightlyUnderspecified() {
+        val scenario = verifiableScenario {
+            given {
+                thereIsANewGame(gameA)
+            }
+            whenever {
+                placeToken(gameA, X, 1 to 1)
+                placeToken(gameA, O, 3 to 1)
+                placeToken(gameA, X, 2 to 2)
+                placeToken(gameA, O, 1 to 2)
+                placeToken(gameA, X, 3 to 3)
+            }
+            then {
+                // this is a winning position, but still underspecified
+                boardHasToken(gameA, X, 1 to 1)
+                boardHasSpace(gameA, 2 to 1)
+                boardHasToken(gameA, O, 3 to 1)
+                boardHasSpace(gameA, 1 to 2)
+                boardHasToken(gameA, X, 2 to 2)
+                boardHasSpace(gameA, 3 to 2)
+                boardHasToken(gameA, X, 3 to 3)
+            }
+        }
+
+        val lines = TicTacToeScriptGenerator().generateScript(scenario).lines()
+        assertFalse { lines.any { "boardHasState" in it } }
+        expect(4) { lines.count { "boardHasToken" in it } }
+        expect(3) { lines.count { "boardHasSpace" in it } }
     }
 
     @Test

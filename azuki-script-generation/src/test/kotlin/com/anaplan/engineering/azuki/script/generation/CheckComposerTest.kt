@@ -1,9 +1,8 @@
 package com.anaplan.engineering.azuki.script.generation
 
-import org.junit.Test
-
-import org.junit.Assert.*
+import kotlin.test.Test
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlin.test.expect
 
 class CheckComposerTest {
@@ -36,10 +35,10 @@ class CheckComposerTest {
         val map = CheckComposerMap(Example::new)
         val env = NoScriptGenerationEnvironment
         val composerA = map.register("a") { increment() }
-        assertTrue("first composer should initially succeed", composerA.compose(env).isSuccess)
+        assertTrue("first composer should initially succeed") { composerA.compose(env).isSuccess }
         val composerB = map.register("a") { fail() }
-        assertTrue("second composer should fail", composerB.compose(env).isFailure)
-        assertTrue("first composer should now also fail", composerA.compose(env).isFailure)
+        assertTrue("second composer should fail") { composerB.compose(env).isFailure }
+        assertTrue("first composer should now also fail" ) { composerA.compose(env).isFailure }
     }
 
     @Test
