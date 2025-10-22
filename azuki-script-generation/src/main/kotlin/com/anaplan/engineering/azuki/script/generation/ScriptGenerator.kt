@@ -63,7 +63,6 @@ abstract class ScriptGenerator<
             require(it !is UnsupportedCheck) { "unsupported check: $it" }
             require(it is ScriptGenerationCheck<*>) { "check $it is not a ScriptGenerationCheck" }
         }
-        // compose everything maximally before we start trying to resolve the checks
         val checksWithComposers = checks.filterIsInstance<ScriptGenerationCheck<E>>().map {
             it to (it as? ComposableScriptGenerationCheck<E>)?.registerComposable(environment)
         }
