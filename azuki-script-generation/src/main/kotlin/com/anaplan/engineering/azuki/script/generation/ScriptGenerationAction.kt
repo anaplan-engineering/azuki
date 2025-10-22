@@ -3,16 +3,17 @@ package com.anaplan.engineering.azuki.script.generation
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.core.system.ParallelAction
 
-interface ScriptGenerationAction : Action {
-    fun getActionScript(): String
+interface ScriptGenerationAction<in E : ScriptGenerationEnvironment> : Action {
+
+    fun getActionScript(environment: E): String
 }
 
-class ScriptGenerationParallelAction(actions: List<List<ScriptGenerationAction>>) :
-    ParallelAction<ScriptGenerationAction>(actions), ScriptGenerationAction {
+class ScriptGenerationParallelAction<in E : ScriptGenerationEnvironment>(actions: List<List<ScriptGenerationAction<E>>>) :
+    ParallelAction<ScriptGenerationAction<E>>(actions), ScriptGenerationAction<E> {
 
-    override fun getActionScript() = """
+    override fun getActionScript(environment: E) = """
         parallel(${
-        runActionsSequentially { it.getActionScript() }.joinToString(", ") {
+        runActionsSequentially { it.getActionScript(environment) }.joinToString(", ") {
             """
             {
                 ${it.joinToString("\n")}
@@ -23,5 +24,6 @@ class ScriptGenerationParallelAction(actions: List<List<ScriptGenerationAction>>
     """
 }
 
-fun Action.toScriptGenAction() =
-    this as? ScriptGenerationAction ?: throw IllegalArgumentException("Incompatible action: $this")
+@Suppress("UNCHECKED_CAST")
+fun <E : ScriptGenerationEnvironment> Action.toScriptGenAction() =
+    this as? ScriptGenerationAction<E> ?: throw IllegalArgumentException("Incompatible action: $this")

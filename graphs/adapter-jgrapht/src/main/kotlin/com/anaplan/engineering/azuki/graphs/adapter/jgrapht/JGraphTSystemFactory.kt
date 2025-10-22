@@ -96,7 +96,7 @@ data class JGraphTSystem(
     companion object {
         private val declarationBuilderFactory = DeclarationBuilderFactory(JGraphTDeclarationBuilderFactory::class.java)
 
-        private val declarationStateBuilder = DeclarationStateBuilder(GraphDeclarationState.Factory)
+        private val declarationStateBuilder = DeclarationStateBuilder(::GraphDeclarationState)
 
         private val Log = LoggerFactory.getLogger(JGraphTSystemFactory::class.java)
     }

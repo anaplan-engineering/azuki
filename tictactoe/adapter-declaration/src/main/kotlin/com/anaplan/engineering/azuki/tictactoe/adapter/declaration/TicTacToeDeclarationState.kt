@@ -22,8 +22,4 @@ class TicTacToeDeclarationState : DeclarationState() {
         val game = getDeclaration<GameDeclaration>(gameName)
         declarations[gameName] = game.copy(moves = game.moves.plus(position to playerName))
     }
-
-    object Factory : DeclarationStateFactory<TicTacToeDeclarationState> {
-        override fun create() = TicTacToeDeclarationState()
-    }
 }

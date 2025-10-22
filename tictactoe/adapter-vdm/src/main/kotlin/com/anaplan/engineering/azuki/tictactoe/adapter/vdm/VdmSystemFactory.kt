@@ -76,6 +76,6 @@ data class VdmSystem(
     companion object {
         private val declarationBuilderFactory = DeclarationBuilderFactory(VdmDeclarationBuilderFactory::class.java)
 
-        private val declarationStateBuilder = DeclarationStateBuilder(TicTacToeDeclarationState.Factory)
+        private val declarationStateBuilder = DeclarationStateBuilder(::TicTacToeDeclarationState)
     }
 }

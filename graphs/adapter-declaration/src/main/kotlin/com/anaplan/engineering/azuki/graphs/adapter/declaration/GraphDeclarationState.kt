@@ -48,10 +48,6 @@ class GraphDeclarationState : DeclarationState() {
             edges = declaration.edges + Pair(source, target)
         )
     }
-
-    object Factory : DeclarationStateFactory<GraphDeclarationState> {
-        override fun create() = GraphDeclarationState()
-    }
 }
 
 

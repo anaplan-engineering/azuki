@@ -96,7 +96,7 @@ data class JungSystem(
     companion object {
         private val declarationBuilderFactory = DeclarationBuilderFactory(JungDeclarationBuilderFactory::class.java)
 
-        private val declarationStateBuilder = DeclarationStateBuilder(GraphDeclarationState.Factory)
+        private val declarationStateBuilder = DeclarationStateBuilder(::GraphDeclarationState)
 
         private val Log = LoggerFactory.getLogger(JungSystemFactory::class.java)
     }
