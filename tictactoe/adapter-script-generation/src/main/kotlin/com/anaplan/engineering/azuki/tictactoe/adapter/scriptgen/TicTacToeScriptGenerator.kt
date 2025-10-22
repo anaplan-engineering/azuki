@@ -42,13 +42,8 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
 
         private val tokens = mutableMapOf<Position, String>()
         private val spaces = mutableSetOf<Position>()
-        private var isTaken = false
 
-        override fun compose(environment: TicTacToeGenerationEnvironment) = if (isTaken) {
-            success(emptyList())
-        } else if (isFullySpecified) {
-            // only allow the composed form to appear in the final script once
-            isTaken = true
+        override fun compose(environment: TicTacToeGenerationEnvironment) = if (isFullySpecified) {
             success(listOf(GameScriptGenerationCheckFactory.hasState(gameName, tokens)))
         } else {
             failure(IllegalStateException("board has not been fully specified"))
