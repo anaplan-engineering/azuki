@@ -3,14 +3,13 @@ package com.anaplan.engineering.azuki.script.generation
 import org.junit.Test
 
 import org.junit.Assert.*
-import kotlin.reflect.jvm.internal.impl.util.Check
 import kotlin.test.assertIs
 import kotlin.test.expect
 
-class CheckComposerMapTest {
+class CheckComposerTest {
 
     @Test
-    fun registerReusesSameComposer() {
+    fun mapRegisterReusesSameComposer() {
         val map = CheckComposerMap(Example::new)
         map.register("a") { increment() }
         map.register("b") { increment() }
@@ -24,7 +23,7 @@ class CheckComposerMapTest {
     }
 
     @Test
-    fun registerUpdatesMapOnObjectChange() {
+    fun mapRegisterUpdatesMapOnObjectChange() {
         val map = CheckComposerMap(Example::new)
         map.register("a") { increment() }
         assertIs<Success>(map["a"])
@@ -33,7 +32,7 @@ class CheckComposerMapTest {
     }
 
     @Test
-    fun registerReturnTargetsMostRecentComposer() {
+    fun mapPropagatesComposerObjectChanges() {
         val map = CheckComposerMap(Example::new)
         val env = NoScriptGenerationEnvironment
         val composerA = map.register("a") { increment() }
@@ -41,6 +40,28 @@ class CheckComposerMapTest {
         val composerB = map.register("a") { fail() }
         assertTrue("second composer should fail", composerB.compose(env).isFailure)
         assertTrue("first composer should now also fail", composerA.compose(env).isFailure)
+    }
+
+    @Test
+    fun wrapperRegisterReusesSameComposer() {
+        val original = Example.new("a")
+        val wrapper = CheckComposerWrapper(original)
+        wrapper.register { increment() }
+        wrapper.register { increment() }
+        wrapper.register { increment() }
+        wrapper.register { increment() }
+        wrapper.register { increment() }
+        expect(original, "should be wrapping the same object") { wrapper.inner }
+        expect(5, "should have mutated the same object") { wrapper.inner.counter }
+    }
+
+    @Test
+    fun wrapperPropagatesComposerObjectChanges() {
+        val original = Example.new("a")
+        val wrapper = CheckComposerWrapper(original)
+        expect(original, "should have stored the original object") { wrapper.inner }
+        wrapper.register { fail() }
+        assertIs<Fail>(wrapper.inner, "should have changed the inner object")
     }
 
     interface Example : CheckComposer<NoScriptGenerationEnvironment> {

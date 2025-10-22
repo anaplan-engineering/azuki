@@ -19,25 +19,25 @@ fun interface CheckComposer<E : ScriptGenerationEnvironment> {
  */
 class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>(val constructor: (K) -> S) {
 
-    private val map = mutableMapOf<K, Wrapper<E, S>>()
+    private val map = mutableMapOf<K, CheckComposerWrapper<E, S>>()
 
     /**
      * Registers a check for composition under the check state addressed by the given key.
      * Applies the given transformation to the check state to capture the knowledge added from the check.
      */
     fun register(key: K, effect: S.() -> S): CheckComposer<E> =
-        map.getOrPut(key) { Wrapper(constructor(key)) }.transform(effect)
-
-    /**
-     * Wraps a composer to ensure that effects that replace it with another object propagate correctly to the generator.
-     */
-    class Wrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>>(var inner: S) : CheckComposer<E> {
-
-        fun transform(effect: S.() -> S) = apply { inner = inner.effect() }
-        override fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>> = inner.compose(environment)
-    }
+        map.getOrPut(key) { CheckComposerWrapper(constructor(key)) }.register(effect)
 
     operator fun get(key: K): S? = map[key]?.inner
 
     val composers get() = map.values.map { it.inner }
+}
+
+/**
+ * Wraps a composer to ensure that effects that replace it with another object propagate correctly to the generator.
+ */
+class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>>(var inner: S) : CheckComposer<E> {
+
+    fun register(effect: S.() -> S) = apply { inner = inner.effect() }
+    override fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>> = inner.compose(environment)
 }
