@@ -1,9 +1,8 @@
 package com.anaplan.engineering.azuki.script.generation
 
-import kotlin.test.Test
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
-import kotlin.test.expect
+import com.anaplan.engineering.azuki.core.system.Behavior
+import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
+import kotlin.test.*
 
 class CheckComposerTest {
 
@@ -25,9 +24,18 @@ class CheckComposerTest {
     fun mapRegisterUpdatesMapOnObjectChange() {
         val map = CheckComposerMap(Example::new)
         map.register("a") { increment() }
-        assertIs<Success>(map["a"])
-        map.register("a") { fail() }
-        assertIs<Fail>(map["a"])
+        assertIs<Forwards>(map["a"])
+        map.register("a") { reverse() }
+        assertIs<Backwards>(map["a"])
+    }
+
+    @Test
+    fun mapRegisterRemovesFromMapOnFailure() {
+        val map = CheckComposerMap(Example::new)
+        map.register("a") { increment() }
+        assertIs<Forwards>(map["a"])
+        map.tryRegister("a") { Result.failure(IllegalStateException("oops")) }
+        assertNull(map["a"], "a should now appear to have been removed")
     }
 
     @Test
@@ -35,10 +43,19 @@ class CheckComposerTest {
         val map = CheckComposerMap(Example::new)
         val env = NoScriptGenerationEnvironment
         val composerA = map.register("a") { increment() }
-        assertTrue("first composer should initially succeed") { composerA.compose(env).isSuccess }
-        val composerB = map.register("a") { fail() }
-        assertTrue("second composer should fail") { composerB.compose(env).isFailure }
-        assertTrue("first composer should now also fail" ) { composerA.compose(env).isFailure }
+        expect("forwards(1)") { composerA.compose(env).getOrThrow()[0].getCheckScript(NoScriptGenerationEnvironment) }
+        val composerB = map.register("a") { reverse() }
+        listOf(composerA, composerB).forEach { c ->
+            expect("backwards(0)") { c.compose(env).getOrThrow()[0].getCheckScript(NoScriptGenerationEnvironment) }
+        }
+        val composerC = map.register("a") { increment() }
+        listOf(composerA, composerB, composerC).forEach { c ->
+            expect("backwards(-1)") { c.compose(env).getOrThrow()[0].getCheckScript(NoScriptGenerationEnvironment) }
+        }
+        val composerD = map.tryRegister("a") { fail() }
+        listOf(composerA, composerB, composerC, composerD).forEach { c ->
+            assertIs<IllegalStateException>(c.compose(env).exceptionOrNull())
+        }
     }
 
     @Test
@@ -50,46 +67,67 @@ class CheckComposerTest {
         wrapper.register { increment() }
         wrapper.register { increment() }
         wrapper.register { increment() }
-        expect(original, "should be wrapping the same object") { wrapper.inner }
-        expect(5, "should have mutated the same object") { wrapper.inner.counter }
+        val inner = wrapper.inner.getOrThrow()
+        expect(original, "should be wrapping the same object") { inner }
+        expect(5, "should have mutated the same object") { inner.counter }
     }
 
     @Test
     fun wrapperPropagatesComposerObjectChanges() {
         val original = Example.new("a")
         val wrapper = CheckComposerWrapper(original)
-        expect(original, "should have stored the original object") { wrapper.inner }
-        wrapper.register { fail() }
-        assertIs<Fail>(wrapper.inner, "should have changed the inner object")
+        expect(original, "should have stored the original object") { wrapper.inner.getOrThrow() }
+        wrapper.register { reverse() }
+        assertIs<Backwards>(wrapper.inner.getOrThrow(), "should have changed the inner object")
     }
 
-    interface Example : CheckComposer<NoScriptGenerationEnvironment> {
+    @Test
+    fun wrapperPropagatesComposerFailures() {
+        val original = Example.new("a")
+        val wrapper = CheckComposerWrapper(original)
+        expect(original, "should have stored the original object") { wrapper.inner.getOrThrow() }
+        wrapper.tryRegister { Result.failure(IllegalStateException("oops")) }
+        assertIs<IllegalStateException>(wrapper.inner.exceptionOrNull(), "should have changed the inner object")
+    }
 
-        val counter : Int?
-        fun increment(): Example
-        fun fail(): Example
+    abstract class Example(val name: String) : CheckComposer<NoScriptGenerationEnvironment> {
+
+        abstract val counter: Int?
+        abstract fun increment(): Example
+        abstract fun reverse(): Example
+        fun fail(): Result<Example> = Result.failure(IllegalStateException("oops"))
 
         companion object {
 
-            fun new(name: String) : Example = Success(name)
+            fun new(name: String): Example = Forwards(name)
         }
     }
 
-    class Success(val name: String) : Example {
+    class Forwards(name: String) : Example(name) {
 
         override var counter = 0
         override fun increment() = apply { counter++ }
-        override fun fail() = Fail
+        override fun reverse() = Backwards(name)
         override fun compose(environment: NoScriptGenerationEnvironment) =
-            Result.success<List<ScriptGenerationCheck<NoScriptGenerationEnvironment>>>(emptyList())
+            Result.success<List<ScriptGenerationCheck<NoScriptGenerationEnvironment>>>(listOf(object :
+                ScriptGenerationCheck<NoScriptGenerationEnvironment> {
+
+                override val behavior = unsupportedBehavior
+                override fun getCheckScript(environment: NoScriptGenerationEnvironment) = "forwards($counter)"
+            }))
     }
 
-    object Fail : Example {
+    class Backwards(name: String) : Example(name) {
 
-        override val counter = null
-        override fun increment() = this
-        override fun fail() = this
+        override var counter = 0
+        override fun increment() = apply { counter-- }
+        override fun reverse() = Forwards(name)
         override fun compose(environment: NoScriptGenerationEnvironment) =
-            Result.failure<List<ScriptGenerationCheck<NoScriptGenerationEnvironment>>>(IllegalStateException("failed"))
+            Result.success<List<ScriptGenerationCheck<NoScriptGenerationEnvironment>>>(listOf(object :
+                ScriptGenerationCheck<NoScriptGenerationEnvironment> {
+
+                override val behavior = unsupportedBehavior
+                override fun getCheckScript(environment: NoScriptGenerationEnvironment) = "backwards($counter)"
+            }))
     }
 }

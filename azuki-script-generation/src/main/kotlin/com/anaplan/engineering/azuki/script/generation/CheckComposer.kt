@@ -22,13 +22,22 @@ class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>
     private val map = mutableMapOf<K, CheckComposerWrapper<E, S>>()
 
     /**
-     * Registers a check for composition under the check state addressed by the given key.
-     * Applies the given transformation to the check state to capture the knowledge added from the check.
+     * Registers a check for composition inside this map, under the given key and with the given effect.
+     * If an existing composer exists under the same key, the effect is applied cumulatively to it.
      */
-    fun register(key: K, effect: S.() -> S): CheckComposer<E> =
-        map.getOrPut(key) { CheckComposerWrapper(constructor(key)) }.register(effect)
+    fun register(key: K, effect: S.() -> S): CheckComposer<E> = getOrInit(key).register(effect)
 
-    operator fun get(key: K): S? = map[key]?.inner
+    /**
+     * As with register(), but can fail, permanently halting composition for this key
+     */
+    fun tryRegister(key: K, effect: S.() -> Result<S>): CheckComposer<E> = getOrInit(key).tryRegister(effect)
+
+    private fun getOrInit(key: K) = map.getOrPut(key) { CheckComposerWrapper(constructor(key)) }
+
+    /**
+     * Gets the composer for a key, provided that it hasn't been removed through failure.
+     */
+    operator fun get(key: K): S? = map[key]?.inner?.getOrNull()
 
     val composers get() = map.values.map { it.inner }
 }
@@ -36,8 +45,22 @@ class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>
 /**
  * Wraps a composer to ensure that effects that replace it with another object propagate correctly to the generator.
  */
-class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>>(var inner: S) : CheckComposer<E> {
+class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>>(initial: S) : CheckComposer<E> {
 
-    fun register(effect: S.() -> S) = apply { inner = inner.effect() }
-    override fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>> = inner.compose(environment)
+    var inner = Result.success(initial)
+
+    /**
+     * Registers a check on the inner composer by applying an effect to it.
+     * If the effect returns a new object, this wrapper updates to point to it.
+     */
+    fun register(effect: S.() -> S) = apply { inner = inner.map(effect) }
+
+    /**
+     * As with register(), but can fail, permanently halting composition.
+     */
+    fun tryRegister(effect: S.() -> Result<S>) = apply { inner = bind(effect) }
+
+    override fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>> = bind { compose(environment) }
+
+    private fun <T> bind(fn: S.() -> Result<T>) = inner.fold(onSuccess = fn, onFailure = { Result.failure(it) })
 }

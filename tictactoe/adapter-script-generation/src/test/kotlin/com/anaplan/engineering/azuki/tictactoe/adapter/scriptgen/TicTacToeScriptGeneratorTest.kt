@@ -125,6 +125,39 @@ class TicTacToeScriptGeneratorTest {
         """.normalise())
     }
 
+    @Test
+    fun boardHasStateIsNotReconstructedIfDuplicateChecksAdded() {
+        val scenario = verifiableScenario {
+            given {
+                thereIsANewGame(gameA)
+            }
+            whenever {
+                placeToken(gameA, X, 1 to 1)
+                placeToken(gameA, O, 3 to 1)
+                placeToken(gameA, X, 1 to 3)
+                placeToken(gameA, O, 1 to 2)
+                placeToken(gameA, X, 3 to 3)
+            }
+            then {
+                boardHasToken(gameA, X, 1 to 1)
+                boardHasToken(gameA, O, 1 to 2)
+                boardHasToken(gameA, X, 1 to 3)
+                boardHasSpace(gameA, 2 to 1)
+                boardHasSpace(gameA, 2 to 2)
+                boardHasSpace(gameA, 2 to 3)
+                boardHasToken(gameA, O, 3 to 1)
+                boardHasSpace(gameA, 3 to 2)
+                boardHasToken(gameA, X, 3 to 3)
+                boardHasToken(gameA, O, 1 to 1)  // oops!
+            }
+        }
+
+        val lines = TicTacToeScriptGenerator().generateScript(scenario).lines()
+        assertFalse { lines.any { "boardHasState" in it } }
+        expect(6) { lines.count { "boardHasToken" in it } }
+        expect(4) { lines.count { "boardHasSpace" in it } }
+    }
+
     private fun String.normalise(): String {
         val noNewlines = replace(Regex("[ \n]+"), " ")
         val noTripleQuoteSpace = noNewlines.replace(Regex(" *${triple} *"), triple)
