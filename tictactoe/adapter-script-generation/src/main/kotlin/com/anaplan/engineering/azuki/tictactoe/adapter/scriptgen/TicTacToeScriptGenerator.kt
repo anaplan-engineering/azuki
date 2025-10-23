@@ -55,7 +55,7 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
         fun hasSpace(position: Position) = at(position) { spaces.add(position) }
 
         private fun at(position: Position, fn: BoardCheckState.() -> Unit) = if (position in tokens || position in spaces) {
-            failure<BoardCheckState>(IllegalStateException("position $position is checked already"))
+            failure(IllegalStateException("position $position is checked already"))
         } else success(apply(fn))
     }
 }

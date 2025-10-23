@@ -41,20 +41,15 @@ class CheckComposerTest {
     @Test
     fun mapPropagatesComposerObjectChanges() {
         val map = CheckComposerMap(Example::new)
-        val env = NoScriptGenerationEnvironment
         val composerA = map.register("a") { increment() }
-        expect("forwards(1)") { composerA.compose(env).getOrThrow()[0].getCheckScript(NoScriptGenerationEnvironment) }
+        expect("forwards(1)") { composerA.toScript() }
         val composerB = map.register("a") { reverse() }
-        listOf(composerA, composerB).forEach { c ->
-            expect("backwards(0)") { c.compose(env).getOrThrow()[0].getCheckScript(NoScriptGenerationEnvironment) }
-        }
+        listOf(composerA, composerB).forEach { c -> expect("backwards(0)") { c.toScript() } }
         val composerC = map.register("a") { increment() }
-        listOf(composerA, composerB, composerC).forEach { c ->
-            expect("backwards(-1)") { c.compose(env).getOrThrow()[0].getCheckScript(NoScriptGenerationEnvironment) }
-        }
+        listOf(composerA, composerB, composerC).forEach { c -> expect("backwards(-1)") { c.toScript() } }
         val composerD = map.tryRegister("a") { fail() }
         listOf(composerA, composerB, composerC, composerD).forEach { c ->
-            assertIs<IllegalStateException>(c.compose(env).exceptionOrNull())
+            assertIs<IllegalStateException>(c.compose(NoScriptGenerationEnvironment).exceptionOrNull())
         }
     }
 
@@ -62,32 +57,32 @@ class CheckComposerTest {
     fun wrapperRegisterReusesSameComposer() {
         val original = Example.new("a")
         val wrapper = CheckComposerWrapper(original)
+        expect("forwards(0)", "should have stored the original object") { wrapper.toScript() }
         wrapper.register { increment() }
         wrapper.register { increment() }
         wrapper.register { increment() }
         wrapper.register { increment() }
         wrapper.register { increment() }
-        val inner = wrapper.inner.getOrThrow()
-        expect(original, "should be wrapping the same object") { inner }
-        expect(5, "should have mutated the same object") { inner.counter }
+        expect("forwards(5)", "should have mutated the same object") { wrapper.toScript() }
     }
 
     @Test
     fun wrapperPropagatesComposerObjectChanges() {
         val original = Example.new("a")
         val wrapper = CheckComposerWrapper(original)
-        expect(original, "should have stored the original object") { wrapper.inner.getOrThrow() }
+        expect("forwards(0)", "should have stored the original object") { wrapper.toScript() }
         wrapper.register { reverse() }
-        assertIs<Backwards>(wrapper.inner.getOrThrow(), "should have changed the inner object")
+        expect("backwards(0)", "should have changed the inner object") { wrapper.toScript() }
     }
 
     @Test
     fun wrapperPropagatesComposerFailures() {
         val original = Example.new("a")
         val wrapper = CheckComposerWrapper(original)
-        expect(original, "should have stored the original object") { wrapper.inner.getOrThrow() }
+        expect("forwards(0)", "should have stored the original object") { wrapper.toScript() }
         wrapper.tryRegister { Result.failure(IllegalStateException("oops")) }
-        assertIs<IllegalStateException>(wrapper.inner.exceptionOrNull(), "should have changed the inner object")
+        assertIs<IllegalStateException>(wrapper.compose(NoScriptGenerationEnvironment).exceptionOrNull(),
+            "should have changed the inner object")
     }
 
     abstract class Example(val name: String) : CheckComposer<NoScriptGenerationEnvironment> {
@@ -131,3 +126,6 @@ class CheckComposerTest {
             }))
     }
 }
+
+private fun CheckComposer<NoScriptGenerationEnvironment>.toScript() =
+    compose(NoScriptGenerationEnvironment).getOrThrow()[0].getCheckScript(NoScriptGenerationEnvironment)

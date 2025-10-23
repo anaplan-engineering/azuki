@@ -37,9 +37,9 @@ class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>
     /**
      * Gets the composer for a key, provided that it hasn't been removed through failure.
      */
-    operator fun get(key: K): S? = map[key]?.inner?.getOrNull()
+    operator fun get(key: K): S? = map[key]?.composer
 
-    val composers get() = map.values.map { it.inner }
+    val composers get() = map.values.mapNotNull { it.composer }
 }
 
 /**
@@ -47,20 +47,21 @@ class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>
  */
 class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>>(initial: S) : CheckComposer<E> {
 
-    var inner = Result.success(initial)
+    private var _inner = Result.success(initial)
+    val composer: S? = _inner.getOrNull()
 
     /**
      * Registers a check on the inner composer by applying an effect to it.
      * If the effect returns a new object, this wrapper updates to point to it.
      */
-    fun register(effect: S.() -> S) = apply { inner = inner.map(effect) }
+    fun register(effect: S.() -> S) = apply { _inner = _inner.map(effect) }
 
     /**
      * As with register(), but can fail, permanently halting composition.
      */
-    fun tryRegister(effect: S.() -> Result<S>) = apply { inner = bind(effect) }
+    fun tryRegister(effect: S.() -> Result<S>) = apply { _inner = bind(effect) }
 
     override fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>> = bind { compose(environment) }
 
-    private fun <T> bind(fn: S.() -> Result<T>) = inner.fold(onSuccess = fn, onFailure = { Result.failure(it) })
+    private fun <T> bind(fn: S.() -> Result<T>) = _inner.fold(onSuccess = fn, onFailure = { Result.failure(it) })
 }
