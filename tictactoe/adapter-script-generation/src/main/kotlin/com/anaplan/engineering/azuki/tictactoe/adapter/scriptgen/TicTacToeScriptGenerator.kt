@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.script.generation.*
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
@@ -9,6 +10,10 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
+
+val TicTacToeScriptGeneration = ScriptGenerationService.create(TicTacToeScriptGenerationActionFactory,
+    TicTacToeScriptGenerationCheckFactory,
+    ::TicTacToeDeclarationState).withEnvironmentFactory(::TicTacToeGenerationEnvironment)
 
 class TicTacToeScriptGenerator(environment: TicTacToeGenerationEnvironment = TicTacToeGenerationEnvironment()) :
     VerificationCapableScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(
@@ -58,8 +63,9 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
         fun hasToken(player: String, position: Position) = at(position) { tokens[position] = player }
         fun hasSpace(position: Position) = at(position) { spaces.add(position) }
 
-        private fun at(position: Position, fn: BoardCheckState.() -> Unit) = if (position in tokens || position in spaces) {
-            failure(IllegalStateException("position $position is checked already"))
-        } else success(apply(fn))
+        private fun at(position: Position, fn: BoardCheckState.() -> Unit) =
+            if (position in tokens || position in spaces) {
+                failure(IllegalStateException("position $position is checked already"))
+            } else success(apply(fn))
     }
 }

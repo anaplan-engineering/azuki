@@ -66,7 +66,7 @@ abstract class ScriptGenerator<
         val checksWithComposers = checks.filterIsInstance<ScriptGenerationCheck<E>>().map {
             it to (it as? ComposableScriptGenerationCheck<E>)?.registerComposable(environment)
         }
-        val composedChecks = composeChecks(checksWithComposers)
+        val composedChecks = composeChecks(environment, checksWithComposers)
         return if (composedChecks.isEmpty()) {
             throw IllegalArgumentException("No checks to generate!")
         } else {
@@ -76,29 +76,6 @@ abstract class ScriptGenerator<
                 }
             """
         }
-    }
-
-    private fun composeChecks(checksWithComposers: List<Pair<ScriptGenerationCheck<E>, CheckComposer<E>?>>): List<ScriptGenerationCheck<E>> {
-        val succeeded = mutableSetOf<CheckComposer<E>>()
-        val failed = mutableSetOf<CheckComposer<E>>()
-        val composedChecks = checksWithComposers.flatMap { (check, composer) ->
-            when (composer) {
-                // non-composable checks pass through unaltered
-                // (also, avoid re-evaluating failed compositions as we assume they'll fail again)
-                null, in failed -> listOf(check)
-                // only allow a successful composers to be composed once, to avoid duplicates
-                in succeeded -> emptyList()
-                // otherwise, we're seeing a composable check for the first time
-                else -> composer.compose(environment).onSuccess {
-                    succeeded.add(composer)
-                }.getOrElse {
-                    failed.add(composer)
-                    Log.info("check {} failed to compose: {} ({})", check, it::class.simpleName, it.message)
-                    listOf(check)
-                }
-            }
-        }
-        return composedChecks.distinct()
     }
 
     fun generateVerifiableScenarioScript(given: String, whenever: String, then: String) = """

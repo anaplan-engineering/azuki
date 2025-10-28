@@ -7,7 +7,12 @@ import com.anaplan.engineering.azuki.graphs.adapter.api.GraphCheckFactory
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.GraphDeclarationState
 import com.anaplan.engineering.azuki.script.generation.NoScriptGenerationEnvironment
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerator
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import com.anaplan.engineering.azuki.script.generation.ScriptingHelper
+
+val GraphScriptGeneration = ScriptGenerationService.create(GraphScriptGenerationActionFactory,
+    GraphScriptGenerationCheckFactory,
+    ::GraphDeclarationState)
 
 object GraphScriptGenerator :
     ScriptGenerator<GraphActionFactory<*>, GraphCheckFactory, NoQueryFactory, NoActionGeneratorFactory, GraphDeclarationState, NoScriptGenerationEnvironment>(

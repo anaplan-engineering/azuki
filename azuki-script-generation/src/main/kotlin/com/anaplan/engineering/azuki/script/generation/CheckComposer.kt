@@ -1,5 +1,7 @@
 package com.anaplan.engineering.azuki.script.generation
 
+import com.anaplan.engineering.azuki.script.generation.StageBuilder.Companion.Log
+
 fun interface CheckComposer<E : ScriptGenerationEnvironment> {
 
     /**
@@ -64,4 +66,27 @@ class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>
     override fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>> = bind { compose(environment) }
 
     private fun <T> bind(fn: S.() -> Result<T>) = _inner.fold(onSuccess = fn, onFailure = { Result.failure(it) })
+}
+
+internal fun <E: ScriptGenerationEnvironment> composeChecks(environment: E, checksWithComposers: List<Pair<ScriptGenerationCheck<E>, CheckComposer<E>?>>): List<ScriptGenerationCheck<E>> {
+    val succeeded = mutableSetOf<CheckComposer<E>>()
+    val failed = mutableSetOf<CheckComposer<E>>()
+    val composedChecks = checksWithComposers.flatMap { (check, composer) ->
+        when (composer) {
+            // non-composable checks pass through unaltered
+            // (also, avoid re-evaluating failed compositions as we assume they'll fail again)
+            null, in failed -> listOf(check)
+            // only allow a successful composers to be composed once, to avoid duplicates
+            in succeeded -> emptyList()
+            // otherwise, we're seeing a composable check for the first time
+            else -> composer.compose(environment).onSuccess {
+                succeeded.add(composer)
+            }.getOrElse {
+                failed.add(composer)
+                Log.info("check {} failed to compose: {} ({})", check, it::class.simpleName, it.message)
+                listOf(check)
+            }
+        }
+    }
+    return composedChecks.distinct()
 }

@@ -3,8 +3,10 @@ package com.anaplan.engineering.azuki.graphs.adapter.scriptgen
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.graphs.dsl.GraphBuildableScenario
+import com.anaplan.engineering.azuki.graphs.dsl.GraphVerifiableScenario
 import com.anaplan.engineering.azuki.graphs.dsl.verifiableScenario
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTestHelper
+import com.anaplan.engineering.azuki.script.generation.ScriptGeneratorTestHelper
 import org.junit.Test
 
 class GraphScriptGeneratorTest {
@@ -12,8 +14,8 @@ class GraphScriptGeneratorTest {
     companion object {
         const val graphA = "graphA"
 
-        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generatorFactory = { GraphScriptGenerator },
-            parser = object : SimpleScenarioParser<GraphBuildableScenario>() {
+        val ScenarioScriptingTestUtils = ScriptGeneratorTestHelper(generator = GraphScriptGeneration,
+            parser = object : SimpleScenarioParser<GraphVerifiableScenario>() {
                 override val defaultImports: ScenarioParsingContext.() -> Unit = {
                     import("com.anaplan.engineering.azuki.graphs.dsl.*")
                     import("com.anaplan.engineering.azuki.graphs.*")

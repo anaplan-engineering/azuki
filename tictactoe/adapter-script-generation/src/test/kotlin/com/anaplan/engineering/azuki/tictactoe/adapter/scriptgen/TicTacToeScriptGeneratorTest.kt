@@ -2,11 +2,11 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
-import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTestHelper
-import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
+import com.anaplan.engineering.azuki.script.generation.ScriptGeneratorTestHelper
+import com.anaplan.engineering.azuki.script.generation.verifiableScenario
+import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeVerifiableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.verifiableScenario
 import kotlin.test.Test
-import kotlin.test.assertContains
 import kotlin.test.assertFalse
 import kotlin.test.expect
 
@@ -49,9 +49,10 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        assertFalse {
-            TicTacToeScriptGenerator().generateScript(scenario).contains("boardHasState")
-        }
+        val then = TicTacToeScriptGeneration.verifiableScenario(scenario).then.scriptFragments
+        assertFalse { then.any { "boardHasState" in it } }
+        expect(2) { then.count { "boardHasToken" in it } }
+        expect(1) { then.count { "boardHasSpace" in it } }
     }
 
     @Test
@@ -79,10 +80,10 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val lines = TicTacToeScriptGenerator().generateScript(scenario).lines()
-        assertFalse { lines.any { "boardHasState" in it } }
-        expect(4) { lines.count { "boardHasToken" in it } }
-        expect(3) { lines.count { "boardHasSpace" in it } }
+        val then = TicTacToeScriptGeneration.verifiableScenario(scenario).then.scriptFragments
+        assertFalse { then.any { "boardHasState" in it } }
+        expect(4) { then.count { "boardHasToken" in it } }
+        expect(3) { then.count { "boardHasSpace" in it } }
     }
 
     @Test
@@ -111,16 +112,12 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val script = TicTacToeScriptGenerator().generateScript(scenario)
-
-        assertContains(script.normalise(), """
-            then {
-                boardHasState(${triple}gameA${triple},
-                ${triple}X | O | X
-                . | . | .
-                O | . | X$triple)
-            }
-        """.normalise())
+        expect("""
+            boardHasState(${triple}gameA${triple}, ${triple}X | O | X
+            . | . | .
+            O | . | X
+            $triple)
+        """.trimIndent()) { TicTacToeScriptGeneration.verifiableScenario(scenario).then.scriptFragments.singleOrNull() }
     }
 
     @Test
@@ -150,17 +147,10 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val lines = TicTacToeScriptGenerator().generateScript(scenario).lines()
-        assertFalse { lines.any { "boardHasState" in it } }
-        expect(6) { lines.count { "boardHasToken" in it } }
-        expect(4) { lines.count { "boardHasSpace" in it } }
-    }
-
-    private fun String.normalise(): String {
-        val noNewlines = replace(Regex("[ \n]+"), " ")
-        val noTripleQuoteSpace = noNewlines.replace(Regex(" *${triple} *"), triple)
-        val noTrailingComma = noTripleQuoteSpace.replace(Regex(", +\\)"), ")")
-        return noTrailingComma
+        val then = TicTacToeScriptGeneration.verifiableScenario(scenario).then.scriptFragments
+        assertFalse { then.any { "boardHasState" in it } }
+        expect(6) { then.count { "boardHasToken" in it } }
+        expect(4) { then.count { "boardHasSpace" in it } }
     }
 
     private val triple = "\"\"\""
