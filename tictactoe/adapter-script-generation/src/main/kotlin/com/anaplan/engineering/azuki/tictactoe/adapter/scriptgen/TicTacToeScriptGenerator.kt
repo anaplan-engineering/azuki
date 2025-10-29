@@ -51,7 +51,11 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
 
         private val isFullySpecified get() = tokens.size + spaces.size == Width * Height
 
-        fun addToken(player: String, position: Position) = apply { tokens[position] = player }
-        fun addSpace(position: Position) = apply { spaces.add(position) }
+        fun hasToken(player: String, position: Position) = at(position) { tokens[position] = player }
+        fun hasSpace(position: Position) = at(position) { spaces.add(position) }
+
+        private fun at(position: Position, fn: BoardCheckState.() -> Unit) = if (position in tokens || position in spaces) {
+            failure(IllegalStateException("position $position is checked already"))
+        } else success(apply(fn))
     }
 }
