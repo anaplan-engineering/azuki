@@ -22,7 +22,7 @@ fun <AF : ActionFactory, CF : CheckFactory> ScriptGenerationService<AF, CF, *, *
     }.verifiableScenario()
 
 /**
- * Generates an incomplete oracle scenario script.
+ * Generates an incomplete scenario script from an oracle.
  */
 fun <AF : ActionFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> ScriptGenerationService<AF, *, *, *, QF, AGF>.incompleteScenarioFromOracle(
     oracle: OracleScenario<in AF, in QF, in AGF>
@@ -30,7 +30,7 @@ fun <AF : ActionFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> Script
     fromScenario(oracle)
 }.whenever {
     fromScenario(oracle)
-}.incomplete()
+}.incompleteScenario()
 
 /**
  * Generates a verifiable script using the setup from an oracle and checks from a corresponding collection of answers.
@@ -46,7 +46,7 @@ fun <AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGener
 }.verifiableScenario()
 
 /**
- * Generates a given-whenever-query script for a query scenario.
+ * Generates a script for a query scenario.
  */
 fun <AF : ActionFactory, QF : QueryFactory> ScriptGenerationService<AF, *, *, *, QF, *>.queryScenario(
     scenario: ScenarioWithQueries<in AF, in QF>
@@ -57,3 +57,20 @@ fun <AF : ActionFactory, QF : QueryFactory> ScriptGenerationService<AF, *, *, *,
 }.query {
     fromScenario(scenario)
 }.queryScenario()
+
+/**
+ * Generates a script for an oracle scenario.
+ */
+fun <AF : ActionFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> ScriptGenerationService<AF, *, *, *, QF, AGF>.oracleScenario(
+    scenario: OracleScenario<in AF, in QF, in AGF>
+) = given {
+    fromScenario(scenario)
+}.generate {
+    blocksFromScenario(scenario)
+}.whenever {
+    fromScenario(scenario)
+}.generate {
+    blocksFromScenario(scenario)
+}.verify {
+    fromScenario(scenario)
+}.oracleScenario()
