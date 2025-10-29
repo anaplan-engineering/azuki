@@ -2,8 +2,11 @@ package com.anaplan.engineering.azuki.script.generation
 
 import com.anaplan.engineering.azuki.core.scenario.*
 import com.anaplan.engineering.azuki.core.system.*
+import com.anaplan.engineering.azuki.core.system.Action
+import com.anaplan.engineering.azuki.core.system.Check
+import com.anaplan.engineering.azuki.core.system.UnsupportedAction
+import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
 import com.anaplan.engineering.azuki.declaration.*
-import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -102,12 +105,8 @@ class ScriptGenerationService<
         )
     }
 
-    abstract inner class ScriptStage(
-        protected val environment: E, header: String, scriptFragments: List<String>
-    ) : ScriptBlock(header, scriptFragments)
-
-    inner class Given(environment: E, scriptFragments: List<String>) :
-        ScriptStage(environment, "given", scriptFragments) {
+    inner class Given(internal val environment: E, scriptFragments: List<String>) :
+        ScriptBlock("given", scriptFragments) {
 
         /**
          * Constructs a whenever block by mixing in declarations from one or more sources.
@@ -123,17 +122,19 @@ class ScriptGenerationService<
         /**
          * Constructs a whenever block with explicit string fragments.
          */
-        fun whenever(scriptFragments: List<String>) = Whenever(this, environment, scriptFragments)
+        fun whenever(scriptFragments: List<String>) = Whenever(this, scriptFragments)
     }
 
     inner class Whenever(
-        val given: Given, environment: E, scriptFragments: List<String>
-    ) : ScriptStage(environment, "whenever", scriptFragments) {
+        internal val given: Given, scriptFragments: List<String>
+    ) : ScriptBlock("whenever", scriptFragments) {
+
+        private val environment get() = given.environment
 
         fun incomplete() = IncompleteScenarioScript(given, whenever = this)
 
         /**
-         * Constructs a then block by mixing in declarations from one or more sources.
+         * Constructs a then block by mixing in checks from one or more sources.
          */
         fun then(build: ThenBuilder<CF, E>.() -> Unit) =
             then(ThenBuilder(checkFactory, environment).apply(build).scriptFragments)
@@ -141,24 +142,48 @@ class ScriptGenerationService<
         /**
          * Constructs a then block with explicit string fragments.
          */
-        fun then(vararg scriptFragments: String) = Then(this, environment, scriptFragments.toList())
+        fun then(vararg scriptFragments: String) = then(scriptFragments.toList())
 
         /**
          * Constructs a then block with explicit string fragments.
          */
         fun then(scriptFragments: List<String>) = Then(this, environment, scriptFragments)
+
+        /**
+         * Constructs a query block by mixing in queries from one or more sources.
+         */
+        fun query(build: QueryBuilder<QF, E>.() -> Unit) =
+            query(QueryBuilder(queryFactory, environment).apply(build).scriptFragments)
+
+        /**
+         * Constructs a query block with explicit script fragments.
+         */
+        fun query(vararg scriptFragments: String) = query(scriptFragments.toList())
+
+        /**
+         * Constructs a query block with explicit script fragments.
+         */
+        fun query(scriptFragments: List<String>) = Query(this, environment, scriptFragments)
     }
 
-    inner class Then(
-        val whenever: Whenever, environment: E, scriptFragments: List<String>
-    ) : ScriptStage(environment, "then", scriptFragments) {
+    inner class Then(val whenever: Whenever, scriptFragments: List<String>) : ScriptBlock("then", scriptFragments) {
+
+        internal val given get() = whenever.given
+
+        /**
+         * Constructs a verifiable scenario script with the given, when, and then blocks previously constructed.
+         */
+        fun verifiableScenario() = VerifiableScenarioScript(given, whenever, then = this)
+    }
+
+    inner class Query(val whenever: Whenever, scriptFragments: List<String>) : ScriptBlock("query", scriptFragments) {
 
         val given get() = whenever.given
 
         /**
          * Constructs a verifiable scenario script with the given, when, and then blocks previously constructed.
          */
-        fun verifiable() = VerifiableScenarioScript(given, whenever, then = this)
+        fun queryScenario() = QueryScenarioScript(given, whenever, query = this)
     }
 }
 
@@ -178,21 +203,14 @@ class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGene
 
     private val declarableActions = mutableListOf<DeclarableAction<DS>>()
 
-    fun fromSystemDefinition(system: SystemDefinition) {
-        fromActions(system.declarations)
-    }
+    fun fromSystemDefinition(system: SystemDefinition) = fromActions(system.declarations)
 
-    fun fromScenario(scenario: BuildableScenario<in AF>) {
-        fromActions(scenario.declarations(actionFactory))
-    }
+    fun fromScenario(scenario: BuildableScenario<in AF>) = fromActions(scenario.declarations(actionFactory))
 
-    fun fromActions(vararg actions: Action) {
-        fromActions(actions.toList())
-    }
+    fun fromActions(vararg actions: Action) = fromActions(actions.toList())
 
-    fun fromActions(actions: Collection<Action>) {
-        declarableActions.addAll(refineActions(actions))
-    }
+    fun fromActions(actions: Collection<Action>) =
+        refine<_, _, UnsupportedAction>("declarable action", actions, destination = declarableActions)
 
     override val scriptFragments: List<String>
         get() = DeclarationStateBuilder(declarationStateFactory).build(declarableActions)
@@ -213,21 +231,14 @@ class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(v
 
     private val commands = mutableListOf<ScriptGenerationAction<E>>()
 
-    fun fromSystemDefinition(system: SystemDefinition) {
-        fromActions(system.commands)
-    }
+    fun fromSystemDefinition(system: SystemDefinition) = fromActions(system.commands)
 
-    fun fromScenario(scenario: BuildableScenario<in AF>) {
-        fromActions(scenario.commands(actionFactory))
-    }
+    fun fromScenario(scenario: BuildableScenario<in AF>) = fromActions(scenario.commands(actionFactory))
 
-    fun fromActions(vararg actions: Action) {
-        fromActions(actions.toList())
-    }
+    fun fromActions(vararg actions: Action) = fromActions(actions.toList())
 
-    fun fromActions(actions: Collection<Action>) {
-        commands.addAll(refineActions(actions))
-    }
+    fun fromActions(actions: Collection<Action>) =
+        refine<_, _, UnsupportedAction>("command action", actions, destination = commands)
 
     override val scriptFragments get() = commands.map { it.getActionScript(environment) }
 }
@@ -256,7 +267,8 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
     /**
      * Populates the script with checks derived from the given answers.
      */
-    fun fromAnswers(answers: Collection<Answer<*, in CF>>) = fromChecks(answers.flatMap { it.createChecks(checkFactory) })
+    fun fromAnswers(answers: Collection<Answer<*, in CF>>) =
+        fromChecks(answers.flatMap { it.createChecks(checkFactory) })
 
     /**
      * Populates the script with the given checks.
@@ -267,7 +279,7 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
      * Populates the script with the given checks.
      */
     fun fromChecks(checks: Collection<Check>) {
-        this.checks.addAll(refineChecks(checks))
+        refine<_, _, UnsupportedCheck>("check", checks, destination = this.checks)
     }
 
     override val scriptFragments
@@ -279,28 +291,69 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
         }.let { composeChecks(environment, it) }
 }
 
-private inline fun <reified T : Action> refineActions(actions: Collection<Action>): List<T> {
-    if (actions.filterIsInstance<UnsupportedAction>().isNotEmpty()) {
-        actions.forEach { StageBuilder.Log.error(" * {}", it) }
-        throw IllegalArgumentException("Scriptgen is missing action")
+class QueryBuilder<out QF : QueryFactory, E : ScriptGenerationEnvironment>(
+    private val queryFactory: QF, environment: E
+) : StageBuilder<E>(environment) {
+
+    val queries = mutableListOf<ScriptGenerationQuery<*>>()
+    val derivedQueries = mutableListOf<ScriptGenerationDerivedQuery<*>>()
+
+    override val scriptFragments: List<String>
+        get() = queries.map { it.getQueryScript() } + derivedQueries.map { it.getDerivedQueryScript() }
+
+    /**
+     * Populates the script with the queries and derived queries from the given scenario.
+     */
+    fun fromScenario(scenario: ScenarioWithQueries<*, in QF>) = fromScenarioQueries(scenario.queries(queryFactory))
+
+    /**
+     * Populates the script with the queries and derived queries from the given bundle.
+     */
+    fun fromScenarioQueries(scenarioQueries: ScenarioQueries) {
+        fromQueries(scenarioQueries.queries)
+        fromDerivedQueries(scenarioQueries.forAllQueries)
     }
-    val filtered = actions.filterIsInstance<T>()
-    if (filtered.size != actions.size) {
-        actions.filterNot { it in filtered }.forEach { StageBuilder.Log.error(" * {}", it) }
-        throw IllegalArgumentException("Some actions were not of the correct type")
-    }
-    return filtered
+
+    /**
+     * Populates the script with the given queries.
+     */
+    fun fromQueries(vararg queries: Query<*>) = fromQueries(queries.toList())
+
+    /**
+     * Populates the script with the given queries.
+     */
+    fun fromQueries(queries: Collection<Query<*>>) = refine<_, _, UnsupportedQuery<*>>("query", queries, this.queries)
+
+    /**
+     * Populates the script with the given derived queries.
+     */
+    fun fromDerivedQueries(vararg queries: DerivedQuery<*>) = fromDerivedQueries(queries.toList())
+
+    /**
+     * Populates the script with the given derived queries.
+     */
+    fun fromDerivedQueries(queries: Collection<DerivedQuery<*>>) =
+        refine<_, _, Unit>("derived query", queries, this.derivedQueries)
 }
 
-private inline fun <reified T : Check> refineChecks(checks: Collection<Check>): List<T> {
-    if (checks.filterIsInstance<UnsupportedCheck>().isNotEmpty()) {
-        checks.forEach { StageBuilder.Log.error(" * {}", it) }
-        throw IllegalArgumentException("Scriptgen is missing check")
+
+/**
+ * Refines a collection of untyped actions or checks I into a collection of typed actions or checks O.
+ * U is the type of unsupported actions or checks, respectively.
+ */
+private inline fun <reified I, reified O : I, reified U : I> refine(
+    type: String, input: Collection<I>, destination: MutableCollection<in O>
+) {
+    val oldSize = destination.size;
+    input.filterIsInstanceTo<O, _>(destination)
+    val allItemsAdded = destination.size == oldSize + input.size
+    val refineFailures = if (allItemsAdded) emptyList() else {
+        input.filterNot { it in destination }.apply { forEach { logRefineFailure<U>(it) } }
     }
-    val filtered = checks.filterIsInstance<T>()
-    if (filtered.size != checks.size) {
-        checks.filterNot { it in filtered }.forEach { StageBuilder.Log.error(" * {}", it) }
-        throw IllegalArgumentException("Some checks were not of the correct type")
-    }
-    return filtered
+    check(refineFailures.isNotEmpty()) { "Some ${type}s are not able to be generated" }
+}
+
+private inline fun <reified U> logRefineFailure(failure: Any?) {
+    val why = if (failure is U) "unsupported" else "wrong type"
+    StageBuilder.Log.error(" * {}: {}", why, failure)
 }

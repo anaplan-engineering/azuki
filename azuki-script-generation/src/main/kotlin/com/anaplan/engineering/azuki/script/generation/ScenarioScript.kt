@@ -1,20 +1,11 @@
 package com.anaplan.engineering.azuki.script.generation
 
-import com.anaplan.engineering.azuki.core.system.Action
-import com.anaplan.engineering.azuki.core.system.ActionFactory
-import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
-import com.anaplan.engineering.azuki.core.system.CheckFactory
-import com.anaplan.engineering.azuki.core.system.QueryFactory
-import com.anaplan.engineering.azuki.core.system.UnsupportedAction
-import com.anaplan.engineering.azuki.declaration.DeclarationState
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
-import kotlin.collections.contains
-import kotlin.collections.forEach
 
 /**
- * A fully-assembled scenario script.
+ * A partially-assembled scenario script.
  */
-abstract class ScenarioScript(val header: String) {
+abstract class ScenarioScript {
 
     protected abstract val blocks: List<ScriptBlock>
 
@@ -23,12 +14,26 @@ abstract class ScenarioScript(val header: String) {
      * The indentation level affects script block delimiters, not the actual contents of the script.
      */
     fun renderInner(indent: Int = 0) = blocks.map { it.render(indent) }
+}
+
+/**
+ * An incomplete result from an oracle (given-whenever, no then)
+ */
+class IncompleteScenarioScript(private val given: ScriptBlock, private val whenever: ScriptBlock) : ScenarioScript() {
+
+    override val blocks: List<ScriptBlock> get() = listOf(given, whenever)
+}
+
+/**
+ * A fully-assembled scenario script.
+ */
+abstract class FullScenarioScript(val typeName: String) : ScenarioScript() {
 
     /**
      * Renders the script and its outer DSL block, without formatting.
      * The indentation level affects script block delimiters, not the actual contents of the script.
      */
-    fun renderUnformatted(indent: Int = 0) = object : ScriptBlock(header, renderInner(indent + 1)) {}.render(indent)
+    fun renderUnformatted(indent: Int = 0) = object : ScriptBlock("${typeName}Scenario", renderInner(indent + 1)) {}.render(indent)
 
     /**
      * Renders the script and its outer DSL block, with KtLint formatting.
@@ -37,18 +42,25 @@ abstract class ScenarioScript(val header: String) {
 }
 
 /**
- * A verifiable scenario (given-when-then) script.
+ * A verifiable scenario (given-whenever-then) script.
  */
 class VerifiableScenarioScript(
     val given: ScriptBlock, val whenever: ScriptBlock, val then: ScriptBlock
-) : ScenarioScript("verifiableScenario") {
+) : FullScenarioScript("verifiable") {
 
     override val blocks: List<ScriptBlock> get() = listOf(given, whenever, then)
 }
 
-class IncompleteScenarioScript(private val given: ScriptBlock, private val whenever: ScriptBlock) {
+/**
+ * A query scenario (given-whenever-query) script.
+ */
+class QueryScenarioScript(
+    val given: ScriptBlock, val whenever: ScriptBlock, val query: ScriptBlock
+) : FullScenarioScript("query") {
 
+    override val blocks: List<ScriptBlock> get() = listOf(given, whenever, query)
 }
+
 
 abstract class ScriptBlock(val header: String, val scriptFragments: List<String>) {
 
