@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.script.generation
 
+import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.scenario.OracleScenario
 import com.anaplan.engineering.azuki.core.scenario.ScenarioWithQueries
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
