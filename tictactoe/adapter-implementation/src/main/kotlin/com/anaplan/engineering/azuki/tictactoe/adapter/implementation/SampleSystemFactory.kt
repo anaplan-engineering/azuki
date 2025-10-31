@@ -3,7 +3,9 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.implementation
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.action.SampleAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.action.SampleActionFactory
@@ -22,7 +24,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 class SampleSystemFactory :
-    PersistableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, SampleSystem> {
+    PersistableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, NoSystemDefaults, SampleSystem> {
 
     override fun create(systemDefinition: SystemDefinition) =
         SampleSystem(

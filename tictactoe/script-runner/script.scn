@@ -1,3 +1,10 @@
+oracleScenario {
+    given {
+        thereIsANewGameWithPlayers("gameA", "X", "O")
+    }
+}
+
+/*
 verifiableScenario {
     given {
         thereIsANewGameWithPlayers("gameA", "X", "O")
@@ -7,3 +14,4 @@ verifiableScenario {
         playerHasMoved("gameA", "O", times = 0)
     }
 }
+*/

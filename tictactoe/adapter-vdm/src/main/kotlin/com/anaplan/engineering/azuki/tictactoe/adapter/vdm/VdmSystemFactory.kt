@@ -3,7 +3,9 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.vdm
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.action.VdmActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check.DefaultVdmCheck
@@ -19,7 +21,7 @@ import com.anaplan.engineering.vdmanimation.api.SpecificationStructure
 import com.anaplan.engineering.vdmanimation.api.VdmAnimationException
 
 class VdmSystemFactory :
-    VerifiableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, VdmSystem> {
+    VerifiableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, NoSystemDefaults, VdmSystem> {
 
     override fun create(systemDefinition: SystemDefinition): VdmSystem {
         if (systemDefinition.regardlessOfActions.any {

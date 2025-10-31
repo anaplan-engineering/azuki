@@ -76,7 +76,7 @@ class ScenarioScriptRunner<
                 is UnsupportedScenarioTypeException -> exit("Currently unsupported scenario type: ${error.type}",
                     ExitCode.UnsupportedScenarioType)
 
-                else -> exit("Unknown error", ExitCode.UnknownError)
+                else -> exit("Unknown error:\n${error.message}", ExitCode.UnknownError)
             }
         }
 

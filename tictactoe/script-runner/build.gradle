@@ -5,6 +5,7 @@ plugins {
 
 configurations {
     runner.extendsFrom runtime
+    sampleImpl
     vdm
 }
 
@@ -12,7 +13,17 @@ dependencies {
     runner project(":tictactoe:dsl")
     runner project(":azuki-runner")
 
+    sampleImpl project(":tictactoe:adapter-implementation")
     vdm project(":tictactoe:adapter-vdm")
+}
+
+task sampleImplClasspathJar(type: Jar) {
+    dependsOn configurations.sampleImpl
+    archiveBaseName = 'SampleImpl'
+    manifest {
+        attributes(
+            "Class-Path": configurations.sampleImpl.collect { it.absolutePath }.join(' '))
+    }
 }
 
 task vdmClasspathJar(type: Jar) {
@@ -36,6 +47,27 @@ task runScript(type: JavaExec) {
     ]
     systemProperties = [
         "com.anaplan.engineering.azuki.implementation.instance.jars": vdmClasspathJar.archiveFile.get().asFile.absolutePath
+    ]
+}
+
+task runOracleScript(type: JavaExec) {
+    dependsOn sampleImplClasspathJar
+    dependsOn vdmClasspathJar
+    classpath = configurations.runner
+    main 'com.anaplan.engineering.azuki.runner.ScenarioScriptRunnerKt'
+    jvmArgs '-Xmx4g'
+    args = [
+        file("script.scn").absolutePath,
+        file("config/imports").absolutePath,
+        'SampleImpl',
+        'VDM'
+    ]
+    def instanceJars = [
+        sampleImplClasspathJar.archiveFile.get().asFile.absolutePath,
+        vdmClasspathJar.archiveFile.get().asFile.absolutePath,
+    ]
+    systemProperties = [
+        "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(','),
     ]
 }
 
