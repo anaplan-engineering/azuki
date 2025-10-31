@@ -48,7 +48,7 @@ class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>
 class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>>(initial: S) : CheckComposer<E> {
 
     private var _inner = Result.success(initial)
-    val composer: S? = _inner.getOrNull()
+    val composer: S? get() = _inner.getOrNull()
 
     /**
      * Registers a check on the inner composer by applying an effect to it.

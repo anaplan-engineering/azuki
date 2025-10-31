@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.script.generation
 
-import com.anaplan.engineering.azuki.core.system.Behavior
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import kotlin.test.*
 
@@ -30,7 +29,7 @@ class CheckComposerTest {
     }
 
     @Test
-    fun mapRegisterRemovesFromMapOnFailure() {
+    fun mapTryRegisterRemovesFromMapOnFailure() {
         val map = CheckComposerMap(Example::new)
         map.register("a") { increment() }
         assertIs<Forwards>(map["a"])
@@ -54,9 +53,18 @@ class CheckComposerTest {
     }
 
     @Test
+    fun mapPropagatesComposerFailures() {
+        val map = CheckComposerMap(Example::new)
+        val composer = map.register("a") { increment() }
+        assertIs<Forwards>(map["a"])
+        map.tryRegister("a") { Result.failure(IllegalStateException("oops")) }
+        assertIs<IllegalStateException>( composer.compose(NoScriptGenerationEnvironment).exceptionOrNull(),
+            "should have changed the inner object")
+    }
+
+    @Test
     fun wrapperRegisterReusesSameComposer() {
-        val original = Example.new("a")
-        val wrapper = CheckComposerWrapper(original)
+        val wrapper = CheckComposerWrapper(Example.new("a"))
         expect("forwards(0)", "should have stored the original object") { wrapper.toScript() }
         wrapper.register { increment() }
         wrapper.register { increment() }
@@ -67,9 +75,26 @@ class CheckComposerTest {
     }
 
     @Test
+    fun wrapperRegisterUpdatesComposerOnObjectChange() {
+        val wrapper = CheckComposerWrapper(Example.new("a"))
+        wrapper.register { increment() }
+        assertIs<Forwards>(wrapper.composer)
+        wrapper.register { reverse() }
+        assertIs<Backwards>(wrapper.composer)
+    }
+
+    @Test
+    fun wrapperTryRegisterNullifiesOnFailure() {
+        val wrapper = CheckComposerWrapper(Example.new("a"))
+        wrapper.register { increment() }
+        assertIs<Forwards>(wrapper.composer)
+        wrapper.tryRegister { Result.failure(IllegalStateException("oops")) }
+        assertNull(wrapper.composer, "a should now appear to have been removed")
+    }
+
+    @Test
     fun wrapperPropagatesComposerObjectChanges() {
-        val original = Example.new("a")
-        val wrapper = CheckComposerWrapper(original)
+        val wrapper = CheckComposerWrapper(Example.new("a"))
         expect("forwards(0)", "should have stored the original object") { wrapper.toScript() }
         wrapper.register { reverse() }
         expect("backwards(0)", "should have changed the inner object") { wrapper.toScript() }
@@ -77,8 +102,7 @@ class CheckComposerTest {
 
     @Test
     fun wrapperPropagatesComposerFailures() {
-        val original = Example.new("a")
-        val wrapper = CheckComposerWrapper(original)
+        val wrapper = CheckComposerWrapper(Example.new("a"))
         expect("forwards(0)", "should have stored the original object") { wrapper.toScript() }
         wrapper.tryRegister { Result.failure(IllegalStateException("oops")) }
         assertIs<IllegalStateException>(wrapper.compose(NoScriptGenerationEnvironment).exceptionOrNull(),
