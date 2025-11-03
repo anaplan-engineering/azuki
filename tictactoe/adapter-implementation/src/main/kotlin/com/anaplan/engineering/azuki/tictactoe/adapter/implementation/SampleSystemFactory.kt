@@ -9,10 +9,15 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.action.SampleAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.action.SampleActionFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.actionGenerator.SampleActionGenerator
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.actionGenerator.SampleActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.SampleCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.SampleCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilder
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilderFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.query.SampleDerivedQuery
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.query.SampleQuery
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.query.SampleQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.implementation.GameManager
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -24,36 +29,54 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 class SampleSystemFactory :
-    PersistableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, NoSystemDefaults, SampleSystem> {
+    ActionGeneratingSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, NoSystemDefaults, SampleSystem>,
+    PersistableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, NoSystemDefaults, SampleSystem>,
+    QueryableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, NoSystemDefaults, SampleSystem> {
 
-    override fun create(systemDefinition: SystemDefinition) =
+    override fun create(systemDefinition: SystemDefinition) = with(systemDefinition) {
         SampleSystem(
-            systemDefinition.declarations.map(::toDeclarableAction),
-            systemDefinition.commands.map(toSampleAction),
-            systemDefinition.checks.map(toSampleCheck),
-            systemDefinition.regardlessOfActions.map { it.map(toSampleAction) },
+            declarations.map(::toDeclarableAction),
+            commands.map(::toSampleAction),
+            actionGenerators.map(::toSampleActionGenerator),
+            checks.map(::toSampleCheck),
+            regardlessOfActions.map { it.map(::toSampleAction) },
+            queries.map(::toSampleQuery),
+            forAllQueries.map(::toSampleDerivedQuery),
         )
+    }
 
     override val actionFactory = SampleActionFactory()
+    override val actionGeneratorFactory = SampleActionGeneratorFactory()
     override val checkFactory = SampleCheckFactory()
+    override val queryFactory = SampleQueryFactory()
 
     companion object {
-        private val toSampleAction: (Action) -> SampleAction = {
-            it as? SampleAction ?: throw IllegalArgumentException("Invalid action: $it")
-        }
 
-        private val toSampleCheck: (Check) -> SampleCheck = {
-            it as? SampleCheck ?: throw IllegalArgumentException("Invalid check: $it")
-        }
+        private fun toSampleAction(it: Action) = requireNotNull(it as? SampleAction) { "Invalid action: $it" }
+
+        private fun toSampleActionGenerator(it: ActionGenerator) =
+            requireNotNull(it as? SampleActionGenerator) { "Invalid action generator: $it" }
+
+        private fun toSampleCheck(it: Check) = requireNotNull(it as? SampleCheck) { "Invalid check: $it" }
+
+        private fun toSampleQuery(it: Query<*>) = requireNotNull(it as? SampleQuery<*>) { "Invalid query: $it" }
+
+        private fun toSampleDerivedQuery(it: DerivedQuery<*>) =
+            requireNotNull(it as? SampleDerivedQuery<*, *>) { "Invalid derived query: $it" }
     }
 }
 
 class SampleSystem(
     private val declarableActions: List<DeclarableAction<TicTacToeDeclarationState>>,
     private val buildActions: List<SampleAction>,
+    private val actionGenerators: List<SampleActionGenerator>,
     private val checks: List<SampleCheck>,
     private val regardlessOfActions: List<List<SampleAction>>,
-) : PersistableSystem<TicTacToeActionFactory, TicTacToeCheckFactory> {
+    private val queries: List<SampleQuery<*>>,
+    private val derivedQueries: List<SampleDerivedQuery<*, *>>,
+) : ActionGeneratingSystem<TicTacToeActionFactory, TicTacToeCheckFactory>,
+    PersistableSystem<TicTacToeActionFactory, TicTacToeCheckFactory>,
+    QueryableSystem<TicTacToeActionFactory, TicTacToeCheckFactory> {
 
     private fun build(env: ExecutionEnvironment) {
         val declarationBuilders = declarationStateBuilder.build(declarableActions).map { declarationBuilder(it) }
@@ -64,39 +87,36 @@ class SampleSystem(
     private fun <D : Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, SampleDeclarationBuilder<D>>(declaration)
 
-    private fun runAllChecks(env: ExecutionEnvironment) =
-        checks.fold(true) { l, r ->
-            l && try {
-                r.check(env)
-            } catch (e: LateDetectUnsupportedCheckException) {
-                handleLateDetectedUnsupportedCheck(e)
-            }
+    private fun runAllChecks(env: ExecutionEnvironment) = checks.fold(true) { l, r ->
+        l && try {
+            r.check(env)
+        } catch (e: LateDetectUnsupportedCheckException) {
+            handleLateDetectedUnsupportedCheck(e)
         }
+    }
 
     private fun handleLateDetectedUnsupportedCheck(e: LateDetectUnsupportedCheckException): Boolean {
         Log.info("Skipping late detected unsupported check", e)
         return true
     }
 
-    override fun verify(): VerificationResult =
-        verify(ExecutionEnvironment(GameManager(Files.createTempDirectory("XO").toFile())))
+    override fun verify(): VerificationResult = verify(newEnvironment())
 
-    private fun verify(env: ExecutionEnvironment) =
-        try {
-            build(env)
-            val allChecksPass = runAllChecks(env) && regardlessOfActions.all { actions ->
-                actions.forEach { it.act(env) }
-                runAllChecks(env)
-            }
-            if (allChecksPass) {
-                VerificationResult.Verified()
-            } else {
-                VerificationResult.Unverified()
-            }
-        } catch (e: LateDetectUnsupportedActionException) {
-            Log.info("Unsupported action", e)
-            throw e
+    private fun verify(env: ExecutionEnvironment) = try {
+        build(env)
+        val allChecksPass = runAllChecks(env) && regardlessOfActions.all { actions ->
+            actions.forEach { it.act(env) }
+            runAllChecks(env)
         }
+        if (allChecksPass) {
+            VerificationResult.Verified()
+        } else {
+            VerificationResult.Unverified()
+        }
+    } catch (e: LateDetectUnsupportedActionException) {
+        Log.info("Unsupported action", e)
+        throw e
+    }
 
     companion object {
         private val Log = LoggerFactory.getLogger(this::class.java)
@@ -109,12 +129,11 @@ class SampleSystem(
     private val objectMapper = jacksonObjectMapper()
 
     data class PersistableSystemState(
-        val activeGames: List<String>,
-        val store: File
+        val activeGames: List<String>, val store: File
     )
 
     override fun verifyAndSerialize(): VerificationResult {
-        val store = Files.createTempDirectory("XO").toFile()
+        val store = newStore()
         val env = ExecutionEnvironment(GameManager(store))
         val result = verify(env)
         return if (result is VerificationResult.Verified) {
@@ -143,4 +162,29 @@ class SampleSystem(
         }
         return verify(ExecutionEnvironment(gameManager))
     }
+
+    override fun generateActions(): List<(TicTacToeActionFactory) -> Action> {
+        check(queries.isEmpty() && derivedQueries.isEmpty()) { "Cannot generate actions and query at the same time" }
+        check(checks.isEmpty()) { "Cannot generate actions and check at the same time" }
+
+        return withBuiltEnvironment { env -> actionGenerators.flatMap { it.generate(env) } }
+    }
+
+    override fun query(): List<Answer<*, TicTacToeCheckFactory>> {
+        check(checks.isEmpty()) { "Cannot query and check at the same time" }
+        check(actionGenerators.isEmpty()) { "Cannot query and generate actions at the same time" }
+
+        return withBuiltEnvironment { env ->
+            val allQueries = queries + derivedQueries.flatMap { it.derive(env) }
+            allQueries.map { it.run(env) }
+        }
+    }
+
+    private fun <T> withBuiltEnvironment(fn: (ExecutionEnvironment) -> T): T = with(newEnvironment()) {
+        build(this)
+        fn(this)
+    }
+
+    private fun newEnvironment() = ExecutionEnvironment(GameManager(newStore()))
+    private fun newStore() = Files.createTempDirectory("XO").toFile()
 }

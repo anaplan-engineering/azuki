@@ -6,11 +6,13 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
 
 class SampleCheckFactory : TicTacToeCheckFactory {
+
     override val player = SamplePlayerCheckFactory
     override val game = SampleGameCheckFactory
 }
 
 object SamplePlayerCheckFactory : PlayerCheckFactory {
+
     override fun moveCount(gameName: String, playerName: String, times: Int) =
         PlayerMoveCountCheck(gameName, playerName, times)
     override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) = CannotPlaceTokenCheck(gameName, playerName, position)
@@ -19,6 +21,7 @@ object SamplePlayerCheckFactory : PlayerCheckFactory {
 }
 
 object SampleGameCheckFactory : GameCheckFactory {
+
     override fun hasPlayOrder(gameName: String, players: List<String>) = HasPlayOrderCheck(gameName, players)
     override fun hasToken(gameName: String, playerName: String, position: Position) = HasTokenCheck(gameName, playerName, position)
     override fun hasSpace(gameName: String, position: Position) = HasSpaceCheck(gameName, position)

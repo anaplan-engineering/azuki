@@ -1,13 +1,18 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check
 
+import com.anaplan.engineering.azuki.core.system.Behavior
 import com.anaplan.engineering.azuki.core.system.Check
+import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.vdm.EmptySystemContext
 import com.anaplan.engineering.azuki.vdm.VdmCheck
+import com.anaplan.engineering.azuki.vdm.VdmSanityCheck
 
 class VdmCheckFactory : TicTacToeCheckFactory {
     override val player = VdmPlayerCheckFactory
     override val game = VdmGameCheckFactory
+
+    override fun systemValid() = SystemValidCheck
 }
 
 object VdmPlayerCheckFactory : PlayerCheckFactory {
