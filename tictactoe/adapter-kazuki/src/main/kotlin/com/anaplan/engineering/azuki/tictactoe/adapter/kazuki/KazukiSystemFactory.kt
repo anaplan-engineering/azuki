@@ -1,36 +1,29 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.kazuki
 
 import com.anaplan.engineering.azuki.core.system.*
-import com.anaplan.engineering.azuki.declaration.Declaration
-import com.anaplan.engineering.azuki.declaration.DeclarationBuilderFactory
+import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarableAction
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.DeclarationBuilder
-import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.toDeclarableAction
-import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.declaration.KazukiDeclarationBuilder
-import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.declaration.KazukiDeclarationBuilderFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.action.KazukiAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.action.KazukiActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.check.KazukiCheck
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.check.KazukiCheckFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.declaration.KazukiDeclarationBuilder
+import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.declaration.KazukiDeclarationBuilderFactory
 import org.slf4j.LoggerFactory
-import java.io.File
 
 class KazukiSystemFactory :
-    SystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults> {
-    override fun create(systemDefinition: SystemDefinition): System<TicTacToeActionFactory, TicTacToeCheckFactory> =
+    VerifiableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, KazukiSystem> {
+    override fun create(systemDefinition: SystemDefinition): KazukiSystem =
         KazukiSystem(
-            systemDefinition.declarations.map(toDeclarableAction),
-            systemDefinition.actions.map(toKazukiAction),
+            systemDefinition.declarations.map(::toDeclarableAction),
+            systemDefinition.commands.map(toKazukiAction),
             systemDefinition.checks.map(toKazukiCheck),
         )
 
     override val actionFactory = KazukiActionFactory()
     override val checkFactory = KazukiCheckFactory()
-    override val queryFactory = NoQueryFactory
-    override val actionGeneratorFactory = NoActionGeneratorFactory
-
 
     companion object {
         private val toKazukiAction: (Action) -> KazukiAction = {
@@ -44,29 +37,21 @@ class KazukiSystemFactory :
 }
 
 class KazukiSystem(
-    private val declarableActions: List<DeclarableAction>,
+    private val declarableActions: List<DeclarableAction<TicTacToeDeclarationState>>,
     private val buildActions: List<KazukiAction>,
     private val checks: List<KazukiCheck>,
-) : System<TicTacToeActionFactory, TicTacToeCheckFactory> {
-
-    override val supportedActions: Set<System.SystemAction> =
-        if (checks.isNotEmpty()) {
-            setOf(System.SystemAction.Verify)
-        } else {
-            setOf()
-        }
+) : VerifiableSystem<TicTacToeActionFactory, TicTacToeCheckFactory> {
 
     private fun build(): ExecutionEnvironment {
         val builder = EnvironmentBuilder()
-        val declarationBuilders =
-            DeclarationBuilder(declarableActions).build().map { declarationBuilder(it) }
+        val declarationBuilders = declarationStateBuilder.build(declarableActions).map { declarationBuilder(it) }
         declarationBuilders.forEach { it.build(builder) }
         val env = builder.build()
         buildActions.forEach { it.act(env) }
         return env
     }
 
-    private fun <D: Declaration> declarationBuilder(declaration: D) =
+    private fun <D : Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, KazukiDeclarationBuilder<D>>(declaration)
 
     private fun runAllChecks(env: ExecutionEnvironment) =
@@ -98,15 +83,11 @@ class KazukiSystem(
         }
     }
 
-    override fun query(): List<Answer<*, TicTacToeCheckFactory>> = throw UnsupportedOperationException()
-
-    override fun generateActions(): List<(TicTacToeActionFactory) -> Action> = throw UnsupportedOperationException()
-
-    override fun generateReport(name: String): File = throw UnsupportedOperationException()
-
     companion object {
         private val Log = LoggerFactory.getLogger(this::class.java)
 
         private val declarationBuilderFactory = DeclarationBuilderFactory(KazukiDeclarationBuilderFactory::class.java)
+
+        private val declarationStateBuilder = DeclarationStateBuilder(::TicTacToeDeclarationState)
     }
 }

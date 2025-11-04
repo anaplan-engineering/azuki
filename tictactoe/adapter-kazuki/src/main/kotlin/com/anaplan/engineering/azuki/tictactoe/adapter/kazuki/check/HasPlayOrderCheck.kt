@@ -14,7 +14,7 @@ class HasPlayOrderCheck(
     override fun check(env: ExecutionEnvironment): Boolean {
         val game = env.get<XO.Game>(gameName)
         val players = playerNames.map { it.toPlayer() }
-        return game.order == XO_Module.mk_PlayOrder(players)
+        return game.order == XO_Module.as_PlayOrder(players)
     }
 
 }

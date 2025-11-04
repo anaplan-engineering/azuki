@@ -24,6 +24,18 @@ object KazukiPlayerCheckFactory : PlayerCheckFactory {
 
 object KazukiGameCheckFactory : GameCheckFactory {
     override fun hasPlayOrder(gameName: String, players: List<String>) = HasPlayOrderCheck(gameName, players)
+
+    override fun hasToken(
+        gameName: String,
+        playerName: String,
+        position: Position
+    ) = UnsupportedCheck
+
+    override fun hasSpace(
+        gameName: String,
+        position: Position
+    ) = UnsupportedCheck
+
     override fun hasState(gameName: String, moves: MoveMap) = BoardHasStateCheck(gameName, moves)
     override fun isComplete(gameName: String) = BoardIsCompleteCheck(gameName)
     override fun isDraw(gameName: String) = UnsupportedCheck

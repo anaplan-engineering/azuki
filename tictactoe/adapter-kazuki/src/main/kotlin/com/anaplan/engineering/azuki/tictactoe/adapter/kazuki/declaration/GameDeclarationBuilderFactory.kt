@@ -6,6 +6,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.toKazuki
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.toPlayer
 import com.anaplan.engineering.azuki.tictactoe.kazuki.XO
 import com.anaplan.engineering.azuki.tictactoe.kazuki.XO_Module
+import com.anaplan.engineering.kazuki.core.*
 
 class GameDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<GameDeclaration> {
 
@@ -16,9 +17,9 @@ class GameDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<GameDeclar
     private class GameDeclarationBuilder(declaration: GameDeclaration) :
         KazukiDeclarationBuilder<GameDeclaration>(declaration) {
         override fun build(builder: EnvironmentBuilder) {
-            val board = declaration.moves.map { (position, playerName) ->
-                position.toKazuki() to playerName.toPlayer()
-            }.toMap()
+            val board = mapping(declaration.moves.entries) { (position, playerName) ->
+                mk_(position.toKazuki(), playerName.toPlayer())
+            }
             builder.declare(declaration.name) { env ->
                 XO_Module.mk_Game(board, env.get<XO.PlayOrder>(declaration.orderName))
             }

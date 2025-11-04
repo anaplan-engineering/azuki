@@ -6,6 +6,8 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.ExecutionEnvironme
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.toKazuki
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.toPlayer
 import com.anaplan.engineering.azuki.tictactoe.kazuki.XO
+import com.anaplan.engineering.kazuki.core.mapping
+import com.anaplan.engineering.kazuki.core.mk_
 
 class BoardHasStateCheck(
     private val gameName: String,
@@ -14,9 +16,9 @@ class BoardHasStateCheck(
 
     override fun check(env: ExecutionEnvironment): Boolean {
         val game = env.get<XO.Game>(gameName)
-        val expectedBoard = moves.map { (position, playerName) ->
-            position.toKazuki() to playerName.toPlayer()
-        }.toMap()
+        val expectedBoard = mapping(moves.entries) { (position, playerName) ->
+            mk_(position.toKazuki(), playerName.toPlayer())
+        }
         return expectedBoard == game.board
     }
 

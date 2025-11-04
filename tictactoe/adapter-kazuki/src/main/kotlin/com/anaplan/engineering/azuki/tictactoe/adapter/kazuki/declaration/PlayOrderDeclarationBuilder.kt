@@ -18,7 +18,7 @@ class PlayOrderDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<PlayO
 
         override fun build(builder: EnvironmentBuilder) {
             builder.declare(declaration.name) {
-                XO_Module.mk_PlayOrder(declaration.playOrder.map { it.toPlayer() })
+                XO_Module.as_PlayOrder(declaration.playOrder.map { it.toPlayer() })
             }
         }
     }

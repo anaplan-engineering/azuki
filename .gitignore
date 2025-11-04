@@ -7,4 +7,5 @@ out/
 .idea
 *.swp
 *.hprof
+.kotlin
 

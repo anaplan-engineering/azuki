@@ -85,7 +85,7 @@ task sampleImplementationV2ClasspathJar(type: Jar) {
 
 ext {
     // default impls
-    setProperty("impl.includes", "SampleImpl,VDM")
+    setProperty("impl.includes", "SampleImpl,VDM,Kazuki")
 }
 
 test {

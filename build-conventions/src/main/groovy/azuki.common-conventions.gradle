@@ -1,5 +1,4 @@
 repositories {
-    mavenLocal() // TODO -- just for dev -- remove before merge
     mavenCentral()
 }
 
