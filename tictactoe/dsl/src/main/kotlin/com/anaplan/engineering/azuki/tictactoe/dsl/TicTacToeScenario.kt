@@ -5,9 +5,11 @@ import com.anaplan.engineering.azuki.core.dsl.NoQueries
 import com.anaplan.engineering.azuki.core.dsl.NoVerify
 import com.anaplan.engineering.azuki.core.runner.RunnableScenario
 import com.anaplan.engineering.azuki.core.scenario.AbstractOracleScenario
+import com.anaplan.engineering.azuki.core.scenario.AbstractQueryScenario
 import com.anaplan.engineering.azuki.core.scenario.AbstractVerifiableScenario
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.scenario.OracleScenario
+import com.anaplan.engineering.azuki.core.scenario.ScenarioWithQueries
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.NoActionGeneratorFactory
 import com.anaplan.engineering.azuki.core.system.NoQueryFactory
@@ -22,12 +24,14 @@ open class TicTacToeScenario :
         TicTacToeDslProvider)
 
 interface TicTacToeBuildableScenario : BuildableScenario<TicTacToeActionFactory> {
+
     fun given(givenFunction: TicTacToeGiven.() -> Unit)
     fun whenever(whenFunction: TicTacToeWhen.() -> Unit)
 }
 
 interface TicTacToeVerifiableScenario : VerifiableScenario<TicTacToeActionFactory, TicTacToeCheckFactory>,
     TicTacToeBuildableScenario {
+
     fun then(thenFunction: TicTacToeThen.() -> Unit)
 }
 
@@ -38,6 +42,11 @@ interface TicTacToeOracleScenario :
     fun generate(generationFunction: TicTacToeGenerate.() -> Unit)
 }
 
+interface TicTacToeQueryScenario : ScenarioWithQueries<TicTacToeActionFactory, TicTacToeQueryFactory> {
+
+    fun query(queryFunction: TicTacToeQueries.() -> Unit)
+}
+
 open class TicTacToeVerifiableScenarioImpl :
     AbstractVerifiableScenario<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeGiven, TicTacToeWhen, TicTacToeThen, TicTacToeRegardlessOf>(
         TicTacToeDslProvider), TicTacToeVerifiableScenario
@@ -46,6 +55,10 @@ open class TicTacToeOracleScenarioImpl :
     AbstractOracleScenario<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, TicTacToeGiven, TicTacToeWhen, TicTacToeThen, TicTacToeVerify, TicTacToeQueries, TicTacToeGenerate>(
         TicTacToeDslProvider), TicTacToeOracleScenario
 
+open class TicTacToeQueryScenarioImpl :
+    AbstractQueryScenario<TicTacToeActionFactory, TicTacToeQueryFactory, TicTacToeGiven, TicTacToeWhen, TicTacToeQueries>(
+        TicTacToeDslProvider), TicTacToeQueryScenario
+
 fun verifiableScenario(init: TicTacToeVerifiableScenario.() -> Unit): TicTacToeVerifiableScenario {
     val scenario = TicTacToeVerifiableScenarioImpl()
     scenario.init()
@@ -53,3 +66,5 @@ fun verifiableScenario(init: TicTacToeVerifiableScenario.() -> Unit): TicTacToeV
 }
 
 fun oracleScenario(init: TicTacToeOracleScenario.() -> Unit) = TicTacToeOracleScenarioImpl().apply(init)
+
+fun queryScenario(init: TicTacToeQueryScenario.() -> Unit) = TicTacToeQueryScenarioImpl().apply(init)
