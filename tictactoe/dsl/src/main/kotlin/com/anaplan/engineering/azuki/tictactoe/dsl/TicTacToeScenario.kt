@@ -40,6 +40,7 @@ interface TicTacToeOracleScenario :
     TicTacToeBuildableScenario {
 
     fun generate(generationFunction: TicTacToeGenerate.() -> Unit)
+    fun verify(verifyFunction: TicTacToeVerify.() -> Unit)
 }
 
 interface TicTacToeQueryScenario : ScenarioWithQueries<TicTacToeActionFactory, TicTacToeQueryFactory> {

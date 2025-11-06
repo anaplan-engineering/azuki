@@ -19,6 +19,10 @@ fun interface TicTacToeScriptGenerationCheck : ScriptGenerationCheck<TicTacToeGe
 
 object GameScriptGenerationCheckFactory : GameCheckFactory {
 
+    override fun exists(gameName: String) = TicTacToeScriptGenerationCheck {
+        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameExists, gameName)
+    }
+
     override fun hasPlayOrder(gameName: String, players: List<String>) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameHasPlayOrder, gameName, players)
     }

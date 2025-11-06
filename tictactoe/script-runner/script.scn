@@ -2,6 +2,13 @@ oracleScenario {
     given {
         thereIsANewGameWithPlayers("gameA", "X", "O")
     }
+
+    verify {
+        forAll(
+            { getPositions("gameA")},
+            { pos -> gameHasToken("gameA", pos) }
+        )
+    }
 }
 
 /*
