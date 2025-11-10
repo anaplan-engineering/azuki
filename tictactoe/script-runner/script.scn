@@ -1,6 +1,12 @@
 oracleScenario {
     given {
-        thereIsANewGameWithPlayers("gameA", "X", "O")
+        thereIsANewGame("gameA")
+    }
+
+    whenever {}
+
+    generate {
+        addMoves("gameA", (1..9), GenerateTurns.InOrder, GeneratePositions.RandomWalk)
     }
 
     verify {

@@ -9,11 +9,6 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 
 class TicTacToeVerify(private val queryFactory: TicTacToeQueryFactory) : Verify<TicTacToeQueryFactory> {
 
-    private val queriesList = mutableListOf<Query<*>>()
-    private val derivedQueriesList = mutableListOf<DerivedQuery<*>>()
-
-    override fun queries() = ScenarioQueries(queriesList, derivedQueriesList)
-
     fun <T, C : Collection<T>> forAll(
         getDriver: DerivedQueryBlock.() -> (qf: TicTacToeQueryFactory) -> Query<C>, v: TicTacToeVerify.(T) -> Unit
     ) {
@@ -27,6 +22,11 @@ class TicTacToeVerify(private val queryFactory: TicTacToeQueryFactory) : Verify<
     fun gameHasHeight(gameName: String) = addQuery { getHeight(gameName) }
     fun gameHasPositions(gameName: String) = addQuery { getPositions(gameName) }
     fun gameHasToken(gameName: String, position: Position) = addQuery { getToken(gameName, position) }
+
+    override fun queries() = ScenarioQueries(queriesList, derivedQueriesList)
+
+    private val queriesList = mutableListOf<Query<*>>()
+    private val derivedQueriesList = mutableListOf<DerivedQuery<*>>()
 
     private fun addQuery(via: TicTacToeQueryFactory.() -> Query<*>) {
         queriesList.add(queryFactory.via())

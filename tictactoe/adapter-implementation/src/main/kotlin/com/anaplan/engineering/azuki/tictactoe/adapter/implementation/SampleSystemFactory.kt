@@ -167,6 +167,7 @@ class SampleSystem(
         check(queries.isEmpty() && derivedQueries.isEmpty()) { "Cannot generate actions and query at the same time" }
         check(checks.isEmpty()) { "Cannot generate actions and check at the same time" }
 
+        println("generateActions")
         return withBuiltEnvironment { env -> actionGenerators.flatMap { it.generate(env) } }
     }
 
