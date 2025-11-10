@@ -10,8 +10,18 @@ configurations {
 }
 
 dependencies {
-    runner project(":tictactoe:dsl")
     runner project(":azuki-runner")
+
+    implementation project(":tictactoe:dsl")
+    implementation project(":tictactoe:adapter-script-generation")
+    implementation project(":azuki-runner")
+    implementation project(":azuki-script-generation")
+    implementation 'com.github.ajalt.clikt:clikt-jvm:5.0.3'
+    implementation "org.jetbrains.kotlin:kotlin-reflect:2.0.21"
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.7'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.2'
+    implementation 'org.apache.logging.log4j:log4j-core:2.17.2'
 
     sampleImpl project(":tictactoe:adapter-implementation")
     sampleImpl project(":tictactoe:implementation")
@@ -37,32 +47,45 @@ task vdmClasspathJar(type: Jar) {
     }
 }
 
+ext {
+    scenarioFile = project.findProperty("scenarioFile") ?: "script.scn"
+}
+
 task runScript(type: JavaExec) {
     dependsOn vdmClasspathJar
-    classpath = configurations.runner
-    main 'com.anaplan.engineering.azuki.runner.ScenarioScriptRunnerKt'
-    jvmArgs '-Xmx4g'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.anaplan.engineering.azuki.tictactoe.scriptrunner.TicTacToeScenarioScriptRunnerKt'
+    jvmArgs '-Xmx4g', "--add-opens=java.base/java.nio=ALL-UNNAMED"
     args = [
-        file("script.scn").absolutePath,
-        file("config/imports").absolutePath,
-        'VDM'
+        "-d", file("build/run${System.currentTimeMillis()}").absolutePath,
+        "-v", file("build/verified").absolutePath,
+        "-u", file("build/unverified").absolutePath,
+        "-i", file("config/imports").absolutePath,
+        "-t", "VDM",
+        file(scenarioFile).absolutePath,
+    ]
+    def instanceJars = [
+        vdmClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
     systemProperties = [
-        "com.anaplan.engineering.azuki.implementation.instance.jars": vdmClasspathJar.archiveFile.get().asFile.absolutePath
+        "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(","),
     ]
 }
 
 task runOracleScript(type: JavaExec) {
     dependsOn sampleImplClasspathJar
     dependsOn vdmClasspathJar
-    classpath = configurations.runner
-    main 'com.anaplan.engineering.azuki.runner.ScenarioScriptRunnerKt'
-    jvmArgs '-Xmx4g'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.anaplan.engineering.azuki.tictactoe.scriptrunner.TicTacToeScenarioScriptRunnerKt'
+    jvmArgs '-Xmx4g', "--add-opens=java.base/java.nio=ALL-UNNAMED"
     args = [
-        file("script.scn").absolutePath,
-        file("config/imports").absolutePath,
-        'SampleImpl',
-        'VDM'
+        "-d", file("build/run${System.currentTimeMillis()}").absolutePath,
+        "-v", file("build/verified").absolutePath,
+        "-u", file("build/unverified").absolutePath,
+        "-i", file("config/imports").absolutePath,
+        "-t", "SampleImpl",
+        "-o", "VDM",
+        file(scenarioFile).absolutePath,
     ]
     def instanceJars = [
         sampleImplClasspathJar.archiveFile.get().asFile.absolutePath,

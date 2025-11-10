@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
+import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationCheck
 import com.anaplan.engineering.azuki.script.generation.asComposable
@@ -10,6 +11,10 @@ object TicTacToeScriptGenerationCheckFactory : TicTacToeCheckFactory {
 
     override val game = GameScriptGenerationCheckFactory
     override val player = PlayerScriptGenCheckFactory
+
+    override fun systemValid() = TicTacToeScriptGenerationCheck {
+        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::everythingIsOkay)
+    }
 }
 
 fun interface TicTacToeScriptGenerationCheck : ScriptGenerationCheck<TicTacToeGenerationEnvironment> {
@@ -18,10 +23,6 @@ fun interface TicTacToeScriptGenerationCheck : ScriptGenerationCheck<TicTacToeGe
 }
 
 object GameScriptGenerationCheckFactory : GameCheckFactory {
-
-    override fun exists(gameName: String) = TicTacToeScriptGenerationCheck {
-        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameExists, gameName)
-    }
 
     override fun hasPlayOrder(gameName: String, players: List<String>) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameHasPlayOrder, gameName, players)

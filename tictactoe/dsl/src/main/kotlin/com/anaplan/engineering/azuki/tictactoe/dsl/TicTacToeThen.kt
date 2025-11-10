@@ -12,6 +12,10 @@ class TicTacToeThen(private val checkFactory: TicTacToeCheckFactory): Then<TicTa
 
     override fun checks() = checkList
 
+    fun everythingIsOkay() {
+        checkList.add(checkFactory.systemValid())
+    }
+
     fun playerHasMoved(gameName: String, playerName: String, times: Int) {
         checkList.add(checkFactory.player.moveCount(gameName, playerName, times))
     }
