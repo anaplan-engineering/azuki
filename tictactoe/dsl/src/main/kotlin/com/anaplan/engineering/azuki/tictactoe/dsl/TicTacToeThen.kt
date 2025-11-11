@@ -20,6 +20,10 @@ class TicTacToeThen(private val checkFactory: TicTacToeCheckFactory): Then<TicTa
         checkList.add(checkFactory.player.moveCount(gameName, playerName, times))
     }
 
+    fun playerCanPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) {
+        checkList.add(checkFactory.player.canPlaceToken(gameName, playerName, Position(position)))
+    }
+
     fun playerCannotPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) {
         checkList.add(checkFactory.player.cannotPlaceToken(gameName, playerName, Position(position)))
     }

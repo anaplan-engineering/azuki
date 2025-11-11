@@ -10,6 +10,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.toPlayer
 import org.slf4j.LoggerFactory
 
 class SampleQueryFactory : TicTacToeQueryFactory {
@@ -18,11 +19,11 @@ class SampleQueryFactory : TicTacToeQueryFactory {
         derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> List<Query<*>>
     ) = SampleDerivedQuery(derivedFrom(this)) { t -> deriveQuery(t, this) }
 
-    override fun <T, C : Collection<T>> createForSomeQuery(
-        derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> List<Query<*>>
-    ) = SampleDerivedQuery(derivedFrom(this)) { t -> deriveQuery(t, this) }
-
     override fun getGames() = query(value = { env -> env.gameManager.activeGames.toList() })
+
+    override fun getPlayOrder(gameName: String) = query(value = { env ->
+        env.withGame(gameName) { playOrder.map { it.token.symbol } }
+    }, checks = { cf, playOrder -> listOf(cf.game.hasPlayOrder(gameName, playOrder)) })
 
     override fun getWidth(gameName: String) = query(value = { env -> env.withGame(gameName) { width } })
 
@@ -43,6 +44,18 @@ class SampleQueryFactory : TicTacToeQueryFactory {
                     cf.game.hasToken(gameName, playerName = token, position)
                 })
             })
+
+    override fun canPlayerPlaceToken(gameName: String, playerName: String, position: Position) = query(value = { env ->
+        env.withGame(gameName) {
+            canMove(toPlayer(playerName), position.col - 1, position.row - 1)
+        }
+    }, checks = { cf, canPlace ->
+        listOf(if (canPlace) {
+            cf.player.canPlaceToken(gameName, playerName, position)
+        } else {
+            cf.player.cannotPlaceToken(gameName, playerName, position)
+        })
+    })
 }
 
 private fun <T> query(

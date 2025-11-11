@@ -20,83 +20,88 @@ import kotlin.reflect.KFunction
  */
 abstract class AbstractTicTacToeScriptGenerationQueryFactory() : TicTacToeQueryFactory {
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T, C : Collection<T>> createForAllQuery(
         derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> List<Query<*>>
-    ) = createDerivedQuery(QueryOperator.ForAll, derivedFrom, deriveQuery)
-
-    override fun <T, C : Collection<T>> createForSomeQuery(
-        derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> List<Query<*>>
-    ) = createDerivedQuery(QueryOperator.ForSome, derivedFrom, deriveQuery)
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <T, C : Collection<T>> createDerivedQuery(
-        operator: QueryOperator,
-        derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> List<Query<*>>
-    ): DerivedQuery<T> {
+    ) : DerivedQuery<T> {
         val genQueryWithDummy =
             derivedFrom(TicTacToeScriptGenerationDerivedQueryFactory) as ScriptGenerationQueryWithDummy<C, T>
         val derivedFromScript = genQueryWithDummy.getQueryScript()
-        val derivationScript =
-            (deriveQuery(genQueryWithDummy.dummy,
-                this).map { (it as ScriptGenerationQuery<T>).getQueryScript() }).joinToString("\n")
+        val derivationScript = deriveQuery(genQueryWithDummy.dummy, this).joinToString("\n")
+        { (it as ScriptGenerationQuery<*>).getQueryScript() }
 
         return TicTacToeScriptGenerationDerivedQuery(
-            operator,
+            QueryOperator.ForAll,
             derivedFromScript,
             derivationScript,
         )
     }
 }
 
-abstract class TicTacToeScriptGenerationQueryFactory(val queryPosition: QueryPosition) : AbstractTicTacToeScriptGenerationQueryFactory() {
+abstract class TicTacToeScriptGenerationQueryFactory(val queryPosition: QueryPosition) :
+    AbstractTicTacToeScriptGenerationQueryFactory() {
 
     override fun getGames() = query<List<String>>(QueryReference.Games)
+    override fun getPlayOrder(gameName: String) = query<List<String>>(QueryReference.PlayOrder, gameName)
     override fun getPositions(gameName: String) = query<List<Position>>(QueryReference.Positions, gameName)
     override fun getWidth(gameName: String) = query<Int>(QueryReference.Width, gameName)
     override fun getHeight(gameName: String) = query<Int>(QueryReference.Height, gameName)
-    override fun getToken(gameName: String, position: Position) = query<String?>(QueryReference.Token, gameName, position)
+    override fun getToken(gameName: String, position: Position) =
+        query<String?>(QueryReference.Token, gameName, position)
 
-    private fun<T> query(reference: QueryReference, vararg args: Any?) =
-        reference.inPosition(queryPosition)?.let {
-            TicTacToeScriptGenerationQuery<T> {
-                TicTacToeScriptingHelper.scriptifyFunction(it, *args)
-            }
-        } ?: UnsupportedQuery()
+    override fun canPlayerPlaceToken(gameName: String, playerName: String, position: Position) =
+        query<Boolean>(QueryReference.CanPlayerPlaceToken, gameName, playerName, position)
+
+    private fun <T> query(reference: QueryReference, vararg args: Any?) = reference.inPosition(queryPosition)?.let {
+        TicTacToeScriptGenerationQuery<T> {
+            TicTacToeScriptingHelper.scriptifyFunction(it, *args)
+        }
+    } ?: UnsupportedQuery()
 }
 
-object TicTacToeScriptGenerationQueryQueryFactory: TicTacToeScriptGenerationQueryFactory(QueryPosition.Query)
-object TicTacToeScriptGenerationVerificationQueryFactory: TicTacToeScriptGenerationQueryFactory(QueryPosition.Verify)
+object TicTacToeScriptGenerationQueryQueryFactory : TicTacToeScriptGenerationQueryFactory(QueryPosition.Query)
+object TicTacToeScriptGenerationVerificationQueryFactory : TicTacToeScriptGenerationQueryFactory(QueryPosition.Verify)
 
 object TicTacToeScriptGenerationDerivedQueryFactory : AbstractTicTacToeScriptGenerationQueryFactory() {
 
-    override fun getGames() = query<List<String>, String>(QueryReference.Games, "")
-    override fun getPositions(gameName: String) = query<List<Position>, Position>(QueryReference.Positions, Position(-1, -1), gameName)
+    override fun getGames() = query<List<String>, String>(QueryReference.Games, "(insert game here)")
+    override fun getPlayOrder(gameName: String) =
+        query<List<String>, String>(QueryReference.PlayOrder, "(insert player here)", gameName)
 
-    private fun<C : Collection<T>, T> query(reference: QueryReference, dummy: T, vararg args: Any?) =
+    override fun getPositions(gameName: String) =
+        query<List<Position>, Position>(QueryReference.Positions, Position(-1, -1), gameName)
+
+    private fun <C : Collection<T>, T> query(reference: QueryReference, dummy: T, vararg args: Any?) =
         reference.inPosition(QueryPosition.Derived)?.let {
-            ScriptGenerationQueryWithDummy(
-                TicTacToeScriptGenerationQuery<C> {
-                    TicTacToeScriptingHelper.scriptifyFunction(it, *args)
-                },
-                dummy
-            )
+            ScriptGenerationQueryWithDummy(TicTacToeScriptGenerationQuery<C> {
+                TicTacToeScriptingHelper.scriptifyFunction(it, *args)
+            }, dummy)
         } ?: UnsupportedQuery()
 }
 
 enum class QueryPosition {
-    Query,
-    Verify,
-    Derived
+    Query, Verify, Derived
 }
 
-enum class QueryReference(val inQueryPosition: KFunction<*>, val inVerificationPosition: KFunction<*>, val inDerivedPosition: KFunction<*>?) {
-    Games(TicTacToeQueries::getGames, TicTacToeVerify::hasGames, DerivedQueryBlock::getGames),
-    Width(TicTacToeQueries::getWidth, TicTacToeVerify::gameHasWidth, DerivedQueryBlock::getWidth),
-    Height(TicTacToeQueries::getHeight, TicTacToeVerify::gameHasHeight, DerivedQueryBlock::getHeight),
-    Positions(TicTacToeQueries::getPositions, TicTacToeVerify::gameHasPositions, DerivedQueryBlock::getPositions),
-    Token(TicTacToeQueries::getToken, TicTacToeVerify::gameHasToken, null);
+enum class QueryReference(
+    val inQueryPosition: KFunction<*>, val inVerificationPosition: KFunction<*>, val inDerivedPosition: KFunction<*>?
+) {
+    Games(TicTacToeQueries::getGames, TicTacToeVerify::hasGames, DerivedQueryBlock::getGames), PlayOrder(
+        TicTacToeQueries::getPlayOrder,
+        TicTacToeVerify::gameHasPlayOrder,
+        DerivedQueryBlock::getPlayOrder),
+    Width(TicTacToeQueries::getWidth, TicTacToeVerify::gameHasWidth, null), Height(TicTacToeQueries::getHeight,
+        TicTacToeVerify::gameHasHeight,
+        null),
+    Positions(TicTacToeQueries::getPositions,
+        TicTacToeVerify::gameHasPositions,
+        DerivedQueryBlock::getPositions),
+    Token(TicTacToeQueries::getToken,
+        TicTacToeVerify::gameHasToken,
+        null),
+    CanPlayerPlaceToken(TicTacToeQueries::canPlayerPlaceToken, TicTacToeVerify::playerCanPlaceToken, null);
 
-    fun inPosition(position: QueryPosition) = when(position) {
+    fun inPosition(position: QueryPosition) = when (position) {
         QueryPosition.Query -> inQueryPosition
         QueryPosition.Verify -> inVerificationPosition
         QueryPosition.Derived -> inDerivedPosition
@@ -107,8 +112,7 @@ class TicTacToeScriptGenerationDerivedQuery<T>(
     val operator: QueryOperator, val derivedFromScript: String, val derivationScript: String
 ) : ScriptGenerationDerivedQuery<T> {
 
-    override fun getDerivedQueryScript() =
-        """
+    override fun getDerivedQueryScript() = """
             ${operator.script}({
                 $derivedFromScript
             }, {
@@ -118,7 +122,7 @@ class TicTacToeScriptGenerationDerivedQuery<T>(
 }
 
 enum class QueryOperator(val script: String) {
-    ForAll("forAll"), ForSome("forSome")
+    ForAll("forAll")
 }
 
 fun interface TicTacToeScriptGenerationQuery<T> : ScriptGenerationQuery<T> {

@@ -11,9 +11,20 @@ oracleScenario {
 
     verify {
         forAll(
-            { getPositions("gameA")},
-            { pos -> gameHasToken("gameA", pos) }
+            { getPositions("gameA") },
+            { pos -> gameHasToken("gameA", pos.col to pos.row) }
         )
+        /*
+        nestedForAll(
+            { getPlayOrder("gameA") },
+            { player ->
+                forAll(
+                    { getPositions("gameA") },
+                    { pos -> playerCanPlaceToken("gameA", player, pos.col to pos.row) }
+                )
+            }
+        )
+         */
     }
 }
 

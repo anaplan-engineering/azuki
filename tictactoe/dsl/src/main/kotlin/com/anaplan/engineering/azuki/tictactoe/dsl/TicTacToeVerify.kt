@@ -13,15 +13,20 @@ class TicTacToeVerify(private val queryFactory: TicTacToeQueryFactory) : Verify<
         getDriver: DerivedQueryBlock.() -> (qf: TicTacToeQueryFactory) -> Query<C>, v: TicTacToeVerify.(T) -> Unit
     ) {
         derivedQueriesList.add(queryFactory.createForAllQuery(DerivedQueryBlock().getDriver()) { t: T, qf: TicTacToeQueryFactory ->
-            TicTacToeVerify(qf).apply { v(t) }.queriesList
+            val verify = TicTacToeVerify(qf).apply { v(t) }
+            check(verify.derivedQueriesList.isEmpty()) { "use nestedForAll" }
+            verify.queriesList
         })
     }
 
     fun hasGames() = addQuery { getGames() }
+    fun gameHasPlayOrder(gameName: String) = addQuery { getPlayOrder(gameName) }
     fun gameHasWidth(gameName: String) = addQuery { getWidth(gameName) }
     fun gameHasHeight(gameName: String) = addQuery { getHeight(gameName) }
     fun gameHasPositions(gameName: String) = addQuery { getPositions(gameName) }
-    fun gameHasToken(gameName: String, position: Position) = addQuery { getToken(gameName, position) }
+    fun gameHasToken(gameName: String, position: Pair<Int, Int>) = addQuery { getToken(gameName, Position(position)) }
+    fun playerCanPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) =
+        addQuery { canPlayerPlaceToken(gameName, playerName, Position(position)) }
 
     override fun queries() = ScenarioQueries(queriesList, derivedQueriesList)
 

@@ -25,6 +25,7 @@ object SamplePlayerCheckFactory : PlayerCheckFactory {
 
     override fun moveCount(gameName: String, playerName: String, times: Int) =
         PlayerMoveCountCheck(gameName, playerName, times)
+    override fun canPlaceToken(gameName: String, playerName: String, position: Position) = CanPlaceTokenCheck(gameName, playerName, position)
     override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) = CannotPlaceTokenCheck(gameName, playerName, position)
     override fun hasWon(gameName: String, playerName: String) = HasWonCheck(gameName, playerName)
     override fun hasLost(gameName: String, playerName: String) = HasLostCheck(gameName, playerName)

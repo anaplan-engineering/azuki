@@ -59,6 +59,14 @@ object PlayerScriptGenCheckFactory : PlayerCheckFactory {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerHasMoved, gameName, playerName, times)
     }
 
+    override fun canPlaceToken(gameName: String, playerName: String, position: Position) =
+        TicTacToeScriptGenerationCheck {
+            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerCanPlaceToken,
+                gameName,
+                playerName,
+                position)
+        }
+
     override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) =
         TicTacToeScriptGenerationCheck {
             TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerCannotPlaceToken,

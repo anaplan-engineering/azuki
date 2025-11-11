@@ -15,6 +15,8 @@ object KazukiPlayerCheckFactory : PlayerCheckFactory {
     override fun moveCount(gameName: String, playerName: String, times: Int) =
         PlayerMoveCountCheck(gameName, playerName, times)
 
+    override fun canPlaceToken(gameName: String, playerName: String, position: Position) =
+        CanPlaceTokenCheck(gameName, playerName, position)
     override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) =
         CannotPlaceTokenCheck(gameName, playerName, position)
 
