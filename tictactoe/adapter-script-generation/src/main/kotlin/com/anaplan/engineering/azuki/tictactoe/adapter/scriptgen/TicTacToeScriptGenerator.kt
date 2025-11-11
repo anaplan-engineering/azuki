@@ -7,8 +7,6 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGenera
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
-import com.anaplan.engineering.azuki.tictactoe.dsl.GeneratePositions
-import com.anaplan.engineering.azuki.tictactoe.dsl.GenerateTurns
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 
@@ -36,8 +34,6 @@ val TicTacToeScriptingHelper = ScriptingHelper(mapOf(
     Int::class to { v: Any? -> v.toString() },
     Long::class to { v: Any? -> v.toString() },
     IntRange::class to { v: Any? -> (v as IntRange).let { "(${it.first} .. ${it.last})" } },
-    GenerateTurns::class to { v: Any? -> (v as GenerateTurns).name },
-    GeneratePositions::class to { v: Any? -> (v as GeneratePositions).name }
 ))
 
 class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {

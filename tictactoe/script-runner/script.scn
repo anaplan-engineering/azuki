@@ -6,7 +6,7 @@ oracleScenario {
     whenever {}
 
     generate {
-        addMoves("gameA", (1..9), GenerateTurns.InOrder, GeneratePositions.RandomWalk)
+        addMoves("gameA")
     }
 
     verify {
