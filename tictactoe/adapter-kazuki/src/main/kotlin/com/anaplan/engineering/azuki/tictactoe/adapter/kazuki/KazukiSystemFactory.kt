@@ -3,7 +3,9 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.kazuki
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.action.KazukiAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.action.KazukiActionFactory

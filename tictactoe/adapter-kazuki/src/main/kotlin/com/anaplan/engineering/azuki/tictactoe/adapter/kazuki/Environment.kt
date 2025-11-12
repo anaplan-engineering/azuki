@@ -33,6 +33,7 @@ class ExecutionEnvironment {
         variables[name] = value
     }
 
+    internal fun game(name: String) = get<XO.Game>(name)
 }
 
 fun String.toPlayer(): XO.Player =
