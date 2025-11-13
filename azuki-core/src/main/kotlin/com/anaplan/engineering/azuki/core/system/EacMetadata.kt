@@ -4,6 +4,8 @@ package com.anaplan.engineering.azuki.core.system
 import com.anaplan.engineering.azuki.core.JvmSystemProperties.eacMetadataDirPropertyName
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.io.File
 
 typealias FunctionalElement = Int
@@ -27,7 +29,7 @@ data class EacMetadata(
     val scenarioName = "${functionalElement}-${behavior}-${methodName}"
 }
 
-internal val objectMapper = ObjectMapper().registerModule(KotlinModule())
+internal val objectMapper = jacksonObjectMapper()
 
 object EacMetadataRecorder {
 

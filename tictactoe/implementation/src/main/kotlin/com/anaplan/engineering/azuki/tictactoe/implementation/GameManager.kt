@@ -2,7 +2,9 @@ package com.anaplan.engineering.azuki.tictactoe.implementation
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
@@ -44,8 +46,7 @@ class GameManager(private val store: File) {
         return game
     }
 
-    private val objectMapper = ObjectMapper()
-        .registerModule(KotlinModule())
+    private val objectMapper = jacksonObjectMapper()
 
     val gameCreator: GameCreator by lazy {
         val loader = ServiceLoader.load(GameCreator::class.java)

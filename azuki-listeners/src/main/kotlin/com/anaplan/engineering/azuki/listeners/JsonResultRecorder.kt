@@ -4,6 +4,8 @@ import com.anaplan.engineering.azuki.core.runner.AzukiRunListener
 import com.anaplan.engineering.azuki.core.runner.ScenarioResult
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.io.File
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -27,7 +29,7 @@ class JsonResultRecorder : AzukiRunListener {
         results.add(scenarioResult)
     }
 
-    private val objectMapper by lazy { ObjectMapper().registerModule(KotlinModule()) }
+    private val objectMapper by lazy { jacksonObjectMapper() }
 
     override fun suiteComplete(suiteName: String) {
         val suiteResults = mutableListOf<ScenarioResult>().apply {

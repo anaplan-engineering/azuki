@@ -6,6 +6,7 @@ import com.anaplan.engineering.azuki.verify.orchestrator.configuration.RunConfig
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -183,7 +184,7 @@ class ScenarioOrchestrator<OS : OrchestratableScenario, RC : ScenarioResultConte
     }
 }
 
-internal val objectMapper = ObjectMapper().registerModule(KotlinModule())
+internal val objectMapper = jacksonObjectMapper()
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
 @ExperimentalCoroutinesApi

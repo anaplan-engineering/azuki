@@ -5,11 +5,12 @@ import com.anaplan.engineering.vdmanimation.api.FileCoverage
 import com.anaplan.engineering.vdmanimation.api.Location
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
 
 object CoverageRecorder {
 
-    private val objectMapper = ObjectMapper().registerModule(KotlinModule())
+    private val objectMapper = jacksonObjectMapper()
 
     fun recordJson(coverage: AnimationCoverage, coverageLocation: String? = System.getProperty("coverage.location")) {
         if (coverageLocation == null) return
