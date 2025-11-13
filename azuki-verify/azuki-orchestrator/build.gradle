@@ -7,15 +7,15 @@ dependencies {
     implementation project(":azuki-runner")
     implementation project(":azuki-verify:azuki-batch-api")
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2'
+    implementation libs.kotlinx.serialization.json
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation "org.jetbrains.kotlin:kotlin-reflect"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
-    implementation 'org.jetbrains.kotlinx:kotlinx-html-jvm:0.8.1'
+    implementation libs.kotlinx.coroutines.core
+    implementation libs.jackson.module
+    implementation libs.kotlinx.html
 
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.7'
+    implementation libs.slf4j.api
     implementation group: 'com.google.guava', name: 'guava', version: '28.2-jre'
 
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit"

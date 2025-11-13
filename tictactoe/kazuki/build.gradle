@@ -11,8 +11,8 @@ dependencies {
     api "com.anaplan.engineering:kazuki-toolkit:0.3.0-alpha.1"
     ksp "com.anaplan.engineering:kazuki-ksp:0.3.0-alpha.1"
     implementation "org.jetbrains.kotlin:kotlin-test-junit"
-    implementation 'org.slf4j:slf4j-api:1.7.36'
-    testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+    implementation libs.slf4j.api
+    testRuntimeOnly libs.slf4j.impl
 }
 
 ksp {

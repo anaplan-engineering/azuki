@@ -5,9 +5,9 @@ plugins {
 
 dependencies {
     api project(":azuki-core")
-    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation libs.slf4j.api
     runtimeOnly 'net.java.dev.jna:jna:5.8.0'
-    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+    runtimeOnly libs.slf4j.impl
 }
 
 publishing {

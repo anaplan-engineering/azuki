@@ -8,8 +8,8 @@ plugins {
 dependencies {
     implementation gradleApi()
     implementation project(':azuki-core')
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
-    implementation 'org.jetbrains.kotlinx:kotlinx-html-jvm:0.12.0'
+    implementation libs.jackson.module
+    implementation libs.kotlinx.html
 }
 
 gradlePlugin {

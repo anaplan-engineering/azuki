@@ -16,7 +16,7 @@ dependencies {
     api project(":graphs:dsl")
     jgrapht project(":graphs:adapter-jgrapht")
     jung project(":graphs:adapter-jung")
-    testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+    testRuntimeOnly libs.slf4j.impl
 }
 
 task jgraphtClasspathJar(type: Jar) {

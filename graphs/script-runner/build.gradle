@@ -16,7 +16,7 @@ configurations {
 dependencies {
     runner project(":graphs:dsl")
     runner project(":azuki-runner")
-    runner 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+    runner libs.slf4j.impl
 
     jgrapht project(":graphs:adapter-jgrapht")
     jung project(":graphs:adapter-jung")
