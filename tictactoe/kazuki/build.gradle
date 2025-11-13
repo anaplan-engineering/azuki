@@ -1,16 +1,15 @@
 plugins {
     id 'azuki.common-conventions'
-    id 'org.jetbrains.kotlin.jvm' version("2.0.21")
+    alias(libs.plugins.kotlin)
     id 'com.google.devtools.ksp' version("2.0.21-1.0.25")
 }
 
 dependencies {
-    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.9.10')
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
-    api "com.anaplan.engineering:kazuki-toolkit:0.3.0-alpha.1"
-    ksp "com.anaplan.engineering:kazuki-ksp:0.3.0-alpha.1"
-    implementation "org.jetbrains.kotlin:kotlin-test-junit"
+    implementation platform(libs.kotlin.bom)
+    implementation libs.kotlin.reflect
+    api libs.kazuki.toolkit
+    ksp libs.kazuki.ksp
+    implementation libs.kotlin.test
     implementation libs.slf4j.api
     testRuntimeOnly libs.slf4j.impl
 }

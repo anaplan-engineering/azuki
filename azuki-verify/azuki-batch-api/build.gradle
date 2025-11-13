@@ -6,8 +6,7 @@ plugins {
 dependencies {
     api project(":azuki-runner")
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation libs.kotlin.reflect
 }
 
 publishing {

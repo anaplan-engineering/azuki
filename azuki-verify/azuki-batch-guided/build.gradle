@@ -6,19 +6,18 @@ plugins {
 dependencies {
     implementation project(":azuki-verify:azuki-batch-api")
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation libs.kotlin.reflect
 
     implementation libs.slf4j.api
-    implementation group: 'com.google.guava', name: 'guava', version: '28.2-jre'
+    implementation libs.guava
     implementation libs.jackson.module
     implementation libs.kotlinx.html
 
 
-    implementation group: 'net.java.dev.jna', name: 'jna', version: '5.8.0'
+    implementation libs.jna
 
-    testImplementation "org.jetbrains.kotlin:kotlin-test-junit"
-    testImplementation "io.mockk:mockk:1.10.2"
+    testImplementation libs.kotlin.test
+    testImplementation libs.mockk
     testRuntimeOnly libs.slf4j.impl
 
 }

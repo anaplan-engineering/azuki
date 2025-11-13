@@ -9,16 +9,15 @@ dependencies {
 
     implementation libs.kotlinx.serialization.json
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation libs.kotlin.reflect
     implementation libs.kotlinx.coroutines.core
     implementation libs.jackson.module
     implementation libs.kotlinx.html
 
     implementation libs.slf4j.api
-    implementation group: 'com.google.guava', name: 'guava', version: '28.2-jre'
+    implementation libs.guava
 
-    testImplementation "org.jetbrains.kotlin:kotlin-test-junit"
+    testImplementation libs.kotlin.test
 }
 
 publishing {

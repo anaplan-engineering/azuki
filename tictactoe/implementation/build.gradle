@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-test-junit"
+    implementation libs.kotlin.test
     implementation libs.kotlinx.serialization.json
     implementation libs.jackson.module
     implementation libs.slf4j.api

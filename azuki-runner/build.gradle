@@ -6,7 +6,7 @@ plugins {
 dependencies {
     api project(":azuki-core")
     implementation libs.slf4j.api
-    runtimeOnly 'net.java.dev.jna:jna:5.8.0'
+    runtimeOnly libs.jna
     runtimeOnly libs.slf4j.impl
 }
 
