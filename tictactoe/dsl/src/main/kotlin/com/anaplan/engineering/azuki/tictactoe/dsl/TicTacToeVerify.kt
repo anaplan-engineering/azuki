@@ -14,8 +14,16 @@ class TicTacToeVerify(private val queryFactory: TicTacToeQueryFactory) : Verify<
     ) {
         derivedQueriesList.add(queryFactory.createForAllQuery(DerivedQueryBlock().getDriver()) { t: T, qf: TicTacToeQueryFactory ->
             val verify = TicTacToeVerify(qf).apply { v(t) }
-            check(verify.derivedQueriesList.isEmpty()) { "use nestedForAll" }
-            verify.queriesList
+
+            // TODO: relax these requirements by creating a derived query concatenation operator?
+            require(verify.queriesList.isEmpty() || verify.derivedQueriesList.isEmpty()) { "forAll cannot have both derived and non-derived queries" }
+            require(verify.derivedQueriesList.size <= 1) { "forAll cannot have more than one nested derived query" }
+
+            if (verify.queriesList.isNotEmpty()) {
+                qf.thereIs<T>(verify.queriesList)
+            } else {
+                verify.derivedQueriesList[0]
+            }
         })
     }
 

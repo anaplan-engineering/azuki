@@ -1,8 +1,15 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.query
 
+import com.anaplan.engineering.azuki.core.system.Answer
 import com.anaplan.engineering.azuki.core.system.Check
+import com.anaplan.engineering.azuki.core.system.CheckFactory
 import com.anaplan.engineering.azuki.core.system.DerivedQuery
+import com.anaplan.engineering.azuki.core.system.RunnableDerivedQuery
+import com.anaplan.engineering.azuki.core.system.RunnableQuery
+import com.anaplan.engineering.azuki.core.system.ForallRunnableDerivedQuery
 import com.anaplan.engineering.azuki.core.system.Query
+import com.anaplan.engineering.azuki.core.system.ListRunnableDerivedQuery
+import com.anaplan.engineering.azuki.core.system.RunnableQueryFactory
 import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
 import com.anaplan.engineering.azuki.core.system.UnsupportedQuery
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
@@ -11,13 +18,17 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.toPlayer
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class SampleQueryFactory : TicTacToeQueryFactory {
+class SampleQueryFactory : TicTacToeQueryFactory, RunnableQueryFactory<ExecutionEnvironment, TicTacToeCheckFactory>() {
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T, C : Collection<T>> createForAllQuery(
-        derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> List<Query<*>>
-    ) = SampleDerivedQuery(derivedFrom(this)) { t -> deriveQuery(t, this) }
+        derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> DerivedQuery<*>
+    ) = ForallRunnableDerivedQuery(derivedFrom(this).ensureRunnable()) { t ->
+        deriveQuery(t, this) as RunnableDerivedQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>
+    }
 
     override fun getGames() = query(value = { env -> env.gameManager.activeGames.toList() })
 
@@ -56,6 +67,11 @@ class SampleQueryFactory : TicTacToeQueryFactory {
             cf.player.cannotPlaceToken(gameName, playerName, position)
         })
     })
+
+    companion object {
+
+        private val Log: Logger = LoggerFactory.getLogger(SampleQueryFactory::class.java)
+    }
 }
 
 private fun <T> query(
@@ -63,50 +79,14 @@ private fun <T> query(
     checks: (TicTacToeCheckFactory, T) -> List<Check> = { _, _ -> listOf(UnsupportedCheck) }
 ): Query<T> = object : SampleQuery<T> {
 
-    override fun run(env: ExecutionEnvironment): SampleAnswer<T> {
-        val value = value(env)
+    override fun run(environment: ExecutionEnvironment): SampleAnswer<T> {
+        val value = value(environment)
 
         return SampleAnswer(this, value) { checks(it, value) }
     }
 }
 
-fun interface SampleQuery<T> : Query<T> {
+fun interface SampleQuery<T> : RunnableQuery<ExecutionEnvironment, TicTacToeCheckFactory, T> {
 
     override val behavior get() = unsupportedBehavior
-
-    fun run(env: ExecutionEnvironment): SampleAnswer<T>
-}
-
-class SampleDerivedQuery<T, C : Collection<T>>(
-    val driver: Query<C>, val derivedQueryFactory: (T) -> List<Query<*>>
-) : DerivedQuery<T> {
-
-    // TODO - shouldn't be filtering out unsupported queries here -- should be detecting earlier
-    fun derive(env: ExecutionEnvironment) = when (driver) {
-        is UnsupportedQuery -> {
-            Log.error("Driver is unsupported in derived query")
-            emptyList()
-        }
-        // TODO -- this should be different for for some.. don't map every value
-        is SampleQuery<C> -> driver.run(env).value.flatMap { t ->
-            derivedQueryFactory(t).mapNotNull {
-                when (it) {
-                    is UnsupportedQuery<*> -> {
-                        Log.warn("Derived query is unsupported")
-                        null
-                    }
-
-                    is SampleQuery<*> -> it
-                    else -> throw IllegalStateException("derived query is incorrect class: ${it::class.simpleName}")
-                }
-            }
-        }
-
-        else -> throw IllegalStateException("driver query is incorrect class: ${driver::class.simpleName}")
-    }
-
-    companion object {
-
-        private val Log = LoggerFactory.getLogger(SampleDerivedQuery::class.java)
-    }
 }

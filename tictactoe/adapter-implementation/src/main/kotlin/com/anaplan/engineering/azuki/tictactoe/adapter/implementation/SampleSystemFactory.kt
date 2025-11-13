@@ -15,8 +15,6 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.Samp
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check.SampleCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilder
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilderFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.query.SampleDerivedQuery
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.query.SampleQuery
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.query.SampleQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.implementation.GameManager
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -59,10 +57,12 @@ class SampleSystemFactory :
 
         private fun toSampleCheck(it: Check) = requireNotNull(it as? SampleCheck) { "Invalid check: $it" }
 
-        private fun toSampleQuery(it: Query<*>) = requireNotNull(it as? SampleQuery<*>) { "Invalid query: $it" }
+        @Suppress("UNCHECKED_CAST")
+        private fun toSampleQuery(it: Query<*>) = requireNotNull(it as? RunnableQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>) { "Invalid query: $it" }
 
+        @Suppress("UNCHECKED_CAST")
         private fun toSampleDerivedQuery(it: DerivedQuery<*>) =
-            requireNotNull(it as? SampleDerivedQuery<*, *>) { "Invalid derived query: $it" }
+            requireNotNull(it as? RunnableDerivedQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>) { "Invalid derived query: $it" }
     }
 }
 
@@ -72,8 +72,9 @@ class SampleSystem(
     private val actionGenerators: List<SampleActionGenerator>,
     private val checks: List<SampleCheck>,
     private val regardlessOfActions: List<List<SampleAction>>,
-    private val queries: List<SampleQuery<*>>,
-    private val derivedQueries: List<SampleDerivedQuery<*, *>>,
+    // These two are Runnable*Query to allow us to use generic query combinators as well as TicTacToe-specific queries.
+    private val queries: List<RunnableQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>>,
+    private val derivedQueries: List<RunnableDerivedQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>>,
 ) : ActionGeneratingSystem<TicTacToeActionFactory, TicTacToeCheckFactory>,
     PersistableSystem<TicTacToeActionFactory, TicTacToeCheckFactory>,
     QueryableSystem<TicTacToeActionFactory, TicTacToeCheckFactory> {
@@ -176,7 +177,8 @@ class SampleSystem(
         check(actionGenerators.isEmpty()) { "Cannot query and generate actions at the same time" }
 
         return withBuiltEnvironment { env ->
-            val allQueries = queries + derivedQueries.flatMap { it.derive(env) }
+            val derivations : List<RunnableQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>> =  derivedQueries.flatMap { it.derive(env) }
+            val allQueries = queries + derivations
             allQueries.map { it.run(env) }
         }
     }

@@ -22,20 +22,29 @@ abstract class AbstractTicTacToeScriptGenerationQueryFactory() : TicTacToeQueryF
 
     @Suppress("UNCHECKED_CAST")
     override fun <T, C : Collection<T>> createForAllQuery(
-        derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> List<Query<*>>
-    ) : DerivedQuery<T> {
+        derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> DerivedQuery<*>
+    ): DerivedQuery<T> {
+        // TODO: is there any way to avoid using a dummy here?
         val genQueryWithDummy =
             derivedFrom(TicTacToeScriptGenerationDerivedQueryFactory) as ScriptGenerationQueryWithDummy<C, T>
-        val derivedFromScript = genQueryWithDummy.getQueryScript()
-        val derivationScript = deriveQuery(genQueryWithDummy.dummy, this).joinToString("\n")
-        { (it as ScriptGenerationQuery<*>).getQueryScript() }
+        val derivation = deriveQuery(genQueryWithDummy.dummy, this) as ScriptGenerationDerivedQuery<*>
 
-        return TicTacToeScriptGenerationDerivedQuery(
-            QueryOperator.ForAll,
-            derivedFromScript,
-            derivationScript,
-        )
+        return ScriptGenerationDerivedQuery {
+            """
+            forAll({
+                ${genQueryWithDummy.getQueryScript()}
+            }, {
+                ${derivation.getDerivedQueryScript()}
+            })
+            """
+        }
     }
+
+    override fun <T> thereIs(queries: List<Query<*>>): DerivedQuery<T> = ScriptGenerationDerivedQuery {
+        // The DSL doesn't expose `thereIs` directly, it just has a variant of `forAll` that takes a query.
+        queries.joinToString("\n") { (it as ScriptGenerationQuery<*>).getQueryScript() }
+    }
+
 }
 
 abstract class TicTacToeScriptGenerationQueryFactory(val queryPosition: QueryPosition) :
@@ -106,23 +115,6 @@ enum class QueryReference(
         QueryPosition.Verify -> inVerificationPosition
         QueryPosition.Derived -> inDerivedPosition
     }
-}
-
-class TicTacToeScriptGenerationDerivedQuery<T>(
-    val operator: QueryOperator, val derivedFromScript: String, val derivationScript: String
-) : ScriptGenerationDerivedQuery<T> {
-
-    override fun getDerivedQueryScript() = """
-            ${operator.script}({
-                $derivedFromScript
-            }, {
-                $derivationScript
-            })
-        """
-}
-
-enum class QueryOperator(val script: String) {
-    ForAll("forAll")
 }
 
 fun interface TicTacToeScriptGenerationQuery<T> : ScriptGenerationQuery<T> {

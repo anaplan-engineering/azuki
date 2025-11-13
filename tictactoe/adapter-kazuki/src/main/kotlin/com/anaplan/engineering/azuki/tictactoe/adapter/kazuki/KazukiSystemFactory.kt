@@ -16,7 +16,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.declaration.Kazuki
 import org.slf4j.LoggerFactory
 
 class KazukiSystemFactory :
-    VerifiableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, KazukiSystem> {
+    VerifiableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, NoSystemDefaults, KazukiSystem> {
     override fun create(systemDefinition: SystemDefinition): KazukiSystem =
         KazukiSystem(
             systemDefinition.declarations.map(::toDeclarableAction),

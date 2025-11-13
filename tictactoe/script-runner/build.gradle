@@ -7,6 +7,7 @@ configurations {
     runner.extendsFrom runtime
     sampleImpl
     vdm
+    kazuki
 }
 
 dependencies {
@@ -27,6 +28,8 @@ dependencies {
     sampleImpl project(":tictactoe:implementation")
     sampleImpl project(":tictactoe:implementation-v2")
     vdm project(":tictactoe:adapter-vdm")
+    kazuki project(":tictactoe:adapter-kazuki")
+    kazuki project(":tictactoe:kazuki")
 }
 
 task sampleImplClasspathJar(type: Jar) {
@@ -35,6 +38,15 @@ task sampleImplClasspathJar(type: Jar) {
     manifest {
         attributes(
             "Class-Path": configurations.sampleImpl.collect { it.absolutePath }.join(' '))
+    }
+}
+
+task kazukiClasspathJar(type: Jar) {
+    dependsOn configurations.kazuki
+    archiveBaseName = 'Kazuki'
+    manifest {
+        attributes(
+            "Class-Path": configurations.kazuki.collect { it.absolutePath }.join(' '))
     }
 }
 
@@ -74,7 +86,7 @@ task runScript(type: JavaExec) {
 
 task runOracleScript(type: JavaExec) {
     dependsOn sampleImplClasspathJar
-    dependsOn vdmClasspathJar
+    dependsOn kazukiClasspathJar
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.anaplan.engineering.azuki.tictactoe.scriptrunner.TicTacToeScenarioScriptRunnerKt'
     jvmArgs '-Xmx4g', "--add-opens=java.base/java.nio=ALL-UNNAMED"
@@ -84,12 +96,12 @@ task runOracleScript(type: JavaExec) {
         "-u", file("build/unverified").absolutePath,
         "-i", file("config/imports").absolutePath,
         "-t", "SampleImpl",
-        "-o", "VDM",
+        "-o", "Kazuki",
         file(scenarioFile).absolutePath,
     ]
     def instanceJars = [
         sampleImplClasspathJar.archiveFile.get().asFile.absolutePath,
-        vdmClasspathJar.archiveFile.get().asFile.absolutePath,
+        kazukiClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
     systemProperties = [
         "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(','),
