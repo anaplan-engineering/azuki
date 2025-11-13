@@ -1,0 +1,41 @@
+[versions]
+kotlin = "2.0.21"
+kazuki = "0.3.0-alpha.1"
+# 1.5.0+ are based on Kotlin 2.1, and would require the script parser to be pinned to the 2.1 version
+ktlint = "1.4.1"
+
+[libraries]
+kotlin-bom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version.ref = "kotlin" }
+kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit" }
+kotlin-compiler-embeddable = { group = "org.jetbrains.kotlin", name = "kotlin-compiler-embeddable" }
+kotlin-scripting-common = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-common" }
+kotlin-scripting-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jvm" }
+kotlin-scripting-jvm-host = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jvm-host" }
+kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.5.2"}
+kotlinx-html = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version = "0.12.0" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.2.2" }
+
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version = "1.7.36" }
+slf4j-impl = { group = "org.apache.logging.log4j", name = "log4j-slf4j-impl", version = "2.17.0" }
+
+jackson-module = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.20.1" }
+
+guava = { group = "com.google.guava", name = "guava", version = "28.2-jre" }
+
+jna = { group = "net.java.dev.jna", name = "jna", version = "5.8.0" }
+
+mockk = { group = "io.mockk", name = "mockk", version = "1.10.2" }
+
+semver4j = { group = "org.semver4j", name = "semver4j", version = "5.2.2" }
+
+ktlint-ruleEngine = { group = "com.pinterest.ktlint", name = "ktlint-rule-engine", version.ref = "ktlint" }
+ktlint-rulesetStandard = { group = "com.pinterest.ktlint", name = "ktlint-ruleset-standard", version.ref = "ktlint" }
+
+kazuki-toolkit = { group = "com.anaplan.engineering", name = "kazuki-toolkit", version.ref = "kazuki"}
+kazuki-ksp = { group = "com.anaplan.engineering", name = "kazuki-ksp", version.ref = "kazuki"}
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

@@ -4,10 +4,8 @@ plugins {
 }
 
 dependencies {
-    implementation platform('org.jetbrains.kotlin:kotlin-bom:2.0.21')
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation platform(libs.kotlin.bom)
+    implementation libs.kotlin.reflect
 
-    testImplementation 'org.jetbrains.kotlin:kotlin-test'
-    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
+    testImplementation libs.kotlin.test
 }

@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     implementation project(':azuki-core')
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
+    implementation libs.jackson.module
 }
 
 publishing {

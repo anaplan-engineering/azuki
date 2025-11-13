@@ -5,7 +5,9 @@ import com.anaplan.engineering.azuki.core.runner.JUnitScenarioType
 import com.anaplan.engineering.azuki.core.runner.ScenarioResult
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 import java.io.File
@@ -15,7 +17,7 @@ class ScenarioReportGenerator(
     val reportDir: File
 ) {
 
-    private val objectMapper by lazy { ObjectMapper().registerModule(KotlinModule()) }
+    private val objectMapper by lazy { jacksonObjectMapper() }
 
     fun generate() {
         val results = sourceFiles.flatMap {

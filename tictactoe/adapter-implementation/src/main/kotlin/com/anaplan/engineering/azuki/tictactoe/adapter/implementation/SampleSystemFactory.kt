@@ -14,10 +14,12 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaratio
 import com.anaplan.engineering.azuki.tictactoe.implementation.GameManager
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 class SampleSystemFactory :
     PersistableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, SampleSystem> {
@@ -102,8 +104,7 @@ class SampleSystem(
         private val declarationStateBuilder = DeclarationStateBuilder(::TicTacToeDeclarationState)
     }
 
-    private val objectMapper = ObjectMapper()
-        .registerModule(KotlinModule())
+    private val objectMapper = jacksonObjectMapper()
 
     data class PersistableSystemState(
         val activeGames: List<String>,

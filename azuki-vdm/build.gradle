@@ -6,7 +6,7 @@ plugins {
 dependencies {
     api project(":azuki-core")
     api "com.anaplan.engineering:vdm-animation-api:$version"
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5'
+    implementation libs.jackson.module
     runtimeOnly "com.anaplan.engineering:vdm-animation-overture:$version"
 }
 

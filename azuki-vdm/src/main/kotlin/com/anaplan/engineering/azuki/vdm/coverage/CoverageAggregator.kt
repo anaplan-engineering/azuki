@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.KeyDeserializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.jsonMapper
+import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.io.File
 import java.nio.file.FileVisitResult
@@ -17,9 +20,10 @@ import java.nio.file.attribute.BasicFileAttributes
 
 class CoverageAggregator {
 
-    private val objectMapper = ObjectMapper()
-            .registerModule(KotlinModule())
-            .registerModule(LocationKeyDeserializerModule())
+    private val objectMapper = jsonMapper {
+        addModule(kotlinModule())
+        addModule(LocationKeyDeserializerModule())
+    }
 
     fun aggregate(coverageDirectory: File) =
             aggregate(locateFilesWithExtension(coverageDirectory, "cov")

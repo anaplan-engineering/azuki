@@ -7,8 +7,8 @@ dependencies {
     api project(":azuki-script-formatter")
     api project(":azuki-core")
     api project(":azuki-declaration")
-    implementation 'org.jetbrains.kotlin:kotlin-test-junit'
-    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation libs.kotlin.test
+    implementation libs.slf4j.api
 
 }
 
