@@ -1,28 +1,4 @@
-oracleScenario {
-    given {
-        thereIsANewGame("gameA")
-    }
-
-    whenever {}
-
-    generate {
-        addMoves("gameA")
-    }
-
-    verify {
-        forAll({ getPositions("gameA") }) { pos ->
-            gameHasToken("gameA", pos.col to pos.row)
-        }
-
-        forAll({ getPlayOrder("gameA") }) { player ->
-            forAll({ getPositions("gameA") }) { pos ->
-                playerCanPlaceToken("gameA", player, pos.col to pos.row)
-            }
-        }
-    }
-}
-
-/*
+// Example verifiable scenario for the tic-tac-toe system.
 verifiableScenario {
     given {
         thereIsANewGameWithPlayers("gameA", "X", "O")
@@ -32,4 +8,3 @@ verifiableScenario {
         playerHasMoved("gameA", "O", times = 0)
     }
 }
-*/

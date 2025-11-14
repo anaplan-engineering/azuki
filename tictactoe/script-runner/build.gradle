@@ -61,6 +61,7 @@ task vdmClasspathJar(type: Jar) {
 
 ext {
     scenarioFile = project.findProperty("scenarioFile") ?: "script.scn"
+    oracleScenarioFile = project.findProperty("oracleScenarioFile") ?: "oracle_script.scn"
 }
 
 task runScript(type: JavaExec) {
@@ -97,7 +98,7 @@ task runOracleScript(type: JavaExec) {
         "-i", file("config/imports").absolutePath,
         "-t", "SampleImpl",
         "-o", "Kazuki",
-        file(scenarioFile).absolutePath,
+        file(oracleScenarioFile).absolutePath,
     ]
     def instanceJars = [
         sampleImplClasspathJar.archiveFile.get().asFile.absolutePath,
