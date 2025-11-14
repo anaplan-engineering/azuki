@@ -3,10 +3,18 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationActionGenerator
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeGenerate
+import kotlin.reflect.KFunction
 
 object TicTacToeScriptGenerationActionGeneratorFactory : TicTacToeActionGeneratorFactory {
 
-    override fun generateMoves(gameName: String, moveCountRange: IntRange) = ScriptGenerationActionGenerator {
-        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeGenerate::addMoves, moveCountRange)
+    override fun generatePlayOrder(orderName: String) = dsl(TicTacToeGenerate::createPlayOrder, orderName)
+
+    override fun generateNewGame(gameName: String) = dsl(TicTacToeGenerate::createNewGameFromExistingPlayOrder, gameName)
+
+    override fun generateMoves(gameName: String, numMoves: Int) =
+        dsl(TicTacToeGenerate::addMoves, numMoves)
+
+    private fun dsl(fn: KFunction<*>, vararg values: Any?) = ScriptGenerationActionGenerator {
+        TicTacToeScriptingHelper.scriptifyFunction(fn, *values)
     }
 }

@@ -148,7 +148,6 @@ class SampleSystem(
     private fun <T> processIteration(
         check: SampleSystemIteration.() -> Unit = {}, processor: SampleSystemIteration.() -> T
     ) = with(currentIteration ?: initialize(newStore())) {
-        println("<*> new iteration: play orders: ${env.playOrders}")
         check()
         runBuildActions(env)
         processor()

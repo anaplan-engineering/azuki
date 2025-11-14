@@ -6,7 +6,20 @@ import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
 interface TicTacToeActionGeneratorFactory : ActionGeneratorFactory {
 
     /**
-     * Generates a sequence of valid moves.
+     * Generates a valid play order and assigns it to the given name.
+     * A play order must not already exist with this name.
      */
-    fun generateMoves(gameName: String, moveCountRange: IntRange): ActionGenerator
+    fun generatePlayOrder(orderName: String): ActionGenerator
+
+    /**
+     * Generates a game using one of the play orders previously generated or defined.
+     * A game must not already exist with this name.
+     */
+    fun generateNewGame(gameName: String): ActionGenerator
+
+
+    /**
+     * Generates a sequence of valid moves for the given game.
+     */
+    fun generateMoves(gameName: String, numMoves: Int): ActionGenerator
 }

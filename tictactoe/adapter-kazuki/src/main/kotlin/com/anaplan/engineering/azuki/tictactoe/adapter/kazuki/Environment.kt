@@ -34,6 +34,7 @@ class ExecutionEnvironment {
     }
 
     internal fun game(name: String) = get<XO.Game>(name)
+    internal fun playOrder(name: String) = get<XO.PlayOrder>(name)
 }
 
 fun String.toPlayer(): XO.Player =
