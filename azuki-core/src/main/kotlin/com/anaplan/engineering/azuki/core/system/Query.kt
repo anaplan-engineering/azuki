@@ -14,23 +14,9 @@ abstract class RunnableQueryFactory<E, CF : CheckFactory> : QueryFactory {
      */
     protected fun <T> Query<T>.ensureRunnable() = let {
         require(this is RunnableQuery<*, *, T>) {
-            if (this is UnsupportedQuery) {
-                "Query is unsupported"
-            } else {
-                "Query is incorrect class: ${this::class.simpleName}"
-            }
+            if (this is UnsupportedQuery) "Query is unsupported" else "Query class is not runnable: ${this::class.simpleName}"
         }
         @Suppress("UNCHECKED_CAST") (this as RunnableQuery<E, CF, T>)
-    }
-
-    /**
-     * Narrows a DerivedQuery to a RunnableDerivedQuery.
-     */
-    protected fun <T> DerivedQuery<T>.ensureRunnable() = let {
-        require (this is RunnableDerivedQuery<*, *, T>) {
-            "Derived query is incorrect class: ${it::class.simpleName}"
-        }
-        @Suppress("UNCHECKED_CAST") (this as RunnableDerivedQuery<E, CF, T>)
     }
 
     /**
@@ -99,6 +85,7 @@ class UnsupportedQuery<T> : Query<T> {
 }
 
 interface Answer<T, CF : CheckFactory> {
+
     val to: Query<T>
     val value: T
     fun createChecks(factory: CF): List<Check>
@@ -109,5 +96,6 @@ interface Answer<T, CF : CheckFactory> {
  * checks are used for verifying that a system continues to return the same answer to a query.
  */
 interface ValidatableAnswer<T, CF : CheckFactory> : Answer<T, CF> {
+
     fun createValidationChecks(factory: CF): List<Check>
 }
