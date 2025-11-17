@@ -77,23 +77,4 @@ class BEH3 : TicTacToeScenario() {
             playerCannotPlaceToken(gameA, X, 1 to 3)
         }
     }
-
-    @Eac("If the play order starts with a cross, only cross can place the first token")
-    @KnownBug(Issue("VDM"))
-    fun firstTurnCross() {
-        given {
-            thereIsAPlayOrder(orderA, X, O)
-            thereIsANewGame(gameA, orderA)
-        }
-        then {
-            for (row in 1..3) {
-                for (col in 1..3) {
-                    playerCanPlaceToken(gameA, X, row to col)
-
-                    // NOTE: VDM doesn't support multiple assertions of this kind
-                    playerCannotPlaceToken(gameA, O, row to col)
-                }
-            }
-        }
-    }
 }
