@@ -46,71 +46,69 @@ object Command : CliktCommand(name = "scenario-runner") {
 
     override fun help(context: Context) = "Scenario script runner for guided scenario generation."
 
-    val scriptFile by argument("script_file").file(
-        mustExist = true, mustBeReadable = true, canBeFile = true, canBeDir = false
-    )
+    val scriptFile by argument("script_file").file(mustExist = true,
+        mustBeReadable = true,
+        canBeFile = true,
+        canBeDir = false)
 
     val script by lazy { scriptFile.readText() }
     val scenarioName by lazy { scriptFile.nameWithoutExtension }
 
-    val oracleImplementationInstances by option(
-        "-o",
+    val oracleImplementationInstances by option("-o",
         "--oracleImplementationInstance",
         metavar = "impl",
-        help = "Oracle implementation instance used to verify test system results"
-    ).multiple()
+        help = "Oracle implementation instance used to verify test system results").multiple()
 
-    val testImplementationInstance by option(
-        "-t", "--testImplementationInstance", metavar = "impl", help = "Implementation instance under test"
-    ).required()
+    val testImplementationInstance by option("-t",
+        "--testImplementationInstance",
+        metavar = "impl",
+        help = "Implementation instance under test").required()
 
-    val importFile by option(
-        "-i", "--importFile", metavar = "file", help = "Imports to include in scriptified scenarios"
-    ).file(mustExist = true, mustBeReadable = true, canBeFile = true, canBeDir = false)
+    val importFile by option("-i",
+        "--importFile",
+        metavar = "file",
+        help = "Imports to include in scriptified scenarios").file(mustExist = true,
+        mustBeReadable = true,
+        canBeFile = true,
+        canBeDir = false)
 
     val imports by lazy { importFile?.readText() ?: "" }
 
-    val testPackageName by option(
-        "-p", "--testPackageName", metavar = "name", help = "Package name to use for generated tests"
-    ).default("com.anaplan.engineering.azuki.tictactoe.generated")
+    val testPackageName by option("-p",
+        "--testPackageName",
+        metavar = "name",
+        help = "Package name to use for generated tests").default("com.anaplan.engineering.azuki.tictactoe.generated")
 
-    val testClassName by option(
-        "-c", "--testClassName", help = "Class name to use for generated tests"
-    )
+    val testClassName by option("-c", "--testClassName", help = "Class name to use for generated tests")
 
-    val outputDir by option(
-        "-d", "--outputDir", metavar = "dir", help = "Directory in which to generate output"
-    ).file(mustExist = false, canBeDir = true, canBeFile = false)
-        .defaultLazy("parent of <script_file>") { scriptFile.parentFile }
+    val outputDir by option("-d", "--outputDir", metavar = "dir", help = "Directory in which to generate output").file(
+        mustExist = false,
+        canBeDir = true,
+        canBeFile = false).defaultLazy("parent of <script_file>") { scriptFile.parentFile }
 
-    private val junitReportDir by option(
-        "-j", "--junitReportDir", metavar = "dir", help = "Directory in which to store JUnit XML result files"
-    ).file(mustExist = false, canBeDir = true, canBeFile = false)
-        .defaultLazy("<outputDir>/junit-reports") { File(outputDir, "junit-reports") }
-
-    private val verifiedTestDir by option(
-        "-v",
+    private val verifiedTestDir by option("-v",
         "--verifiedTestDir",
         metavar = "dir",
-        help = "Directory in which to store generated and verified JUnit tests"
-    ).file(mustExist = false, canBeDir = true, canBeFile = false)
-        .defaultLazy("<outputDir>/verified") { File(outputDir, "verified") }
+        help = "Directory in which to store generated and verified JUnit tests").file(mustExist = false,
+        canBeDir = true,
+        canBeFile = false).defaultLazy("<outputDir>/verified") { File(outputDir, "verified") }
 
-    private val unverifiedTestDir by option(
-        "-u",
+    private val unverifiedTestDir by option("-u",
         "--unverifiedTestDir",
         metavar = "dir",
-        help = "Directory in which to store generated but unverified JUnit tests"
-    ).file(mustExist = false, canBeDir = true, canBeFile = false)
-        .defaultLazy("<outputDir>/unverified") { File(outputDir, "unverified") }
+        help = "Directory in which to store generated but unverified JUnit tests").file(mustExist = false,
+        canBeDir = true,
+        canBeFile = false).defaultLazy("<outputDir>/unverified") { File(outputDir, "unverified") }
 
-    val resultSummaryFileName by option(
-        "-r", "--resultSummaryFileName", metavar = "filename", help = "File name to use when storing result summary"
-    ).default("result.json")
+    val resultSummaryFileName by option("-r",
+        "--resultSummaryFileName",
+        metavar = "filename",
+        help = "File name to use when storing result summary").default("result.json")
 
-    val queryResultsFileName by option(
-        "-q", "--queryResultsFileName", metavar = "filename", help = "File name to use when storing query results"
-    ).default("queries.json")
+    val queryResultsFileName by option("-q",
+        "--queryResultsFileName",
+        metavar = "filename",
+        help = "File name to use when storing query results").default("queries.json")
 
     override fun run() {
         outputDir.mkdirs()
@@ -118,13 +116,10 @@ object Command : CliktCommand(name = "scenario-runner") {
         unverifiedTestDir.mkdirs()
         System.setProperty("logFileName", File(outputDir, "scenarioRun.log").absolutePath)
         Configurator.reconfigure()
-        ScenarioScriptRunner.Log.debug(
-            "Starting script runner: testImpl={} oracleImpls={}",
-            testImplementationInstance,
-            oracleImplementationInstances
-        )
-        val runner = ScenarioScriptRunner(
-            testImplementationInstance, oracleImplementationInstances, imports, TicTacToeResultsProcessor(
+        val runner = ScenarioScriptRunner(testImplementationInstance,
+            oracleImplementationInstances,
+            imports,
+            TicTacToeResultsProcessor(
                 scenarioName = scenarioName,
                 generatedTestPackage = testPackageName,
                 generatedTestClass = testClassName,
@@ -133,15 +128,12 @@ object Command : CliktCommand(name = "scenario-runner") {
                 queryResultsFileName = queryResultsFileName,
                 verifiedTestsDir = verifiedTestDir,
                 unverifiedTestsDir = unverifiedTestDir,
-                junitReportDir = junitReportDir,
-            )
-        )
+            ))
         try {
             runner.runScenario(script)
         } catch (e: Exception) {
             ScenarioScriptRunner.exit(e.message!!, ExitCode.UnknownError)
         }
-        ScenarioScriptRunner.Log.debug("Script runner complete, exiting")
 
         // something appears to be keeping this alive -- can't figure out
         // using exit as last resort for now!

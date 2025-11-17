@@ -14,7 +14,6 @@ class TicTacToeResultsProcessor(
     private val resultSummaryFileName: String,
     verifiedTestsDir: File,
     unverifiedTestsDir: File,
-    junitReportDir: File,
     generatedTestPackage: String,
     generatedTestClass: String?,
     queryResultsFileName: String,
@@ -22,7 +21,6 @@ class TicTacToeResultsProcessor(
 
     private val jUnitTestCaseWriter =
         JUnitTestCaseWriter(verifiedTestsDir, unverifiedTestsDir, generatedTestPackage, generatedTestClass)
-    private val jUnitOracleScenarioResultWriter = JUnitOracleScenarioResultWriter(junitReportDir)
     private val queryResultsWriter = QueryResultWriter(outputDir, queryResultsFileName)
     private val generatedScenarioWriter = GeneratedScenarioWriter(scenarioName, outputDir)
 
@@ -30,7 +28,6 @@ class TicTacToeResultsProcessor(
         Log.debug("Processing oracle scenario results: result={}", result)
         generatedScenarioWriter.writeGeneratedScenario(result)
         val testFile = jUnitTestCaseWriter.writeTestCase(result)
-        jUnitOracleScenarioResultWriter.writeTestResults(scenarioName, result)
         queryResultsWriter.writeQueryResults(scenarioName, result)
         val runResult = recordOracleScenarioResult(result, testFile)
         Log.info("Scenario completed result=$runResult")
@@ -104,8 +101,8 @@ class TicTacToeResultsProcessor(
     private fun Throwable.summary() = "${message}\n${stackTrace.joinToString(separator = "\n", limit = 10)}"
 
     companion object {
-        private val Log = LoggerFactory.getLogger(TicTacToeResultsProcessor::class.java)
 
+        private val Log = LoggerFactory.getLogger(TicTacToeResultsProcessor::class.java)
         private val objectMapper = jacksonObjectMapper()
     }
 }
