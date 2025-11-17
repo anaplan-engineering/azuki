@@ -11,11 +11,7 @@ object TicTacToeRunnableScenarioClassGenerator {
         packageName: String? = null,
         implementationVersions: Map<String, String> = emptyMap(),
         scenarioScript: String,
-    ) =
-        RunnableScenarioClass(
-            className,
-            packageName,
-            """
+    ) = RunnableScenarioClass(className, packageName, """
 package ${packageName ?: ""}
 
 ${ScenarioParsingContext().apply { addTicTacToeDefaultImports() }.toImportString()}
@@ -29,21 +25,15 @@ class $className : TicTacToeRunnableScenario() {
     @GeneratedScenario
     ${
         if (implementationVersions.isEmpty()) "" else "@Since(${
-            implementationVersions.map { "ImplementationVersion(\"${it.key}\", \"${it.value}\")" }
-                .joinToString(", ")
+            implementationVersions.map { "ImplementationVersion(\"${it.key}\", \"${it.value}\")" }.joinToString(", ")
         })"
     }
     fun test() {
         $scenarioScript
     }
 }
-"""
-        )
+""")
 }
 
-data class RunnableScenarioClass(
-    val className: String,
-    val packageName: String?,
-    val definition: String,
-)
+data class RunnableScenarioClass(val className: String, val packageName: String?, val definition: String)
 

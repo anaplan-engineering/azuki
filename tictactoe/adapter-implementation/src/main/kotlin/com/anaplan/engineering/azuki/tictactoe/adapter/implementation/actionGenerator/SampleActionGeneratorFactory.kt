@@ -47,7 +47,6 @@ class SampleActionGeneratorFactory : TicTacToeActionGeneratorFactory {
             }.toList()
         }
     }
-
 }
 
 fun interface SampleActionGenerator : ActionGenerator {
