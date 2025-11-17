@@ -27,10 +27,7 @@ class TicTacToeVerify(private val queryFactory: TicTacToeQueryFactory) : Verify<
         })
     }
 
-    fun hasGames() = addQuery { getGames() }
     fun gameHasPlayOrder(gameName: String) = addQuery { getPlayOrder(gameName) }
-    fun gameHasWidth(gameName: String) = addQuery { getWidth(gameName) }
-    fun gameHasHeight(gameName: String) = addQuery { getHeight(gameName) }
     fun gameHasPositions(gameName: String) = addQuery { getPositions(gameName) }
     fun gameHasToken(gameName: String, position: Pair<Int, Int>) = addQuery { getToken(gameName, Position(position)) }
     fun playerCanPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) =

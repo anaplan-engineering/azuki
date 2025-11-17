@@ -9,10 +9,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 
 class TicTacToeQueries(private val queryFactory: TicTacToeQueryFactory) : Queries<TicTacToeQueryFactory> {
 
-    fun getGames() = addQuery { getGames() }
     fun getPlayOrder(gameName: String) = addQuery { getPlayOrder(gameName) }
-    fun getWidth(gameName: String) = addQuery { getWidth(gameName) }
-    fun getHeight(gameName: String) = addQuery { getHeight(gameName) }
     fun getPositions(gameName: String) = addQuery { getPositions(gameName) }
     fun getToken(gameName: String, position: Pair<Int, Int>) = addQuery { getToken(gameName, Position(position)) }
     fun canPlayerPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) =
@@ -30,7 +27,6 @@ class TicTacToeQueries(private val queryFactory: TicTacToeQueryFactory) : Querie
 
 class DerivedQueryBlock {
 
-    fun getGames() = derived { getGames() }
     fun getPlayOrder(gameName: String) = derived { getPlayOrder(gameName) }
     fun getPositions(gameName: String) = derived { getPositions(gameName) }
 

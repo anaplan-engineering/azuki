@@ -31,15 +31,9 @@ class SampleQueryFactory : TicTacToeQueryFactory {
     override fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>) =
         ListRunnableDerivedQuery.fromQueries<ExecutionEnvironment, TicTacToeCheckFactory, T>(queries)
 
-    override fun getGames() = query(value = { env -> env.gameManager.activeGames.toList() })
-
     override fun getPlayOrder(gameName: String) = query(value = { env ->
         env.withGame(gameName) { playOrder.map { it.token.symbol } }
     }, checks = { playOrder -> { listOf(game.hasPlayOrder(gameName, playOrder)) } })
-
-    override fun getWidth(gameName: String) = query(value = { env -> env.withGame(gameName) { width } })
-
-    override fun getHeight(gameName: String) = query(value = { env -> env.withGame(gameName) { height } })
 
     override fun getPositions(gameName: String) = query(value = { env ->
         env.withGame(gameName) { (1..height).flatMap { row -> (1..width).map { col -> Position(row, col) } } }

@@ -40,20 +40,18 @@ abstract class AbstractTicTacToeScriptGenerationQueryFactory() : TicTacToeQueryF
         }
     }
 
-    override fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>): DerivedQuery<T> = ScriptGenerationDerivedQuery {
-        // The DSL doesn't expose `thereIs` directly, it just has a variant of `forAll` that takes a query.
-        queries.joinToString("\n") { (it as ScriptGenerationQuery<*>).getQueryScript() }
-    }
+    override fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>): DerivedQuery<T> =
+        ScriptGenerationDerivedQuery {
+            // The DSL doesn't expose `thereIs` directly, it just has a variant of `forAll` that takes a query.
+            queries.joinToString("\n") { (it as ScriptGenerationQuery<*>).getQueryScript() }
+        }
 }
 
 abstract class TicTacToeScriptGenerationQueryFactory(val queryPosition: QueryPosition) :
     AbstractTicTacToeScriptGenerationQueryFactory() {
 
-    override fun getGames() = query<List<String>>(QueryReference.Games)
     override fun getPlayOrder(gameName: String) = query<List<String>>(QueryReference.PlayOrder, gameName)
     override fun getPositions(gameName: String) = query<List<Position>>(QueryReference.Positions, gameName)
-    override fun getWidth(gameName: String) = query<Int>(QueryReference.Width, gameName)
-    override fun getHeight(gameName: String) = query<Int>(QueryReference.Height, gameName)
     override fun getToken(gameName: String, position: Position) =
         query<String?>(QueryReference.Token, gameName, position)
 
@@ -72,7 +70,6 @@ object TicTacToeScriptGenerationVerificationQueryFactory : TicTacToeScriptGenera
 
 object TicTacToeScriptGenerationDerivedQueryFactory : AbstractTicTacToeScriptGenerationQueryFactory() {
 
-    override fun getGames() = query<List<String>, String>(QueryReference.Games, "(insert game here)")
     override fun getPlayOrder(gameName: String) =
         query<List<String>, String>(QueryReference.PlayOrder, "(insert player here)", gameName)
 
@@ -94,13 +91,9 @@ enum class QueryPosition {
 enum class QueryReference(
     val inQueryPosition: KFunction<*>, val inVerificationPosition: KFunction<*>, val inDerivedPosition: KFunction<*>?
 ) {
-    Games(TicTacToeQueries::getGames, TicTacToeVerify::hasGames, DerivedQueryBlock::getGames), PlayOrder(
-        TicTacToeQueries::getPlayOrder,
+    PlayOrder(TicTacToeQueries::getPlayOrder,
         TicTacToeVerify::gameHasPlayOrder,
         DerivedQueryBlock::getPlayOrder),
-    Width(TicTacToeQueries::getWidth, TicTacToeVerify::gameHasWidth, null), Height(TicTacToeQueries::getHeight,
-        TicTacToeVerify::gameHasHeight,
-        null),
     Positions(TicTacToeQueries::getPositions,
         TicTacToeVerify::gameHasPositions,
         DerivedQueryBlock::getPositions),

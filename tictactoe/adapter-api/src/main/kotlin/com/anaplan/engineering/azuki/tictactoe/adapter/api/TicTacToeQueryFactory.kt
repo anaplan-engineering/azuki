@@ -21,10 +21,7 @@ interface TicTacToeQueryFactory : QueryFactory {
      */
     fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>): DerivedQuery<T>
 
-    fun getGames(): Query<List<String>> = UnsupportedQuery()
     fun getPlayOrder(gameName: String): Query<List<String>> = UnsupportedQuery()
-    fun getWidth(gameName: String): Query<Int> = UnsupportedQuery()
-    fun getHeight(gameName: String): Query<Int> = UnsupportedQuery()
     fun getPositions(gameName: String): Query<List<Position>> = UnsupportedQuery()
     fun getToken(gameName: String, position: Position): Query<String?> = UnsupportedQuery()
     fun canPlayerPlaceToken(gameName: String, playerName: String, position: Position): Query<Boolean> =
