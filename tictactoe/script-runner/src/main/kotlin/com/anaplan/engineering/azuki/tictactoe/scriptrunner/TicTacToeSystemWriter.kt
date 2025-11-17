@@ -88,10 +88,7 @@ class TicTacToeSystemWriter :
     }
 
     private fun write(prefix: String, suffix: String, script: String) {
-        File(scenarioDir, "$prefix.$suffix").apply {
-            Log.debug("Writing {}", this)
-            writeText(script)
-        }
+        File(scenarioDir, "$prefix.$suffix").apply { writeText(script) }
     }
 
     companion object {

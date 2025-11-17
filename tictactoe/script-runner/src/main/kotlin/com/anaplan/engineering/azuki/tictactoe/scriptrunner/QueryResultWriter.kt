@@ -18,13 +18,7 @@ class QueryResultWriter(private val queryResultDir: File, private val queryResul
         }
         @Suppress("UNCHECKED_CAST") val answers = queryTask.result as List<Answer<*, TicTacToeCheckFactory>>
         val queryResults = QueryResults(answers.groupBy { it.to }.map { (q, a) ->
-            val queryAnswers = a.flatMap { answer ->
-                if (answer.value is Collection<*>) {
-                    (answer.value as Collection<*>)
-                } else {
-                    listOf(answer.value)
-                }
-            }
+            val queryAnswers = a.flatMap { it.value as? Collection<*> ?: listOf(it.value) }
             QueryResult(q.behavior, q.toString(), queryAnswers.map { it?.toString() ?: "null" })
         })
         val queryResultsFile = File(queryResultDir, queryResultFileName)
@@ -34,8 +28,6 @@ class QueryResultWriter(private val queryResultDir: File, private val queryResul
     companion object {
 
         private val Log = LoggerFactory.getLogger(QueryResultWriter::class.java)
-
         private val objectMapper = jacksonObjectMapper()
     }
-
 }

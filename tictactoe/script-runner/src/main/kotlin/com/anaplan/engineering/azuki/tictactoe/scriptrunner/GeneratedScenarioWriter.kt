@@ -14,7 +14,6 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
         writeOracleScenario(generatedScenario)
 
         val queryingOracle = result.oracleResults.lastOrNull { it.hasTask(TaskType.Query) }
-
         if (queryingOracle == null) {
             writeIncompleteScenario(generatedScenario)
             return
@@ -32,7 +31,6 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
         answers: List<Answer<*, TicTacToeCheckFactory>>
     ) {
         val gen = TicTacToeScriptGenerator()
-
         val script = """
             ${gen.generateGivenScript(generatedScenario)}
             ${gen.generateWheneverScript(generatedScenario)}
@@ -45,7 +43,6 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
         generatedScenario: OracleScenario<TicTacToeActionFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory>
     ) {
         val gen = TicTacToeScriptGenerator()
-
         val script = """
             ${gen.generateGivenScript(generatedScenario)}
             ${gen.generateWheneverScript(generatedScenario)}
@@ -55,9 +52,7 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
 
     private fun writeOracleScenario(generatedScenario: OracleScenario<TicTacToeActionFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory>) {
         val gen = TicTacToeScriptGenerator()
-
         val script = gen.generateScript(generatedScenario)
         File(outputDir, "$scenarioName-gen-ocl.scn").writeText(script)
     }
-
 }

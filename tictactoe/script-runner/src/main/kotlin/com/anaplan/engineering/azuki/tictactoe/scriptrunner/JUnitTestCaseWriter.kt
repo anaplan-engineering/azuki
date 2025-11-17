@@ -79,6 +79,7 @@ class JUnitTestCaseWriter(
         ))
 
     companion object {
+
         private val Log = LoggerFactory.getLogger(JUnitTestCaseWriter::class.java)
     }
 }

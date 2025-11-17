@@ -106,5 +106,3 @@ class TicTacToeResultsProcessor(
         private val objectMapper = jacksonObjectMapper()
     }
 }
-
-fun Long?.toMs() = if (this == null) 0L else this / 1_000_000
