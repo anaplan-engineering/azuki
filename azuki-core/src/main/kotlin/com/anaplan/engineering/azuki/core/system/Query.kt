@@ -4,26 +4,6 @@ interface QueryFactory
 
 object NoQueryFactory : QueryFactory
 
-/**
- * Basic framework for creating query factories that make RunnableQueries and RunnableDerivedQueries.
- */
-abstract class RunnableQueryFactory<E, CF : CheckFactory> : QueryFactory {
-
-    /**
-     * Narrows a Query to a RunnableQuery.
-     */
-    protected fun <T> Query<T>.ensureRunnable() = let {
-        require(this is RunnableQuery<*, *, T>) {
-            if (this is UnsupportedQuery) "Query is unsupported" else "Query class is not runnable: ${this::class.simpleName}"
-        }
-        @Suppress("UNCHECKED_CAST") (this as RunnableQuery<E, CF, T>)
-    }
-
-    /**
-     * Lifts a list of queries to a derived query.
-     */
-    fun <T> thereIs(queries: List<Query<*>>) = ListRunnableDerivedQuery<E, CF, T>(queries.map { it.ensureRunnable() })
-}
 
 interface Query<T> : ReifiedBehavior
 
@@ -39,6 +19,17 @@ interface RunnableQuery<E, CF : CheckFactory, T> : Query<T> {
      */
     fun run(environment: E): Answer<T, CF>
 }
+
+/**
+ * Narrows a Query to a RunnableQuery.
+ */
+fun <E, CF : CheckFactory, T> Query<T>.ensureRunnable() = let {
+    require(this is RunnableQuery<*, *, T>) {
+        if (this is UnsupportedQuery) "Query is unsupported" else "Query class is not runnable: ${this::class.simpleName}"
+    }
+    @Suppress("UNCHECKED_CAST") (this as RunnableQuery<E, CF, T>)
+}
+
 
 /**
  * A derived query that can be run on an environment.
@@ -60,6 +51,12 @@ data class ListRunnableDerivedQuery<E, CF : CheckFactory, T>(val queries: List<R
     RunnableDerivedQuery<E, CF, T> {
 
     override fun derive(environment: E) = queries
+
+    companion object {
+
+        fun <E, CF : CheckFactory, T> fromQueries(queries: List<Query<*>>) =
+            ListRunnableDerivedQuery<E, CF, T>(queries.map { it.ensureRunnable() })
+    }
 }
 
 /**

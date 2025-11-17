@@ -6,14 +6,14 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
+import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.tokenAt
 
 class SampleActionGeneratorFactory : TicTacToeActionGeneratorFactory {
 
     override fun generatePlayOrder(orderName: String) = SampleActionGenerator { env ->
         require(orderName !in env.playOrders) { "play order $orderName already generated or declared" }
 
-        // it's important to shuffle these ahead of time;
-        // otherwise, the order will keep changing between system iterations
+        // We need to shuffle these ahead of time; otherwise, the order will keep changing between system iterations
         val players = listOf("X", "O").shuffled()
 
         listOf { af -> af.playOrder.create(orderName, players) }
@@ -22,8 +22,7 @@ class SampleActionGeneratorFactory : TicTacToeActionGeneratorFactory {
     override fun generateNewGame(gameName: String) = SampleActionGenerator { env ->
         require(gameName !in env.gameManager.activeGames) { "game $gameName already generated or declared" }
 
-        // it's important to shuffle these ahead of time;
-        // otherwise, the order will keep changing between system iterations
+        // We need to shuffle these ahead of time; otherwise, the order will keep changing between system iterations
         val orderName = env.playOrders.keys.random()
 
         listOf { af -> af.game.start(gameName, orderName) }
@@ -39,12 +38,8 @@ class SampleActionGeneratorFactory : TicTacToeActionGeneratorFactory {
             val symbols = playOrder.map { it.token.symbol }
             val turns = sequence { while (true) yieldAll(symbols) }.drop(movesSoFar)
 
-            val positions = sequence {
-                for (x in 1..width) {
-                    for (y in 1..height) {
-                        if (tokenAt(x - 1, y - 1) == null) yield(Position(row = y, col = x))
-                    }
-                }
+            val positions = (1..width).asSequence().flatMap { x ->
+                (1..height).map { y -> Position(row = y, col = x) }.filter { tokenAt(it) == null }
             }.shuffled().take(numMoves)
 
             turns.zip(positions) { playerName, position ->

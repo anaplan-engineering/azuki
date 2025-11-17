@@ -20,7 +20,7 @@ class TicTacToeVerify(private val queryFactory: TicTacToeQueryFactory) : Verify<
             require(verify.derivedQueriesList.size <= 1) { "forAll cannot have more than one nested derived query" }
 
             if (verify.queriesList.isNotEmpty()) {
-                qf.thereIs<T>(verify.queriesList)
+                qf.liftQueriesToDerivedQuery<T>(verify.queriesList)
             } else {
                 verify.derivedQueriesList[0]
             }

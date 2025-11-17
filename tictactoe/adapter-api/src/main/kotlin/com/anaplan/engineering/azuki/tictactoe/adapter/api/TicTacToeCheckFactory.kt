@@ -4,11 +4,13 @@ import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.core.system.CheckFactory
 
 interface TicTacToeCheckFactory : CheckFactory {
+
     val player: PlayerCheckFactory
     val game: GameCheckFactory
 }
 
 interface PlayerCheckFactory {
+
     fun moveCount(gameName: String, playerName: String, times: Int): Check
     fun canPlaceToken(gameName: String, playerName: String, position: Position): Check
     fun cannotPlaceToken(gameName: String, playerName: String, position: Position): Check

@@ -7,14 +7,19 @@ import com.anaplan.engineering.azuki.core.system.UnsupportedQuery
 
 interface TicTacToeQueryFactory : QueryFactory {
 
+    /**
+     * Creates a for-all query.
+     * The body is another derived query, to allow nesting;
+     * use `liftQueriesToDerivedQuery` to adapt the final set of (non-derived) queries to the right type.
+     */
     fun <T, C : Collection<T>> createForAllQuery(
         derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> DerivedQuery<*>
     ): DerivedQuery<T>
 
     /**
-     * Forms the bottom of a nested query derivation.
+     * Lifts a list of queries to a derived query.
      */
-    fun <T> thereIs(queries: List<Query<*>>): DerivedQuery<T>
+    fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>): DerivedQuery<T>
 
     fun getGames(): Query<List<String>> = UnsupportedQuery()
     fun getPlayOrder(gameName: String): Query<List<String>> = UnsupportedQuery()
