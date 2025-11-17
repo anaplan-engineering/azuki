@@ -17,14 +17,11 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaratio
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.declaration.SampleDeclarationBuilderFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.query.SampleQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.implementation.GameManager
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.Logger
 
 class SampleSystemFactory :
@@ -49,10 +46,7 @@ data class SampleSystemIteration(
     val queries: List<RunnableQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>>,
     val derivedQueries: List<RunnableDerivedQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>>,
 ) {
-    fun runBuildActions(env: ExecutionEnvironment) {
-        buildActions.forEach { it.act(env) }
-    }
-
+    fun runBuildActions(env: ExecutionEnvironment) = buildActions.forEach { it.act(env) }
     fun runQueries(env: ExecutionEnvironment) = (queries + deriveQueries(env)).map { it.run(env) }
     fun deriveQueries(env: ExecutionEnvironment) = derivedQueries.flatMap { it.derive(env) }
     fun generateActions(env: ExecutionEnvironment) = actionGenerators.flatMap { it.generate(env) }
@@ -136,9 +130,8 @@ private fun toSampleDerivedQuery(it: DerivedQuery<*>) =
  *
  * This system handles persistence and is capable of action generation and querying.
  */
-class SampleSystem(
-    private val initialDefinition: SampleSystemDefinition
-) : ActionGeneratingSystem<TicTacToeActionFactory, TicTacToeCheckFactory>,
+class SampleSystem(private val initialDefinition: SampleSystemDefinition) :
+    ActionGeneratingSystem<TicTacToeActionFactory, TicTacToeCheckFactory>,
     PersistableSystem<TicTacToeActionFactory, TicTacToeCheckFactory>,
     QueryableSystem<TicTacToeActionFactory, TicTacToeCheckFactory>,
     MutableSystem<TicTacToeActionFactory, TicTacToeCheckFactory> {
@@ -152,7 +145,6 @@ class SampleSystem(
         runBuildActions(env)
         processor()
     }
-
 
     private var _store: File? = null
     private val store: File get() = checkNotNull(_store) { "store should have been initialised" }
@@ -180,9 +172,7 @@ class SampleSystem(
 
     private val objectMapper = jacksonObjectMapper()
 
-    data class PersistableSystemState(
-        val activeGames: List<String>, val store: File
-    )
+    data class PersistableSystemState(val activeGames: List<String>, val store: File)
 
     override fun verifyAndSerialize(): VerificationResult {
         val result = verify()
@@ -207,9 +197,7 @@ class SampleSystem(
     override fun deserializeAndVerify(file: File): VerificationResult {
         val systemState = objectMapper.readValue<PersistableSystemState>(file)
         currentIteration = initialize(systemState.store)
-        systemState.activeGames.forEach {
-            env.gameManager.load(it)
-        }
+        systemState.activeGames.forEach { env.gameManager.load(it) }
         return verify()
     }
 
@@ -252,11 +240,7 @@ class SampleSystem(
             initialDefinition.queries,
             initialDefinition.derivedQueries)
 
-        if (initialIteration == null) {
-            definitionIteration
-        } else {
-            definitionIteration + initialIteration.toSampleSystemIteration()
-        }
+        initialIteration?.let { definitionIteration + it.toSampleSystemIteration() } ?: definitionIteration
     } catch (e: LateDetectUnsupportedActionException) {
         Log.info("Unsupported action", e)
         throw e
@@ -265,8 +249,8 @@ class SampleSystem(
     override fun destroy() {}
 
     companion object {
-        private val Log = LoggerFactory.getLogger(this::class.java)
 
+        private val Log = LoggerFactory.getLogger(this::class.java)
         private val declarationBuilderFactory = DeclarationBuilderFactory(SampleDeclarationBuilderFactory::class.java)
         private val declarationStateBuilder = DeclarationStateBuilder(::TicTacToeDeclarationState)
     }
