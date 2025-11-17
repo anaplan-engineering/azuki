@@ -20,6 +20,7 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 
 slf4j-api = { group = "org.slf4j", name = "slf4j-api", version = "1.7.36" }
 slf4j-impl = { group = "org.apache.logging.log4j", name = "log4j-slf4j-impl", version = "2.17.0" }
+log4j-core = { group = "org.apache.logging.log4j", name = "log4j-core", version = "2.17.0" }
 
 jackson-module = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.20.1" }
 
@@ -36,6 +37,8 @@ ktlint-rulesetStandard = { group = "com.pinterest.ktlint", name = "ktlint-rulese
 
 kazuki-toolkit = { group = "com.anaplan.engineering", name = "kazuki-toolkit", version.ref = "kazuki"}
 kazuki-ksp = { group = "com.anaplan.engineering", name = "kazuki-ksp", version.ref = "kazuki"}
+
+clikt-jvm = { group = "com.github.ajalt.clikt", name = "clikt-jvm", version = "5.0.3" }
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
