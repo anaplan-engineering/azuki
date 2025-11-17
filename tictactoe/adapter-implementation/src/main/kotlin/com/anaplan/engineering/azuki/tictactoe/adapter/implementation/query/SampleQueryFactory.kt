@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.core.system.DerivedQuery
 import com.anaplan.engineering.azuki.core.system.RunnableDerivedQuery
 import com.anaplan.engineering.azuki.core.system.RunnableQuery
-import com.anaplan.engineering.azuki.core.system.ForallRunnableDerivedQuery
+import com.anaplan.engineering.azuki.core.system.ForAllRunnableDerivedQuery
 import com.anaplan.engineering.azuki.core.system.Query
 import com.anaplan.engineering.azuki.core.system.ListRunnableDerivedQuery
 import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
@@ -23,7 +23,7 @@ class SampleQueryFactory : TicTacToeQueryFactory {
 
     override fun <T, C : Collection<T>> createForAllQuery(
         derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> DerivedQuery<*>
-    ) = ForallRunnableDerivedQuery(derivedFrom(this).ensureRunnable()) { t ->
+    ) = ForAllRunnableDerivedQuery(derivedFrom(this).ensureRunnable()) { t ->
         @Suppress("UNCHECKED_CAST") (deriveQuery(t,
             this) as RunnableDerivedQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>)
     }
