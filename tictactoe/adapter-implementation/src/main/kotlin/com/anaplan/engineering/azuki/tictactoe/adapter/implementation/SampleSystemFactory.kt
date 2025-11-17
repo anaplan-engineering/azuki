@@ -164,7 +164,7 @@ class SampleSystem(
 
     override fun verify() = processIteration(check = {
         check(queries.isEmpty()) { "Cannot check and query at the same time" }
-        check(actionGenerators.isNotEmpty()) { "Cannot check and generate actions at the same time" }
+        check(actionGenerators.isEmpty()) { "Cannot check and generate actions at the same time" }
     }) {
         try {
             val allChecksPass = runAllChecks(env) && regardlessOfActions.all { actions ->
