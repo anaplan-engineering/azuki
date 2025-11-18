@@ -1,16 +1,16 @@
 package com.anaplan.engineering.vdmanimation.overture
 
 import com.anaplan.engineering.vdmanimation.api.Location
-import com.anaplan.engineering.vdmanimation.overture.CoverageGenerator
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import org.junit.Assert
-import org.junit.Test
 import org.overture.ast.lex.LexLocation
 import org.overture.ast.lex.LexNameToken
 import org.overture.ast.modules.AModuleModules
 import org.overture.ast.util.ClonableFile
 import java.nio.file.Files
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class CoverageGeneratorTest {
 
@@ -25,8 +25,8 @@ class CoverageGeneratorTest {
         whenever(module.files).thenReturn(mutableListOf(ClonableFile(moduleFile)))
         val modules = listOf(module)
         val coverage = generator.generate(modules, { emptyList() })
-        Assert.assertEquals(1, coverage.files.size)
-        Assert.assertTrue(coverage.files.all { it.coverage.isEmpty() })
+        assertEquals(1, coverage.files.size)
+        assertTrue(coverage.files.all { it.coverage.isEmpty() })
     }
 
     @Test
@@ -46,9 +46,9 @@ class CoverageGeneratorTest {
         val element2 = LexLocation(file, moduleNaem, 1, 3, 1, 6, 0, 0)
         element2.hits = 0
         val coverage = generator.generate(modules, { listOf(element, element2) })
-        Assert.assertEquals(1, coverage.files.size)
+        assertEquals(1, coverage.files.size)
         coverage.files.forEach { fileCoverage ->
-            Assert.assertEquals(setOf(
+            assertEquals(setOf(
                     Location(1, 1, 1, 3),
                     Location(1, 3, 1, 6)
             ), fileCoverage.coverage.keys)
@@ -85,21 +85,21 @@ class CoverageGeneratorTest {
                 else -> throw IllegalArgumentException()
             }
         })
-        Assert.assertEquals(2, coverage.files.size)
+        assertEquals(2, coverage.files.size)
         coverage.files.forEach { fileCoverage ->
             when (fileCoverage.text) {
                 "ABCDEF" -> {
-                    Assert.assertEquals(setOf(
+                    assertEquals(setOf(
                             Location(1, 1, 1, 3),
                             Location(1, 3, 1, 6)
                     ), fileCoverage.coverage.keys)
-                    Assert.assertEquals(mapOf(
+                    assertEquals(mapOf(
                             Location(1, 1, 1, 3) to 3L,
                             Location(1, 3, 1, 6) to 0L
                     ), fileCoverage.coverage)
 
                 }
-                "GHILKM" -> Assert.assertEquals(setOf(
+                "GHILKM" -> assertEquals(setOf(
                         Location(1, 1, 1, 3),
                         Location(1, 3, 1, 6)
                 ), fileCoverage.coverage.keys)

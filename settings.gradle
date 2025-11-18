@@ -10,7 +10,6 @@ include(
     "azuki-verify:azuki-batch-api",
     "azuki-verify:azuki-batch-guided",
     "azuki-verify:azuki-orchestrator",
-    "packaging-tools",
     "tictactoe:dsl",
     "tictactoe:adapter-api",
     "tictactoe:adapter-declaration",
@@ -35,7 +34,6 @@ include(
     "graphs:eacs",
     "graphs:tests",
     "graphs:script-runner",
-    "graphs:verification-runner",
 )
 includeBuild("build-conventions")
 includeBuild("vdm-animation")
