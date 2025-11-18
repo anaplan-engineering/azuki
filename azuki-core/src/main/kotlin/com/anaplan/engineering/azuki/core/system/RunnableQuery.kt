@@ -25,7 +25,7 @@ fun <E, CF : CheckFactory, T> Query<T>.ensureRunnable(): RunnableQuery<E, CF, T>
 fun interface RunnableDerivedQuery<E, CF : CheckFactory, T> : DerivedQuery<T> {
 
     /**
-     * Derives a list of queries from this derived query based on the state of the environment.
+     * Derives a list of queries based on the state of the environment.
      */
     fun derive(environment: E): List<RunnableQuery<E, CF, *>>
 }
