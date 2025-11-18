@@ -4,7 +4,7 @@ plugins {
 
 repositories {
     // required for jung snapshot
-    maven { url "https://jitpack.io" }
+    maven { url = "https://jitpack.io" }
 }
 
 configurations {
@@ -44,7 +44,7 @@ task runScript(type: JavaExec) {
     dependsOn jgraphtClasspathJar
     dependsOn jungClasspathJar
     classpath = configurations.runner
-    main 'com.anaplan.engineering.azuki.runner.ScenarioScriptRunnerKt'
+    mainClass = 'com.anaplan.engineering.azuki.runner.ScenarioScriptRunnerKt'
     jvmArgs '-Xmx4g'
     args = [
         file("script.scn").absolutePath,

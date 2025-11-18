@@ -27,7 +27,7 @@ task vdmClasspathJar(type: Jar) {
 task runScript(type: JavaExec) {
     dependsOn vdmClasspathJar
     classpath = configurations.runner
-    main 'com.anaplan.engineering.azuki.runner.ScenarioScriptRunnerKt'
+    mainClass = 'com.anaplan.engineering.azuki.runner.ScenarioScriptRunnerKt'
     jvmArgs '-Xmx4g'
     args = [
         file("script.scn").absolutePath,

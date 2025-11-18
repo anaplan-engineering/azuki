@@ -1,7 +1,7 @@
 plugins {
     id 'azuki.common-conventions'
     alias(libs.plugins.kotlin)
-    id 'com.google.devtools.ksp' version("2.0.21-1.0.25")
+    id 'com.google.devtools.ksp' version("2.1.21-2.0.1")
 }
 
 dependencies {
@@ -16,4 +16,5 @@ dependencies {
 
 ksp {
     arg("com.anaplan.engineering.kazuki.compile.debug.level", "INFO")
+    useKsp2 = false
 }
