@@ -12,10 +12,10 @@ interface TicTacToeActionGeneratorFactory : ActionGeneratorFactory {
     fun generatePlayOrder(orderName: String): ActionGenerator
 
     /**
-     * Generates a game using one of the play orders previously generated or defined.
+     * Generates a new, empty game using one of the play orders previously generated or defined.
      * A game must not already exist with this name.
      */
-    fun generateNewGame(gameName: String): ActionGenerator
+    fun generateGame(gameName: String): ActionGenerator
 
 
     /**

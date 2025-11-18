@@ -19,7 +19,7 @@ class SampleActionGeneratorFactory : TicTacToeActionGeneratorFactory {
         listOf { af -> af.playOrder.create(orderName, players) }
     }
 
-    override fun generateNewGame(gameName: String) = SampleActionGenerator { env ->
+    override fun generateGame(gameName: String) = SampleActionGenerator { env ->
         require(gameName !in env.gameManager.activeGames) { "game $gameName already generated or declared" }
 
         // We need to shuffle these ahead of time; otherwise, the order will keep changing between system iterations

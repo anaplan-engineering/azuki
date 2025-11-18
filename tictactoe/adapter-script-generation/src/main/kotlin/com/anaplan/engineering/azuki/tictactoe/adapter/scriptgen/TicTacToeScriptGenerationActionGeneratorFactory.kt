@@ -9,7 +9,7 @@ object TicTacToeScriptGenerationActionGeneratorFactory : TicTacToeActionGenerato
 
     override fun generatePlayOrder(orderName: String) = dsl(TicTacToeGenerate::createPlayOrder, orderName)
 
-    override fun generateNewGame(gameName: String) = dsl(TicTacToeGenerate::createNewGameFromExistingPlayOrder, gameName)
+    override fun generateGame(gameName: String) = dsl(TicTacToeGenerate::createNewGameFromExistingPlayOrder, gameName)
 
     override fun generateMoves(gameName: String, numMoves: Int) =
         dsl(TicTacToeGenerate::addMoves, numMoves)

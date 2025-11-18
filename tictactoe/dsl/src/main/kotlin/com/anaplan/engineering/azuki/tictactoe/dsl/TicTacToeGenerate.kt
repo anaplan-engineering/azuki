@@ -21,7 +21,7 @@ class TicTacToeGenerate(private val actionGeneratorFactory: TicTacToeActionGener
      * The new game will randomly choose one of the play orders already defined.  This means there needs to be at least
      * one use of `createPlayOrder`, or at least one play order previously set up in the `given` block.
      */
-    fun createNewGameFromExistingPlayOrder(gameName: String) = addGenerator { generateNewGame(gameName) }
+    fun createNewGameFromExistingPlayOrder(gameName: String) = addGenerator { generateGame(gameName) }
 
     /**
      * Adds a sequence of moves to the given game.
