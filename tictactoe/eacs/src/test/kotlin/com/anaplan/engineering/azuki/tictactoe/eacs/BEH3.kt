@@ -1,12 +1,9 @@
 package com.anaplan.engineering.azuki.tictactoe.eacs
 
 import com.anaplan.engineering.azuki.core.runner.Eac
-import com.anaplan.engineering.azuki.core.runner.Issue
-import com.anaplan.engineering.azuki.core.runner.KnownBug
 import com.anaplan.engineering.azuki.core.system.BEH
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeBehaviours
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeFunctionalElements
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeImplementation
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeScenario
 
 @BEH(TicTacToeBehaviours.PlaceToken, TicTacToeFunctionalElements.Game, """
