@@ -4,15 +4,12 @@ plugins {
 }
 
 configurations {
-    runner.extendsFrom runtime
     sampleImpl
     vdm
     kazuki
 }
 
 dependencies {
-    runner project(":azuki-runner")
-
     api project(":tictactoe:dsl")
     api project(":azuki-script-generation")
     implementation project(":tictactoe:adapter-script-generation")
