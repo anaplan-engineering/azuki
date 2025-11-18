@@ -26,7 +26,6 @@ dependencies {
     runtimeOnly libs.slf4j.impl
 
     sampleImpl project(":tictactoe:adapter-implementation")
-    sampleImpl project(":tictactoe:implementation")
     sampleImpl project(":tictactoe:implementation-v2")
 
     vdm project(":tictactoe:adapter-vdm")
