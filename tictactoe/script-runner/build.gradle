@@ -13,10 +13,10 @@ configurations {
 dependencies {
     runner project(":azuki-runner")
 
-    implementation project(":tictactoe:dsl")
+    api project(":tictactoe:dsl")
+    api project(":azuki-script-generation")
     implementation project(":tictactoe:adapter-script-generation")
     implementation project(":azuki-runner")
-    implementation project(":azuki-script-generation")
 
     implementation libs.clikt.jvm
     implementation libs.kotlin.reflect
