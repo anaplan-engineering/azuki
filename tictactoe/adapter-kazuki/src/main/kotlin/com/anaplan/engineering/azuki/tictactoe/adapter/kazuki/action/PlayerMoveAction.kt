@@ -15,7 +15,7 @@ class PlayerMoveAction(
 ) : PlayerMoveDeclarableAction(gameName, playerName, position), KazukiAction {
 
     override fun act(env: ExecutionEnvironment) {
-        val game = env.get<XO.Game>(gameName)
+        val game = env.game(gameName)
         env.set(gameName, XO.move(game, playerName.toPlayer(), position.toKazuki()))
     }
 }
