@@ -63,8 +63,8 @@ task vdmClasspathJar(type: Jar) {
 }
 
 ext {
-    scenarioFile = project.findProperty("scenarioFile") ?: "script.scn"
-    oracleScenarioFile = project.findProperty("oracleScenarioFile") ?: "oracle_script.scn"
+    scenarioFile = providers.gradleProperty("scenarioFile").getOrElse("script.scn")
+    oracleScenarioFile = providers.gradleProperty("oracleScenarioFile").getOrElse("oracle_script.scn")
 }
 
 task runScript(type: JavaExec) {
