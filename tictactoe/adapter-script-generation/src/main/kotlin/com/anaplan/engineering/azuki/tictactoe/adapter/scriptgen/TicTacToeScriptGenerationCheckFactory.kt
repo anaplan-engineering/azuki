@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
-import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationCheck
 import com.anaplan.engineering.azuki.script.generation.asComposable
@@ -59,17 +58,9 @@ object PlayerScriptGenCheckFactory : PlayerCheckFactory {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerHasMoved, gameName, playerName, times)
     }
 
-    override fun canPlaceToken(gameName: String, playerName: String, position: Position) =
+    override fun canPlaceToken(gameName: String, playerName: String, position: Position, expected: Boolean) =
         TicTacToeScriptGenerationCheck {
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerCanPlaceToken,
-                gameName,
-                playerName,
-                position)
-        }
-
-    override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) =
-        TicTacToeScriptGenerationCheck {
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerCannotPlaceToken,
+            TicTacToeScriptingHelper.scriptifyFunction(if (expected) TicTacToeThen::playerCanPlaceToken else TicTacToeThen::playerCannotPlaceToken,
                 gameName,
                 playerName,
                 position)

@@ -6,10 +6,12 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionE
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.canMove
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.toPlayer
 
-class CanPlaceTokenCheck(private val gameName: String, private val playerName: String, private val position: Position) :
-    PlaceATokenBehaviour(), SampleCheck {
+class CanPlaceTokenCheck(
+    private val gameName: String,
+    private val playerName: String,
+    private val position: Position,
+    private val expected: Boolean
+) : PlaceATokenBehaviour(), SampleCheck {
 
-    override fun check(env: ExecutionEnvironment): Boolean {
-        return env.withGame(gameName) { canMove(playerName, position) }
-    }
+    override fun check(env: ExecutionEnvironment) = env.withGame(gameName) { expected == canMove(playerName, position) }
 }

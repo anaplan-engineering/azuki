@@ -49,8 +49,7 @@ class SampleQueryFactory : TicTacToeQueryFactory {
     override fun canPlayerPlaceToken(gameName: String, playerName: String, position: Position) = query(value = { env ->
         env.withGame(gameName) { canMove(playerName, position) }
     }, checks = { canPlace ->
-        val check = if (canPlace) PlayerCheckFactory::canPlaceToken else PlayerCheckFactory::cannotPlaceToken
-        { listOf(check(player, gameName, playerName, position)) }
+        { listOf(player.canPlaceToken(gameName, playerName, position, canPlace)) }
     })
 }
 

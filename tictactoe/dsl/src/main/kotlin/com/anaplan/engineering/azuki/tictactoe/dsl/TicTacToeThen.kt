@@ -21,11 +21,11 @@ class TicTacToeThen(private val checkFactory: TicTacToeCheckFactory): Then<TicTa
     }
 
     fun playerCanPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) {
-        checkList.add(checkFactory.player.canPlaceToken(gameName, playerName, Position(position)))
+        checkList.add(checkFactory.player.canPlaceToken(gameName, playerName, Position(position), expected = true))
     }
 
     fun playerCannotPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) {
-        checkList.add(checkFactory.player.cannotPlaceToken(gameName, playerName, Position(position)))
+        checkList.add(checkFactory.player.canPlaceToken(gameName, playerName, Position(position), expected = false))
     }
 
     fun gameHasPlayOrder(gameName: String, vararg players: String) {

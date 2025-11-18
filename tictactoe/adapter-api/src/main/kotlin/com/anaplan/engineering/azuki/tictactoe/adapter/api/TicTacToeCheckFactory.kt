@@ -12,8 +12,7 @@ interface TicTacToeCheckFactory : CheckFactory {
 interface PlayerCheckFactory {
 
     fun moveCount(gameName: String, playerName: String, times: Int): Check
-    fun canPlaceToken(gameName: String, playerName: String, position: Position): Check
-    fun cannotPlaceToken(gameName: String, playerName: String, position: Position): Check
+    fun canPlaceToken(gameName: String, playerName: String, position: Position, expected: Boolean): Check
     fun hasWon(gameName: String, playerName: String): Check
     fun hasLost(gameName: String, playerName: String): Check
 }
