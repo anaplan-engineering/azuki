@@ -1,7 +1,6 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.implementation.check
 
 import com.anaplan.engineering.azuki.core.system.Check
-import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
 
@@ -10,15 +9,7 @@ class SampleCheckFactory : TicTacToeCheckFactory {
     override val player = SamplePlayerCheckFactory
     override val game = SampleGameCheckFactory
 
-    override fun systemValid() = object : SampleCheck {
-
-        override val behavior = unsupportedBehavior
-
-        override fun check(env: ExecutionEnvironment): Boolean {
-            // TODO: more system checks?
-            return env.playOrders.keys.all { it in env.gameManager.activeGames }
-        }
-    }
+    override fun systemValid() = SystemValidCheck()
 }
 
 object SamplePlayerCheckFactory : PlayerCheckFactory {
