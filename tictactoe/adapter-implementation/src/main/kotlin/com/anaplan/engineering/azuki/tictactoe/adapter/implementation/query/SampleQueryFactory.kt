@@ -37,6 +37,9 @@ class SampleQueryFactory : TicTacToeQueryFactory {
 
     override fun getPositions(gameName: String) = query(value = { env ->
         env.withGame(gameName) { (1..height).flatMap { row -> (1..width).map { col -> Position(row, col) } } }
+    }, checks = {
+        // This query is only intended as a driver for for-all quantifiers, so we don't support checking it
+        { listOf(UnsupportedCheck) }
     })
 
     override fun getToken(gameName: String, position: Position) =
@@ -55,7 +58,7 @@ class SampleQueryFactory : TicTacToeQueryFactory {
 
 private fun <T> query(
     value: (ExecutionEnvironment) -> T,
-    checks: (T) -> TicTacToeCheckFactory.() -> List<Check> = { { listOf(UnsupportedCheck) } },
+    checks: (T) -> TicTacToeCheckFactory.() -> List<Check>
 ): Query<T> = object : RunnableQuery<ExecutionEnvironment, TicTacToeCheckFactory, T> {
 
     override val behavior: Behavior get() = unsupportedBehavior
