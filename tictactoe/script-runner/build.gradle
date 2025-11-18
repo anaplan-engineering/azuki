@@ -10,8 +10,6 @@ configurations {
 }
 
 dependencies {
-    api project(":tictactoe:dsl")
-    api project(":azuki-script-generation")
     implementation project(":tictactoe:adapter-script-generation")
     implementation project(":azuki-runner")
 
