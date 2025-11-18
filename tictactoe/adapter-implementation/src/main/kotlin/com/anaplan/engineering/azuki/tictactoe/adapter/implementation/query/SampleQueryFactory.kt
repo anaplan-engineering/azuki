@@ -7,7 +7,7 @@ import com.anaplan.engineering.azuki.core.system.RunnableDerivedQuery
 import com.anaplan.engineering.azuki.core.system.RunnableQuery
 import com.anaplan.engineering.azuki.core.system.ForAllRunnableDerivedQuery
 import com.anaplan.engineering.azuki.core.system.Query
-import com.anaplan.engineering.azuki.core.system.ListRunnableDerivedQuery
+import com.anaplan.engineering.azuki.core.system.RunnableQueriesAsDerivedQuery
 import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
 import com.anaplan.engineering.azuki.core.system.ensureRunnable
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
@@ -29,7 +29,7 @@ class SampleQueryFactory : TicTacToeQueryFactory {
     }
 
     override fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>) =
-        ListRunnableDerivedQuery.fromQueries<ExecutionEnvironment, TicTacToeCheckFactory, T>(queries)
+        RunnableQueriesAsDerivedQuery.fromQueries<ExecutionEnvironment, TicTacToeCheckFactory, T>(queries)
 
     override fun getPlayOrder(gameName: String) = query(value = { env ->
         env.withGame(gameName) { playOrder.map { it.token.symbol } }

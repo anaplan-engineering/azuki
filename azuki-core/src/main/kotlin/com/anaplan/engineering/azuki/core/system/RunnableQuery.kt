@@ -35,7 +35,7 @@ fun interface RunnableDerivedQuery<E, CF : CheckFactory, T> : DerivedQuery<T> {
  *
  * The main use of this adapter is to form the final layer of a nested quantification.
  */
-data class ListRunnableDerivedQuery<E, CF : CheckFactory, T>(val queries: List<RunnableQuery<E, CF, *>>) :
+data class RunnableQueriesAsDerivedQuery<E, CF : CheckFactory, T>(val queries: List<RunnableQuery<E, CF, *>>) :
     RunnableDerivedQuery<E, CF, T> {
 
     override fun derive(environment: E) = queries
@@ -43,15 +43,14 @@ data class ListRunnableDerivedQuery<E, CF : CheckFactory, T>(val queries: List<R
     companion object {
 
         fun <E, CF : CheckFactory, T> fromQueries(queries: List<Query<*>>) =
-            ListRunnableDerivedQuery<E, CF, T>(queries.map { it.ensureRunnable() })
+            RunnableQueriesAsDerivedQuery<E, CF, T>(queries.map { it.ensureRunnable() })
     }
 }
 
 /**
  * Implements a runnable for-all query.
  *
- * The answers from the driver query will be used to produce another layer of derivation, which will then be derived,
- * and so on until we reach a base case (such as `ListRunnableDerivedQuery`).
+ * Derives queries recursively until we reach a base case (such as `RunnableQueriesAsDerivedQuery`).
  */
 class ForAllRunnableDerivedQuery<E, CF : CheckFactory, T, C : Collection<T>>(
     val driver: RunnableQuery<E, CF, C>, val derivedQueryFactory: (T) -> RunnableDerivedQuery<E, CF, *>
