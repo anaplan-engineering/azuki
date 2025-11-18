@@ -42,7 +42,7 @@ abstract class AbstractTicTacToeScriptGenerationQueryFactory() : TicTacToeQueryF
 
     override fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>): DerivedQuery<T> =
         ScriptGenerationDerivedQuery {
-            // The DSL doesn't expose `thereIs` directly, it just has a variant of `forAll` that takes a query.
+            // The DSL doesn't expose this function directly, it just has a variant of `forAll` that takes a query.
             queries.joinToString("\n") { (it as ScriptGenerationQuery<*>).getQueryScript() }
         }
 }
