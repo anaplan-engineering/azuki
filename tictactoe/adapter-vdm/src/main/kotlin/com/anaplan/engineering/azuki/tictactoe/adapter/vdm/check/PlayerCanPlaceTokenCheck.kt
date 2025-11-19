@@ -24,7 +24,7 @@ class PlayerCanPlaceTokenCheck(
                     dcl g: ${XOModule.Game} := $gameGetter;
                     dcl p: ${XOModule.Player} := ${toVdmPlayer(playerName)};
                     dcl pos: ${XOModule.Pos} := ${toVdmPos(position)};
-                    dcl expected: bool := ${if (expected) "true" else "false"};
+                    dcl expected: bool := $expected;
                     ${checkEquals(actual = "${XOModule.isValidMove}(g, p, pos)")}
                 );
             """))
