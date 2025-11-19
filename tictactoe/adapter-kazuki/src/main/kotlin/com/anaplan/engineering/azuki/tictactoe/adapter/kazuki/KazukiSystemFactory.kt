@@ -3,7 +3,9 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.kazuki
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.action.KazukiAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.action.KazukiActionFactory
@@ -14,7 +16,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.kazuki.declaration.Kazuki
 import org.slf4j.LoggerFactory
 
 class KazukiSystemFactory :
-    VerifiableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, KazukiSystem> {
+    VerifiableSystemFactory<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, NoSystemDefaults, KazukiSystem> {
     override fun create(systemDefinition: SystemDefinition): KazukiSystem =
         KazukiSystem(
             systemDefinition.declarations.map(::toDeclarableAction),

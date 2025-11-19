@@ -21,7 +21,7 @@ class GameDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<GameDeclar
                 mk_(position.toKazuki(), playerName.toPlayer())
             }
             builder.declare(declaration.name) { env ->
-                XO_Module.mk_Game(board, env.get<XO.PlayOrder>(declaration.orderName))
+                XO_Module.mk_Game(board, env.playOrder(declaration.orderName))
             }
         }
     }

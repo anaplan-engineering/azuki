@@ -1,25 +1,31 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.vdm.check
 
+import com.anaplan.engineering.azuki.core.system.Behavior
 import com.anaplan.engineering.azuki.core.system.Check
+import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.vdm.EmptySystemContext
 import com.anaplan.engineering.azuki.vdm.VdmCheck
+import com.anaplan.engineering.azuki.vdm.VdmSanityCheck
 
 class VdmCheckFactory : TicTacToeCheckFactory {
     override val player = VdmPlayerCheckFactory
     override val game = VdmGameCheckFactory
+
+    override fun systemValid() = SystemValidCheck
 }
 
 object VdmPlayerCheckFactory : PlayerCheckFactory {
     override fun moveCount(gameName: String, playerName: String, times: Int) =
         PlayerMoveCountCheck(gameName, playerName, times)
-    override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) =
-        PlayerCannotPlaceTokenCheck(gameName, playerName, position)
+    override fun canPlaceToken(gameName: String, playerName: String, position: Position, expected: Boolean) =
+        PlayerCanPlaceTokenCheck(gameName, playerName, position, expected)
     override fun hasWon(gameName: String, playerName: String) = PlayerHasWonCheck(gameName, playerName)
     override fun hasLost(gameName: String, playerName: String) = PlayerHasLostCheck(gameName, playerName)
 }
 
 object VdmGameCheckFactory : GameCheckFactory {
+
     override fun hasPlayOrder(gameName: String, players: List<String>) = GameHasPlayOrderCheck(gameName, players)
     override fun hasToken(gameName: String, playerName: String, position: Position) = BoardHasTokenCheck(gameName, playerName, position)
     override fun hasSpace(gameName: String, position: Position) = BoardHasSpaceCheck(gameName, position)

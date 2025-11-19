@@ -1,3 +1,4 @@
+// Example verifiable scenario for the tic-tac-toe system.
 verifiableScenario {
     given {
         thereIsANewGameWithPlayers("gameA", "X", "O")

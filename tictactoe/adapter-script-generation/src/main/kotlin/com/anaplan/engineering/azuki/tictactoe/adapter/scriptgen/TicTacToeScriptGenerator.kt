@@ -1,21 +1,24 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
-import com.anaplan.engineering.azuki.core.system.NoActionGeneratorFactory
-import com.anaplan.engineering.azuki.core.system.NoQueryFactory
 import com.anaplan.engineering.azuki.script.generation.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 
 class TicTacToeScriptGenerator(environment: TicTacToeGenerationEnvironment = TicTacToeGenerationEnvironment()) :
-    ScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(
+    VerificationCapableScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(
         TicTacToeScriptGenerationActionFactory,
         TicTacToeScriptGenerationCheckFactory,
         ::TicTacToeDeclarationState,
         environment,
+        TicTacToeScriptGenerationActionGeneratorFactory,
+        TicTacToeScriptGenerationQueryQueryFactory,
+        TicTacToeScriptGenerationVerificationQueryFactory,
     )
 
 // None of the declaration builders for TicTacToe use the environment:
@@ -30,6 +33,7 @@ val TicTacToeScriptingHelper = ScriptingHelper(mapOf(
     Position::class to { v: Any? -> (v as Position).let { "${it.row} to ${it.col}" } },
     Int::class to { v: Any? -> v.toString() },
     Long::class to { v: Any? -> v.toString() },
+    IntRange::class to { v: Any? -> (v as IntRange).let { "(${it.first} .. ${it.last})" } },
 ))
 
 class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {

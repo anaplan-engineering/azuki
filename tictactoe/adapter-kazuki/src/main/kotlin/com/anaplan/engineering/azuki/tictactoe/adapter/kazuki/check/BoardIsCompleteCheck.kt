@@ -8,9 +8,5 @@ class BoardIsCompleteCheck(
     private val gameName: String
 ) : IsCompleteBehaviour(), KazukiCheck {
 
-    override fun check(env: ExecutionEnvironment): Boolean {
-        val game = env.get<XO.Game>(gameName)
-        return !XO.isUnfinished(game)
-    }
-
+    override fun check(env: ExecutionEnvironment) = !XO.isUnfinished(env.game(gameName))
 }

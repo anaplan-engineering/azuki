@@ -71,11 +71,11 @@ abstract class Game protected constructor(
         if (x < 0 || y < 0 || x >= width || y >= height) {
             return false
         }
-        if (board[y][x] != null) {
+        if (tokenAt(x, y) != null) {
             return false
         }
         val playerMoveCount = playerMoveCount(player)
-        val otherPlayerMoveCount = playerMoveCount(playOrder.filter { it != player }.single())
+        val otherPlayerMoveCount = playerMoveCount(playOrder.single { it != player })
         return if (player == playOrder.first()) {
             playerMoveCount == otherPlayerMoveCount
         } else {

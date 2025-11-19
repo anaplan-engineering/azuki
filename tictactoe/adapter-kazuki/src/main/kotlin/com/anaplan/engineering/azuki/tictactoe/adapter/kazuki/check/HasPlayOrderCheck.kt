@@ -8,13 +8,9 @@ import com.anaplan.engineering.azuki.tictactoe.kazuki.XO_Module
 
 class HasPlayOrderCheck(
     private val gameName: String,
-    private val playerNames: List<String>,
+    private val playerNames: List<String>
 ) : GetPlayOrderBehaviour(), KazukiCheck {
 
-    override fun check(env: ExecutionEnvironment): Boolean {
-        val game = env.get<XO.Game>(gameName)
-        val players = playerNames.map { it.toPlayer() }
-        return game.order == XO_Module.as_PlayOrder(players)
-    }
-
+    override fun check(env: ExecutionEnvironment) =
+        env.game(gameName).order == XO_Module.as_PlayOrder(playerNames.map { it.toPlayer() })
 }

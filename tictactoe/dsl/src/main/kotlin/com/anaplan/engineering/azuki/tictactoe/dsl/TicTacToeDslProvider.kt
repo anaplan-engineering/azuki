@@ -7,10 +7,12 @@ import com.anaplan.engineering.azuki.core.dsl.NoVerify
 import com.anaplan.engineering.azuki.core.system.NoActionGeneratorFactory
 import com.anaplan.engineering.azuki.core.system.NoQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
+import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 
 object TicTacToeDslProvider :
-    DslProvider<TicTacToeActionFactory, TicTacToeCheckFactory, NoQueryFactory, NoActionGeneratorFactory, TicTacToeGiven, TicTacToeWhen, TicTacToeThen, NoVerify, NoQueries, NoGenerate, TicTacToeRegardlessOf> {
+    DslProvider<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, TicTacToeGiven, TicTacToeWhen, TicTacToeThen, TicTacToeVerify, TicTacToeQueries, TicTacToeGenerate, TicTacToeRegardlessOf> {
 
     override fun createGiven(actionFactory: TicTacToeActionFactory) = TicTacToeGiven(actionFactory)
 
@@ -18,11 +20,11 @@ object TicTacToeDslProvider :
 
     override fun createThen(checkFactory: TicTacToeCheckFactory) = TicTacToeThen(checkFactory)
 
-    override fun createVerify(queryFactory: NoQueryFactory) = NoVerify
+    override fun createVerify(queryFactory: TicTacToeQueryFactory) = TicTacToeVerify(queryFactory)
 
-    override fun createQueries(queryFactory: NoQueryFactory) = NoQueries
+    override fun createQueries(queryFactory: TicTacToeQueryFactory) = TicTacToeQueries(queryFactory)
 
-    override fun createGenerate(actionGeneratorFactory: NoActionGeneratorFactory) = NoGenerate
+    override fun createGenerate(actionGeneratorFactory: TicTacToeActionGeneratorFactory) = TicTacToeGenerate(actionGeneratorFactory)
 
     override fun createRegardlessOf(actionFactory: TicTacToeActionFactory) = TicTacToeRegardlessOf(actionFactory)
 

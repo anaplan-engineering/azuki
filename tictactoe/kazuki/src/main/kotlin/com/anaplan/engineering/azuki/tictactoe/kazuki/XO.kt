@@ -126,13 +126,17 @@ object XO {
         command = { g: Game, p: Player, pos: Position ->
             mk_Game(g.board + mk_Mapping(mk_(pos, p)), g.order)
         },
-        pre = { g, p, pos ->
+        pre = { g, p, pos -> canMove(g, p, pos) },
+        post = { g, _, _, result ->
+            moveCountSoFar(result) == moveCountSoFar(g) + 1uL
+        }
+    )
+
+    val canMove = function(
+        command = { g: Game, p: Player, pos: Position ->
             hasTurn(g, p) &&
                 pos !in movesSoFar(g) &&
                 moveCountLeft(g) > 0uL
-        },
-        post = { g, p, _, result ->
-            moveCountSoFar(result) == moveCountSoFar(g) + 1uL
         }
     )
 
@@ -144,6 +148,5 @@ object XO {
             order[(numMoves % numPlayers) + 1uL] == p
         }
     )
-
 }
 

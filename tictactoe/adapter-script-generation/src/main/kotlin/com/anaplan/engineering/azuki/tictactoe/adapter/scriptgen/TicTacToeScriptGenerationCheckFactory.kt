@@ -10,6 +10,10 @@ object TicTacToeScriptGenerationCheckFactory : TicTacToeCheckFactory {
 
     override val game = GameScriptGenerationCheckFactory
     override val player = PlayerScriptGenCheckFactory
+
+    override fun systemValid() = TicTacToeScriptGenerationCheck {
+        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::everythingIsOkay)
+    }
 }
 
 fun interface TicTacToeScriptGenerationCheck : ScriptGenerationCheck<TicTacToeGenerationEnvironment> {
@@ -54,9 +58,9 @@ object PlayerScriptGenCheckFactory : PlayerCheckFactory {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerHasMoved, gameName, playerName, times)
     }
 
-    override fun cannotPlaceToken(gameName: String, playerName: String, position: Position) =
+    override fun canPlaceToken(gameName: String, playerName: String, position: Position, expected: Boolean) =
         TicTacToeScriptGenerationCheck {
-            TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::playerCannotPlaceToken,
+            TicTacToeScriptingHelper.scriptifyFunction(if (expected) TicTacToeThen::playerCanPlaceToken else TicTacToeThen::playerCannotPlaceToken,
                 gameName,
                 playerName,
                 position)

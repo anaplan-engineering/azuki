@@ -5,6 +5,6 @@ plugins {
 dependencies {
     api project(":tictactoe:dsl")
     api project(":tictactoe:adapter-declaration")
-    implementation project(":azuki-script-generation")
+    api project(":azuki-script-generation")
     implementation libs.slf4j.api
 }

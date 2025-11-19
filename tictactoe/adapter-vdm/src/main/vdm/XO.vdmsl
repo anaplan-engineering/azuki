@@ -19,7 +19,7 @@ types
 	Moves = seq of Pos				                  -- A legal game play sequence
 	inv moves ==
 		len moves = card elems moves and			    -- Has no duplicated moves
-		len moves > card PLAYERS * (SIZE - 1) and	-- Has minimum moves to win 
+		len moves > card PLAYERS * (SIZE - 1) and	-- Has minimum moves to win
 		len moves <= MAX;							            -- Hasn't too many moves
 
 	PlayOrder = seq1 of Player				 -- The order of play of the players
@@ -68,8 +68,10 @@ functions
 			exists line in set winningLines &
 				line subset moves;
 
-  hasLost: Game * Player -> bool
-  hasLost(g, p) == not hasWon(g, p);
+
+    hasLost: Game * Player -> bool
+    hasLost(g, p) == not hasWon(g, p);
+
 
 	whoWon: Game -> Player
 	whoWon(g) ==
@@ -92,6 +94,13 @@ functions
 		not isWon(g) and not isDraw(g);
 
 
+    isValidMove: Game * Player * Pos -> bool
+    isValidMove(g, p, pos) ==
+        hasTurn(g, p) and
+        pos not in set movesSoFar(g) and
+		moveCountLeft(g) > 0;
+
+
 	movesSoFar: Game -> set of Pos
 	movesSoFar(g) ==
 		dom g.board;
@@ -111,27 +120,30 @@ functions
 	movesForPlayer(g, p) ==
 		dom (g.board :> {p});
 
+
 	move: Game * Player * Pos -> Game
 	move(g, p, pos) ==
 		mk_Game(g.board munion { pos |-> p }, g.order)
-	pre hasTurn(g, p) and
-    pos not in set movesSoFar(g) and
-		moveCountLeft(g) > 0
-  post moveCountSoFar(RESULT) = moveCountSoFar(g) + 1;
+	pre isValidMove(g, p, pos)
+    post moveCountSoFar(RESULT) = moveCountSoFar(g) + 1;
 
-  getPlayOrder: Game +> PlayOrder
-  getPlayOrder(g) == g.order;
 
-  getBoard: Game +> map Pos to Player
-  getBoard(g) == g.board;
+    getPlayOrder: Game +> PlayOrder
+    getPlayOrder(g) == g.order;
 
-  hasTurn: Game * Player +> bool
-  hasTurn(g, p) ==
-    let
-      order = getPlayOrder(g),
-      numPlayers = len order,
-      numMoves = card movesSoFar(g)
-    in
-      order((numMoves mod numPlayers) + 1) = p;
+
+    getBoard: Game +> map Pos to Player
+    getBoard(g) == g.board;
+
+
+    hasTurn: Game * Player +> bool
+    hasTurn(g, p) ==
+        let
+            order = getPlayOrder(g),
+            numPlayers = len order,
+            numMoves = card movesSoFar(g)
+        in
+            order((numMoves mod numPlayers) + 1) = p;
+
 
 end XO
