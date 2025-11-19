@@ -43,7 +43,7 @@ interface TicTacToeOracleScenario :
     fun verify(verifyFunction: TicTacToeVerify.() -> Unit)
 }
 
-interface TicTacToeQueryScenario : ScenarioWithQueries<TicTacToeActionFactory, TicTacToeQueryFactory> {
+interface TicTacToeQueryScenario : ScenarioWithQueries<TicTacToeActionFactory, TicTacToeQueryFactory>, TicTacToeBuildableScenario {
 
     fun query(queryFunction: TicTacToeQueries.() -> Unit)
 }
