@@ -9,6 +9,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
+import kotlin.reflect.KFunction
 
 class TicTacToeScriptGenerator(environment: TicTacToeGenerationEnvironment = TicTacToeGenerationEnvironment()) :
     VerificationCapableScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(
