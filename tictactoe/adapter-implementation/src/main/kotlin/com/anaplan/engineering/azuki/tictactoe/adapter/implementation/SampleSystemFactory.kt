@@ -79,12 +79,12 @@ data class SampleSystemIteration(
 }
 
 fun SystemIteration.toSampleSystemIteration() = SampleSystemIteration(
-    commands.map(::toSampleAction),
-    actionGenerators.map(::toSampleActionGenerator),
-    checks.map(::toSampleCheck),
-    regardlessOfActions.map { it.map(::toSampleAction) },
-    queries.map(::toSampleQuery),
-    forAllQueries.map(::toSampleDerivedQuery),
+    commands.map { it.toSampleAction() },
+    actionGenerators.map { it.toSampleActionGenerator() },
+    checks.map { it.toSampleCheck() },
+    regardlessOfActions.map { b -> b.map { it.toSampleAction() } },
+    queries.map { it.toSampleQuery() },
+    forAllQueries.map { it.toSampleDerivedQuery() },
 )
 
 data class SampleSystemDefinition(
@@ -100,29 +100,29 @@ data class SampleSystemDefinition(
 
 fun SystemDefinition.toSampleSystemDefinition() = SampleSystemDefinition(
     declarations.map(::toDeclarableAction),
-    commands.map(::toSampleAction),
-    actionGenerators.map(::toSampleActionGenerator),
-    checks.map(::toSampleCheck),
-    regardlessOfActions.map { it.map(::toSampleAction) },
-    queries.map(::toSampleQuery),
-    forAllQueries.map(::toSampleDerivedQuery),
+    commands.map { it.toSampleAction() },
+    actionGenerators.map { it.toSampleActionGenerator() },
+    checks.map { it.toSampleCheck() },
+    regardlessOfActions.map { b -> b.map { it.toSampleAction() } },
+    queries.map { it.toSampleQuery() },
+    forAllQueries.map { it.toSampleDerivedQuery() },
 )
 
-private fun toSampleAction(it: Action) = requireNotNull(it as? SampleAction) { "Invalid action: $it" }
+private fun Action.toSampleAction() = requireNotNull(this as? SampleAction) { "Invalid action: $this" }
 
-private fun toSampleActionGenerator(it: ActionGenerator) =
-    requireNotNull(it as? SampleActionGenerator) { "Invalid action generator: $it" }
+private fun ActionGenerator.toSampleActionGenerator() =
+    requireNotNull(this as? SampleActionGenerator) { "Invalid action generator: $this" }
 
-private fun toSampleCheck(it: Check) = requireNotNull(it as? SampleCheck) { "Invalid check: $it" }
-
-@Suppress("UNCHECKED_CAST")
-private fun toSampleQuery(it: Query<*>) =
-    requireNotNull(it as? RunnableQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>) { "Invalid query: $it" }
+private fun Check.toSampleCheck() = requireNotNull(this as? SampleCheck) { "Invalid check: $this" }
 
 @Suppress("UNCHECKED_CAST")
-private fun toSampleDerivedQuery(it: DerivedQuery<*>) =
-    requireNotNull(it as? RunnableDerivedQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>) {
-        "Invalid derived query: $it"
+private fun <T> Query<T>.toSampleQuery() =
+    requireNotNull(this as? RunnableQuery<ExecutionEnvironment, TicTacToeCheckFactory, T>) { "Invalid query: $this" }
+
+@Suppress("UNCHECKED_CAST")
+private fun <T> DerivedQuery<T>.toSampleDerivedQuery() =
+    requireNotNull(this as? RunnableDerivedQuery<ExecutionEnvironment, TicTacToeCheckFactory, T>) {
+        "Invalid derived query: $this"
     }
 
 /**
