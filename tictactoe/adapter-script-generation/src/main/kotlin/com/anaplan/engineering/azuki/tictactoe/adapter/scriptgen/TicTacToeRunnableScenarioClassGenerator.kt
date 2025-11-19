@@ -14,7 +14,7 @@ object TicTacToeRunnableScenarioClassGenerator {
     ) = RunnableScenarioClass(className, packageName, """
 ${if (packageName.isEmpty()) "" else "package $packageName"}
 
-${ScenarioParsingContext().apply { addTicTacToeDefaultImports() }.toImportString()}
+${ticTacToeStandardImports.joinToString("\n") { "import $it" }}
 import com.anaplan.engineering.azuki.core.runner.*
 import com.anaplan.engineering.azuki.core.system.*
 ${if (implementationVersions.isEmpty()) "" else "import com.anaplan.engineering.azuki.core.scenario.Since"}

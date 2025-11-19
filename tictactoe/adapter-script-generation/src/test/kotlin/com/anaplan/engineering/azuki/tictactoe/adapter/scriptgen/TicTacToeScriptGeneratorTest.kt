@@ -21,8 +21,11 @@ class TicTacToeScriptGeneratorTest {
         const val X = "X"
         const val O = "O"
 
-        val ScenarioScriptingTestUtils =
-            ScriptGenerationTestHelper(generatorFactory = ::TicTacToeScriptGenerator, parser = TicTacToeScenarioParser)
+        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generatorFactory = ::TicTacToeScriptGenerator,
+            parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
+
+                override val defaultImports: ScenarioParsingContext.() -> Unit = { import(*ticTacToeStandardImports) }
+            })
     }
 
 
