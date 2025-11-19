@@ -4,9 +4,13 @@ import com.anaplan.engineering.azuki.core.parser.ScenarioParser
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
+import com.anaplan.engineering.azuki.core.scenario.OracleScenario
+import com.anaplan.engineering.azuki.core.scenario.ScenarioWithQueries
 import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.ActionFactory
+import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
 import com.anaplan.engineering.azuki.core.system.CheckFactory
+import com.anaplan.engineering.azuki.core.system.QueryFactory
 import org.junit.Assert
 import org.slf4j.LoggerFactory
 import kotlin.test.expect
@@ -45,8 +49,9 @@ open class ScriptGenerationTestHelper<S : BuildableScenario<AF>, AF : ActionFact
     }
 }
 
-class ScriptGeneratorTestHelper<AF : ActionFactory, CF : CheckFactory, SC : VerifiableScenario<AF, CF>>(
-    val generator: ScriptGenerationService<AF, CF, *, *, *, *>, val parser: ScenarioParser<SC> = SimpleScenarioParser()
+class ScriptGeneratorTestHelper<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, S : BuildableScenario<AF>>(
+    val generator: GenericScenarioGenerator<AF, CF, QF, AGF, S>,
+    val parser: ScenarioParser<S> = SimpleScenarioParser(),
 ) {
 
     /**
@@ -59,16 +64,16 @@ class ScriptGeneratorTestHelper<AF : ActionFactory, CF : CheckFactory, SC : Veri
      * different DSL.  The two should be semantically equivalent (have the same actions, checks, queries, and so on),
      * but we can't check that here.
      */
-    fun checkScenarioGeneration(scenario: SC, initContext: ScenarioParsingContext.() -> Unit = {}) {
+    fun checkScenarioGeneration(scenario: S, initContext: ScenarioParsingContext.() -> Unit = {}) {
         Log.debug("Generating script")
-        val generatedScript = generator.verifiableScenario(scenario).renderFormatted()
+        val generatedScript = generator.scenario(scenario).renderFormatted()
         Log.debug("Generated:\n{}", generatedScript)
 
         val parsedScenario = parser.parse(generatedScript, initContext)
 
         // The two generators need to be separate to avoid sharing environment
         Log.debug("Regenerating script")
-        val regeneratedScript = generator.verifiableScenario(scenario).renderFormatted()
+        val regeneratedScript = generator.scenario(parsedScenario).renderFormatted()
         Log.debug("Regenerated:\n{}", regeneratedScript)
 
         expect(regeneratedScript) { generatedScript }

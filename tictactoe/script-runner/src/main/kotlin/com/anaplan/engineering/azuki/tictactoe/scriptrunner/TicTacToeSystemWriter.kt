@@ -3,9 +3,11 @@ package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 import com.anaplan.engineering.azuki.core.scenario.ScenarioQueries
 import com.anaplan.engineering.azuki.core.system.SystemDefinition
 import com.anaplan.engineering.azuki.core.system.SystemWriter
+import com.anaplan.engineering.azuki.script.generation.FullScenarioScript
 import com.anaplan.engineering.azuki.script.generation.toScriptGenAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator
+import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerationActionFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerationActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerationCheckFactory
@@ -39,37 +41,42 @@ class TicTacToeSystemWriter :
     }
 
     private fun writeVerifiableScenario(systemDefinition: SystemDefinition, context: String?) {
-        val gen = TicTacToeScriptGenerator()
-        write(context ?: "scenario-vfy",
-            ScenarioSuffix,
-            gen.generateVerifiableScenarioScript(gen.generateGivenScriptFromActions(systemDefinition.declarations),
-                gen.generateWheneverScriptFromActions(systemDefinition.commands.map { it.toScriptGenAction() }),
-                gen.generateThenScriptFromChecks(systemDefinition.checks)))
+        TicTacToeScriptGeneration.given {
+            fromSystemDefinition(systemDefinition)
+        }.whenever {
+            fromSystemDefinition(systemDefinition)
+        }.then {
+            fromSystemDefinition(systemDefinition)
+        }.verifiableScenario().write(context ?: "scenario-vfy", ScenarioSuffix)
     }
 
     private fun writeOracleScenario(systemDefinition: SystemDefinition, context: String?) {
-        val gen = TicTacToeScriptGenerator()
-        val hasWhen = systemDefinition.commands.isNotEmpty()
-        val generateScript = gen.generateGenerateScript(listOf(systemDefinition.actionGenerators))
-        val given = gen.generateGivenScriptFromActions(systemDefinition.declarations)
-        val whenever = gen.generateWheneverScriptFromActions(systemDefinition.commands.map { it.toScriptGenAction() })
-        write(context ?: "scenario-ocl",
-            ScenarioSuffix,
-            gen.generateOracleScenarioScript(given,
-                whenever,
-                if (hasWhen) "" else generateScript,
-                if (hasWhen) generateScript else "",
-                "" // TODO - verify
-            ))
+        val oracle = TicTacToeScriptGeneration.given {
+            fromSystemDefinition(systemDefinition)
+        }.generate {
+            blocksFromSystemDefinition(systemDefinition)
+        }.whenever {
+            fromSystemDefinition(systemDefinition)
+        }.generate {
+            blocksFromSystemDefinition(systemDefinition)
+        }.verify {
+            fromSystemDefinition(systemDefinition)
+        }.oracleScenario()
+
+        oracle.write(context ?: "scenario-ocl", ScenarioSuffix)
 
         if (systemDefinition.actionGenerators.isNotEmpty()) {
+            val scenarioScript = TicTacToeScriptGeneration.given {
+                fromBlockContents(oracle.given)
+            }.whenever {
+                fromBlockContents(oracle.whenever)
+            }.then {
+                fromChecks(listOf(checkFactory.systemValid()))
+            }.verifiableScenario().renderFormatted()
+
             val testCase = TicTacToeRunnableScenarioClassGenerator.generate(className = context ?: "scenario-ocl",
                 packageName = "debug",
-                scenarioScript = """
-                    $given
-                    $whenever,
-                    ${gen.generateThenScriptFromChecks(listOf(TicTacToeScriptGenerationCheckFactory.systemValid()))}
-                """,
+                scenarioScript = scenarioScript,
                 implementationVersions = emptyMap())
             write(testCase.className, TestSuffix, testCase.definition)
         }
@@ -87,8 +94,12 @@ class TicTacToeSystemWriter :
             ))
     }
 
-    private fun write(prefix: String, suffix: String, script: String) {
-        File(scenarioDir, "$prefix.$suffix").apply { writeText(script) }
+    private fun FullScenarioScript.write(prefix: String, suffix: String) {
+        write(prefix, suffix, renderFormatted())
+    }
+
+    private fun write(prefix: String, suffix: String, text: String) {
+        File(scenarioDir, "$prefix.$suffix").apply { writeText(text) }
     }
 
     companion object {

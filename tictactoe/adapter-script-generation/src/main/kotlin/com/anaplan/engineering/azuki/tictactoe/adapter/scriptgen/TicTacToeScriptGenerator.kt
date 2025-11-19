@@ -14,6 +14,8 @@ import kotlin.Result.Companion.success
 val TicTacToeScriptGeneration = ScriptGenerationService.create(TicTacToeScriptGenerationActionFactory,
     TicTacToeScriptGenerationCheckFactory,
     ::TicTacToeDeclarationState).withEnvironmentFactory(::TicTacToeGenerationEnvironment)
+    .withActionGeneratorFactory(TicTacToeScriptGenerationActionGeneratorFactory)
+    .withQueryFactories(TicTacToeScriptGenerationQueryQueryFactory, TicTacToeScriptGenerationVerificationQueryFactory)
 
 class TicTacToeScriptGenerator(environment: TicTacToeGenerationEnvironment = TicTacToeGenerationEnvironment()) :
     VerificationCapableScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(

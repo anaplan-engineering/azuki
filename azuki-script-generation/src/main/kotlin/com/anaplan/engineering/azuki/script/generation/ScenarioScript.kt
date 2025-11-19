@@ -71,7 +71,7 @@ data class OracleScenarioScript(
     val whenever: BasicScriptBlock,
     val whenGenerate: CompositeScriptBlock,
     val verify: BasicScriptBlock
-) : FullScenarioScript("query") {
+) : FullScenarioScript("oracle") {
 
     override val blocks
         get() = buildList {

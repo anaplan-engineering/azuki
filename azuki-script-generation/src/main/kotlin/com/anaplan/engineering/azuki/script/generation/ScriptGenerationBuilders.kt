@@ -49,6 +49,10 @@ abstract class StageBuilder<in S : BuildableScenario<*>, E : ScriptGenerationEnv
         explicitScriptFragments += fragments
     }
 
+    fun fromBlockContents(block: BasicScriptBlock) {
+        explicitScriptFragments += block.scriptFragments
+    }
+
     private val explicitScriptFragments = mutableListOf<String>()
     protected abstract val builtScriptFragments: List<String>
     val scriptFragments get() = explicitScriptFragments + builtScriptFragments

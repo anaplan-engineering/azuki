@@ -22,9 +22,16 @@ class ScriptGenerationService<
     internal val declarationStateFactory: DeclarationStateFactory<DS>,
     // optional parameters
     internal val environmentFactory: ScriptGenerationEnvironmentFactory<E>,
-    internal val queryFactory: QF,
+    internal val queryQueryFactory: QF,
+    internal val verifyQueryFactory: QF,
     internal val actionGeneratorFactory: AGF,
 ) {
+
+    /**
+     * Provides ready-made usage patterns for script generation.
+     */
+    val patterns = ScriptGenerationPatterns(this)
+
     /**
      * Adds an environment factory to this service, changing the type of accepted scenarios accordingly.
      */
@@ -34,19 +41,21 @@ class ScriptGenerationService<
             checkFactory,
             declarationStateFactory,
             environmentFactory = new,
-            queryFactory,
+            queryQueryFactory,
+            verifyQueryFactory,
             actionGeneratorFactory,
         )
 
     /**
-     * Adds a query factory to this service, changing the type of accepted scenarios accordingly.
+     * Adds query factories to this service, changing the type of accepted scenarios accordingly.
      */
-    fun <N : QueryFactory> withQueryFactory(new: N) = ScriptGenerationService(
+    fun <N : QueryFactory> withQueryFactories(query: N, verify: N) = ScriptGenerationService(
         actionFactory,
         checkFactory,
         declarationStateFactory,
         environmentFactory,
-        queryFactory = new,
+        queryQueryFactory = query,
+        verifyQueryFactory = verify,
         actionGeneratorFactory,
     )
 
@@ -58,7 +67,8 @@ class ScriptGenerationService<
         checkFactory,
         declarationStateFactory,
         environmentFactory,
-        queryFactory,
+        queryQueryFactory,
+        verifyQueryFactory,
         actionGeneratorFactory = new,
     )
 
@@ -81,6 +91,7 @@ class ScriptGenerationService<
             checkFactory,
             declarationStateFactory,
             environmentFactory = { NoScriptGenerationEnvironment },
+            NoQueryFactory,
             NoQueryFactory,
             NoActionGeneratorFactory,
         )
@@ -128,7 +139,7 @@ class ScriptGenerationService<
          * Constructs a query block by mixing in queries from one or more sources.
          */
         fun query(build: QueryBuilder<QF, E>.() -> Unit) =
-            GivenWheneverQuery(this, QueryBuilder(queryFactory, environment).apply(build).scriptFragments)
+            GivenWheneverQuery(this, QueryBuilder(queryQueryFactory, environment).apply(build).scriptFragments)
     }
 
     inner class GivenWheneverThen(val whenever: GivenWhenever, scriptFragments: List<String>) :
@@ -189,14 +200,14 @@ class ScriptGenerationService<
         CompositeScriptBlock(subBlocks) {
 
         fun verify(body: QueryBuilder<QF, E>.() -> Unit) = GivenGenerateWheneverGenerateVerify(this,
-            QueryBuilder(queryFactory, environment).apply(body).scriptFragments)
+            QueryBuilder(verifyQueryFactory, environment).apply(body).scriptFragments)
 
         private val environment = whenever.given.environment
     }
 
     inner class GivenGenerateWheneverGenerateVerify(
         val wheneverGenerate: GivenGenerateWheneverGenerate, scriptFragments: List<String>
-    ) : BasicScriptBlock("query", scriptFragments) {
+    ) : BasicScriptBlock("verify", scriptFragments) {
 
         val whenever = wheneverGenerate.whenever
         val givenGenerate = whenever.givenGenerate

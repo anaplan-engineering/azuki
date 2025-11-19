@@ -2,8 +2,11 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
+import com.anaplan.engineering.azuki.script.generation.GenericScenarioGenerator
 import com.anaplan.engineering.azuki.script.generation.ScriptGeneratorTestHelper
-import com.anaplan.engineering.azuki.script.generation.verifiableScenario
+import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
+import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeOracleScenario
+import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeQueryScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeVerifiableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.verifiableScenario
 import kotlin.test.Test
@@ -21,11 +24,14 @@ class TicTacToeScriptGeneratorTest {
         const val X = "X"
         const val O = "O"
 
-        val ScenarioScriptingTestUtils = ScriptGenerationTestHelper(generatorFactory = ::TicTacToeScriptGenerator,
-            parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
+        val ScenarioScriptingTestUtils = ScriptGeneratorTestHelper(generator = GenericScenarioGenerator(
+            TicTacToeScriptGeneration,
+            { this as? TicTacToeVerifiableScenario },
+            { this as? TicTacToeOracleScenario },
+            { this as? TicTacToeQueryScenario }), parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
 
-                override val defaultImports: ScenarioParsingContext.() -> Unit = { import(*ticTacToeStandardImports) }
-            })
+            override val defaultImports: ScenarioParsingContext.() -> Unit = { import(*ticTacToeStandardImports) }
+        })
     }
 
 
@@ -49,7 +55,7 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val then = TicTacToeScriptGeneration.verifiableScenario(scenario).then.scriptFragments
+        val then = TicTacToeScriptGeneration.patterns.verifiableScenario(scenario).then.scriptFragments
         assertFalse { then.any { "boardHasState" in it } }
         expect(2) { then.count { "boardHasToken" in it } }
         expect(1) { then.count { "boardHasSpace" in it } }
@@ -80,7 +86,7 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val then = TicTacToeScriptGeneration.verifiableScenario(scenario).then.scriptFragments
+        val then = TicTacToeScriptGeneration.patterns.verifiableScenario(scenario).then.scriptFragments
         assertFalse { then.any { "boardHasState" in it } }
         expect(4) { then.count { "boardHasToken" in it } }
         expect(3) { then.count { "boardHasSpace" in it } }
@@ -117,7 +123,7 @@ class TicTacToeScriptGeneratorTest {
             . | . | .
             O | . | X
             $triple)
-        """.trimIndent()) { TicTacToeScriptGeneration.verifiableScenario(scenario).then.scriptFragments.singleOrNull() }
+        """.trimIndent()) { TicTacToeScriptGeneration.patterns.verifiableScenario(scenario).then.scriptFragments.singleOrNull() }
     }
 
     @Test
@@ -147,7 +153,7 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val then = TicTacToeScriptGeneration.verifiableScenario(scenario).then.scriptFragments
+        val then = TicTacToeScriptGeneration.patterns.verifiableScenario(scenario).then.scriptFragments
         assertFalse { then.any { "boardHasState" in it } }
         expect(6) { then.count { "boardHasToken" in it } }
         expect(4) { then.count { "boardHasSpace" in it } }
