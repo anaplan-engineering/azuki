@@ -7,6 +7,8 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactor
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
 import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.tokenAt
+import java.util.Collections
+import kotlin.sequences.flatten
 
 class SampleActionGeneratorFactory : TicTacToeActionGeneratorFactory {
 
@@ -32,11 +34,12 @@ class SampleActionGeneratorFactory : TicTacToeActionGeneratorFactory {
         env.withGame(gameName) {
             require(0 <= numMoves) { "number of moves must be non-negative" }
 
+            val order = playOrder.map { it.token.symbol }.toMutableList()
             // Make sure we skip however many turns have already been taken when deciding which turn goes next
             val movesSoFar = playOrder.sumOf { playerMoveCount(it) }
-
-            val symbols = playOrder.map { it.token.symbol }
-            val turns = sequence { while (true) yieldAll(symbols) }.drop(movesSoFar)
+            val playersToSkip = movesSoFar % playOrder.size
+            Collections.rotate(order, -playersToSkip)
+            val turns = generateSequence { order.asSequence() }.flatten()
 
             val positions = (1..width).asSequence().flatMap { x ->
                 (1..height).map { y -> Position(row = y, col = x) }.filter { tokenAt(it) == null }
