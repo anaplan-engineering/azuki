@@ -81,15 +81,13 @@ class TicTacToeSystemWriter :
     }
 
     private fun writeQueryScenario(systemDefinition: SystemDefinition, context: String?) {
-        val gen = TicTacToeScriptGenerator()
-        write(context ?: "scenario-ocl",
-            ScenarioSuffix,
-            gen.generateQueryScenarioScript(
-                gen.generateGivenScriptFromActions(systemDefinition.declarations),
-                gen.generateWheneverScriptFromActions(systemDefinition.commands.map { it.toScriptGenAction() }),
-                gen.generateQueryScriptFromQueries(ScenarioQueries(systemDefinition.queries,
-                    systemDefinition.forAllQueries)),
-            ))
+        TicTacToeScriptGeneration.given {
+            fromSystemDefinition(systemDefinition)
+        }.whenever {
+            fromSystemDefinition(systemDefinition)
+        }.query {
+            fromSystemDefinition(systemDefinition)
+        }.queryScenario().write(context ?: "scenario-ocl", ScenarioSuffix)
     }
 
     private fun FullScenarioScript.write(prefix: String, suffix: String) {
