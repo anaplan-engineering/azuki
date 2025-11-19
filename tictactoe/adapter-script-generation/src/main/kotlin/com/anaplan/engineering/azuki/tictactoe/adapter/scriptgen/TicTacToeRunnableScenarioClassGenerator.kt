@@ -1,38 +1,37 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
-import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import java.util.*
 
 object TicTacToeRunnableScenarioClassGenerator {
 
-    // TODO - format class
     fun generate(
-        className: String = "Generated_" + UUID.randomUUID().toString().replace("-", "_"),
+        className: String = "Generated_" + UUID.randomUUID().toString(),
         packageName: String = "",
         implementationVersions: Map<String, String> = emptyMap(),
         scenarioScript: String,
-    ) = RunnableScenarioClass(className, packageName, """
-${if (packageName.isEmpty()) "" else "package $packageName"}
+    ) = RunnableScenarioClass(className, packageName, buildString {
+        if (packageName.isNotEmpty()) appendLine("package $packageName").appendLine()
 
-${ticTacToeStandardImports.joinToString("\n") { "import $it" }}
-import com.anaplan.engineering.azuki.core.runner.*
-import com.anaplan.engineering.azuki.core.system.*
-${if (implementationVersions.isEmpty()) "" else "import com.anaplan.engineering.azuki.core.scenario.Since"}
-import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeRunnableScenario
+        val imports = ticTacToeStandardImports + listOfNotNull("com.anaplan.engineering.azuki.core.runner.*",
+            "com.anaplan.engineering.azuki.core.system.*",
+            "com.anaplan.engineering.azuki.core.scenario.Since".takeUnless { implementationVersions.isEmpty() },
+            "com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeRunnableScenario")
+        imports.sorted().forEach { appendLine("import $it") }
+        appendLine()
 
-class $className : TicTacToeRunnableScenario() {
-
-    @GeneratedScenario
-    ${
-        if (implementationVersions.isEmpty()) "" else "@Since(${
-            implementationVersions.map { "ImplementationVersion(\"${it.key}\", \"${it.value}\")" }.joinToString(", ")
-        })"
-    }
-    fun test() {
-        $scenarioScript
-    }
-}
-""")
+        appendLine("class ${className.replace("-", "_")} : TicTacToeRunnableScenario() {")
+        appendLine()
+        appendLine("    @GeneratedScenario")
+        if (implementationVersions.isNotEmpty()) {
+            appendLine("    @Since(")
+            implementationVersions.forEach { (k, v) -> appendLine("""        ImplementationVersion("$k", "$v"),""") }
+            appendLine("    )")
+        }
+        appendLine("    fun test() {")
+        appendLine(scenarioScript)
+        appendLine("    }")
+        appendLine("}")
+    })
 }
 
 data class RunnableScenarioClass(val className: String, val packageName: String?, val definition: String)

@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 import com.anaplan.engineering.azuki.core.scenario.ScenarioQueries
 import com.anaplan.engineering.azuki.core.system.SystemDefinition
 import com.anaplan.engineering.azuki.core.system.SystemWriter
+import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 import com.anaplan.engineering.azuki.script.generation.FullScenarioScript
 import com.anaplan.engineering.azuki.script.generation.toScriptGenAction
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
@@ -61,24 +62,21 @@ class TicTacToeSystemWriter :
             blocksFromSystemDefinition(systemDefinition)
         }.verify {
             fromSystemDefinition(systemDefinition)
-        }.oracleScenario()
+        }
 
-        oracle.write(context ?: "scenario-ocl", ScenarioSuffix)
+        oracle.oracleScenario().write(context ?: "scenario-ocl", ScenarioSuffix)
 
         if (systemDefinition.actionGenerators.isNotEmpty()) {
-            val scenarioScript = TicTacToeScriptGeneration.given {
-                fromBlockContents(oracle.given)
-            }.whenever {
-                fromBlockContents(oracle.whenever)
-            }.then {
+            val scenarioScript = oracle.takeGivenAndWhenever().then {
                 fromChecks(listOf(checkFactory.systemValid()))
-            }.verifiableScenario().renderFormatted()
+            }.verifiableScenario().renderUnformatted(indent = 2)
 
             val testCase = TicTacToeRunnableScenarioClassGenerator.generate(className = context ?: "scenario-ocl",
                 packageName = "debug",
                 scenarioScript = scenarioScript,
                 implementationVersions = emptyMap())
-            write(testCase.className, TestSuffix, testCase.definition)
+            val definition = ScenarioFormatter.formatScenario(testCase.definition)
+            write(testCase.className, TestSuffix, definition)
         }
     }
 

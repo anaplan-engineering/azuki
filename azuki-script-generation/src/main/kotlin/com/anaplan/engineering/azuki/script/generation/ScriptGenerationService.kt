@@ -217,6 +217,11 @@ class ScriptGenerationService<
          * Constructs an oracle scenario script with the given, when, verify, and generate blocks previously constructed.
          */
         fun oracleScenario() = OracleScenarioScript(given, givenGenerate, whenever, wheneverGenerate, verify = this)
+
+        /**
+         * Use the given and whenever blocks from this oracle scenario to start building towards a verifiable scenario.
+         */
+        fun takeGivenAndWhenever() = GivenWhenever(given, whenever.scriptFragments)
     }
 
 }

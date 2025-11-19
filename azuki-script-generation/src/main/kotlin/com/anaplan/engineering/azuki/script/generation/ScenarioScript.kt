@@ -97,6 +97,9 @@ interface ScriptBlock {
     fun render(indent: Int = 0): String
 }
 
+/**
+ * A standard DSL script block, with a header and several lines of DSL.
+ */
 open class BasicScriptBlock(val header: String, val scriptFragments: List<String>) : ScriptBlock {
 
     override val isEmpty = scriptFragments.isEmpty()
@@ -108,6 +111,9 @@ open class BasicScriptBlock(val header: String, val scriptFragments: List<String
     private fun indenting(level: Int): String = "    ".repeat(level)
 }
 
+/**
+ * A script block containing zero or more subordinate script blocks.
+ */
 open class CompositeScriptBlock(val subBlocks: List<ScriptBlock>) : ScriptBlock {
 
     override val isEmpty = subBlocks.isEmpty()
