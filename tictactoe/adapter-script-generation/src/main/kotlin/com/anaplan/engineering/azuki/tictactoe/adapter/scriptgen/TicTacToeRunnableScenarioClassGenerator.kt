@@ -8,11 +8,11 @@ object TicTacToeRunnableScenarioClassGenerator {
     // TODO - format class
     fun generate(
         className: String = "Generated_" + UUID.randomUUID().toString().replace("-", "_"),
-        packageName: String? = null,
+        packageName: String = "",
         implementationVersions: Map<String, String> = emptyMap(),
         scenarioScript: String,
     ) = RunnableScenarioClass(className, packageName, """
-package ${packageName ?: ""}
+${if (packageName.isEmpty()) "" else "package $packageName"}
 
 ${ScenarioParsingContext().apply { addTicTacToeDefaultImports() }.toImportString()}
 import com.anaplan.engineering.azuki.core.runner.*
