@@ -79,7 +79,8 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
     /**
      * Generates a script for an oracle scenario.
      */
-    fun oracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) = oracleScenarioBuilder(scenario).oracleScenario()
+    fun oracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
+        oracleScenarioBuilder(scenario).oracleScenario()
 }
 
 /**
@@ -88,7 +89,7 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
  * For type safety, this wrapper takes projection methods to try map the base scenario type to all the specific scenario
  * shapes the generator supports.  These should almost always be implemented as `{ this as? NarrowScenarioType }`.
  */
-data class GenericScenarioGenerator<AF: ActionFactory, CF: CheckFactory, QF: QueryFactory, AGF: ActionGeneratorFactory, S: BuildableScenario<AF>>(
+data class GenericScenarioGenerator<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, S : BuildableScenario<AF>>(
     val service: ScriptGenerationService<AF, CF, *, *, QF, AGF>,
     val asVerifiable: S.() -> VerifiableScenario<AF, CF>? = { null },
     val asOracle: S.() -> OracleScenario<AF, QF, AGF>? = { null },
@@ -98,10 +99,11 @@ data class GenericScenarioGenerator<AF: ActionFactory, CF: CheckFactory, QF: Que
     /**
      * Generates the appropriate script for the given scenario.
      */
-    fun scenario(scenario: S) = listOf<S.() -> ScenarioScript?>(
-        { asVerifiable()?.let { service.patterns.verifiableScenario(it) }},
-        { asOracle()?.let { service.patterns.oracleScenario(it) }},
-        { asQuery()?.let { service.patterns.queryScenario(it) }},
-        { throw IllegalArgumentException("unsupported scenario type: ${this::class.simpleName}") }
-    ).firstNotNullOf { it(scenario) }
+    fun scenario(scenario: S) =
+        listOf<S.() -> ScenarioScript?>({ asVerifiable()?.let { service.patterns.verifiableScenario(it) } },
+            { asOracle()?.let { service.patterns.oracleScenario(it) } },
+            { asQuery()?.let { service.patterns.queryScenario(it) } },
+            { throw IllegalArgumentException("unsupported scenario type: ${this::class.simpleName}") }).firstNotNullOf {
+            it(scenario)
+        }
 }

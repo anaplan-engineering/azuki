@@ -6,7 +6,7 @@ import com.anaplan.engineering.azuki.graphs.dsl.GraphBuildableScenario
 import com.anaplan.engineering.azuki.graphs.dsl.GraphVerifiableScenario
 import com.anaplan.engineering.azuki.graphs.dsl.verifiableScenario
 import com.anaplan.engineering.azuki.script.generation.GenericScenarioGenerator
-import com.anaplan.engineering.azuki.script.generation.ScriptGeneratorTestHelper
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTesting
 import org.junit.Test
 
 class GraphScriptGeneratorTest {
@@ -14,7 +14,7 @@ class GraphScriptGeneratorTest {
     companion object {
         const val graphA = "graphA"
 
-        val ScenarioScriptingTestUtils = ScriptGeneratorTestHelper(generator = GenericScenarioGenerator(
+        val ScenarioScriptingTestUtils = ScriptGenerationTesting(generator = GenericScenarioGenerator(
             GraphScriptGeneration,
             asVerifiable = { this as? GraphVerifiableScenario },
         ), parser = object : SimpleScenarioParser<GraphBuildableScenario>() {

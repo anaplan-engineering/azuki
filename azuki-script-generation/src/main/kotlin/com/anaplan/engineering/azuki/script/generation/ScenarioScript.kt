@@ -12,36 +12,30 @@ abstract class ScenarioScript(val typeName: String) {
      *
      * Apply a block to this method to configure the renderer before it renders the script.
      */
-    fun render(config: ScenarioScriptRenderer.() -> Unit = {}) =
-        ScenarioScriptRenderer().apply(config).render(typeName, blocks)
+    fun render(config: Renderer.() -> Unit = {}) = Renderer().apply(config).render(blocks)
 
     protected abstract val blocks: List<ScriptBlock>
-}
 
-/**
- * Customisable renderer for scenario scripts.
- */
-class ScenarioScriptRenderer(var format: Boolean = true, var inOuterBlock: Boolean = true, var indent: Int = 0) {
+    /**
+     * Customisable renderer for scenario scripts.
+     */
+    inner class Renderer(var format: Boolean = true, var inOuterBlock: Boolean = true, var indent: Int = 0) {
 
-    internal fun render(typeName: String, blocks: List<ScriptBlock>): String {
-        val inner = renderInner(blocks)
-        val script = maybeWrap(typeName, inner)
-        return maybeFormat(script)
+        internal fun render(blocks: List<ScriptBlock>) = blocks.renderInner().maybeWrap().maybeFormat()
+
+        private fun List<ScriptBlock>.renderInner() = filterNot { it.isEmpty }.map { it.render(innerIndent) }
+
+        private fun List<String>.maybeWrap() = if (inOuterBlock) {
+            BasicScriptBlock("${typeName}Scenario", this).render(indent)
+        } else {
+            joinToString("\n\n")
+        }
+
+        private fun String.maybeFormat() = if (format) ScenarioFormatter.formatScenario(this) else this
+
+        private val innerIndent get() = indent + if (inOuterBlock) 1 else 0
     }
-
-    private fun renderInner(blocks: List<ScriptBlock>) = blocks.filterNot { it.isEmpty }.map { it.render(innerIndent) }
-
-    private fun maybeWrap(typeName: String, scriptFragments: List<String>) = if (inOuterBlock) {
-        BasicScriptBlock("${typeName}Scenario", scriptFragments).render(indent)
-    } else {
-        scriptFragments.joinToString("\n\n")
-    }
-
-    private fun maybeFormat(script: String) = if (format) ScenarioFormatter.formatScenario(script) else script
-
-    private val innerIndent get() = indent + if (inOuterBlock) 1 else 0
 }
-
 
 /**
  * An incomplete result from an oracle (given-whenever, no then)

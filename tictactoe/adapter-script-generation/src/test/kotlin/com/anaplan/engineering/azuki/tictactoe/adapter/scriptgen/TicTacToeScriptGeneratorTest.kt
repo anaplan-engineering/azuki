@@ -3,7 +3,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.script.generation.GenericScenarioGenerator
-import com.anaplan.engineering.azuki.script.generation.ScriptGeneratorTestHelper
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTesting
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeOracleScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeQueryScenario
@@ -24,7 +24,7 @@ class TicTacToeScriptGeneratorTest {
         const val X = "X"
         const val O = "O"
 
-        val ScenarioScriptingTestUtils = ScriptGeneratorTestHelper(generator = GenericScenarioGenerator(
+        val ScenarioScriptingTestUtils = ScriptGenerationTesting(generator = GenericScenarioGenerator(
             TicTacToeScriptGeneration,
             { this as? TicTacToeVerifiableScenario },
             { this as? TicTacToeOracleScenario },

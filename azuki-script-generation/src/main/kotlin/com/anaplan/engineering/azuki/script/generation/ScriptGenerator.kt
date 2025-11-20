@@ -4,9 +4,8 @@ import com.anaplan.engineering.azuki.core.scenario.*
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
+@Deprecated("Use ScriptGenerationService")
 abstract class ScriptGenerator<
     AF : ActionFactory,
     CF : CheckFactory,
@@ -159,11 +158,11 @@ abstract class ScriptGenerator<
 
         private val declarationBuilderFactory =
             DeclarationBuilderFactory(ScriptGenerationDeclarationBuilderFactory::class.java)
-
-        private val Log: Logger = LoggerFactory.getLogger(ScriptGenerator::class.java)
     }
 }
 
+@Suppress("DEPRECATION")
+@Deprecated("Use ScriptGenerationService and supply query and action generator factories")
 abstract class VerificationCapableScriptGenerator<
     AF : ActionFactory,
     CF : CheckFactory,

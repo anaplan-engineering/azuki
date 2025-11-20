@@ -4,9 +4,6 @@ import com.anaplan.engineering.azuki.core.parser.ScenarioParser
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
-import com.anaplan.engineering.azuki.core.scenario.OracleScenario
-import com.anaplan.engineering.azuki.core.scenario.ScenarioWithQueries
-import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.ActionFactory
 import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
 import com.anaplan.engineering.azuki.core.system.CheckFactory
@@ -15,8 +12,9 @@ import org.junit.Assert
 import org.slf4j.LoggerFactory
 import kotlin.test.expect
 
+@Deprecated("Use ScriptGenerationTesting")
 open class ScriptGenerationTestHelper<S : BuildableScenario<AF>, AF : ActionFactory>(
-    private val generatorFactory: () -> ScriptGenerator<AF, *, *, *, *, *>,
+    @Suppress("DEPRECATION") private val generatorFactory: () -> ScriptGenerator<AF, *, *, *, *, *>,
     private val parser: ScenarioParser<S> = SimpleScenarioParser(),
 ) {
     /**
@@ -49,7 +47,14 @@ open class ScriptGenerationTestHelper<S : BuildableScenario<AF>, AF : ActionFact
     }
 }
 
-class ScriptGeneratorTestHelper<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, S : BuildableScenario<AF>>(
+/**
+ * Testing utilities for script generators.
+ *
+ * This class is flexible as to which kind of scenarios it takes as input - it can check testing for verifiable,
+ * oracle, and query scenarios.  However, this means that it needs to take a `GenericScenarioGenerator` rather than a
+ * `ScriptGenerationService`.
+ */
+class ScriptGenerationTesting<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, S : BuildableScenario<AF>>(
     val generator: GenericScenarioGenerator<AF, CF, QF, AGF, S>,
     val parser: ScenarioParser<S> = SimpleScenarioParser(),
 ) {
@@ -71,7 +76,6 @@ class ScriptGeneratorTestHelper<AF : ActionFactory, CF : CheckFactory, QF : Quer
 
         val parsedScenario = parser.parse(generatedScript, initContext)
 
-        // The two generators need to be separate to avoid sharing environment
         Log.debug("Regenerating script")
         val regeneratedScript = generator.scenario(parsedScenario).render()
         Log.debug("Regenerated:\n{}", regeneratedScript)

@@ -3,7 +3,6 @@ package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.core.system.Answer
 import com.anaplan.engineering.azuki.script.generation.ScenarioScript
-import com.anaplan.engineering.azuki.script.generation.ScenarioScriptRenderer
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
 import java.io.File
@@ -36,7 +35,7 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
         }
     }
 
-    private fun ScenarioScript.write(fileName: String, renderOpts: ScenarioScriptRenderer.() -> Unit = {}) {
+    private fun ScenarioScript.write(fileName: String, renderOpts: ScenarioScript.Renderer.() -> Unit = {}) {
         File(outputDir, fileName).writeText(render(renderOpts))
     }
 }
