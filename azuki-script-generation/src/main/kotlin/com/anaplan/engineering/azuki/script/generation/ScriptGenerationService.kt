@@ -7,14 +7,16 @@ import com.anaplan.engineering.azuki.declaration.*
  * The main endpoint for script generation tasks.
  */
 class ScriptGenerationService<
-    // mandatory parameters
+    // mandatory factories
     out AF : ActionFactory,
     out CF : CheckFactory,
-    DS : DeclarationState,
-    // optional parameters (these require calling 'withXYZFactory')
-    E : ScriptGenerationEnvironment,
+    // optional factories (these require calling 'withXYZFactory')
     out QF : QueryFactory,
     out AGF : ActionGeneratorFactory,
+    // mandatory non-factory parameters
+    DS : DeclarationState,
+    // optional non-factory parameters (these require calling 'withXYZ')
+    E : ScriptGenerationEnvironment,
     > private constructor(
     // mandatory parameters
     internal val actionFactory: AF,

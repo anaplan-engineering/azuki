@@ -14,7 +14,7 @@ import com.anaplan.engineering.azuki.core.system.QueryFactory
  * Implements stock patterns for the script generation service.
  */
 class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
-    private val service: ScriptGenerationService<AF, CF, *, *, QF, AGF>
+    private val service: ScriptGenerationService<AF, CF, QF, AGF, *, *>
 ) {
 
     /**
@@ -90,7 +90,7 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
  * shapes the generator supports.  These should almost always be implemented as `{ this as? NarrowScenarioType }`.
  */
 data class GenericScenarioGenerator<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, S : BuildableScenario<AF>>(
-    val service: ScriptGenerationService<AF, CF, *, *, QF, AGF>,
+    val service: ScriptGenerationService<AF, CF, QF, AGF, *, *>,
     val asVerifiable: S.() -> VerifiableScenario<AF, CF>? = { null },
     val asOracle: S.() -> OracleScenario<AF, QF, AGF>? = { null },
     val asQuery: S.() -> ScenarioWithQueries<AF, QF>? = { null },
