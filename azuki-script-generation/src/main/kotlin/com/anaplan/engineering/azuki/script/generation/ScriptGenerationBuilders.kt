@@ -28,8 +28,32 @@ import com.anaplan.engineering.azuki.declaration.DeclarationStateBuilder
 import com.anaplan.engineering.azuki.declaration.DeclarationStateFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.collections.plusAssign
 
-abstract class StageBuilder<in S : BuildableScenario<*>, E : ScriptGenerationEnvironment>(val environment: E) {
+/**
+ * Builder for a basic script block (which may be a top-level stage of a scenario script, or contained in a composite
+ * block)
+ */
+abstract class BasicScriptBlockBuilder() {
+
+    /**
+     * Supplies script fragments to this builder directly.
+     * Note that they will appear before any script fragments produced in any other way.
+     */
+    fun fromFragments(vararg fragments: String) {
+        explicitScriptFragments += fragments
+    }
+
+    private val explicitScriptFragments = mutableListOf<String>()
+    protected abstract val builtScriptFragments: List<String>
+    protected val scriptFragments get() = explicitScriptFragments + builtScriptFragments
+}
+
+/**
+ * Builder for a basic script block that represents a stage of a scenario script.
+ */
+abstract class BasicStageBuilder<in S : BuildableScenario<*>, E : ScriptGenerationEnvironment>(val environment: E) :
+    BasicScriptBlockBuilder() {
 
     /**
      * Supplies script fragments from the corresponding parts of the given scenario.
@@ -41,31 +65,16 @@ abstract class StageBuilder<in S : BuildableScenario<*>, E : ScriptGenerationEnv
      */
     abstract fun fromSystemDefinition(systemDefinition: SystemDefinition)
 
-    /**
-     * Supplies script fragments to this builder directly.
-     * Note that they will appear before any script fragments produced in any other way.
-     */
-    fun fromFragments(vararg fragments: String) {
-        explicitScriptFragments += fragments
-    }
-
-    fun fromBlockContents(block: BasicScriptBlock) {
-        explicitScriptFragments += block.scriptFragments
-    }
-
-    private val explicitScriptFragments = mutableListOf<String>()
-    protected abstract val builtScriptFragments: List<String>
-    val scriptFragments get() = explicitScriptFragments + builtScriptFragments
 
     companion object {
 
-        internal val Log: Logger = LoggerFactory.getLogger(StageBuilder::class.java)
+        internal val Log: Logger = LoggerFactory.getLogger(BasicStageBuilder::class.java)
     }
 }
 
 class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGenerationEnvironment>(
     private val actionFactory: AF, private val declarationStateFactory: DeclarationStateFactory<DS>, environment: E
-) : StageBuilder<BuildableScenario<in AF>, E>(environment) {
+) : BasicStageBuilder<BuildableScenario<in AF>, E>(environment) {
 
     fun build(body: GivenBuilder<AF, DS, E>.() -> Unit) = apply(body).scriptFragments
 
@@ -94,7 +103,7 @@ class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGene
 }
 
 class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(val actionFactory: AF, environment: E) :
-    StageBuilder<BuildableScenario<in AF>, E>(environment) {
+    BasicStageBuilder<BuildableScenario<in AF>, E>(environment) {
 
     fun build(body: WheneverBuilder<AF, E>.() -> Unit) = apply(body).scriptFragments
 
@@ -119,7 +128,7 @@ class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(v
 
 class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
     private val checkFactory: CF, environment: E
-) : StageBuilder<VerifiableScenario<*, in CF>, E>(environment) {
+) : BasicStageBuilder<VerifiableScenario<*, in CF>, E>(environment) {
 
     fun build(body: ThenBuilder<CF, E>.() -> Unit) = apply(body).scriptFragments
 
@@ -161,7 +170,7 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
 
 class QueryBuilder<out QF : QueryFactory, E : ScriptGenerationEnvironment>(
     private val queryFactory: QF, environment: E
-) : StageBuilder<ScenarioWithQueries<*, in QF>, E>(environment) {
+) : BasicStageBuilder<ScenarioWithQueries<*, in QF>, E>(environment) {
 
     fun build(body: QueryBuilder<QF, E>.() -> Unit) = apply(body).scriptFragments
 
@@ -214,59 +223,84 @@ abstract class GenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, ou
     protected val actionGeneratorFactory: AGF
 ) {
 
-    val subBlocks
-        get() = actionGenerators.map { block ->
-            BasicScriptBlock("generate", block.map { it.getActionGeneratorScript() })
-        }
-
     fun build(body: GenerateBuilder<AF, QF, AGF>.() -> Unit) = apply(body).subBlocks
 
     /**
-     * Adds a new block to the generate list, containing these action generators.
+     * Adds a new block to the generate list, with the contents provided to the builder.
      */
-    fun blockFromActionGenerators(actionGenerators: List<ActionGenerator>) {
-        val destination = mutableListOf<ScriptGenerationActionGenerator>()
-        destination.addAllWithRefinement<_, _, UnsupportedActionGenerator>("action generator", actionGenerators)
-        this.actionGenerators.add(destination)
-    }
+    fun block(body: GenerateBlockBuilder.() -> Unit) =
+        subBlocks.add(BasicScriptBlock("generate", GenerateBlockBuilder().build(body)))
 
     /**
      * Adds the generate blocks from this oracle scenario.
      */
-    abstract fun blocksFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>)
+    fun blocksFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
+        actionGeneratorsFromScenario(scenario).forEach {
+            block {
+                fromActionGenerators(it)
+            }
+        }
+
+    protected abstract fun actionGeneratorsFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>): List<List<ActionGenerator>>
+    protected abstract fun canTakeActionGeneratorsFromSystemDefinition(systemDefinition: SystemDefinition): Boolean
 
     /**
      * Adds the generate blocks from this system definition.
      */
-    abstract fun blocksFromSystemDefinition(systemDefinition: SystemDefinition)
+    fun blocksFromSystemDefinition(systemDefinition: SystemDefinition) {
+        // Whether we can emit the blocks here depends on the shape of the system definition, and whether we're in
+        // given-generate or when-generate position.
+        if (canTakeActionGeneratorsFromSystemDefinition(systemDefinition)) {
+            block {
+                fromActionGenerators(systemDefinition.actionGenerators)
+            }
+        }
+    }
 
-    private val actionGenerators = mutableListOf<List<ScriptGenerationActionGenerator>>()
+    private val subBlocks = mutableListOf<BasicScriptBlock>()
+}
+
+/**
+ * Builds an individual block in a list of generate blocks.
+ */
+class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
+
+    fun build(body: GenerateBlockBuilder.() -> Unit) = apply(body).scriptFragments
+
+    /**
+     * Populates the script with these action generators.
+     */
+    fun fromActionGenerators(actionGenerators: List<ActionGenerator>) {
+        this.actionGenerators.addAllWithRefinement<_, _, UnsupportedActionGenerator>("action generator",
+            actionGenerators)
+    }
+
+    private val actionGenerators = mutableListOf<ScriptGenerationActionGenerator>()
+    override val builtScriptFragments get() = actionGenerators.map { it.getActionGeneratorScript() }
 }
 
 class GivenGenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     actionGeneratorFactory: AGF
 ) : GenerateBuilder<AF, QF, AGF>(actionGeneratorFactory) {
 
-    override fun blocksFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
-        scenario.givenActionGenerations(actionGeneratorFactory).forEach(::blockFromActionGenerators)
+    override fun actionGeneratorsFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
+        scenario.givenActionGenerations(actionGeneratorFactory)
 
-    override fun blocksFromSystemDefinition(systemDefinition: SystemDefinition) {
-        // system definition action generators go after given if there are no commands
-        if (systemDefinition.commands.isEmpty()) blockFromActionGenerators(systemDefinition.actionGenerators)
-    }
+    // System definition action generators go after 'given' iff there are no commands
+    override fun canTakeActionGeneratorsFromSystemDefinition(systemDefinition: SystemDefinition) =
+        systemDefinition.commands.isEmpty()
 }
 
 class WheneverGenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     actionGeneratorFactory: AGF
 ) : GenerateBuilder<AF, QF, AGF>(actionGeneratorFactory) {
 
-    override fun blocksFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
-        scenario.givenActionGenerations(actionGeneratorFactory).forEach(::blockFromActionGenerators)
+    override fun actionGeneratorsFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
+        scenario.whenActionGenerations(actionGeneratorFactory)
 
-    override fun blocksFromSystemDefinition(systemDefinition: SystemDefinition) {
-        // system definition action generators go after whenever if there are no actions
-        if (systemDefinition.commands.isNotEmpty()) blockFromActionGenerators(systemDefinition.actionGenerators)
-    }
+    // System definition action generators go after 'whenever' iff there are commands
+    override fun canTakeActionGeneratorsFromSystemDefinition(systemDefinition: SystemDefinition) =
+        systemDefinition.commands.isNotEmpty()
 }
 
 /**
@@ -287,5 +321,5 @@ private inline fun <reified I, reified O : I, reified U : I> MutableCollection<i
 
 private inline fun <reified U> logRefineFailure(failure: Any?) {
     val why = if (failure is U) "unsupported" else "wrong type"
-    StageBuilder.Log.error(" * {}: {}", why, failure)
+    BasicStageBuilder.Log.error(" * {}: {}", why, failure)
 }

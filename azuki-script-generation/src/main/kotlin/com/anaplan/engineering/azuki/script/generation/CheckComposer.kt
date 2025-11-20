@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.script.generation
 
-import com.anaplan.engineering.azuki.script.generation.StageBuilder.Companion.Log
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 fun interface CheckComposer<E : ScriptGenerationEnvironment> {
 
@@ -14,6 +15,11 @@ fun interface CheckComposer<E : ScriptGenerationEnvironment> {
      * Fails if composition isn't possible, at which point we should return the original check.
      */
     fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>>
+
+    companion object {
+
+        internal val Log : Logger = LoggerFactory.getLogger(CheckComposer::class.java)
+    }
 }
 
 /**
@@ -83,7 +89,7 @@ internal fun <E: ScriptGenerationEnvironment> composeChecks(environment: E, chec
                 succeeded.add(composer)
             }.getOrElse {
                 failed.add(composer)
-                Log.info("check {} failed to compose: {} ({})", check, it::class.simpleName, it.message)
+                CheckComposer.Log.info("check {} failed to compose: {} ({})", check, it::class.simpleName, it.message)
                 listOf(check)
             }
         }

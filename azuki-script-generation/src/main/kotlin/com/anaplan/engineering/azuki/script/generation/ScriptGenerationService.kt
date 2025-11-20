@@ -84,7 +84,10 @@ class ScriptGenerationService<
     companion object {
 
         /**
-         * Constructs a basic script generator factory with no optional extras included.
+         * Constructs a basic script generation service.
+         *
+         * If your implementation of Azuki uses a script generation environment, or supports queries and/or action
+         * generators, you will need to call additional methods on the result of this method to pass them in.
          */
         fun <AF : ActionFactory, CF : CheckFactory, DS : DeclarationState> create(
             actionFactory: AF, checkFactory: CF, declarationStateFactory: DeclarationStateFactory<DS>
@@ -97,6 +100,20 @@ class ScriptGenerationService<
             NoQueryFactory,
             NoActionGeneratorFactory,
         )
+
+        /**
+         * A basic service that is independent of any Azuki adapter.
+         *
+         * This is useful when generating scripts directly from string script fragments.  In all other cases,
+         * create a `ScriptGenerationService` to be able to generate scripts from scenarios and system definitions.
+         */
+        val standalone by lazy {
+            create(
+                object : ActionFactory {},
+                object : CheckFactory {},
+                { object : DeclarationState() {} },
+            )
+        }
     }
 
     inner class Given(internal val environment: E, scriptFragments: List<String>) :
@@ -134,14 +151,14 @@ class ScriptGenerationService<
         /**
          * Constructs a then block by mixing in checks from one or more sources.
          */
-        fun then(build: ThenBuilder<CF, E>.() -> Unit) =
-            GivenWheneverThen(this, ThenBuilder(checkFactory, environment).apply(build).scriptFragments)
+        fun then(body: ThenBuilder<CF, E>.() -> Unit) =
+            GivenWheneverThen(this, ThenBuilder(checkFactory, environment).build(body))
 
         /**
          * Constructs a query block by mixing in queries from one or more sources.
          */
-        fun query(build: QueryBuilder<QF, E>.() -> Unit) =
-            GivenWheneverQuery(this, QueryBuilder(queryQueryFactory, environment).apply(build).scriptFragments)
+        fun query(body: QueryBuilder<QF, E>.() -> Unit) =
+            GivenWheneverQuery(this, QueryBuilder(queryQueryFactory, environment).build(body))
     }
 
     inner class GivenWheneverThen(val whenever: GivenWhenever, scriptFragments: List<String>) :
@@ -207,8 +224,8 @@ class ScriptGenerationService<
         /**
          * Constructs a verify block by mixing in queries from one or more sources.
          */
-        fun verify(body: QueryBuilder<QF, E>.() -> Unit) = GivenGenerateWheneverGenerateVerify(this,
-            QueryBuilder(verifyQueryFactory, environment).apply(body).scriptFragments)
+        fun verify(body: QueryBuilder<QF, E>.() -> Unit) =
+            GivenGenerateWheneverGenerateVerify(this, QueryBuilder(verifyQueryFactory, environment).build(body))
 
         private val environment = whenever.given.environment
     }
