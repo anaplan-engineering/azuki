@@ -54,8 +54,8 @@ open class ScriptGenerationTestHelper<S : BuildableScenario<AF>, AF : ActionFact
  * oracle, and query scenarios.  However, this means that it needs to take a `GenericScenarioGenerator` rather than a
  * `ScriptGenerationService`.
  */
-class ScriptGenerationTesting<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, S : BuildableScenario<AF>>(
-    val generator: GenericScenarioGenerator<AF, CF, QF, AGF, S>,
+class ScriptGenerationTesting<S : BuildableScenario<*>>(
+    val generator: (S) -> ScenarioScript,
     val parser: ScenarioParser<S> = SimpleScenarioParser(),
 ) {
 
@@ -71,13 +71,13 @@ class ScriptGenerationTesting<AF : ActionFactory, CF : CheckFactory, QF : QueryF
      */
     fun checkScenarioGeneration(scenario: S, initContext: ScenarioParsingContext.() -> Unit = {}) {
         Log.debug("Generating script")
-        val generatedScript = generator.scenario(scenario).render()
+        val generatedScript = generator(scenario).render()
         Log.debug("Generated:\n{}", generatedScript)
 
         val parsedScenario = parser.parse(generatedScript, initContext)
 
         Log.debug("Regenerating script")
-        val regeneratedScript = generator.scenario(parsedScenario).render()
+        val regeneratedScript = generator(parsedScenario).render()
         Log.debug("Regenerated:\n{}", regeneratedScript)
 
         expect(regeneratedScript) { generatedScript }

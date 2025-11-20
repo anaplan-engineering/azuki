@@ -2,7 +2,6 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
-import com.anaplan.engineering.azuki.script.generation.GenericScenarioGenerator
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTesting
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeOracleScenario
@@ -18,22 +17,20 @@ class TicTacToeScriptGeneratorTest {
     companion object {
 
         const val orderA = "orderA"
-
         const val gameA = "gameA"
-
         const val X = "X"
         const val O = "O"
 
-        val ScenarioScriptingTestUtils = ScriptGenerationTesting(generator = GenericScenarioGenerator(
-            TicTacToeScriptGeneration,
-            { this as? TicTacToeVerifiableScenario },
-            { this as? TicTacToeOracleScenario },
-            { this as? TicTacToeQueryScenario }), parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
+        val ScenarioScriptingTestUtils = ScriptGenerationTesting(generator = {
+            TicTacToeScriptGeneration.patterns.scenario(it,
+                { this as? TicTacToeVerifiableScenario },
+                { this as? TicTacToeOracleScenario },
+                { this as? TicTacToeQueryScenario })
+        }, parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
 
             override val defaultImports: ScenarioParsingContext.() -> Unit = { import(*ticTacToeStandardImports) }
         })
     }
-
 
     @Test
     fun boardHasStateNotReconstructedIfUnderspecified() {
