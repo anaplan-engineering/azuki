@@ -41,7 +41,7 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
      * Generates a verifiable script using the setup from an oracle and checks from a corresponding collection of answers.
      */
     fun verifiableScenarioFromOracle(
-        oracle: OracleScenario<in AF, in QF, in AGF>, answers: Collection<Answer<*, in CF>>
+        oracle: BuildableScenario<in AF>, answers: Collection<Answer<*, in CF>>
     ) = service.given {
         fromScenario(oracle)
     }.whenever {
