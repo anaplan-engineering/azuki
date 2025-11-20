@@ -12,7 +12,7 @@ object TicTacToeScriptGenerationActionGeneratorFactory : TicTacToeActionGenerato
     override fun generateGame(gameName: String) = dsl(TicTacToeGenerate::createNewGameFromExistingPlayOrder, gameName)
 
     override fun generateMoves(gameName: String, numMoves: Int) =
-        dsl(TicTacToeGenerate::addMoves, numMoves)
+        dsl(TicTacToeGenerate::addMoves, gameName, numMoves)
 
     private fun dsl(fn: KFunction<*>, vararg values: Any?) = ScriptGenerationActionGenerator {
         TicTacToeScriptingHelper.scriptifyFunction(fn, *values)

@@ -7,6 +7,7 @@ import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeOracleScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeQueryScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeVerifiableScenario
+import com.anaplan.engineering.azuki.tictactoe.dsl.oracleScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.verifiableScenario
 import kotlin.test.Test
 import kotlin.test.assertFalse
@@ -201,6 +202,37 @@ class TicTacToeScriptGeneratorTest {
                 . | O | .
                 . | . | .
             """)
+            }
+        })
+    }
+
+    @Test
+    fun exampleOracleScenario() {
+        ScenarioScriptingTestUtils.checkScenarioGeneration(oracleScenario {
+            generate {
+                createPlayOrder("orderA")
+                createPlayOrder("orderB")
+                createPlayOrder("orderC")
+            }
+            generate {
+                createNewGameFromExistingPlayOrder("gameA")
+            }
+            generate {
+                addMoves("gameA", 4)
+            }
+            whenever {}
+            generate {
+                addMoves("gameA", 5)
+            }
+            verify {
+                forAll({ getPositions("gameA") }) { pos ->
+                    gameHasToken("gameA", pos.col to pos.row)
+                }
+                forAll({ getPlayOrder("gameA") }) { player ->
+                    forAll({ getPositions("gameA") }) { pos ->
+                        playerCanPlaceToken("gameA", player, pos.col to pos.row)
+                    }
+                }
             }
         })
     }
