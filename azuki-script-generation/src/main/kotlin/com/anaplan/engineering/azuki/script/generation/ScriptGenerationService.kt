@@ -199,19 +199,28 @@ class ScriptGenerationService<
     inner class GivenGenerateWheneverGenerate(val whenever: GivenGenerateWhenever, subBlocks: List<ScriptBlock>) :
         CompositeScriptBlock(subBlocks) {
 
+        val givenGenerate = whenever.givenGenerate
+        val given = whenever.given
+
+        /**
+         * Constructs a verify block by mixing in queries from one or more sources.
+         */
         fun verify(body: QueryBuilder<QF, E>.() -> Unit) = GivenGenerateWheneverGenerateVerify(this,
             QueryBuilder(verifyQueryFactory, environment).apply(body).scriptFragments)
 
         private val environment = whenever.given.environment
     }
 
+    /**
+     * A verify block following a whenever-generate block.
+     */
     inner class GivenGenerateWheneverGenerateVerify(
         val wheneverGenerate: GivenGenerateWheneverGenerate, scriptFragments: List<String>
     ) : BasicScriptBlock("verify", scriptFragments) {
 
         val whenever = wheneverGenerate.whenever
-        val givenGenerate = whenever.givenGenerate
-        val given = givenGenerate.given
+        val givenGenerate = wheneverGenerate.givenGenerate
+        val given = wheneverGenerate.given
 
         /**
          * Constructs an oracle scenario script with the given, when, verify, and generate blocks previously constructed.
