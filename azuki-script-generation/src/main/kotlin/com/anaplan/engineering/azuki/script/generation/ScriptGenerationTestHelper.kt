@@ -66,14 +66,14 @@ class ScriptGeneratorTestHelper<AF : ActionFactory, CF : CheckFactory, QF : Quer
      */
     fun checkScenarioGeneration(scenario: S, initContext: ScenarioParsingContext.() -> Unit = {}) {
         Log.debug("Generating script")
-        val generatedScript = generator.scenario(scenario).renderFormatted()
+        val generatedScript = generator.scenario(scenario).render()
         Log.debug("Generated:\n{}", generatedScript)
 
         val parsedScenario = parser.parse(generatedScript, initContext)
 
         // The two generators need to be separate to avoid sharing environment
         Log.debug("Regenerating script")
-        val regeneratedScript = generator.scenario(parsedScenario).renderFormatted()
+        val regeneratedScript = generator.scenario(parsedScenario).render()
         Log.debug("Regenerated:\n{}", regeneratedScript)
 
         expect(regeneratedScript) { generatedScript }

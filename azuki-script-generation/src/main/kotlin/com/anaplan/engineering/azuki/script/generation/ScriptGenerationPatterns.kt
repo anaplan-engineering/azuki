@@ -62,9 +62,9 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
     }.queryScenario()
 
     /**
-     * Generates a script for an oracle scenario.
+     * Builds the blocks for an oracle scenario, but stops short of finishing the build.
      */
-    fun oracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) = service.given {
+    fun oracleScenarioBuilder(scenario: OracleScenario<in AF, in QF, in AGF>) = service.given {
         fromScenario(scenario)
     }.generate {
         blocksFromScenario(scenario)
@@ -74,7 +74,12 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
         blocksFromScenario(scenario)
     }.verify {
         fromScenario(scenario)
-    }.oracleScenario()
+    }
+
+    /**
+     * Generates a script for an oracle scenario.
+     */
+    fun oracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) = oracleScenarioBuilder(scenario).oracleScenario()
 }
 
 /**
@@ -93,7 +98,7 @@ data class GenericScenarioGenerator<AF: ActionFactory, CF: CheckFactory, QF: Que
     /**
      * Generates the appropriate script for the given scenario.
      */
-    fun scenario(scenario: S) = listOf<S.() -> FullScenarioScript?>(
+    fun scenario(scenario: S) = listOf<S.() -> ScenarioScript?>(
         { asVerifiable()?.let { service.patterns.verifiableScenario(it) }},
         { asOracle()?.let { service.patterns.oracleScenario(it) }},
         { asQuery()?.let { service.patterns.queryScenario(it) }},

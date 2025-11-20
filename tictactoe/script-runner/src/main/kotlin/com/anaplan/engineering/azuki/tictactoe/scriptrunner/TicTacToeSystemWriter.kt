@@ -1,11 +1,9 @@
 package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 
-import com.anaplan.engineering.azuki.core.scenario.ScenarioQueries
 import com.anaplan.engineering.azuki.core.system.SystemDefinition
 import com.anaplan.engineering.azuki.core.system.SystemWriter
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
-import com.anaplan.engineering.azuki.script.generation.FullScenarioScript
-import com.anaplan.engineering.azuki.script.generation.toScriptGenAction
+import com.anaplan.engineering.azuki.script.generation.ScenarioScript
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
@@ -13,7 +11,6 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScript
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerationActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerationCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerationQueryQueryFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerator
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -69,7 +66,13 @@ class TicTacToeSystemWriter :
         if (systemDefinition.actionGenerators.isNotEmpty()) {
             val scenarioScript = oracle.takeGivenAndWhenever().then {
                 fromChecks(listOf(checkFactory.systemValid()))
-            }.verifiableScenario().renderUnformatted(indent = 2)
+            }.verifiableScenario().render {
+                indent = 2
+                inOuterBlock = true
+
+                // We're going to format the whole test-case anyway, so formatting twice is pointless
+                format = false
+            }
 
             val testCase = TicTacToeRunnableScenarioClassGenerator.generate(className = context ?: "scenario-ocl",
                 packageName = "debug",
@@ -90,8 +93,12 @@ class TicTacToeSystemWriter :
         }.queryScenario().write(context ?: "scenario-ocl", ScenarioSuffix)
     }
 
-    private fun FullScenarioScript.write(prefix: String, suffix: String) {
-        write(prefix, suffix, renderFormatted())
+    private fun ScenarioScript.write(prefix: String, suffix: String) {
+        write(prefix, suffix, render {
+            indent = 0
+            format = true
+            inOuterBlock = true
+        })
     }
 
     private fun write(prefix: String, suffix: String, text: String) {

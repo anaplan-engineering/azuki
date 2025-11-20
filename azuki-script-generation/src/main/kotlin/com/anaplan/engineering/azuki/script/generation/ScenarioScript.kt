@@ -3,43 +3,53 @@ package com.anaplan.engineering.azuki.script.generation
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 
 /**
- * A partially-assembled scenario script.
+ * A scenario script.
  */
-abstract class ScenarioScript {
-
-    protected abstract val blocks: List<ScriptBlock>
+abstract class ScenarioScript(val typeName: String) {
 
     /**
-     * Renders the contents of the script to a string.
-     * The indentation level affects script block delimiters, not the actual contents of the script.
+     * Renders the script.
+     *
+     * Apply a block to this method to configure the renderer before it renders the script.
      */
-    fun renderInner(indent: Int = 0) = blocks.filterNot { it.isEmpty }.map { it.render(indent) }
+    fun render(config: ScenarioScriptRenderer.() -> Unit = {}) =
+        ScenarioScriptRenderer().apply(config).render(typeName, blocks)
+
+    protected abstract val blocks: List<ScriptBlock>
 }
+
+/**
+ * Customisable renderer for scenario scripts.
+ */
+class ScenarioScriptRenderer(var format: Boolean = true, var inOuterBlock: Boolean = true, var indent: Int = 0) {
+
+    internal fun render(typeName: String, blocks: List<ScriptBlock>): String {
+        val inner = renderInner(blocks)
+        val script = maybeWrap(typeName, inner)
+        return maybeFormat(script)
+    }
+
+    private fun renderInner(blocks: List<ScriptBlock>) = blocks.filterNot { it.isEmpty }.map { it.render(innerIndent) }
+
+    private fun maybeWrap(typeName: String, scriptFragments: List<String>) = if (inOuterBlock) {
+        BasicScriptBlock("${typeName}Scenario", scriptFragments).render(indent)
+    } else {
+        scriptFragments.joinToString("\n\n")
+    }
+
+    private fun maybeFormat(script: String) = if (format) ScenarioFormatter.formatScenario(script) else script
+
+    private val innerIndent get() = indent + if (inOuterBlock) 1 else 0
+}
+
 
 /**
  * An incomplete result from an oracle (given-whenever, no then)
  */
-class IncompleteScenarioScript(private val given: ScriptBlock, private val whenever: ScriptBlock) : ScenarioScript() {
+class IncompleteScenarioScript(private val given: ScriptBlock, private val whenever: ScriptBlock) :
+    ScenarioScript("verifiable") {
 
     override val blocks get() = listOf(given, whenever)
-}
-
-/**
- * A fully-assembled scenario script.
- */
-abstract class FullScenarioScript(val typeName: String) : ScenarioScript() {
-
-    /**
-     * Renders the script and its outer DSL block, without formatting.
-     * The indentation level affects script block delimiters, not the actual contents of the script.
-     */
-    fun renderUnformatted(indent: Int = 0) =
-        BasicScriptBlock("${typeName}Scenario", renderInner(indent + 1)).render(indent)
-
-    /**
-     * Renders the script and its outer DSL block, with KtLint formatting.
-     */
-    fun renderFormatted() = ScenarioFormatter.formatScenario(renderUnformatted())
 }
 
 /**
@@ -47,7 +57,7 @@ abstract class FullScenarioScript(val typeName: String) : ScenarioScript() {
  */
 data class VerifiableScenarioScript(
     val given: BasicScriptBlock, val whenever: BasicScriptBlock, val then: BasicScriptBlock
-) : FullScenarioScript("verifiable") {
+) : ScenarioScript("verifiable") {
 
     override val blocks get() = listOf(given, whenever, then)
 }
@@ -57,7 +67,7 @@ data class VerifiableScenarioScript(
  */
 data class QueryScenarioScript(
     val given: BasicScriptBlock, val whenever: BasicScriptBlock, val query: BasicScriptBlock
-) : FullScenarioScript("query") {
+) : ScenarioScript("query") {
 
     override val blocks get() = listOf(given, whenever, query)
 }
@@ -71,7 +81,7 @@ data class OracleScenarioScript(
     val whenever: BasicScriptBlock,
     val whenGenerate: CompositeScriptBlock,
     val verify: BasicScriptBlock
-) : FullScenarioScript("oracle") {
+) : ScenarioScript("oracle") {
 
     override val blocks
         get() = buildList {
