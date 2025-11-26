@@ -68,7 +68,7 @@ class JUnitTestCaseWriter(
         // TODO - add utility function for arbitrary name
         className = generatedTestClass ?: ("Generated_" + UUID.randomUUID().toString().replace("-", "_")),
         packageName = generatedTestPackage,
-        scenarioScript = TicTacToeScriptGeneration.patterns.verifiableScenarioFromOracle(baseScenario, answers).render {
+        scenarioScript = TicTacToeScriptGeneration.scenario.verifiableFromOracle(baseScenario, answers).render {
             indent = 2
             format = false
         },

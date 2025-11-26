@@ -11,7 +11,7 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
 
     fun writeGeneratedScenario(result: OracleScenarioResult) {
         val generatedScenario = result.generatedScenario ?: return
-        val oracleBuilder = TicTacToeScriptGeneration.patterns.oracleScenarioBuilder(generatedScenario)
+        val oracleBuilder = TicTacToeScriptGeneration.scenario.oracleBuilder(generatedScenario)
 
         val oracleScenario = oracleBuilder.oracleScenario()
         oracleScenario.write("$scenarioName-gen-ocl.scn")

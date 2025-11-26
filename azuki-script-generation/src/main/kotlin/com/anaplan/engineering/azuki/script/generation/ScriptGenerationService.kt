@@ -30,9 +30,9 @@ class ScriptGenerationService<
 ) {
 
     /**
-     * Provides ready-made usage patterns for script generation.
+     * Provides ready-made usage patterns for script generation of a whole scenario, from a whole scenario.
      */
-    val patterns = ScriptGenerationPatterns(this)
+    val scenario = ScriptGenerationScenarioPatterns(this)
 
     /**
      * Adds an environment factory to this service, changing the type of accepted scenarios accordingly.

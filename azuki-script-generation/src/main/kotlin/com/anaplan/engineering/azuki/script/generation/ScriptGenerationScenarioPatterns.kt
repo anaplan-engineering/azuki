@@ -11,16 +11,16 @@ import com.anaplan.engineering.azuki.core.system.CheckFactory
 import com.anaplan.engineering.azuki.core.system.QueryFactory
 
 /**
- * Implements stock patterns for the script generation service.
+ * Implements stock patterns for using the script generation service to create complete scenario scripts.
  */
-class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
+class ScriptGenerationScenarioPatterns<out AF : ActionFactory, out CF : CheckFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     private val service: ScriptGenerationService<AF, CF, QF, AGF, *, *>
 ) {
 
     /**
      * Generates a verifiable scenario script.
      */
-    fun verifiableScenario(scenario: VerifiableScenario<in AF, in CF>) = service.given {
+    fun verifiable(scenario: VerifiableScenario<in AF, in CF>) = service.given {
         fromScenario(scenario)
     }.whenever {
         fromScenario(scenario)
@@ -31,7 +31,7 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
     /**
      * Generates an incomplete scenario script from an oracle.
      */
-    fun incompleteScenarioFromOracle(oracle: OracleScenario<in AF, in QF, in AGF>) = service.given {
+    fun incompleteFromOracle(oracle: OracleScenario<in AF, in QF, in AGF>) = service.given {
         fromScenario(oracle)
     }.whenever {
         fromScenario(oracle)
@@ -40,7 +40,7 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
     /**
      * Generates a verifiable script using the setup from an oracle and checks from a corresponding collection of answers.
      */
-    fun verifiableScenarioFromOracle(
+    fun verifiableFromOracle(
         oracle: BuildableScenario<in AF>, answers: Collection<Answer<*, in CF>>
     ) = service.given {
         fromScenario(oracle)
@@ -53,7 +53,7 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
     /**
      * Generates a script for a query scenario.
      */
-    fun queryScenario(scenario: ScenarioWithQueries<in AF, in QF>) = service.given {
+    fun query(scenario: ScenarioWithQueries<in AF, in QF>) = service.given {
         fromScenario(scenario)
     }.whenever {
         fromScenario(scenario)
@@ -63,8 +63,11 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
 
     /**
      * Builds the blocks for an oracle scenario, but stops short of finishing the build.
+     *
+     * This allows the same builder to be used for the oracle scenario and for the verifiable scenario derived from its
+     * answers.
      */
-    fun oracleScenarioBuilder(scenario: OracleScenario<in AF, in QF, in AGF>) = service.given {
+    fun oracleBuilder(scenario: OracleScenario<in AF, in QF, in AGF>) = service.given {
         fromScenario(scenario)
     }.generate {
         blocksFromScenario(scenario)
@@ -79,8 +82,8 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
     /**
      * Generates a script for an oracle scenario.
      */
-    fun oracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
-        oracleScenarioBuilder(scenario).oracleScenario()
+    fun oracle(scenario: OracleScenario<in AF, in QF, in AGF>) =
+        oracleBuilder(scenario).oracleScenario()
 
     /**
      * Generates a script for a scenario whose kind (verifiable, oracle, query) isn't known until run-time.
@@ -89,14 +92,14 @@ class ScriptGenerationPatterns<out AF : ActionFactory, out CF : CheckFactory, ou
      * scenario kinds the generator supports.  These should usually be implemented as `{ this as? NarrowScenarioType }`.
      * If a projection method is not given, scenarios of that kind won't be handled and will result in an exception.
      */
-    fun <S : BuildableScenario<in AF>> scenario(
+    fun <S : BuildableScenario<in AF>> arbitrary(
         scenario: S,
         asVerifiable: S.() -> VerifiableScenario<in AF, in CF>? = { null },
         asOracle: S.() -> OracleScenario<in AF, in QF, in AGF>? = { null },
         asQuery: S.() -> ScenarioWithQueries<in AF, in QF>? = { null },
-    ) = listOf<S.() -> ScenarioScript?>({ asVerifiable()?.let { service.patterns.verifiableScenario(it) } },
-        { asOracle()?.let { service.patterns.oracleScenario(it) } },
-        { asQuery()?.let { service.patterns.queryScenario(it) } },
+    ) = listOf<S.() -> ScenarioScript?>({ asVerifiable()?.let { service.scenario.verifiable(it) } },
+        { asOracle()?.let { service.scenario.oracle(it) } },
+        { asQuery()?.let { service.scenario.query(it) } },
         { throw IllegalArgumentException("unsupported scenario type: ${this::class.simpleName}") }).firstNotNullOf {
         it(scenario)
     }
