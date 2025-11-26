@@ -40,25 +40,32 @@ class TicTacToeSystemWriter :
 
     private fun writeVerifiableScenario(systemDefinition: SystemDefinition, context: String?) {
         TicTacToeScriptGeneration.given {
-            fromSystemDefinition(systemDefinition)
+            fromActions(systemDefinition.declarations)
         }.whenever {
-            fromSystemDefinition(systemDefinition)
+            fromActions(systemDefinition.commands)
         }.then {
-            fromSystemDefinition(systemDefinition)
+            fromChecks(systemDefinition.checks)
         }.verifiableScenario().write(context ?: "scenario-vfy", ScenarioSuffix)
     }
 
     private fun writeOracleScenario(systemDefinition: SystemDefinition, context: String?) {
         val oracle = TicTacToeScriptGeneration.given {
-            fromSystemDefinition(systemDefinition)
+            fromActions(systemDefinition.declarations)
         }.generate {
-            blocksFromSystemDefinition(systemDefinition)
+            // System definition action generators go after 'given' iff there are no commands
+            if (systemDefinition.commands.isEmpty()) block {
+                fromActionGenerators(systemDefinition.actionGenerators)
+            }
         }.whenever {
-            fromSystemDefinition(systemDefinition)
+            fromActions(systemDefinition.commands)
         }.generate {
-            blocksFromSystemDefinition(systemDefinition)
+            // System definition action generators go after 'whenever' iff there are commands
+            if (systemDefinition.commands.isNotEmpty()) block {
+                fromActionGenerators(systemDefinition.actionGenerators)
+            }
         }.verify {
-            fromSystemDefinition(systemDefinition)
+            fromQueries(systemDefinition.queries)
+            fromDerivedQueries(systemDefinition.forAllQueries)
         }
 
         oracle.oracleScenario().write(context ?: "scenario-ocl", ScenarioSuffix)
@@ -85,11 +92,12 @@ class TicTacToeSystemWriter :
 
     private fun writeQueryScenario(systemDefinition: SystemDefinition, context: String?) {
         TicTacToeScriptGeneration.given {
-            fromSystemDefinition(systemDefinition)
+            fromActions(systemDefinition.declarations)
         }.whenever {
-            fromSystemDefinition(systemDefinition)
+            fromActions(systemDefinition.commands)
         }.query {
-            fromSystemDefinition(systemDefinition)
+            fromQueries(systemDefinition.queries)
+            fromDerivedQueries(systemDefinition.forAllQueries)
         }.queryScenario().write(context ?: "scenario-ocl", ScenarioSuffix)
     }
 
