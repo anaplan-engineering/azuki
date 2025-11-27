@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 /**
  * A scenario script.
  */
-abstract class ScenarioScript(val typeName: String) {
+abstract class ScenarioScript(val typeName: String, val blocks: List<ScriptBlock>) {
 
     /**
      * Renders the script.
@@ -13,8 +13,6 @@ abstract class ScenarioScript(val typeName: String) {
      * Apply a block to this method to configure the renderer before it renders the script.
      */
     fun render(config: Renderer.() -> Unit = {}) = Renderer().apply(config).render(blocks)
-
-    protected abstract val blocks: List<ScriptBlock>
 
     /**
      * Customisable renderer for scenario scripts.
@@ -40,31 +38,22 @@ abstract class ScenarioScript(val typeName: String) {
 /**
  * An incomplete result from an oracle (given-whenever, no then)
  */
-class IncompleteScenarioScript(private val given: ScriptBlock, private val whenever: ScriptBlock) :
-    ScenarioScript("verifiable") {
-
-    override val blocks get() = listOf(given, whenever)
-}
+data class IncompleteScenarioScript(val given: ScriptBlock, val whenever: ScriptBlock) :
+    ScenarioScript("verifiable", listOf(given, whenever))
 
 /**
  * A verifiable scenario (given-whenever-then) script.
  */
 data class VerifiableScenarioScript(
     val given: BasicScriptBlock, val whenever: BasicScriptBlock, val then: BasicScriptBlock
-) : ScenarioScript("verifiable") {
-
-    override val blocks get() = listOf(given, whenever, then)
-}
+) : ScenarioScript("verifiable", listOf(given, whenever, then))
 
 /**
  * A query scenario (given-whenever-query) script.
  */
 data class QueryScenarioScript(
     val given: BasicScriptBlock, val whenever: BasicScriptBlock, val query: BasicScriptBlock
-) : ScenarioScript("query") {
-
-    override val blocks get() = listOf(given, whenever, query)
-}
+) : ScenarioScript("query", listOf(given, whenever, query))
 
 /**
  * An oracle scenario (given-generate-whenever-generate-verify) script.
@@ -75,18 +64,17 @@ data class OracleScenarioScript(
     val whenever: BasicScriptBlock,
     val whenGenerate: CompositeScriptBlock,
     val verify: BasicScriptBlock
-) : ScenarioScript("oracle") {
+) : ScenarioScript("oracle", buildList {
+    add(given)
+    addAll(givenGenerate.subBlocks)
+    add(whenever)
+    addAll(whenGenerate.subBlocks)
+    add(verify)
+})
 
-    override val blocks
-        get() = buildList {
-            add(given)
-            addAll(givenGenerate.subBlocks)
-            add(whenever)
-            addAll(whenGenerate.subBlocks)
-            add(verify)
-        }
-}
-
+/**
+ * A component in a DSL script that is being generated.
+ */
 interface ScriptBlock {
 
     /**
