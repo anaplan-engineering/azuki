@@ -78,7 +78,7 @@ class TicTacToeSystemWriter :
                 inOuterBlock = true
 
                 // We're going to format the whole test-case anyway, so formatting twice is pointless
-                format = false
+                useFormatter = false
             }
 
             val testCase = TicTacToeRunnableScenarioClassGenerator.generate(className = context ?: "scenario-ocl",
@@ -104,7 +104,7 @@ class TicTacToeSystemWriter :
     private fun ScenarioScript.write(prefix: String, suffix: String) {
         write(prefix, suffix, render {
             indent = 0
-            format = true
+            useFormatter = true
             inOuterBlock = true
         })
     }

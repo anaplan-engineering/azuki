@@ -44,8 +44,8 @@ abstract class BasicScriptBlockBuilder() {
     }
 
     private val explicitScriptFragments = mutableListOf<String>()
-    protected abstract val builtScriptFragments: List<String>
-    protected val scriptFragments get() = explicitScriptFragments + builtScriptFragments
+    protected abstract val builtScriptElements: List<ScriptElement>
+    protected val scriptElements get() = explicitScriptFragments.map(::ScriptStringFragment) + builtScriptElements
 }
 
 /**
@@ -69,7 +69,7 @@ class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGene
     private val actionFactory: AF, private val declarationStateFactory: DeclarationStateFactory<DS>, environment: E
 ) : BasicStageBuilder<BuildableScenario<in AF>, E>(environment) {
 
-    fun build(body: GivenBuilder<AF, DS, E>.() -> Unit) = apply(body).scriptFragments
+    fun build(body: GivenBuilder<AF, DS, E>.() -> Unit) = apply(body).scriptElements
 
     fun fromActions(vararg actions: Action) = fromActions(actions.toList())
 
@@ -78,9 +78,9 @@ class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGene
 
     override fun fromScenario(scenario: BuildableScenario<in AF>) = fromActions(scenario.declarations(actionFactory))
 
-    override val builtScriptFragments: List<String>
+    override val builtScriptElements
         get() = DeclarationStateBuilder(declarationStateFactory).build(declarableActions)
-            .map { declarationBuilder(it).getDeclarationScript(environment) }
+            .map { ScriptStringFragment(declarationBuilder(it).getDeclarationScript(environment)) }
 
     private fun <D : Declaration> declarationBuilder(declaration: D) =
         declarationBuilderFactory.createBuilder<D, ScriptGenerationDeclarationBuilder<E, D>>(declaration)
@@ -97,7 +97,7 @@ class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGene
 class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(val actionFactory: AF, environment: E) :
     BasicStageBuilder<BuildableScenario<in AF>, E>(environment) {
 
-    fun build(body: WheneverBuilder<AF, E>.() -> Unit) = apply(body).scriptFragments
+    fun build(body: WheneverBuilder<AF, E>.() -> Unit) = apply(body).scriptElements
 
     /**
      * Populates the script with these commands.
@@ -112,7 +112,7 @@ class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(v
 
     override fun fromScenario(scenario: BuildableScenario<in AF>) = fromActions(scenario.commands(actionFactory))
 
-    override val builtScriptFragments get() = commands.map { it.getActionScript(environment) }
+    override val builtScriptElements get() = commands.map { ScriptStringFragment(it.getActionScript(environment)) }
 
     private val commands = mutableListOf<ScriptGenerationAction<E>>()
 }
@@ -121,7 +121,7 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
     private val checkFactory: CF, environment: E
 ) : BasicStageBuilder<VerifiableScenario<*, in CF>, E>(environment) {
 
-    fun build(body: ThenBuilder<CF, E>.() -> Unit) = apply(body).scriptFragments
+    fun build(body: ThenBuilder<CF, E>.() -> Unit) = apply(body).scriptElements
 
     /**
      * Whether to use check composition on creating the final check list.
@@ -147,8 +147,8 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
 
     override fun fromScenario(scenario: VerifiableScenario<*, in CF>) = fromChecks(scenario.checks(checkFactory))
 
-    override val builtScriptFragments
-        get() = (if (compose) composedChecks else checks).map { it.getCheckScript(environment) }
+    override val builtScriptElements
+        get() = (if (compose) composedChecks else checks).map { ScriptStringFragment(it.getCheckScript(environment)) }
 
     private val composedChecks
         get() = checks.map {
@@ -162,7 +162,7 @@ class QueryBuilder<out QF : QueryFactory, E : ScriptGenerationEnvironment>(
     private val queryFactory: QF, environment: E
 ) : BasicStageBuilder<ScenarioWithQueries<*, in QF>, E>(environment) {
 
-    fun build(body: QueryBuilder<QF, E>.() -> Unit) = apply(body).scriptFragments
+    fun build(body: QueryBuilder<QF, E>.() -> Unit) = apply(body).scriptElements
 
     /**
      * Populates the script with the queries and derived queries from the given bundle.
@@ -197,8 +197,8 @@ class QueryBuilder<out QF : QueryFactory, E : ScriptGenerationEnvironment>(
     override fun fromScenario(scenario: ScenarioWithQueries<*, in QF>) =
         fromScenarioQueries(scenario.queries(queryFactory))
 
-    override val builtScriptFragments: List<String>
-        get() = queries.map { it.getQueryScript() } + derivedQueries.map { it.getDerivedQueryScript() }
+    override val builtScriptElements
+        get() = queries.map { ScriptStringFragment(it.getQueryScript()) } + derivedQueries.map { ScriptStringFragment(it.getDerivedQueryScript()) }
 
     private val queries = mutableListOf<ScriptGenerationQuery<*>>()
     private val derivedQueries = mutableListOf<ScriptGenerationDerivedQuery<*>>()
@@ -214,7 +214,7 @@ abstract class GenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, ou
      * Adds a new block to the generate list, with the contents provided to the builder.
      */
     fun block(body: GenerateBlockBuilder.() -> Unit) =
-        subBlocks.add(BasicScriptBlock("generate", GenerateBlockBuilder().build(body)))
+        subBlocks.add(ScriptBlock("generate", GenerateBlockBuilder().build(body)))
 
     /**
      * Adds the generate blocks from this oracle scenario.
@@ -228,7 +228,7 @@ abstract class GenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, ou
 
     protected abstract fun actionGeneratorsFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>): List<List<ActionGenerator>>
 
-    private val subBlocks = mutableListOf<BasicScriptBlock>()
+    private val subBlocks = mutableListOf<ScriptBlock>()
 }
 
 /**
@@ -236,7 +236,7 @@ abstract class GenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, ou
  */
 class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
 
-    fun build(body: GenerateBlockBuilder.() -> Unit) = apply(body).scriptFragments
+    fun build(body: GenerateBlockBuilder.() -> Unit) = apply(body).scriptElements
 
     /**
      * Populates the script with these action generators.
@@ -247,7 +247,7 @@ class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
     }
 
     private val actionGenerators = mutableListOf<ScriptGenerationActionGenerator>()
-    override val builtScriptFragments get() = actionGenerators.map { it.getActionGeneratorScript() }
+    override val builtScriptElements get() = actionGenerators.map { ScriptStringFragment(it.getActionGeneratorScript()) }
 }
 
 class GivenGenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(

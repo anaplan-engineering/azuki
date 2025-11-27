@@ -116,8 +116,8 @@ class ScriptGenerationService<
         }
     }
 
-    inner class Given(internal val environment: E, scriptFragments: List<String>) :
-        BasicScriptBlock("given", scriptFragments) {
+    inner class Given(internal val environment: E, scriptElements: List<ScriptElement>) :
+        ScriptBlock("given", scriptElements) {
 
         /**
          * Constructs a whenever block by mixing in declarations from one or more sources.
@@ -132,7 +132,7 @@ class ScriptGenerationService<
             GivenGenerate(this, GivenGenerateBuilder<AF, QF, AGF>(actionGeneratorFactory).build(body))
     }
 
-    abstract inner class Whenever(scriptFragments: List<String>) : BasicScriptBlock("whenever", scriptFragments) {
+    abstract inner class Whenever(contents: List<ScriptElement>) : ScriptBlock("whenever", contents) {
 
         abstract val given: Given
         protected val environment get() = given.environment
@@ -141,7 +141,7 @@ class ScriptGenerationService<
     /**
      * A whenever block following a given block.
      */
-    inner class GivenWhenever(override val given: Given, scriptFragments: List<String>) : Whenever(scriptFragments) {
+    inner class GivenWhenever(override val given: Given, contents: List<ScriptElement>) : Whenever(contents) {
 
         /**
          * Finishes generation of an incomplete verifiable scenario.
@@ -161,8 +161,8 @@ class ScriptGenerationService<
             GivenWheneverQuery(this, QueryBuilder(queryQueryFactory, environment).build(body))
     }
 
-    inner class GivenWheneverThen(val whenever: GivenWhenever, scriptFragments: List<String>) :
-        BasicScriptBlock("then", scriptFragments) {
+    inner class GivenWheneverThen(val whenever: GivenWhenever, contents: List<ScriptElement>) :
+        ScriptBlock("then", contents) {
 
         internal val given get() = whenever.given
 
@@ -172,8 +172,8 @@ class ScriptGenerationService<
         fun verifiableScenario() = VerifiableScenarioScript(given, whenever, then = this)
     }
 
-    inner class GivenWheneverQuery(val whenever: GivenWhenever, scriptFragments: List<String>) :
-        BasicScriptBlock("query", scriptFragments) {
+    inner class GivenWheneverQuery(val whenever: GivenWhenever, contents: List<ScriptElement>) :
+        ScriptBlock("query", contents) {
 
         val given = whenever.given
 
@@ -186,7 +186,7 @@ class ScriptGenerationService<
     /**
      * A list of generate blocks in 'given' position.
      */
-    inner class GivenGenerate(val given: Given, subBlocks: List<ScriptBlock>) : CompositeScriptBlock(subBlocks) {
+    inner class GivenGenerate(val given: Given, subBlocks: List<ScriptBlock>) : ScriptElementList<ScriptBlock>(subBlocks) {
 
         /**
          * Constructs a whenever block by mixing in declarations from one or more sources.
@@ -200,8 +200,8 @@ class ScriptGenerationService<
     /**
      * A whenever block following a given-generate block.
      */
-    inner class GivenGenerateWhenever(val givenGenerate: GivenGenerate, scriptFragments: List<String>) :
-        Whenever(scriptFragments) {
+    inner class GivenGenerateWhenever(val givenGenerate: GivenGenerate, contents: List<ScriptElement>) :
+        Whenever(contents) {
 
         override val given = givenGenerate.given
 
@@ -216,7 +216,7 @@ class ScriptGenerationService<
      * A list of generate blocks in 'whenever' position.
      */
     inner class GivenGenerateWheneverGenerate(val whenever: GivenGenerateWhenever, subBlocks: List<ScriptBlock>) :
-        CompositeScriptBlock(subBlocks) {
+        ScriptElementList<ScriptBlock>(subBlocks) {
 
         val givenGenerate = whenever.givenGenerate
         val given = whenever.given
@@ -234,8 +234,8 @@ class ScriptGenerationService<
      * A verify block following a whenever-generate block.
      */
     inner class GivenGenerateWheneverGenerateVerify(
-        val wheneverGenerate: GivenGenerateWheneverGenerate, scriptFragments: List<String>
-    ) : BasicScriptBlock("verify", scriptFragments) {
+        val wheneverGenerate: GivenGenerateWheneverGenerate, contents: List<ScriptElement>
+    ) : ScriptBlock("verify", contents) {
 
         val whenever = wheneverGenerate.whenever
         val givenGenerate = wheneverGenerate.givenGenerate
@@ -249,7 +249,6 @@ class ScriptGenerationService<
         /**
          * Use the given and whenever blocks from this oracle scenario to start building towards a verifiable scenario.
          */
-        fun takeGivenAndWhenever() = GivenWhenever(given, whenever.scriptFragments)
+        fun takeGivenAndWhenever() = GivenWhenever(given, whenever.inner.elements)
     }
-
 }

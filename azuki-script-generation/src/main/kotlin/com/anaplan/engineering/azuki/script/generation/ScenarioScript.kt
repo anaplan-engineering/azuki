@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 /**
  * A scenario script.
  */
-abstract class ScenarioScript(val typeName: String, val blocks: List<ScriptBlock>) {
+abstract class ScenarioScript(val typeName: String, val blocks: ScriptElementList<ScriptBlock>) {
 
     /**
      * Renders the script.
@@ -17,21 +17,15 @@ abstract class ScenarioScript(val typeName: String, val blocks: List<ScriptBlock
     /**
      * Customisable renderer for scenario scripts.
      */
-    inner class Renderer(var format: Boolean = true, var inOuterBlock: Boolean = true, var indent: Int = 0) {
+    inner class Renderer(var useFormatter: Boolean = true, var inOuterBlock: Boolean = true, var indent: Int = 0) {
 
-        internal fun render(blocks: List<ScriptBlock>) = blocks.renderInner().maybeWrap().maybeFormat()
-
-        private fun List<ScriptBlock>.renderInner() = filterNot { it.isEmpty }.map { it.render(innerIndent) }
-
-        private fun List<String>.maybeWrap() = if (inOuterBlock) {
-            BasicScriptBlock("${typeName}Scenario", this).render(indent)
-        } else {
-            joinToString("\n\n")
+        internal fun render(blocks: ScriptElementList<ScriptBlock>) = blocks.doIf(inOuterBlock) {
+            ScriptBlock("${typeName}Scenario", it)
+        }.render(RenderContext(indent)).doIf(useFormatter) {
+            ScenarioFormatter.formatScenario(it)
         }
 
-        private fun String.maybeFormat() = if (format) ScenarioFormatter.formatScenario(this) else this
-
-        private val innerIndent get() = indent + if (inOuterBlock) 1 else 0
+        private fun <O, I : O> I.doIf(cond: Boolean, f: (I) -> O) = if (cond) f(this) else this
     }
 }
 
@@ -39,76 +33,116 @@ abstract class ScenarioScript(val typeName: String, val blocks: List<ScriptBlock
  * An incomplete result from an oracle (given-whenever, no then)
  */
 data class IncompleteScenarioScript(val given: ScriptBlock, val whenever: ScriptBlock) :
-    ScenarioScript("verifiable", listOf(given, whenever))
+    ScenarioScript("verifiable", ScriptElementList(given, whenever))
 
 /**
  * A verifiable scenario (given-whenever-then) script.
  */
 data class VerifiableScenarioScript(
-    val given: BasicScriptBlock, val whenever: BasicScriptBlock, val then: BasicScriptBlock
-) : ScenarioScript("verifiable", listOf(given, whenever, then))
+    val given: ScriptBlock, val whenever: ScriptBlock, val then: ScriptBlock
+) : ScenarioScript("verifiable", ScriptElementList(given, whenever, then))
 
 /**
  * A query scenario (given-whenever-query) script.
  */
 data class QueryScenarioScript(
-    val given: BasicScriptBlock, val whenever: BasicScriptBlock, val query: BasicScriptBlock
-) : ScenarioScript("query", listOf(given, whenever, query))
+    val given: ScriptBlock, val whenever: ScriptBlock, val query: ScriptBlock
+) : ScenarioScript("query", ScriptElementList(given, whenever, query))
 
 /**
  * An oracle scenario (given-generate-whenever-generate-verify) script.
  */
 data class OracleScenarioScript(
-    val given: BasicScriptBlock,
-    val givenGenerate: CompositeScriptBlock,
-    val whenever: BasicScriptBlock,
-    val whenGenerate: CompositeScriptBlock,
-    val verify: BasicScriptBlock
-) : ScenarioScript("oracle", buildList {
+    val given: ScriptBlock,
+    val givenGenerate: ScriptElementList<ScriptBlock>,
+    val whenever: ScriptBlock,
+    val whenGenerate: ScriptElementList<ScriptBlock>,
+    val verify: ScriptBlock
+) : ScenarioScript("oracle", ScriptElementList(buildList {
     add(given)
-    addAll(givenGenerate.subBlocks)
+    addAll(givenGenerate.elements)
     add(whenever)
-    addAll(whenGenerate.subBlocks)
+    addAll(whenGenerate.elements)
     add(verify)
-})
+}))
 
 /**
  * A component in a DSL script that is being generated.
  */
-interface ScriptBlock {
+interface ScriptElement {
 
     /**
-     * Is the block empty and therefore safe to skip?
+     * Is the element empty and therefore safe to skip?
      */
     val isEmpty: Boolean
 
     /**
-     * Renders the contents of the script block to a string.
-     * The indentation level affects block delimiters, not the actual contents of the script.
+     * Renders the contents of the script element to a string with the given context.
      */
-    fun render(indent: Int = 0): String
+    fun render(ctx: RenderContext = RenderContext()): String
 }
 
 /**
- * A standard DSL script block, with a header and several lines of DSL.
+ * A raw string fragment as a script element.
+ *
+ * Because we don't know anything about the contents of these elements, we can't inspect them or safely reformat them
+ * (aside from passing the end result to a general Kotlin formatter).  This means that they ignore indentation hints,
+ * for example.
  */
-open class BasicScriptBlock(val header: String, val scriptFragments: List<String>) : ScriptBlock {
+data class ScriptStringFragment(val fragment: String) : ScriptElement {
 
-    override val isEmpty = scriptFragments.isEmpty()
+    override val isEmpty: Boolean = fragment.isBlank()
 
-    override fun render(indent: Int) = indenting(indent).let { tab ->
-        scriptFragments.joinToString(prefix = "$tab$header {\n", postfix = "\n$tab}", separator = "\n")
+    override fun render(ctx: RenderContext) = fragment
+}
+
+/**
+ * A standard DSL script block with a header.
+ */
+open class ScriptBlock(val header: String, val inner: ScriptElementList<ScriptElement>) : ScriptElement {
+
+    constructor(header: String, contents: List<ScriptElement>) : this(header, ScriptElementList(contents))
+
+    override val isEmpty get() = inner.isEmpty
+    val elements get() = inner.elements
+
+    override fun render(ctx: RenderContext) = with(ctx) {
+        """
+        $tab$header {
+        ${inner.render(nextIndent)}
+        $tab}
+        """.trimIndent()
     }
-
-    private fun indenting(level: Int): String = "    ".repeat(level)
 }
 
 /**
- * A script block containing zero or more subordinate script blocks.
+ * A script element containing zero or more vertically joined script elements.
  */
-open class CompositeScriptBlock(val subBlocks: List<ScriptBlock>) : ScriptBlock {
+open class ScriptElementList<out E : ScriptElement>(val elements: List<E>) : ScriptElement {
 
-    override val isEmpty = subBlocks.isEmpty()
+    constructor(vararg elements: E) : this(listOf(*elements))
 
-    override fun render(indent: Int) = subBlocks.joinToString("\n") { it.render(indent) }
+    override val isEmpty get() = elements.isEmpty()
+
+    override fun render(ctx: RenderContext) = elements.filterNot { it.isEmpty }.joinToString("\n") { it.render(ctx) }
+}
+
+/**
+ * Context about how to render a script element, which is threaded through the rendering process.
+ */
+data class RenderContext(
+    val indent: Int = 0
+    // TODO: we might need other things here such as target line width
+    // TODO: should this be parameterised on implementation-specific data?
+) {
+
+    /**
+     * Creates a new context for the next indent level.
+     */
+    val nextIndent by lazy { copy(indent = indent + 1) }
+
+    /**
+     * A number of spaces corresponding to the indent level.
+     */
+    val tab by lazy { "    ".repeat(indent) }
 }

@@ -70,7 +70,7 @@ class JUnitTestCaseWriter(
         packageName = generatedTestPackage,
         scenarioScript = TicTacToeScriptGeneration.scenario.verifiableFromOracle(baseScenario, answers).render {
             indent = 2
-            format = false
+            useFormatter = false
         },
         implementationVersions = mapOf(
             testImplementation.implementationName to (testImplementation.version ?: "0.0.0"),

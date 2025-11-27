@@ -53,7 +53,7 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val then = TicTacToeScriptGeneration.scenario.verifiable(scenario).then.scriptFragments
+        val then = TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.map { it.render() }
         assertFalse { then.any { "boardHasState" in it } }
         expect(2) { then.count { "boardHasToken" in it } }
         expect(1) { then.count { "boardHasSpace" in it } }
@@ -84,7 +84,7 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val then = TicTacToeScriptGeneration.scenario.verifiable(scenario).then.scriptFragments
+        val then = TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.map { it.render() }
         assertFalse { then.any { "boardHasState" in it } }
         expect(4) { then.count { "boardHasToken" in it } }
         expect(3) { then.count { "boardHasSpace" in it } }
@@ -121,7 +121,7 @@ class TicTacToeScriptGeneratorTest {
             . | . | .
             O | . | X
             $triple)
-        """.trimIndent()) { TicTacToeScriptGeneration.scenario.verifiable(scenario).then.scriptFragments.singleOrNull() }
+        """.trimIndent()) { TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.singleOrNull()?.render() }
     }
 
     @Test
@@ -151,7 +151,7 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val then = TicTacToeScriptGeneration.scenario.verifiable(scenario).then.scriptFragments
+        val then = TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.map { it.render() }
         assertFalse { then.any { "boardHasState" in it } }
         expect(6) { then.count { "boardHasToken" in it } }
         expect(4) { then.count { "boardHasSpace" in it } }

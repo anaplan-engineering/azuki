@@ -5,9 +5,6 @@ import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.system.ActionFactory
-import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
-import com.anaplan.engineering.azuki.core.system.CheckFactory
-import com.anaplan.engineering.azuki.core.system.QueryFactory
 import org.junit.Assert
 import org.slf4j.LoggerFactory
 import kotlin.test.expect
