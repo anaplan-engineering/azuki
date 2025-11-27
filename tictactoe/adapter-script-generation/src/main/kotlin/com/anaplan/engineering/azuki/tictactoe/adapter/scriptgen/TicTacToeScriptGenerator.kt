@@ -3,11 +3,8 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 import com.anaplan.engineering.azuki.script.generation.*
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
+import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeRunnableScenario
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 
@@ -60,3 +57,15 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
             } else success(apply(fn))
     }
 }
+
+object TicTacToeRunnableScenarioClassGenerator : RunnableScenarioClassGenerator<TicTacToeRunnableScenario>(
+    ticTacToeStandardImports.toList(),
+    TicTacToeRunnableScenario::class)
+
+/**
+ * Default imports that should be added to any tic-tac-toe script (generated or parsed).
+ */
+val ticTacToeStandardImports = arrayOf(
+    "com.anaplan.engineering.azuki.tictactoe.dsl.*",
+    "com.anaplan.engineering.azuki.tictactoe.*"
+)
