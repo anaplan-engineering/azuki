@@ -175,6 +175,41 @@ class ScriptGenerationServiceStringFragmentsTest {
         }
     }
 
+    @Test
+    fun oracleScenarioPreserveEmptyWheneverIfWhenGenerate() {
+        expect("""
+            oracleScenario {
+                given {
+                    thereIsAFoo(fooA)
+                }
+                whenever {
+                }
+                generate {
+                    deleteARandomFoo()
+                }
+                verify {
+                    fooExists(fooA)
+                }
+            }
+        """.trimIndent()) {
+            generateAndRender {
+                given {
+                    fromFragments("thereIsAFoo(fooA)")
+                }.generate { /* this can be left empty */ }.whenever {
+                    /* leaving this empty shouldn't cause whenever to disappear!
+                     * it's needed to separate the given-generate and when-generate phases
+                     */
+                }.generate {
+                    block {
+                        fromFragments("deleteARandomFoo()")
+                    }
+                }.verify {
+                    fromFragments("fooExists(fooA)")
+                }.oracleScenario()
+            }
+        }
+    }
+
     companion object {
 
         fun generateAndRender(body: ScriptGenerationService<*, *, *, *, *, *>.() -> ScenarioScript) =

@@ -99,12 +99,16 @@ data class ScriptStringFragment(val fragment: String) : ScriptElement {
 /**
  * A standard DSL script block with a header.
  */
-open class ScriptBlock(val header: String, val inner: ScriptElementList<ScriptElement>) : ScriptElement {
+open class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptElement {
 
     constructor(header: String, contents: List<ScriptElement>) : this(header, ScriptElementList(contents))
 
     override val isEmpty get() = inner.isEmpty
-    val elements get() = inner.elements
+
+    /**
+     * Gets the script elements contained within this block.
+     */
+    val elements get() = if (inner is ScriptElementList<*>) inner.elements else listOf(inner)
 
     override fun render(ctx: RenderContext) = with(ctx) {
         """
@@ -122,7 +126,7 @@ open class ScriptElementList<out E : ScriptElement>(val elements: List<E>) : Scr
 
     constructor(vararg elements: E) : this(listOf(*elements))
 
-    override val isEmpty get() = elements.isEmpty()
+    override val isEmpty get() = elements.all { it.isEmpty }
 
     override fun render(ctx: RenderContext) = elements.filterNot { it.isEmpty }.joinToString("\n") { it.render(ctx) }
 }

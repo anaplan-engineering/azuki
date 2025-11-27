@@ -237,9 +237,23 @@ class ScriptGenerationService<
         val wheneverGenerate: GivenGenerateWheneverGenerate, contents: List<ScriptElement>
     ) : ScriptBlock("verify", contents) {
 
-        val whenever = wheneverGenerate.whenever
         val givenGenerate = wheneverGenerate.givenGenerate
         val given = wheneverGenerate.given
+
+        val whenever by lazy {
+            val existing = wheneverGenerate.whenever
+            if (existing.isEmpty && !wheneverGenerate.isEmpty) {
+                // We need the `whenever` block to appear to make sure the `generate` block after it is considered a
+                // whenever-generate block, but it's empty, so is liable to be omitted by the renderer.  Solve this by
+                // replacing it with a `whenever` block that always claims to be non-empty.
+                object : ScriptBlock("whenever", existing.elements) {
+
+                    override val isEmpty: Boolean = false
+                }
+            } else {
+                existing
+            }
+        }
 
         /**
          * Constructs an oracle scenario script with the given, when, verify, and generate blocks previously constructed.
@@ -249,6 +263,6 @@ class ScriptGenerationService<
         /**
          * Use the given and whenever blocks from this oracle scenario to start building towards a verifiable scenario.
          */
-        fun takeGivenAndWhenever() = GivenWhenever(given, whenever.inner.elements)
+        fun takeGivenAndWhenever() = GivenWhenever(given, whenever.elements)
     }
 }
