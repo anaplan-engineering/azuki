@@ -65,19 +65,25 @@ class ScriptGenerationTesting<S : BuildableScenario<*>>(
      * The initial and parsed scenario are not necessarily syntactically equivalent, as generation may have produced a
      * different DSL.  The two should be semantically equivalent (have the same actions, checks, queries, and so on),
      * but we can't check that here.
+     *
+     * Returns the regenerated scenario script, so that it can be used in further assertions.
      */
-    fun checkScenarioGeneration(scenario: S, initContext: ScenarioParsingContext.() -> Unit = {}) {
+    fun checkScenarioGeneration(scenario: S, initContext: ScenarioParsingContext.() -> Unit = {}): ScenarioScript {
         Log.debug("Generating script")
-        val generatedScript = generator(scenario).render()
-        Log.debug("Generated:\n{}", generatedScript)
+        val generatedScript = generator(scenario)
+        val renderedGeneratedScript = generatedScript.render()
+        Log.debug("Generated:\n{}", renderedGeneratedScript)
 
-        val parsedScenario = parser.parse(generatedScript, initContext)
+        val parsedScenario = parser.parse(renderedGeneratedScript, initContext)
 
         Log.debug("Regenerating script")
-        val regeneratedScript = generator(parsedScenario).render()
-        Log.debug("Regenerated:\n{}", regeneratedScript)
+        val regeneratedScript = generator(parsedScenario)
+        val renderedRegeneratedScript = regeneratedScript.render()
+        Log.debug("Regenerated:\n{}", renderedRegeneratedScript)
 
-        expect(regeneratedScript) { generatedScript }
+        expect(renderedRegeneratedScript) { renderedGeneratedScript }
+
+        return regeneratedScript
     }
 
     /**
