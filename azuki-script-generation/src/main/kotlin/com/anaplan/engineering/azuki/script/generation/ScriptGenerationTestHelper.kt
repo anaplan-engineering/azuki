@@ -80,6 +80,13 @@ class ScriptGenerationTesting<S : BuildableScenario<*>>(
         expect(regeneratedScript) { generatedScript }
     }
 
+    /**
+     * Asserts that two scenarios produce the same script, and returns the generated script.
+     */
+    fun assertScenariosProduceSameScript(expected: S, actual: S) = generator(expected).also {
+        expect(it.render()) { generator(actual).render() }
+    }
+
     companion object {
 
         private val Log = LoggerFactory.getLogger(this::class.java.declaringClass)

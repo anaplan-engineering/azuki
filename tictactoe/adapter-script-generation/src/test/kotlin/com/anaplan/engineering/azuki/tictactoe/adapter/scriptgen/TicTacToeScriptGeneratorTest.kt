@@ -31,6 +31,11 @@ class TicTacToeScriptGeneratorTest {
 
             override val defaultImports: ScenarioParsingContext.() -> Unit = { import(*ticTacToeStandardImports) }
         })
+
+        private fun renderedThenElements(scenario: TicTacToeVerifiableScenario): List<String> =
+            TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.map { it.render() }
+
+        private const val TRIPLE = "\"\"\""
     }
 
     @Test
@@ -53,7 +58,7 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val then = TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.map { it.render() }
+        val then = renderedThenElements(scenario)
         assertFalse { then.any { "boardHasState" in it } }
         expect(2) { then.count { "boardHasToken" in it } }
         expect(1) { then.count { "boardHasSpace" in it } }
@@ -84,7 +89,7 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val then = TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.map { it.render() }
+        val then = renderedThenElements(scenario)
         assertFalse { then.any { "boardHasState" in it } }
         expect(4) { then.count { "boardHasToken" in it } }
         expect(3) { then.count { "boardHasSpace" in it } }
@@ -117,11 +122,52 @@ class TicTacToeScriptGeneratorTest {
         }
 
         expect("""
-            boardHasState(${triple}gameA${triple}, ${triple}X | O | X
+            boardHasState(${TRIPLE}gameA${TRIPLE}, ${TRIPLE}X | O | X
             . | . | .
             O | . | X
-            $triple)
-        """.trimIndent()) { TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.singleOrNull()?.render() }
+            $TRIPLE)
+        """.trimIndent()) { renderedThenElements(scenario).singleOrNull() }
+    }
+
+    @Test
+    fun boardHasStateIsReconstructedIfFullySpecifiedEquivalenceCheck() {
+        val common: TicTacToeVerifiableScenario.() -> Unit = {
+            given {
+                thereIsANewGame(gameA)
+            }
+            whenever {
+                placeToken(gameA, X, 1 to 1)
+                placeToken(gameA, O, 3 to 1)
+                placeToken(gameA, X, 1 to 3)
+                placeToken(gameA, O, 1 to 2)
+                placeToken(gameA, X, 3 to 3)
+            }
+        }
+        val composed = verifiableScenario {
+            common()
+            then {
+                boardHasState(gameA, """
+                    X | O | X
+                    . | . | .
+                    O | . | X
+                """)
+            }
+        }
+        val decomposed = verifiableScenario {
+            common()
+            then {
+                boardHasToken(gameA, X, 1 to 1)
+                boardHasToken(gameA, O, 1 to 2)
+                boardHasToken(gameA, X, 1 to 3)
+                boardHasSpace(gameA, 2 to 1)
+                boardHasSpace(gameA, 2 to 2)
+                boardHasSpace(gameA, 2 to 3)
+                boardHasToken(gameA, O, 3 to 1)
+                boardHasSpace(gameA, 3 to 2)
+                boardHasToken(gameA, X, 3 to 3)
+            }
+        }
+        ScenarioScriptingTestUtils.assertScenariosProduceSameScript(composed, decomposed)
     }
 
     @Test
@@ -151,13 +197,11 @@ class TicTacToeScriptGeneratorTest {
             }
         }
 
-        val then = TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.map { it.render() }
+        val then = renderedThenElements(scenario)
         assertFalse { then.any { "boardHasState" in it } }
         expect(6) { then.count { "boardHasToken" in it } }
         expect(4) { then.count { "boardHasSpace" in it } }
     }
-
-    private val triple = "\"\"\""
 
     @Test
     fun moves() {
