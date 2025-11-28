@@ -99,7 +99,7 @@ data class ScriptStringFragment(val fragment: String) : ScriptElement {
 /**
  * A standard DSL script block with a header.
  */
-open class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptElement {
+data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptElement {
 
     constructor(header: String, contents: List<ScriptElement>) : this(header, ScriptElementList(contents))
 
@@ -117,12 +117,25 @@ open class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
         $tab}
         """.trimIndent()
     }
+
+    /**
+     * A script block with the same header and contents, but with `isEmpty` forced to false.
+     */
+    val withForcedNonEmpty get() = copy(inner = ForceNonEmptyElement(inner))
+}
+
+/**
+ * A script element that wraps another script element, but always reports that it is non-empty.
+ */
+data class ForceNonEmptyElement(val inner: ScriptElement) : ScriptElement by inner {
+
+    override val isEmpty: Boolean = false
 }
 
 /**
  * A script element containing zero or more vertically joined script elements.
  */
-open class ScriptElementList<out E : ScriptElement>(val elements: List<E>) : ScriptElement {
+data class ScriptElementList<out E : ScriptElement>(val elements: List<E>) : ScriptElement {
 
     constructor(vararg elements: E) : this(listOf(*elements))
 

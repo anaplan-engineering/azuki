@@ -116,8 +116,9 @@ class ScriptGenerationService<
         }
     }
 
-    inner class Given(internal val environment: E, scriptElements: List<ScriptElement>) :
-        ScriptBlock("given", scriptElements) {
+    inner class Given(internal val environment: E, contents: List<ScriptElement>) {
+
+        val block = ScriptBlock("given", contents)
 
         /**
          * Constructs a whenever block by mixing in declarations from one or more sources.
@@ -132,8 +133,9 @@ class ScriptGenerationService<
             GivenGenerate(this, GivenGenerateBuilder<AF, QF, AGF>(actionGeneratorFactory).build(body))
     }
 
-    abstract inner class Whenever(contents: List<ScriptElement>) : ScriptBlock("whenever", contents) {
+    abstract inner class Whenever(contents: List<ScriptElement>) {
 
+        val block = ScriptBlock("whenever", contents)
         abstract val given: Given
         protected val environment get() = given.environment
     }
@@ -146,7 +148,7 @@ class ScriptGenerationService<
         /**
          * Finishes generation of an incomplete verifiable scenario.
          */
-        fun incompleteScenario() = IncompleteScenarioScript(given, whenever = this)
+        fun incompleteScenario() = IncompleteScenarioScript(given.block, whenever = block)
 
         /**
          * Constructs a then block by mixing in checks from one or more sources.
@@ -161,32 +163,34 @@ class ScriptGenerationService<
             GivenWheneverQuery(this, QueryBuilder(queryQueryFactory, environment).build(body))
     }
 
-    inner class GivenWheneverThen(val whenever: GivenWhenever, contents: List<ScriptElement>) :
-        ScriptBlock("then", contents) {
+    inner class GivenWheneverThen(val whenever: GivenWhenever, contents: List<ScriptElement>) {
 
+        val block = ScriptBlock("then", contents)
         internal val given get() = whenever.given
 
         /**
          * Constructs a verifiable scenario script with the given, when, and then blocks previously constructed.
          */
-        fun verifiableScenario() = VerifiableScenarioScript(given, whenever, then = this)
+        fun verifiableScenario() = VerifiableScenarioScript(given.block, whenever.block, block)
     }
 
-    inner class GivenWheneverQuery(val whenever: GivenWhenever, contents: List<ScriptElement>) :
-        ScriptBlock("query", contents) {
+    inner class GivenWheneverQuery(val whenever: GivenWhenever, contents: List<ScriptElement>) {
 
+        val block = ScriptBlock("query", contents)
         val given = whenever.given
 
         /**
          * Constructs a query scenario script with the given, when, and query blocks previously constructed.
          */
-        fun queryScenario() = QueryScenarioScript(given, whenever, query = this)
+        fun queryScenario() = QueryScenarioScript(given.block, whenever.block, block)
     }
 
     /**
      * A list of generate blocks in 'given' position.
      */
-    inner class GivenGenerate(val given: Given, subBlocks: List<ScriptBlock>) : ScriptElementList<ScriptBlock>(subBlocks) {
+    inner class GivenGenerate(val given: Given, subBlocks: List<ScriptBlock>) {
+
+        val blockList = ScriptElementList<ScriptBlock>(subBlocks)
 
         /**
          * Constructs a whenever block by mixing in declarations from one or more sources.
@@ -215,9 +219,9 @@ class ScriptGenerationService<
     /**
      * A list of generate blocks in 'whenever' position.
      */
-    inner class GivenGenerateWheneverGenerate(val whenever: GivenGenerateWhenever, subBlocks: List<ScriptBlock>) :
-        ScriptElementList<ScriptBlock>(subBlocks) {
+    inner class GivenGenerateWheneverGenerate(val whenever: GivenGenerateWhenever, subBlocks: List<ScriptBlock>) {
 
+        val blockList = ScriptElementList<ScriptBlock>(subBlocks)
         val givenGenerate = whenever.givenGenerate
         val given = whenever.given
 
@@ -235,34 +239,34 @@ class ScriptGenerationService<
      */
     inner class GivenGenerateWheneverGenerateVerify(
         val wheneverGenerate: GivenGenerateWheneverGenerate, contents: List<ScriptElement>
-    ) : ScriptBlock("verify", contents) {
+    ) {
 
+        val block = ScriptBlock("verify", contents)
         val givenGenerate = wheneverGenerate.givenGenerate
         val given = wheneverGenerate.given
+        val whenever = wheneverGenerate.whenever
 
-        val whenever by lazy {
-            val existing = wheneverGenerate.whenever
-            if (existing.isEmpty && !wheneverGenerate.isEmpty) {
-                // We need the `whenever` block to appear to make sure the `generate` block after it is considered a
-                // whenever-generate block, but it's empty, so is liable to be omitted by the renderer.  Solve this by
-                // replacing it with a `whenever` block that always claims to be non-empty.
-                object : ScriptBlock("whenever", existing.elements) {
-
-                    override val isEmpty: Boolean = false
-                }
-            } else {
-                existing
-            }
+        // We need the `whenever` block to appear to make sure the `generate` block after it is considered a
+        // whenever-generate block, but it's empty, so is liable to be omitted by the renderer.  Solve this by
+        // replacing it with a `whenever` block that always claims to be non-empty.
+        private val oracleWheneverBlock by lazy {
+            val existing = wheneverGenerate.whenever.block
+            val mustGenerateWhenever = existing.isEmpty && !wheneverGenerate.blockList.isEmpty
+            if (mustGenerateWhenever) existing.withForcedNonEmpty else existing
         }
 
         /**
          * Constructs an oracle scenario script with the given, when, verify, and generate blocks previously constructed.
          */
-        fun oracleScenario() = OracleScenarioScript(given, givenGenerate, whenever, wheneverGenerate, verify = this)
+        fun oracleScenario() = OracleScenarioScript(given.block,
+            givenGenerate.blockList,
+            oracleWheneverBlock,
+            wheneverGenerate.blockList,
+            this.block)
 
         /**
          * Use the given and whenever blocks from this oracle scenario to start building towards a verifiable scenario.
          */
-        fun takeGivenAndWhenever() = GivenWhenever(given, whenever.elements)
+        fun takeGivenAndWhenever() = GivenWhenever(given, whenever.block.elements)
     }
 }
