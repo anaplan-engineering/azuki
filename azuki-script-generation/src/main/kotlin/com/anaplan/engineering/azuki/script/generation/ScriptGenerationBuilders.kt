@@ -19,6 +19,7 @@ import com.anaplan.engineering.azuki.core.system.UnsupportedAction
 import com.anaplan.engineering.azuki.core.system.UnsupportedActionGenerator
 import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
 import com.anaplan.engineering.azuki.core.system.UnsupportedQuery
+import com.anaplan.engineering.azuki.core.system.ValidatableAnswer
 import com.anaplan.engineering.azuki.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.declaration.Declaration
 import com.anaplan.engineering.azuki.declaration.DeclarationBuilderFactory
@@ -133,6 +134,12 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
      */
     fun fromAnswers(answers: Collection<Answer<*, in CF>>) =
         fromChecks(answers.flatMap { it.createChecks(checkFactory) })
+
+    /**
+     * Populates the script with checks derived from these validatable answers.
+     */
+    fun fromValidatableAnswers(answers: Collection<ValidatableAnswer<*, in CF>>) =
+        fromChecks(answers.flatMap { it.createValidationChecks(checkFactory)})
 
     /**
      * Populates the script with these checks.
