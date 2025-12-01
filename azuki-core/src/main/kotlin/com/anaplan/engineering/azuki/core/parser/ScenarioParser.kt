@@ -2,7 +2,7 @@ package com.anaplan.engineering.azuki.core.parser
 
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 
-interface ScenarioParser<S : BuildableScenario<*>> {
+interface ScenarioParser<out S : BuildableScenario<*>> {
     /**
      * Parses a scenario from a string and additional imports prefix.
      *

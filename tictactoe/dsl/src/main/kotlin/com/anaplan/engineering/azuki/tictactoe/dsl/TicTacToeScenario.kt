@@ -29,6 +29,21 @@ interface TicTacToeBuildableScenario : BuildableScenario<TicTacToeActionFactory>
     fun whenever(whenFunction: TicTacToeWhen.() -> Unit)
 }
 
+open class TicTacToeRunnableScenario : RunnableScenario<
+    TicTacToeActionFactory,
+    TicTacToeCheckFactory,
+    TicTacToeQueryFactory,
+    TicTacToeActionGeneratorFactory,
+    TicTacToeGiven,
+    TicTacToeWhen,
+    TicTacToeThen,
+    TicTacToeVerify,
+    TicTacToeQueries,
+    TicTacToeGenerate,
+    TicTacToeRegardlessOf,
+    NoSystemDefaults,
+    >(TicTacToeDslProvider)
+
 interface TicTacToeVerifiableScenario : VerifiableScenario<TicTacToeActionFactory, TicTacToeCheckFactory>,
     TicTacToeBuildableScenario {
 
@@ -43,7 +58,8 @@ interface TicTacToeOracleScenario :
     fun verify(verifyFunction: TicTacToeVerify.() -> Unit)
 }
 
-interface TicTacToeQueryScenario : ScenarioWithQueries<TicTacToeActionFactory, TicTacToeQueryFactory>, TicTacToeBuildableScenario {
+interface TicTacToeQueryScenario : ScenarioWithQueries<TicTacToeActionFactory, TicTacToeQueryFactory>,
+    TicTacToeBuildableScenario {
 
     fun query(queryFunction: TicTacToeQueries.() -> Unit)
 }

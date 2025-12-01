@@ -1,25 +1,19 @@
 package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.script.generation.*
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeActionGeneratorFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
+import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeRunnableScenario
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 
-class TicTacToeScriptGenerator(environment: TicTacToeGenerationEnvironment = TicTacToeGenerationEnvironment()) :
-    VerificationCapableScriptGenerator<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, TicTacToeDeclarationState, TicTacToeGenerationEnvironment>(
-        TicTacToeScriptGenerationActionFactory,
-        TicTacToeScriptGenerationCheckFactory,
-        ::TicTacToeDeclarationState,
-        environment,
-        TicTacToeScriptGenerationActionGeneratorFactory,
-        TicTacToeScriptGenerationQueryQueryFactory,
-        TicTacToeScriptGenerationVerificationQueryFactory,
-    )
+val TicTacToeScriptGeneration = ScriptGenerationService.new(TicTacToeScriptGenerationActionFactory,
+    TicTacToeScriptGenerationCheckFactory,
+    ::TicTacToeDeclarationState).withEnvironmentFactory(::TicTacToeGenerationEnvironment)
+    .withActionGeneratorFactory(TicTacToeScriptGenerationActionGeneratorFactory)
+    .withQueryFactories(TicTacToeScriptGenerationQueryQueryFactory, TicTacToeScriptGenerationVerificationQueryFactory)
+    .build()
 
 // None of the declaration builders for TicTacToe use the environment:
 typealias TicTacToeScriptGenerationDeclarationBuilder<D> = ScriptGenerationDeclarationBuilder<TicTacToeGenerationEnvironment, D>
@@ -58,8 +52,21 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
         fun hasToken(player: String, position: Position) = at(position) { tokens[position] = player }
         fun hasSpace(position: Position) = at(position) { spaces.add(position) }
 
-        private fun at(position: Position, fn: BoardCheckState.() -> Unit) = if (position in tokens || position in spaces) {
-            failure(IllegalStateException("position $position is checked already"))
-        } else success(apply(fn))
+        private fun at(position: Position, fn: BoardCheckState.() -> Unit) =
+            if (position in tokens || position in spaces) {
+                failure(IllegalStateException("position $position is checked already"))
+            } else success(apply(fn))
     }
 }
+
+object TicTacToeRunnableScenarioClassGenerator : RunnableScenarioClassGenerator<TicTacToeRunnableScenario>(
+    ticTacToeStandardImports.toList(),
+    TicTacToeRunnableScenario::class)
+
+/**
+ * Default imports that should be added to any tic-tac-toe script (generated or parsed).
+ */
+val ticTacToeStandardImports = arrayOf(
+    "com.anaplan.engineering.azuki.tictactoe.dsl.*",
+    "com.anaplan.engineering.azuki.tictactoe.*"
+)

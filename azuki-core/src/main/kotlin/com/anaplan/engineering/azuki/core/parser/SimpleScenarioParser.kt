@@ -13,7 +13,7 @@ import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
-open class SimpleScenarioParser<S : BuildableScenario<*>> : ScenarioParser<S> {
+open class SimpleScenarioParser<out S : BuildableScenario<*>> : ScenarioParser<S> {
     private val engine by lazy {
         BasicJvmScriptingHost()
     }

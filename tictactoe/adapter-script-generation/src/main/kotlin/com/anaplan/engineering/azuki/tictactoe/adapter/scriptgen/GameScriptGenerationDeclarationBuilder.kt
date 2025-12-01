@@ -24,7 +24,8 @@ class GameScriptGenerationDeclarationBuilder(declaration: GameDeclaration) :
                 gameOrder,
                 declaration.name,
                 declaration.orderName,
-                declaration.moves.pretty(3, 3),
+                // add a newline to avoid """ and board being on same line
+                "\n" + declaration.moves.pretty(3, 3),
             )
         }
 

@@ -1,5 +1,8 @@
 package com.anaplan.engineering.azuki.script.generation
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 fun interface CheckComposer<E : ScriptGenerationEnvironment> {
 
     /**
@@ -12,6 +15,11 @@ fun interface CheckComposer<E : ScriptGenerationEnvironment> {
      * Fails if composition isn't possible, at which point we should return the original check.
      */
     fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>>
+
+    companion object {
+
+        internal val Log: Logger = LoggerFactory.getLogger(CheckComposer::class.java)
+    }
 }
 
 /**
@@ -64,4 +72,30 @@ class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>
     override fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>> = bind { compose(environment) }
 
     private fun <T> bind(fn: S.() -> Result<T>) = _inner.fold(onSuccess = fn, onFailure = { Result.failure(it) })
+}
+
+internal fun <E : ScriptGenerationEnvironment> composeChecks(
+    environment: E, checksWithComposers: List<Pair<ScriptGenerationCheck<E>, CheckComposer<E>?>>
+): List<ScriptGenerationCheck<E>> {
+    val succeeded = mutableSetOf<CheckComposer<E>>()
+    val failed = mutableSetOf<CheckComposer<E>>()
+    val composedChecks = checksWithComposers.flatMap { (check, composer) ->
+        when (composer) {
+            // non-composable checks pass through unaltered
+            // (also, avoid re-evaluating failed compositions as we assume they'll fail again)
+            null, in failed -> listOf(check)
+            // only allow a successful composers to be composed once, to avoid duplicates
+            in succeeded -> emptyList()
+            // otherwise, we're seeing a composable check for the first time
+            else -> composer.compose(environment).fold(onSuccess = {
+                succeeded.add(composer)
+                it
+            }, onFailure = {
+                failed.add(composer)
+                CheckComposer.Log.info("check {} failed to compose: {} ({})", check, it::class.simpleName, it.message)
+                listOf(check)
+            })
+        }
+    }
+    return composedChecks.distinct()
 }

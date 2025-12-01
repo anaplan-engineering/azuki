@@ -3,9 +3,10 @@ package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
 import com.anaplan.engineering.azuki.core.system.Answer
+import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator
-import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerator
+import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
@@ -53,7 +54,8 @@ class JUnitTestCaseWriter(
         targetDir.mkdirs()
         Log.debug("Writing test class={} targetDir={}", runnableScenarioClass.className, targetDir)
         val testFile = File(targetDir, "${runnableScenarioClass.className}.kt")
-        testFile.writeText(runnableScenarioClass.definition)
+        val definition = ScenarioFormatter.formatScenario(runnableScenarioClass.definition)
+        testFile.writeText(definition)
         return testFile
     }
 
@@ -66,13 +68,7 @@ class JUnitTestCaseWriter(
         // TODO - add utility function for arbitrary name
         className = generatedTestClass ?: ("Generated_" + UUID.randomUUID().toString().replace("-", "_")),
         packageName = generatedTestPackage,
-        scenarioScript = TicTacToeScriptGenerator().let {
-            """
-                ${it.generateGivenScript(baseScenario)}
-                ${it.generateWheneverScript(baseScenario)}
-                ${it.generateThenScript(answers)}
-            """
-        },
+        scenarioScript = TicTacToeScriptGeneration.generateVerifiableScenario(baseScenario, answers),
         implementationVersions = mapOf(
             testImplementation.implementationName to (testImplementation.version ?: "0.0.0"),
             verifyingImplementation.implementationName to (verifyingImplementation.version ?: "0.0.0"),
