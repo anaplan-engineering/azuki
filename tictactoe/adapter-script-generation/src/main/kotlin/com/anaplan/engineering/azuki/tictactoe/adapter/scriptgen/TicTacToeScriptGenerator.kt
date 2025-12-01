@@ -8,11 +8,12 @@ import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeRunnableScenario
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 
-val TicTacToeScriptGeneration = ScriptGenerationService.create(TicTacToeScriptGenerationActionFactory,
+val TicTacToeScriptGeneration = ScriptGenerationService.new(TicTacToeScriptGenerationActionFactory,
     TicTacToeScriptGenerationCheckFactory,
     ::TicTacToeDeclarationState).withEnvironmentFactory(::TicTacToeGenerationEnvironment)
     .withActionGeneratorFactory(TicTacToeScriptGenerationActionGeneratorFactory)
     .withQueryFactories(TicTacToeScriptGenerationQueryQueryFactory, TicTacToeScriptGenerationVerificationQueryFactory)
+    .build()
 
 // None of the declaration builders for TicTacToe use the environment:
 typealias TicTacToeScriptGenerationDeclarationBuilder<D> = ScriptGenerationDeclarationBuilder<TicTacToeGenerationEnvironment, D>

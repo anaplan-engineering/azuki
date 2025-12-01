@@ -7,15 +7,11 @@ import com.anaplan.engineering.azuki.declaration.*
  * The main endpoint for script generation tasks.
  */
 class ScriptGenerationService<
-    // mandatory factories
     out AF : ActionFactory,
     out CF : CheckFactory,
-    // optional factories (these require calling 'withXYZFactory')
     out QF : QueryFactory,
     out AGF : ActionGeneratorFactory,
-    // mandatory non-factory parameters
     DS : DeclarationState,
-    // optional non-factory parameters (these require calling 'withXYZ')
     E : ScriptGenerationEnvironment,
     > private constructor(
     // mandatory parameters
@@ -30,49 +26,87 @@ class ScriptGenerationService<
 ) {
 
     /**
-     * Provides ready-made usage patterns for script generation of a whole scenario, from a whole scenario.
+     * Incremental builder for script generators.
      */
-    val scenario = ScriptGenerationScenarioPatterns(this)
+    class Builder<
+        // mandatory factories
+        out AF : ActionFactory,
+        out CF : CheckFactory,
+        // optional factories (these require calling 'withXYZFactory')
+        out QF : QueryFactory,
+        out AGF : ActionGeneratorFactory,
+        // mandatory non-factory parameters
+        DS : DeclarationState,
+        // optional non-factory parameters (these require calling 'withXYZ')
+        E : ScriptGenerationEnvironment,
+        >(
+        // mandatory parameters
+        internal val actionFactory: AF,
+        internal val checkFactory: CF,
+        internal val declarationStateFactory: DeclarationStateFactory<DS>,
+        // optional parameters
+        internal val environmentFactory: ScriptGenerationEnvironmentFactory<E>,
+        internal val queryQueryFactory: QF,
+        internal val verifyQueryFactory: QF,
+        internal val actionGeneratorFactory: AGF,
+    ) {
 
-    /**
-     * Adds an environment factory to this service, changing the type of accepted scenarios accordingly.
-     */
-    fun <N : ScriptGenerationEnvironment> withEnvironmentFactory(new: ScriptGenerationEnvironmentFactory<N>) =
-        ScriptGenerationService(
+        fun build() = ScriptGenerationService(
             actionFactory,
             checkFactory,
             declarationStateFactory,
-            environmentFactory = new,
+            environmentFactory,
             queryQueryFactory,
             verifyQueryFactory,
             actionGeneratorFactory,
         )
 
-    /**
-     * Adds query factories to this service, changing the type of accepted scenarios accordingly.
-     */
-    fun <N : QueryFactory> withQueryFactories(query: N, verify: N) = ScriptGenerationService(
-        actionFactory,
-        checkFactory,
-        declarationStateFactory,
-        environmentFactory,
-        queryQueryFactory = query,
-        verifyQueryFactory = verify,
-        actionGeneratorFactory,
-    )
+        /**
+         * Adds an environment factory to this service, changing the type of accepted scenarios accordingly.
+         */
+        fun <N : ScriptGenerationEnvironment> withEnvironmentFactory(new: ScriptGenerationEnvironmentFactory<N>) =
+            Builder(
+                actionFactory,
+                checkFactory,
+                declarationStateFactory,
+                environmentFactory = new,
+                queryQueryFactory,
+                verifyQueryFactory,
+                actionGeneratorFactory,
+            )
+
+        /**
+         * Adds query factories to this service, changing the type of accepted scenarios accordingly.
+         */
+        fun <N : QueryFactory> withQueryFactories(query: N, verify: N) = Builder(
+            actionFactory,
+            checkFactory,
+            declarationStateFactory,
+            environmentFactory,
+            queryQueryFactory = query,
+            verifyQueryFactory = verify,
+            actionGeneratorFactory,
+        )
+
+        /**
+         * Adds an action generation factory to this service, changing the type of accepted scenarios accordingly.
+         */
+        fun <N : ActionGeneratorFactory> withActionGeneratorFactory(new: N) = Builder(
+            actionFactory,
+            checkFactory,
+            declarationStateFactory,
+            environmentFactory,
+            queryQueryFactory,
+            verifyQueryFactory,
+            actionGeneratorFactory = new,
+        )
+    }
 
     /**
-     * Adds an action generation factory to this service, changing the type of accepted scenarios accordingly.
+     * Provides ready-made usage patterns for script generation of a whole scenario, from a whole scenario.
      */
-    fun <N : ActionGeneratorFactory> withActionGeneratorFactory(new: N) = ScriptGenerationService(
-        actionFactory,
-        checkFactory,
-        declarationStateFactory,
-        environmentFactory,
-        queryQueryFactory,
-        verifyQueryFactory,
-        actionGeneratorFactory = new,
-    )
+    val scenario = ScriptGenerationScenarioPatterns(this)
+
 
     /**
      * Constructs a given block by mixing in declarations from one or more sources.
@@ -84,14 +118,14 @@ class ScriptGenerationService<
     companion object {
 
         /**
-         * Constructs a basic script generation service.
+         * Starts building a basic script generation service.
          *
          * If your implementation of Azuki uses a script generation environment, or supports queries and/or action
          * generators, you will need to call additional methods on the result of this method to pass them in.
          */
-        fun <AF : ActionFactory, CF : CheckFactory, DS : DeclarationState> create(
+        fun <AF : ActionFactory, CF : CheckFactory, DS : DeclarationState> new(
             actionFactory: AF, checkFactory: CF, declarationStateFactory: DeclarationStateFactory<DS>
-        ) = ScriptGenerationService(
+        ) = Builder(
             actionFactory,
             checkFactory,
             declarationStateFactory,
@@ -108,11 +142,11 @@ class ScriptGenerationService<
          * create a `ScriptGenerationService` to be able to generate scripts from scenarios and system definitions.
          */
         val standalone by lazy {
-            create(
+            new(
                 object : ActionFactory {},
                 object : CheckFactory {},
                 { object : DeclarationState() {} },
-            )
+            ).build()
         }
     }
 

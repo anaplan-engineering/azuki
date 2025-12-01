@@ -4,9 +4,9 @@ import com.anaplan.engineering.azuki.graphs.adapter.declaration.GraphDeclaration
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import com.anaplan.engineering.azuki.script.generation.ScriptingHelper
 
-val GraphScriptGeneration = ScriptGenerationService.create(GraphScriptGenerationActionFactory,
+val GraphScriptGeneration = ScriptGenerationService.new(GraphScriptGenerationActionFactory,
     GraphScriptGenerationCheckFactory,
-    ::GraphDeclarationState)
+    ::GraphDeclarationState).build()
 
 val GraphScriptingHelper = ScriptingHelper(mapOf(
     String::class to { v: Any? -> "\"${v.toString()}\"" },
