@@ -35,7 +35,9 @@ class ScriptGenerationScenarioPatterns<out AF : ActionFactory, out CF : CheckFac
         fromScenario(oracle)
     }.whenever {
         fromScenario(oracle)
-    }.incompleteScenario()
+    }.then {
+        // no answers
+    }.verifiableScenario()
 
     /**
      * Generates a verifiable script using the setup from an oracle and checks from a corresponding collection of answers.

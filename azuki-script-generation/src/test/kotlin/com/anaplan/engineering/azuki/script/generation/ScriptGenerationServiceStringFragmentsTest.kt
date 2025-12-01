@@ -27,7 +27,8 @@ class ScriptGenerationServiceStringFragmentsTest {
                     fromFragments("thereIsAFoo(fooA)", "thereIsAFoo(fooB)")
                 }.whenever {
                     fromFragments("deleteFoo(fooA)")
-                }.incompleteScenario()
+                }.then {
+                }.verifiableScenario()
             }
         }
     }

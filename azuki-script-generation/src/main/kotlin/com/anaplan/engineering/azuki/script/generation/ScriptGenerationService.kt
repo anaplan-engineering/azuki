@@ -180,11 +180,6 @@ class ScriptGenerationService<
     inner class GivenWhenever(override val given: Given, contents: List<ScriptElement>) : Whenever(contents) {
 
         /**
-         * Finishes generation of an incomplete verifiable scenario.
-         */
-        fun incompleteScenario() = IncompleteScenarioScript(given.block, whenever = block)
-
-        /**
          * Constructs a then block by mixing in checks from one or more sources.
          */
         fun then(body: ThenBuilder<CF, E>.() -> Unit) =

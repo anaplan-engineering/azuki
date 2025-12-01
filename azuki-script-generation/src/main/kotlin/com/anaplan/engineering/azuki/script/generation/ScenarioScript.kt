@@ -88,12 +88,6 @@ fun interface Formatter {
 }
 
 /**
- * An incomplete result from an oracle (given-whenever, no then)
- */
-data class IncompleteScenarioScript(val given: ScriptBlock, val whenever: ScriptBlock) :
-    ScenarioScript("verifiable", ScriptElementList(given, whenever))
-
-/**
  * A verifiable scenario (given-whenever-then) script.
  */
 data class VerifiableScenarioScript(

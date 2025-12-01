@@ -25,7 +25,9 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
         val answers = (taskResult as? List<*>)?.filterIsInstance<Answer<*, TicTacToeCheckFactory>>()
 
         if (queryingOracle == null) {
-            verifiableScenarioBuilder.incompleteScenario().write("$scenarioName-gen-err.scn") {
+            verifiableScenarioBuilder.then {
+                // deliberately leave empty
+            }.verifiableScenario().write("$scenarioName-gen-err.scn") {
                 // This isn't a full verifiable scenario, so don't present it as one
                 scriptType = ScriptType.Inline
             }
