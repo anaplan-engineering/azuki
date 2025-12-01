@@ -160,9 +160,13 @@ class ScriptGenerationServiceStringFragmentsTest {
             generateAndRender {
                 given {
                     fromFragments("thereIsAFoo(fooA)")
-                }.generate { /* this can be left empty */ }.whenever {
+                }.generate {
+                    // this can be left empty
+                }.whenever {
                     fromFragments("deleteFoo(fooA)")
-                }.generate { /* this can be left empty */ }.verify {
+                }.generate {
+                    // this can be left empty
+                }.verify {
                     fromFragments("fooExists(fooA)")
                 }.oracleScenario
             }
