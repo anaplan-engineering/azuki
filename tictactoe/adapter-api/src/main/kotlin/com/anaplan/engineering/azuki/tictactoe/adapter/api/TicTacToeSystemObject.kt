@@ -12,6 +12,7 @@ fun MoveMap.pretty(rowMax:Int, colMax: Int): String = buildString {
             append(getOrDefault(Position(row, col), "."))
             append(" | ")
         }
-        append("${getOrDefault(Position(row, colMax), ".")}\n")
+        append(getOrDefault(Position(row, colMax), "."))
+        appendLine()
     }
 }

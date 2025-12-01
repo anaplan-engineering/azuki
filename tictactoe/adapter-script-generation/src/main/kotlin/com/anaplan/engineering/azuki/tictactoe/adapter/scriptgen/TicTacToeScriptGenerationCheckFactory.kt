@@ -40,7 +40,9 @@ object GameScriptGenerationCheckFactory : GameCheckFactory {
     }
 
     override fun hasState(gameName: String, moves: MoveMap) = TicTacToeScriptGenerationCheck {
-        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasState, gameName, moves.pretty(3, 3))
+        TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasState, gameName,
+            // add a newline to avoid """ and board being on same line
+            "\n" + moves.pretty(3, 3))
     }
 
     override fun isComplete(gameName: String) = TicTacToeScriptGenerationCheck {
