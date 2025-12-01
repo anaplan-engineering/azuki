@@ -14,7 +14,7 @@ class GraphScriptGeneratorTest {
         const val graphA = "graphA"
 
         val ScenarioScriptingTestUtils = ScriptGenerationTesting(generator = {
-            GraphScriptGeneration.scenario.arbitrary(
+            GraphScriptGeneration.scenario.refineScenarioType(
                 it,
                 asVerifiable = { this as? GraphVerifiableScenario },
             )

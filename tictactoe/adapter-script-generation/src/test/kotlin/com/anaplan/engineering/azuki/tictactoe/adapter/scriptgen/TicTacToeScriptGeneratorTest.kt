@@ -23,7 +23,7 @@ class TicTacToeScriptGeneratorTest {
         const val O = "O"
 
         val ScenarioScriptingTestUtils = ScriptGenerationTesting(generator = {
-            TicTacToeScriptGeneration.scenario.arbitrary(it,
+            TicTacToeScriptGeneration.scenario.refineScenarioType(it,
                 { this as? TicTacToeVerifiableScenario },
                 { this as? TicTacToeOracleScenario },
                 { this as? TicTacToeQueryScenario })

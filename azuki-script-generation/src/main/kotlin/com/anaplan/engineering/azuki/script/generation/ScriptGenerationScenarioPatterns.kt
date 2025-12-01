@@ -82,8 +82,7 @@ class ScriptGenerationScenarioPatterns<out AF : ActionFactory, out CF : CheckFac
     /**
      * Generates a script for an oracle scenario.
      */
-    fun oracle(scenario: OracleScenario<in AF, in QF, in AGF>) =
-        oracleBuilder(scenario).oracleScenario()
+    fun oracle(scenario: OracleScenario<in AF, in QF, in AGF>) = oracleBuilder(scenario).oracleScenario()
 
     /**
      * Generates a script for a scenario whose kind (verifiable, oracle, query) isn't known until run-time.
@@ -92,15 +91,15 @@ class ScriptGenerationScenarioPatterns<out AF : ActionFactory, out CF : CheckFac
      * scenario kinds the generator supports.  These should usually be implemented as `{ this as? NarrowScenarioType }`.
      * If a projection method is not given, scenarios of that kind won't be handled and will result in an exception.
      */
-    fun <S : BuildableScenario<in AF>> arbitrary(
+    fun <S : BuildableScenario<in AF>> refineScenarioType(
         scenario: S,
         asVerifiable: S.() -> VerifiableScenario<in AF, in CF>? = { null },
         asOracle: S.() -> OracleScenario<in AF, in QF, in AGF>? = { null },
         asQuery: S.() -> ScenarioWithQueries<in AF, in QF>? = { null },
-    ) = listOf<S.() -> ScenarioScript?>({ asVerifiable()?.let { service.scenario.verifiable(it) } },
-        { asOracle()?.let { service.scenario.oracle(it) } },
-        { asQuery()?.let { service.scenario.query(it) } },
-        { throw IllegalArgumentException("unsupported scenario type: ${this::class.simpleName}") }).firstNotNullOf {
-        it(scenario)
-    }
+    ) = listOf(
+        asVerifiable(scenario)?.let { service.scenario.verifiable(it) },
+        asOracle(scenario)?.let { service.scenario.oracle(it) },
+        asQuery(scenario)?.let { service.scenario.query(it) },
+    ).firstNotNullOfOrNull { it }
+        ?: throw IllegalArgumentException("unsupported scenario type: ${this::class.simpleName}")
 }
