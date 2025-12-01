@@ -18,7 +18,7 @@ fun interface CheckComposer<E : ScriptGenerationEnvironment> {
 
     companion object {
 
-        internal val Log : Logger = LoggerFactory.getLogger(CheckComposer::class.java)
+        internal val Log: Logger = LoggerFactory.getLogger(CheckComposer::class.java)
     }
 }
 
@@ -74,7 +74,9 @@ class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>
     private fun <T> bind(fn: S.() -> Result<T>) = _inner.fold(onSuccess = fn, onFailure = { Result.failure(it) })
 }
 
-internal fun <E: ScriptGenerationEnvironment> composeChecks(environment: E, checksWithComposers: List<Pair<ScriptGenerationCheck<E>, CheckComposer<E>?>>): List<ScriptGenerationCheck<E>> {
+internal fun <E : ScriptGenerationEnvironment> composeChecks(
+    environment: E, checksWithComposers: List<Pair<ScriptGenerationCheck<E>, CheckComposer<E>?>>
+): List<ScriptGenerationCheck<E>> {
     val succeeded = mutableSetOf<CheckComposer<E>>()
     val failed = mutableSetOf<CheckComposer<E>>()
     val composedChecks = checksWithComposers.flatMap { (check, composer) ->
@@ -85,13 +87,14 @@ internal fun <E: ScriptGenerationEnvironment> composeChecks(environment: E, chec
             // only allow a successful composers to be composed once, to avoid duplicates
             in succeeded -> emptyList()
             // otherwise, we're seeing a composable check for the first time
-            else -> composer.compose(environment).onSuccess {
+            else -> composer.compose(environment).fold(onSuccess = {
                 succeeded.add(composer)
-            }.getOrElse {
+                it
+            }, onFailure = {
                 failed.add(composer)
                 CheckComposer.Log.info("check {} failed to compose: {} ({})", check, it::class.simpleName, it.message)
                 listOf(check)
-            }
+            })
         }
     }
     return composedChecks.distinct()
