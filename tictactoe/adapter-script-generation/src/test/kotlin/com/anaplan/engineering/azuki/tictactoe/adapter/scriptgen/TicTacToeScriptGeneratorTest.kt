@@ -122,7 +122,7 @@ class TicTacToeScriptGeneratorTest {
         }
 
         expect("""
-            boardHasState(${TRIPLE}gameA${TRIPLE}, ${TRIPLE}
+            boardHasState(${TRIPLE}gameA${TRIPLE}, $TRIPLE
             X | O | X
             . | . | .
             O | . | X
