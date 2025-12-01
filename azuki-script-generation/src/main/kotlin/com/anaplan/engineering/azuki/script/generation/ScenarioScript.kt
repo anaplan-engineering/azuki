@@ -36,11 +36,11 @@ abstract class ScenarioScript(val typeName: String, val blocks: ScriptElementLis
         var indentString: String = "    "
     ) {
 
-        internal fun render(blocks: ScriptElementList<ScriptBlock>) =
-            blocks.wrap().render(RenderContext(indentLevel, indentString)).format()
-
-        private fun ScriptElementList<ScriptBlock>.wrap() = scriptType.wrap(typeName, this)
-        private fun String.format() = formatter.format(this)
+        internal fun render(blocks: ScriptElementList<ScriptBlock>): String {
+            val wrapped = scriptType.wrap(typeName, blocks)
+            val rendered = wrapped.render(RenderContext(indentLevel, indentString))
+            return formatter.format(rendered)
+        }
     }
 
 }
