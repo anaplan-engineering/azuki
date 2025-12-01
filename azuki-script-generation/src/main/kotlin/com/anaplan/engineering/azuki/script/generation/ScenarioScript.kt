@@ -121,13 +121,13 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
     /**
      * A script block with the same header and contents, but with `isEmpty` forced to false.
      */
-    val withForcedNonEmpty get() = copy(inner = ForceNonEmptyElement(inner))
+    val asNonEmpty get() = copy(inner = AsNonEmpty(inner))
 }
 
 /**
  * A script element that wraps another script element, but always reports that it is non-empty.
  */
-data class ForceNonEmptyElement(val inner: ScriptElement) : ScriptElement by inner {
+data class AsNonEmpty(val inner: ScriptElement) : ScriptElement by inner {
 
     override val isEmpty: Boolean = false
 }

@@ -286,7 +286,7 @@ class ScriptGenerationService<
         private val oracleWheneverBlock by lazy {
             val existing = wheneverGenerate.whenever.block
             val mustGenerateWhenever = existing.isEmpty && !wheneverGenerate.blockList.isEmpty
-            if (mustGenerateWhenever) existing.withForcedNonEmpty else existing
+            if (mustGenerateWhenever) existing.asNonEmpty else existing
         }
 
         /**
