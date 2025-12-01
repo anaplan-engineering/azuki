@@ -27,8 +27,7 @@ class ScriptGenerationServiceStringFragmentsTest {
                     fromFragments("thereIsAFoo(fooA)", "thereIsAFoo(fooB)")
                 }.whenever {
                     fromFragments("deleteFoo(fooA)")
-                }.then {
-                }.verifiableScenario()
+                }.then {}.verifiableScenario()
             }
         }
     }
@@ -126,22 +125,16 @@ class ScriptGenerationServiceStringFragmentsTest {
                 given {
                     fromFragments("thereIsAFoo(fooA)")
                 }.generate {
-                    block {
-                        fromFragments("createFoo(fooB)")
-                        fromFragments("createFoo(fooC)")
-                    }
-                    block {
-                        fromFragments("createBar(barA)")
-                    }
+                    fromFragments("createFoo(fooB)")
+                    fromFragments("createFoo(fooC)")
+                }.generate {
+                    fromFragments("createBar(barA)")
                 }.whenever {
                     fromFragments("deleteFoo(fooA)")
                 }.generate {
-                    block {
-                        fromFragments("deleteARandomFoo()")
-                    }
-                    block {
-                        fromFragments("deleteARandomBar()")
-                    }
+                    fromFragments("deleteARandomFoo()")
+                }.generate {
+                    fromFragments("deleteARandomBar()")
                 }.verify {
                     fromFragments("fooExists(fooA)", "fooExists(fooB)", "fooExists(fooC)", "barExists(barA)")
                 }.oracleScenario()
@@ -196,14 +189,12 @@ class ScriptGenerationServiceStringFragmentsTest {
             generateAndRender {
                 given {
                     fromFragments("thereIsAFoo(fooA)")
-                }.generate { /* this can be left empty */ }.whenever {
+                }.generateBlocks { /* this can be left empty */ }.whenever {
                     /* leaving this empty shouldn't cause whenever to disappear!
                      * it's needed to separate the given-generate and when-generate phases
                      */
                 }.generate {
-                    block {
-                        fromFragments("deleteARandomFoo()")
-                    }
+                    fromFragments("deleteARandomFoo()")
                 }.verify {
                     fromFragments("fooExists(fooA)")
                 }.oracleScenario()

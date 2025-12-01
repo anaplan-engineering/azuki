@@ -49,14 +49,14 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
     private fun writeOracleScenario(systemDefinition: SystemDefinition, context: String?) {
         val oracle = scriptGeneration.given {
             fromActions(systemDefinition.declarations)
-        }.generate {
+        }.generateBlocks {
             // System definition action generators go after 'given' iff there are no commands
             if (systemDefinition.commands.isEmpty()) block {
                 fromActionGenerators(systemDefinition.actionGenerators)
             }
         }.whenever {
             fromActions(systemDefinition.commands)
-        }.generate {
+        }.generateBlocks {
             // System definition action generators go after 'whenever' iff there are commands
             if (systemDefinition.commands.isNotEmpty()) block {
                 fromActionGenerators(systemDefinition.actionGenerators)

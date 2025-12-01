@@ -187,13 +187,15 @@ data class AsNonEmpty(val inner: ScriptElement) : ScriptElement by inner {
 /**
  * A script element containing zero or more vertically joined script elements.
  */
-data class ScriptElementList<out E : ScriptElement>(val elements: List<E>) : ScriptElement {
+data class ScriptElementList<E : ScriptElement>(val elements: List<E>) : ScriptElement {
 
     constructor(vararg elements: E) : this(listOf(*elements))
 
     override val isEmpty get() = elements.all { it.isEmpty }
 
     override fun render(ctx: RenderContext) = elements.filterNot { it.isEmpty }.joinToString("\n") { it.render(ctx) }
+
+    operator fun plus(other: ScriptElementList<E>) = ScriptElementList(elements + other.elements)
 }
 
 /**

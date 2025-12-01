@@ -38,15 +38,21 @@ abstract class BasicScriptBlockBuilder() {
 
     /**
      * Supplies script fragments to this builder directly.
-     * Note that they will appear before any script fragments produced in any other way.
      */
     fun fromFragments(vararg fragments: String) {
-        explicitScriptFragments += fragments
+        fromElements(fragments.map(::ScriptStringFragment))
     }
 
-    private val explicitScriptFragments = mutableListOf<String>()
+    /**
+     * Supplies script elements to this builder directly.
+     */
+    fun fromElements(elements: List<ScriptElement>) {
+        explicitScriptElements += elements
+    }
+
+    private val explicitScriptElements = mutableListOf<ScriptElement>()
     protected abstract val builtScriptElements: List<ScriptElement>
-    protected val scriptElements get() = explicitScriptFragments.map(::ScriptStringFragment) + builtScriptElements
+    protected val scriptElements get() = explicitScriptElements + builtScriptElements
 }
 
 /**
@@ -211,11 +217,11 @@ class QueryBuilder<out QF : QueryFactory, E : ScriptGenerationEnvironment>(
     private val derivedQueries = mutableListOf<ScriptGenerationDerivedQuery<*>>()
 }
 
-abstract class GenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
+abstract class GenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     protected val actionGeneratorFactory: AGF
 ) {
 
-    fun build(body: GenerateBuilder<AF, QF, AGF>.() -> Unit) = apply(body).subBlocks
+    fun build(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit) = apply(body).subBlocks
 
     /**
      * Adds a new block to the generate list, with the contents provided to the builder.
@@ -226,7 +232,7 @@ abstract class GenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, ou
     /**
      * Adds the generate blocks from this oracle scenario.
      */
-    fun blocksFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
+    fun fromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
         actionGeneratorsFromScenario(scenario).forEach {
             block {
                 fromActionGenerators(it)
@@ -257,17 +263,17 @@ class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
     override val builtScriptElements get() = actionGenerators.map { ScriptStringFragment(it.getActionGeneratorScript()) }
 }
 
-class GivenGenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
+class GivenGenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     actionGeneratorFactory: AGF
-) : GenerateBuilder<AF, QF, AGF>(actionGeneratorFactory) {
+) : GenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory) {
 
     override fun actionGeneratorsFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
         scenario.givenActionGenerations(actionGeneratorFactory)
 }
 
-class WheneverGenerateBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
+class WheneverGenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     actionGeneratorFactory: AGF
-) : GenerateBuilder<AF, QF, AGF>(actionGeneratorFactory) {
+) : GenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory) {
 
     override fun actionGeneratorsFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
         scenario.whenActionGenerations(actionGeneratorFactory)

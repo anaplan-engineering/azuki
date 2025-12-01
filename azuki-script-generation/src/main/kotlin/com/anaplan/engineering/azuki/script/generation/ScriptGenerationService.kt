@@ -153,12 +153,12 @@ class ScriptGenerationService<
      */
     fun oracleScenarioBuilder(scenario: OracleScenario<in AF, in QF, in AGF>) = given {
         fromScenario(scenario)
-    }.generate {
-        blocksFromScenario(scenario)
+    }.generateBlocks {
+        fromScenario(scenario)
     }.whenever {
         fromScenario(scenario)
-    }.generate {
-        blocksFromScenario(scenario)
+    }.generateBlocks {
+        fromScenario(scenario)
     }.verify {
         fromScenario(scenario)
     }
@@ -235,7 +235,23 @@ class ScriptGenerationService<
         }
     }
 
-    inner class Given(internal val environment: E, contents: List<ScriptElement>) {
+    /**
+     * Builders that allow `.generate {}` (given, whenever, and the two types of generate block themselves).
+     */
+    interface AllowsGenerate<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory, out N> {
+        /**
+         * Constructs a single generate block by mixing in generators from one or more sources.
+         */
+        fun generate(body: GenerateBlockBuilder.() -> Unit) = generateBlocks { block(body) }
+
+        /**
+         * Constructs multiple generate blocks by mixing in generators from one or more sources.
+         */
+        fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit): N
+    }
+
+    inner class Given(internal val environment: E, contents: List<ScriptElement>) :
+        AllowsGenerate<AF, QF, AGF, GivenGenerate> {
 
         val block = ScriptBlock("given", contents)
 
@@ -246,10 +262,10 @@ class ScriptGenerationService<
             GivenWhenever(this, WheneverBuilder(actionFactory, environment).build(body))
 
         /**
-         * Constructs a given-generate block by mixing in generators from one or more sources.
+         * Constructs multiple given-generate blocks by mixing in generators from one or more sources.
          */
-        fun generate(body: GenerateBuilder<AF, QF, AGF>.() -> Unit) =
-            GivenGenerate(this, GivenGenerateBuilder<AF, QF, AGF>(actionGeneratorFactory).build(body))
+        override fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit) =
+            GivenGenerate(this, GivenGenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory).build(body))
     }
 
     abstract inner class Whenever(contents: List<ScriptElement>) {
@@ -302,15 +318,20 @@ class ScriptGenerationService<
     /**
      * A list of generate blocks in 'given' position.
      */
-    inner class GivenGenerate(val given: Given, subBlocks: List<ScriptBlock>) {
+    inner class GivenGenerate(val given: Given, subBlocks: List<ScriptBlock>) :
+        AllowsGenerate<AF, QF, AGF, GivenGenerate> {
 
-        val blockList = ScriptElementList<ScriptBlock>(subBlocks)
+        var blockList = ScriptElementList<ScriptBlock>(subBlocks)
 
         /**
          * Constructs a whenever block by mixing in declarations from one or more sources.
          */
         fun whenever(body: WheneverBuilder<AF, E>.() -> Unit) =
             GivenGenerateWhenever(this, WheneverBuilder(actionFactory, environment).build(body))
+
+        override fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit) = apply {
+            blockList += given.generateBlocks(body).blockList
+        }
 
         private val environment = given.environment
     }
@@ -319,23 +340,25 @@ class ScriptGenerationService<
      * A whenever block following a given-generate block.
      */
     inner class GivenGenerateWhenever(val givenGenerate: GivenGenerate, contents: List<ScriptElement>) :
-        Whenever(contents) {
+        Whenever(contents), AllowsGenerate<AF, QF, AGF, GivenGenerateWheneverGenerate> {
 
         override val given = givenGenerate.given
 
         /**
-         * Constructs a whenever-generate block by mixing in generators from one or more sources.
+         * Constructs multiple whenever-generate blocks by mixing in generators from one or more sources.
          */
-        fun generate(body: GenerateBuilder<AF, QF, AGF>.() -> Unit) = GivenGenerateWheneverGenerate(this,
-            WheneverGenerateBuilder<AF, QF, AGF>(actionGeneratorFactory).build(body))
+        override fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit) =
+            GivenGenerateWheneverGenerate(this,
+                WheneverGenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory).build(body))
     }
 
     /**
      * A list of generate blocks in 'whenever' position.
      */
-    inner class GivenGenerateWheneverGenerate(val whenever: GivenGenerateWhenever, subBlocks: List<ScriptBlock>) {
+    inner class GivenGenerateWheneverGenerate(val whenever: GivenGenerateWhenever, subBlocks: List<ScriptBlock>) :
+        AllowsGenerate<AF, QF, AGF, GivenGenerateWheneverGenerate> {
 
-        val blockList = ScriptElementList<ScriptBlock>(subBlocks)
+        var blockList = ScriptElementList<ScriptBlock>(subBlocks)
         val givenGenerate = whenever.givenGenerate
         val given = whenever.given
 
@@ -344,6 +367,10 @@ class ScriptGenerationService<
          */
         fun verify(body: QueryBuilder<QF, E>.() -> Unit) =
             GivenGenerateWheneverGenerateVerify(this, QueryBuilder(verifyQueryFactory, environment).build(body))
+
+        override fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit) = apply {
+            blockList += whenever.generateBlocks(body).blockList
+        }
 
         private val environment = whenever.given.environment
     }
