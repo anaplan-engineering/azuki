@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.core.system.Answer
 import com.anaplan.engineering.azuki.script.generation.ScenarioScript
+import com.anaplan.engineering.azuki.script.generation.ScriptType
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
 import java.io.File
@@ -26,7 +27,7 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
         if (queryingOracle == null) {
             verifiableScenarioBuilder.incompleteScenario().write("$scenarioName-gen-err.scn") {
                 // This isn't a full verifiable scenario, so don't present it as one
-                inOuterBlock = false
+                scriptType = ScriptType.Inline
             }
         } else if (!answers.isNullOrEmpty()) {
             verifiableScenarioBuilder.then {

@@ -40,11 +40,10 @@ abstract class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *
         }
         appendLine("    fun test() {")
         appendLine(scenarioScript.render {
-            indent = 2
-            inOuterBlock = true
-
+            indentLevel = 2
+            scriptType = ScriptType.Standalone
             // We're going to format the whole test-case anyway, so formatting twice is pointless
-            useFormatter = false
+            formatter = Formatter.None
         })
         appendLine("    }")
         appendLine("}")

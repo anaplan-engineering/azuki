@@ -95,9 +95,9 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
 
     private fun ScenarioScript.write(prefix: String, suffix: String) {
         write(prefix, suffix, render {
-            indent = 0
-            useFormatter = true
-            inOuterBlock = true
+            indentLevel = 0
+            formatter = Formatter.Full
+            scriptType = ScriptType.Standalone
         })
     }
 

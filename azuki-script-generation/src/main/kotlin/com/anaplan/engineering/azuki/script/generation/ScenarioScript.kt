@@ -17,15 +17,73 @@ abstract class ScenarioScript(val typeName: String, val blocks: ScriptElementLis
     /**
      * Customisable renderer for scenario scripts.
      */
-    inner class Renderer(var useFormatter: Boolean = true, var inOuterBlock: Boolean = true, var indent: Int = 0) {
+    inner class Renderer(
+        /**
+         * The formatter to use, if any.
+         */
+        var formatter: Formatter = Formatter.Full,
+        /**
+         * How to convert the scenario's blocks into a script.
+         */
+        var scriptType: ScriptType = ScriptType.Standalone,
+        /**
+         * The starting indent level for the renderer.
+         */
+        var indentLevel: Int = 0,
+        /**
+         * String to be repeated once for each indent level.  (Usually this will be some multiple of spaces or tabs.)
+         */
+        var indentString: String = "    "
+    ) {
 
-        internal fun render(blocks: ScriptElementList<ScriptBlock>) = blocks.doIf(inOuterBlock) {
-            ScriptBlock("${typeName}Scenario", it)
-        }.render(RenderContext(indent)).doIf(useFormatter) {
-            ScenarioFormatter.formatScenario(it)
-        }
+        internal fun render(blocks: ScriptElementList<ScriptBlock>) =
+            blocks.wrap().render(RenderContext(indentLevel, indentString)).format()
 
-        private fun <O, I : O> I.doIf(cond: Boolean, f: (I) -> O) = if (cond) f(this) else this
+        private fun ScriptElementList<ScriptBlock>.wrap() = scriptType.wrap(typeName, this)
+        private fun String.format() = formatter.format(this)
+    }
+
+}
+
+/**
+ * The type of script output to render.
+ */
+fun interface ScriptType {
+
+    fun wrap(typeName: String, blocks: ScriptElementList<ScriptBlock>): ScriptElement
+
+    companion object {
+
+        /**
+         * Don't wrap the script blocks in an outer function call.
+         */
+        val Inline = ScriptType { _, blocks -> blocks }
+
+        /**
+         * Wrap the script blocks in the appropriate scenario function.
+         */
+        val Standalone = ScriptType { typeName, blocks -> ScriptBlock("${typeName}Scenario", blocks) }
+    }
+}
+
+/**
+ * The type of formatter to run on the script after rendering.
+ */
+fun interface Formatter {
+
+    fun format(scenarioScript: String): String
+
+    companion object {
+
+        /**
+         * Don't format.
+         */
+        val None = Formatter { it }
+
+        /**
+         * Format the scenario using the full-scenario formatter.
+         */
+        val Full = Formatter(ScenarioFormatter::formatScenario)
     }
 }
 
@@ -112,9 +170,9 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
 
     override fun render(ctx: RenderContext) = with(ctx) {
         """
-        $tab$header {
-        ${inner.render(nextIndent)}
-        $tab}
+        $indent$header {
+        ${inner.render(nextIndentLevel)}
+        $indent}
         """.trimIndent()
     }
 
@@ -148,7 +206,8 @@ data class ScriptElementList<out E : ScriptElement>(val elements: List<E>) : Scr
  * Context about how to render a script element, which is threaded through the rendering process.
  */
 data class RenderContext(
-    val indent: Int = 0
+    val indentLevel: Int = 0,
+    val indentString: String = "    ",
     // TODO: we might need other things here such as target line width
     // TODO: should this be parameterised on implementation-specific data?
 ) {
@@ -156,10 +215,10 @@ data class RenderContext(
     /**
      * Creates a new context for the next indent level.
      */
-    val nextIndent by lazy { copy(indent = indent + 1) }
+    val nextIndentLevel by lazy { copy(indentLevel = indentLevel + 1) }
 
     /**
-     * A number of spaces corresponding to the indent level.
+     * Indents up to the current indent level.
      */
-    val tab by lazy { "    ".repeat(indent) }
+    val indent by lazy { indentString.repeat(indentLevel) }
 }
