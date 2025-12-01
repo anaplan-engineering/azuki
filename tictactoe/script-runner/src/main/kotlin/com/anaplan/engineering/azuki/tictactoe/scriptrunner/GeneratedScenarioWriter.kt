@@ -12,9 +12,9 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
 
     fun writeGeneratedScenario(result: OracleScenarioResult) {
         val generatedScenario = result.generatedScenario ?: return
-        val oracleBuilder = TicTacToeScriptGeneration.oracleScenarioBuilder(generatedScenario)
+        val oracleBuilder = TicTacToeScriptGeneration.getOracleScenarioBuilder(generatedScenario)
 
-        val oracleScenario = oracleBuilder.oracleScenario()
+        val oracleScenario = oracleBuilder.oracleScenario
         oracleScenario.write("$scenarioName-gen-ocl.scn")
 
         // We can reuse these blocks from the oracle as the first blocks of the other scenario outputs:
@@ -27,14 +27,14 @@ class GeneratedScenarioWriter(private val scenarioName: String, private val outp
         if (queryingOracle == null) {
             verifiableScenarioBuilder.then {
                 // deliberately leave empty
-            }.verifiableScenario().write("$scenarioName-gen-err.scn") {
+            }.verifiableScenario.write("$scenarioName-gen-err.scn") {
                 // This isn't a full verifiable scenario, so don't present it as one
                 scriptType = ScriptType.Inline
             }
         } else if (!answers.isNullOrEmpty()) {
             verifiableScenarioBuilder.then {
                 fromAnswers(answers)
-            }.verifiableScenario().write("$scenarioName-gen-vfy.scn")
+            }.verifiableScenario.write("$scenarioName-gen-vfy.scn")
         }
     }
 

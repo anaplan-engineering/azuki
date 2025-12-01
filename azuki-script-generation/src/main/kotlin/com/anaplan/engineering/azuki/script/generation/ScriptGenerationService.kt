@@ -113,18 +113,18 @@ class ScriptGenerationService<
     /**
      * Generates a verifiable scenario script.
      */
-    fun verifiableScenario(scenario: VerifiableScenario<in AF, in CF>) = given {
+    fun generateVerifiableScenario(scenario: VerifiableScenario<in AF, in CF>) = given {
         fromScenario(scenario)
     }.whenever {
         fromScenario(scenario)
     }.then {
         fromScenario(scenario)
-    }.verifiableScenario()
+    }.verifiableScenario
 
     /**
      * Generates a verifiable script using the setup from an oracle and checks from a corresponding collection of answers.
      */
-    fun verifiableScenarioFromOracle(
+    fun generateVerifiableScenario(
         oracle: BuildableScenario<in AF>, answers: Collection<Answer<*, in CF>>
     ) = given {
         fromScenario(oracle)
@@ -132,18 +132,18 @@ class ScriptGenerationService<
         fromScenario(oracle)
     }.then {
         fromAnswers(answers)
-    }.verifiableScenario()
+    }.verifiableScenario
 
     /**
      * Generates a script for a query scenario.
      */
-    fun queryScenario(scenario: ScenarioWithQueries<in AF, in QF>) = given {
+    fun generateQueryScenario(scenario: ScenarioWithQueries<in AF, in QF>) = given {
         fromScenario(scenario)
     }.whenever {
         fromScenario(scenario)
     }.query {
         fromScenario(scenario)
-    }.queryScenario()
+    }.queryScenario
 
     /**
      * Builds the blocks for an oracle scenario, but stops short of finishing the build.
@@ -151,7 +151,7 @@ class ScriptGenerationService<
      * This allows the same builder to be used for the oracle scenario and for the verifiable scenario derived from its
      * answers.
      */
-    fun oracleScenarioBuilder(scenario: OracleScenario<in AF, in QF, in AGF>) = given {
+    fun getOracleScenarioBuilder(scenario: OracleScenario<in AF, in QF, in AGF>) = given {
         fromScenario(scenario)
     }.generateBlocks {
         fromScenario(scenario)
@@ -166,8 +166,8 @@ class ScriptGenerationService<
     /**
      * Generates a script for an oracle scenario.
      */
-    fun oracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
-        oracleScenarioBuilder(scenario).oracleScenario()
+    fun generateOracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
+        getOracleScenarioBuilder(scenario).oracleScenario
 
     /**
      * Generates a script for a scenario whose type (verifiable, oracle, query) isn't known until run-time, by
@@ -177,15 +177,15 @@ class ScriptGenerationService<
      * scenario types the generator supports.  These should usually be implemented as `{ this as? NarrowScenarioType }`.
      * If a projection method is not given, scenarios of that kind won't be handled and will result in an exception.
      */
-    fun <S : BuildableScenario<in AF>> scenarioWithRefinedType(
+    fun <S : BuildableScenario<in AF>> generateScenarioOfUnknownType(
         scenario: S,
         asVerifiable: S.() -> VerifiableScenario<in AF, in CF>? = { null },
         asOracle: S.() -> OracleScenario<in AF, in QF, in AGF>? = { null },
         asQuery: S.() -> ScenarioWithQueries<in AF, in QF>? = { null },
     ) = listOf(
-        asVerifiable(scenario)?.let { verifiableScenario(it) },
-        asOracle(scenario)?.let { oracleScenario(it) },
-        asQuery(scenario)?.let { queryScenario(it) },
+        asVerifiable(scenario)?.let { generateVerifiableScenario(it) },
+        asOracle(scenario)?.let { generateOracleScenario(it) },
+        asQuery(scenario)?.let { generateQueryScenario(it) },
     ).firstNotNullOfOrNull { it }
         ?: throw IllegalArgumentException("unsupported scenario type: ${this::class.simpleName}")
 
@@ -301,7 +301,7 @@ class ScriptGenerationService<
         /**
          * Constructs a verifiable scenario script with the given, when, and then blocks previously constructed.
          */
-        fun verifiableScenario() = VerifiableScenarioScript(given.block, whenever.block, block)
+        val verifiableScenario by lazy { VerifiableScenarioScript(given.block, whenever.block, block) }
     }
 
     inner class GivenWheneverQuery(val whenever: GivenWhenever, contents: List<ScriptElement>) {
@@ -312,7 +312,7 @@ class ScriptGenerationService<
         /**
          * Constructs a query scenario script with the given, when, and query blocks previously constructed.
          */
-        fun queryScenario() = QueryScenarioScript(given.block, whenever.block, block)
+        val queryScenario by lazy { QueryScenarioScript(given.block, whenever.block, block) }
     }
 
     /**
@@ -399,11 +399,13 @@ class ScriptGenerationService<
         /**
          * Constructs an oracle scenario script with the given, when, verify, and generate blocks previously constructed.
          */
-        fun oracleScenario() = OracleScenarioScript(given.block,
-            givenGenerate.blockList,
-            oracleWheneverBlock,
-            wheneverGenerate.blockList,
-            this.block)
+        val oracleScenario by lazy {
+            OracleScenarioScript(given.block,
+                givenGenerate.blockList,
+                oracleWheneverBlock,
+                wheneverGenerate.blockList,
+                this.block)
+        }
 
         /**
          * Use the given and whenever blocks from this oracle scenario to start building towards a verifiable scenario.

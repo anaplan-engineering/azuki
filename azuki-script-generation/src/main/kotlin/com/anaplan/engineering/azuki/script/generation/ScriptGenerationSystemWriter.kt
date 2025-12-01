@@ -43,7 +43,7 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
             fromActions(systemDefinition.commands)
         }.then {
             fromChecks(systemDefinition.checks)
-        }.verifiableScenario().write(context ?: "scenario-vfy", ScenarioSuffix)
+        }.verifiableScenario.write(context ?: "scenario-vfy", ScenarioSuffix)
     }
 
     private fun writeOracleScenario(systemDefinition: SystemDefinition, context: String?) {
@@ -66,12 +66,12 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
             fromDerivedQueries(systemDefinition.forAllQueries)
         }
 
-        oracle.oracleScenario().write(context ?: "scenario-ocl", ScenarioSuffix)
+        oracle.oracleScenario.write(context ?: "scenario-ocl", ScenarioSuffix)
 
         if (systemDefinition.actionGenerators.isNotEmpty()) {
             val scenarioScript = oracle.takeGivenAndWhenever().then {
                 fromChecks(listOf(checkFactory.systemValid()))
-            }.verifiableScenario()
+            }.verifiableScenario
 
             val testCase = classGeneration.generate(className = context ?: "scenario-ocl",
                 packageName = "debug",
@@ -90,7 +90,7 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
         }.query {
             fromQueries(systemDefinition.queries)
             fromDerivedQueries(systemDefinition.forAllQueries)
-        }.queryScenario().write(context ?: "scenario-ocl", ScenarioSuffix)
+        }.queryScenario.write(context ?: "scenario-ocl", ScenarioSuffix)
     }
 
     private fun ScenarioScript.write(prefix: String, suffix: String) {

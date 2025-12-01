@@ -27,7 +27,7 @@ class ScriptGenerationServiceStringFragmentsTest {
                     fromFragments("thereIsAFoo(fooA)", "thereIsAFoo(fooB)")
                 }.whenever {
                     fromFragments("deleteFoo(fooA)")
-                }.then {}.verifiableScenario()
+                }.then {}.verifiableScenario
             }
         }
     }
@@ -56,7 +56,7 @@ class ScriptGenerationServiceStringFragmentsTest {
                     fromFragments("deleteFoo(fooA)")
                 }.then {
                     fromFragments("fooExists(fooA)", "fooDoesNotExist(fooB)")
-                }.verifiableScenario()
+                }.verifiableScenario
             }
         }
     }
@@ -85,7 +85,7 @@ class ScriptGenerationServiceStringFragmentsTest {
                     fromFragments("deleteFoo(fooA)")
                 }.query {
                     fromFragments("fooExists(fooA)", "fooExists(fooB)")
-                }.queryScenario()
+                }.queryScenario
             }
         }
     }
@@ -137,7 +137,7 @@ class ScriptGenerationServiceStringFragmentsTest {
                     fromFragments("deleteARandomBar()")
                 }.verify {
                     fromFragments("fooExists(fooA)", "fooExists(fooB)", "fooExists(fooC)", "barExists(barA)")
-                }.oracleScenario()
+                }.oracleScenario
             }
         }
     }
@@ -164,7 +164,7 @@ class ScriptGenerationServiceStringFragmentsTest {
                     fromFragments("deleteFoo(fooA)")
                 }.generate { /* this can be left empty */ }.verify {
                     fromFragments("fooExists(fooA)")
-                }.oracleScenario()
+                }.oracleScenario
             }
         }
     }
@@ -197,7 +197,7 @@ class ScriptGenerationServiceStringFragmentsTest {
                     fromFragments("deleteARandomFoo()")
                 }.verify {
                     fromFragments("fooExists(fooA)")
-                }.oracleScenario()
+                }.oracleScenario
             }
         }
     }
