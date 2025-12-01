@@ -23,7 +23,7 @@ class TicTacToeScriptGeneratorTest {
         const val O = "O"
 
         val ScenarioScriptingTestUtils = ScriptGenerationTesting(generator = {
-            TicTacToeScriptGeneration.scenario.refineScenarioType(it,
+            TicTacToeScriptGeneration.scenarioWithRefinedType(it,
                 { this as? TicTacToeVerifiableScenario },
                 { this as? TicTacToeOracleScenario },
                 { this as? TicTacToeQueryScenario })
@@ -33,7 +33,7 @@ class TicTacToeScriptGeneratorTest {
         })
 
         private fun renderedThenElements(scenario: TicTacToeVerifiableScenario): List<String> =
-            TicTacToeScriptGeneration.scenario.verifiable(scenario).then.elements.map { it.render() }
+            TicTacToeScriptGeneration.verifiableScenario(scenario).then.elements.map { it.render() }
 
         private const val TRIPLE = "\"\"\""
     }

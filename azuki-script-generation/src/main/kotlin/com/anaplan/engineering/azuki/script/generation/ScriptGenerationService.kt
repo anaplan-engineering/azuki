@@ -1,5 +1,9 @@
 package com.anaplan.engineering.azuki.script.generation
 
+import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
+import com.anaplan.engineering.azuki.core.scenario.OracleScenario
+import com.anaplan.engineering.azuki.core.scenario.ScenarioWithQueries
+import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.*
 
@@ -102,11 +106,92 @@ class ScriptGenerationService<
         )
     }
 
-    /**
-     * Provides ready-made usage patterns for script generation of a whole scenario, from a whole scenario.
+    /*
+     * High-level patterns API
      */
-    val scenario = ScriptGenerationScenarioPatterns(this)
 
+    /**
+     * Generates a verifiable scenario script.
+     */
+    fun verifiableScenario(scenario: VerifiableScenario<in AF, in CF>) = given {
+        fromScenario(scenario)
+    }.whenever {
+        fromScenario(scenario)
+    }.then {
+        fromScenario(scenario)
+    }.verifiableScenario()
+
+    /**
+     * Generates a verifiable script using the setup from an oracle and checks from a corresponding collection of answers.
+     */
+    fun verifiableScenarioFromOracle(
+        oracle: BuildableScenario<in AF>, answers: Collection<Answer<*, in CF>>
+    ) = given {
+        fromScenario(oracle)
+    }.whenever {
+        fromScenario(oracle)
+    }.then {
+        fromAnswers(answers)
+    }.verifiableScenario()
+
+    /**
+     * Generates a script for a query scenario.
+     */
+    fun queryScenario(scenario: ScenarioWithQueries<in AF, in QF>) = given {
+        fromScenario(scenario)
+    }.whenever {
+        fromScenario(scenario)
+    }.query {
+        fromScenario(scenario)
+    }.queryScenario()
+
+    /**
+     * Builds the blocks for an oracle scenario, but stops short of finishing the build.
+     *
+     * This allows the same builder to be used for the oracle scenario and for the verifiable scenario derived from its
+     * answers.
+     */
+    fun oracleScenarioBuilder(scenario: OracleScenario<in AF, in QF, in AGF>) = given {
+        fromScenario(scenario)
+    }.generate {
+        blocksFromScenario(scenario)
+    }.whenever {
+        fromScenario(scenario)
+    }.generate {
+        blocksFromScenario(scenario)
+    }.verify {
+        fromScenario(scenario)
+    }
+
+    /**
+     * Generates a script for an oracle scenario.
+     */
+    fun oracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
+        oracleScenarioBuilder(scenario).oracleScenario()
+
+    /**
+     * Generates a script for a scenario whose type (verifiable, oracle, query) isn't known until run-time, by
+     * refining it into one of the types of scenario we can handle.
+     *
+     * For type safety, this wrapper takes projection methods to try map the base scenario type to all the specific
+     * scenario types the generator supports.  These should usually be implemented as `{ this as? NarrowScenarioType }`.
+     * If a projection method is not given, scenarios of that kind won't be handled and will result in an exception.
+     */
+    fun <S : BuildableScenario<in AF>> scenarioWithRefinedType(
+        scenario: S,
+        asVerifiable: S.() -> VerifiableScenario<in AF, in CF>? = { null },
+        asOracle: S.() -> OracleScenario<in AF, in QF, in AGF>? = { null },
+        asQuery: S.() -> ScenarioWithQueries<in AF, in QF>? = { null },
+    ) = listOf(
+        asVerifiable(scenario)?.let { verifiableScenario(it) },
+        asOracle(scenario)?.let { oracleScenario(it) },
+        asQuery(scenario)?.let { queryScenario(it) },
+    ).firstNotNullOfOrNull { it }
+        ?: throw IllegalArgumentException("unsupported scenario type: ${this::class.simpleName}")
+
+    /*
+     * Script builder API
+     */
 
     /**
      * Constructs a given block by mixing in declarations from one or more sources.
