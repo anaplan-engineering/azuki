@@ -5,7 +5,6 @@ import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.graphs.dsl.GraphBuildableScenario
 import com.anaplan.engineering.azuki.graphs.dsl.GraphVerifiableScenario
 import com.anaplan.engineering.azuki.graphs.dsl.verifiableScenario
-import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTesting
 import com.anaplan.engineering.azuki.script.generation.createVerifiableTestHelper
 import org.junit.Test
 
