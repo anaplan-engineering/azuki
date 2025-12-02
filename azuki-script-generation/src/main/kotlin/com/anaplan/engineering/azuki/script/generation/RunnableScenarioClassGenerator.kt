@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 /**
  * Generates full Kotlin JUnit runnable scenario classes given a scenario script.
  */
-abstract class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *, *, *, *, *, *, *, *>>(
+open class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *, *, *, *, *, *, *, *>>(
     val adapterSpecificImports: List<String>,
     val scenarioClass: KClass<S>,
 ) {

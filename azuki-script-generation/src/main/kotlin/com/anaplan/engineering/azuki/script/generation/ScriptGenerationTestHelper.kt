@@ -56,7 +56,7 @@ open class ScriptGenerationTestHelper<S : BuildableScenario<AF>, AF : ActionFact
  * This class is flexible as to which kind of scenarios it takes as input.  Typically, you'll want to instantiate one
  * for each scenario type (verifiable, query, oracle) supported by your script generation adapter.
  */
-class ScriptGenerationTesting<S : BuildableScenario<*>>(
+open class ScriptGenerationTesting<S : BuildableScenario<*>>(
     val generator: (S) -> ScenarioScript,
     val parser: ScenarioParser<S> = SimpleScenarioParser(),
 ) {
