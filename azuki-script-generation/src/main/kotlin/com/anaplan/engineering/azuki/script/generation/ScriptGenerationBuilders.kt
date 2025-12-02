@@ -37,17 +37,15 @@ import kotlin.collections.plusAssign
 abstract class BasicScriptBlockBuilder() {
 
     /**
-     * Supplies script fragments to this builder directly.
+     * Supplies a script fragment to this builder directly.
      */
-    fun fromFragments(vararg fragments: String) {
-        fromElements(fragments.map(::ScriptStringFragment))
-    }
+    operator fun String.unaryPlus() = +ScriptStringFragment(this)
 
     /**
-     * Supplies script elements to this builder directly.
+     * Supplies a script element to this builder directly.
      */
-    fun fromElements(elements: List<ScriptElement>) {
-        explicitScriptElements += elements
+    operator fun ScriptElement.unaryPlus() {
+        explicitScriptElements += this
     }
 
     private val explicitScriptElements = mutableListOf<ScriptElement>()
@@ -148,7 +146,7 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
      * Populates the script with checks derived from these validatable answers.
      */
     fun fromValidatableAnswers(answers: Collection<ValidatableAnswer<*, in CF>>) =
-        fromChecks(answers.flatMap { it.createValidationChecks(checkFactory)})
+        fromChecks(answers.flatMap { it.createValidationChecks(checkFactory) })
 
     /**
      * Populates the script with these checks.
@@ -236,12 +234,11 @@ abstract class GenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFacto
     /**
      * Adds the generate blocks from this oracle scenario.
      */
-    fun fromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
-        actionGeneratorsFromScenario(scenario).forEach {
-            block {
-                fromActionGenerators(it)
-            }
+    fun fromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) = actionGeneratorsFromScenario(scenario).forEach {
+        block {
+            fromActionGenerators(it)
         }
+    }
 
     protected abstract fun actionGeneratorsFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>): List<List<ActionGenerator>>
 
