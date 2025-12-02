@@ -72,6 +72,7 @@ abstract class BasicStageBuilder<in S : BuildableScenario<*>, E : ScriptGenerati
     }
 }
 
+@ScriptGenerationDsl
 class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGenerationEnvironment>(
     private val actionFactory: AF, private val declarationStateFactory: DeclarationStateFactory<DS>, environment: E
 ) : BasicStageBuilder<BuildableScenario<in AF>, E>(environment) {
@@ -101,6 +102,7 @@ class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGene
     }
 }
 
+@ScriptGenerationDsl
 class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(val actionFactory: AF, environment: E) :
     BasicStageBuilder<BuildableScenario<in AF>, E>(environment) {
 
@@ -124,6 +126,7 @@ class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(v
     private val commands = mutableListOf<ScriptGenerationAction<E>>()
 }
 
+@ScriptGenerationDsl
 class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
     private val checkFactory: CF, environment: E
 ) : BasicStageBuilder<VerifiableScenario<*, in CF>, E>(environment) {
@@ -171,6 +174,7 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
     private val checks = mutableListOf<ScriptGenerationCheck<E>>()
 }
 
+@ScriptGenerationDsl
 class QueryBuilder<out QF : QueryFactory, E : ScriptGenerationEnvironment>(
     private val queryFactory: QF, environment: E
 ) : BasicStageBuilder<ScenarioWithQueries<*, in QF>, E>(environment) {
@@ -247,6 +251,7 @@ abstract class GenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFacto
 /**
  * Builds an individual block in a list of generate blocks.
  */
+@ScriptGenerationDsl
 class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
 
     fun build(body: GenerateBlockBuilder.() -> Unit) = apply(body).scriptElements
@@ -263,6 +268,7 @@ class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
     override val builtScriptElements get() = actionGenerators.map { ScriptStringFragment(it.getActionGeneratorScript()) }
 }
 
+@ScriptGenerationDsl
 class GivenGenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     actionGeneratorFactory: AGF
 ) : GenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory) {
@@ -271,6 +277,7 @@ class GivenGenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFactory, 
         scenario.givenActionGenerations(actionGeneratorFactory)
 }
 
+@ScriptGenerationDsl
 class WheneverGenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     actionGeneratorFactory: AGF
 ) : GenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory) {
@@ -299,3 +306,7 @@ private inline fun <reified U> logRefineFailure(failure: Any?) {
     val why = if (failure is U) "unsupported" else "wrong type"
     BasicStageBuilder.Log.error(" * {}: {}", why, failure)
 }
+
+@DslMarker
+@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
+annotation class ScriptGenerationDsl

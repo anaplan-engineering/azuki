@@ -10,6 +10,7 @@ import com.anaplan.engineering.azuki.declaration.*
 /**
  * The main endpoint for script generation tasks.
  */
+@ScriptGenerationDsl
 class ScriptGenerationService<
     out AF : ActionFactory,
     out CF : CheckFactory,
