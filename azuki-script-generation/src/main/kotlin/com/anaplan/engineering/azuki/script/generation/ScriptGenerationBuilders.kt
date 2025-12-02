@@ -38,11 +38,13 @@ abstract class BasicScriptBlockBuilder() {
 
     /**
      * Supplies a script fragment to this builder directly.
+     * Note that all directly-supplied fragments and elements appear _before_ those specified by other means.
      */
     operator fun String.unaryPlus() = +ScriptStringFragment(this)
 
     /**
      * Supplies a script element to this builder directly.
+     * Note that all directly-supplied fragments and elements appear _before_ those specified by other means.
      */
     operator fun ScriptElement.unaryPlus() {
         explicitScriptElements += this
