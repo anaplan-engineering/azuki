@@ -6,6 +6,7 @@ import com.anaplan.engineering.azuki.graphs.dsl.GraphBuildableScenario
 import com.anaplan.engineering.azuki.graphs.dsl.GraphVerifiableScenario
 import com.anaplan.engineering.azuki.graphs.dsl.verifiableScenario
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTesting
+import com.anaplan.engineering.azuki.script.generation.createVerifiableTestHelper
 import org.junit.Test
 
 class GraphScriptGeneratorTest {
@@ -13,22 +14,13 @@ class GraphScriptGeneratorTest {
     companion object {
         const val graphA = "graphA"
 
-        val ScenarioScriptingTestUtils = ScriptGenerationTesting(generator = {
-            GraphScriptGeneration.generateScenarioOfUnknownType(
-                it,
-                asVerifiable = { this as? GraphVerifiableScenario },
-            )
-        }, parser = object : SimpleScenarioParser<GraphBuildableScenario>() {
-            override val defaultImports: ScenarioParsingContext.() -> Unit = {
-                import("com.anaplan.engineering.azuki.graphs.dsl.*")
-                import("com.anaplan.engineering.azuki.graphs.*")
-            }
-        })
+        val VerifiableScenarioTesting =
+            GraphScriptGeneration.createVerifiableTestHelper(GraphScenarioParser<GraphVerifiableScenario>())
     }
 
     @Test
     fun graphWithEdges() {
-        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        VerifiableScenarioTesting.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAnUndirectedGraph(graphA) {
                     edge("a", "b")
@@ -42,7 +34,7 @@ class GraphScriptGeneratorTest {
 
     @Test
     fun graphWithParallelBlock() {
-        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        VerifiableScenarioTesting.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAnUndirectedGraph(graphA)
             }
@@ -61,7 +53,7 @@ class GraphScriptGeneratorTest {
 
     @Test
     fun directedGraph() {
-        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        VerifiableScenarioTesting.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsADirectedGraph("graphA") {}
             }
@@ -69,5 +61,13 @@ class GraphScriptGeneratorTest {
                 hasVertexCount("graphA", 0)
             }
         })
+    }
+}
+
+class GraphScenarioParser<S : GraphBuildableScenario> : SimpleScenarioParser<S>() {
+
+    override val defaultImports: ScenarioParsingContext.() -> Unit = {
+        import("com.anaplan.engineering.azuki.graphs.dsl.*")
+        import("com.anaplan.engineering.azuki.graphs.*")
     }
 }

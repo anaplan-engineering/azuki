@@ -169,26 +169,6 @@ class ScriptGenerationService<
     fun generateOracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
         getOracleScenarioBuilder(scenario).oracleScenario
 
-    /**
-     * Generates a script for a scenario whose type (verifiable, oracle, query) isn't known until run-time, by
-     * refining it into one of the types of scenario we can handle.
-     *
-     * For type safety, this wrapper takes projection methods to try map the base scenario type to all the specific
-     * scenario types the generator supports.  These should usually be implemented as `{ this as? NarrowScenarioType }`.
-     * If a projection method is not given, scenarios of that kind won't be handled and will result in an exception.
-     */
-    fun <S : BuildableScenario<in AF>> generateScenarioOfUnknownType(
-        scenario: S,
-        asVerifiable: S.() -> VerifiableScenario<in AF, in CF>? = { null },
-        asOracle: S.() -> OracleScenario<in AF, in QF, in AGF>? = { null },
-        asQuery: S.() -> ScenarioWithQueries<in AF, in QF>? = { null },
-    ) = listOf(
-        asVerifiable(scenario)?.let { generateVerifiableScenario(it) },
-        asOracle(scenario)?.let { generateOracleScenario(it) },
-        asQuery(scenario)?.let { generateQueryScenario(it) },
-    ).firstNotNullOfOrNull { it }
-        ?: throw IllegalArgumentException("unsupported scenario type: ${this::class.simpleName}")
-
     /*
      * Script builder API
      */

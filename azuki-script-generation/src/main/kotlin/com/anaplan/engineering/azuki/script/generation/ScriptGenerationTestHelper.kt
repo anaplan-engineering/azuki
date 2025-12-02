@@ -4,7 +4,13 @@ import com.anaplan.engineering.azuki.core.parser.ScenarioParser
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
+import com.anaplan.engineering.azuki.core.scenario.OracleScenario
+import com.anaplan.engineering.azuki.core.scenario.ScenarioWithQueries
+import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.ActionFactory
+import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
+import com.anaplan.engineering.azuki.core.system.CheckFactory
+import com.anaplan.engineering.azuki.core.system.QueryFactory
 import org.junit.Assert
 import org.slf4j.LoggerFactory
 import kotlin.test.expect
@@ -47,9 +53,8 @@ open class ScriptGenerationTestHelper<S : BuildableScenario<AF>, AF : ActionFact
 /**
  * Testing utilities for script generators.
  *
- * This class is flexible as to which kind of scenarios it takes as input - it can check testing for verifiable,
- * oracle, and query scenarios.  However, this means that it needs to take a `GenericScenarioGenerator` rather than a
- * `ScriptGenerationService`.
+ * This class is flexible as to which kind of scenarios it takes as input.  Typically, you'll want to instantiate one
+ * for each scenario type (verifiable, query, oracle) supported by your script generation adapter.
  */
 class ScriptGenerationTesting<S : BuildableScenario<*>>(
     val generator: (S) -> ScenarioScript,
@@ -98,3 +103,24 @@ class ScriptGenerationTesting<S : BuildableScenario<*>>(
         private val Log = LoggerFactory.getLogger(this::class.java.declaringClass)
     }
 }
+
+/**
+ * Creates a test helper for verifiable scenarios, given a way to parse them.
+ */
+fun <AF : ActionFactory, CF : CheckFactory> ScriptGenerationService<AF, CF, *, *, *, *>.createVerifiableTestHelper(
+    parser: ScenarioParser<VerifiableScenario<AF, CF>>
+) = ScriptGenerationTesting(::generateVerifiableScenario, parser)
+
+/**
+ * Creates a test helper for oracle scenarios, given a way to parse them.
+ */
+fun <AF : ActionFactory, QF : QueryFactory, AGF: ActionGeneratorFactory> ScriptGenerationService<AF, *, QF, AGF, *, *>.createOracleTestHelper(
+    parser: ScenarioParser<OracleScenario<AF, QF, AGF>>
+) = ScriptGenerationTesting(::generateOracleScenario, parser)
+
+/**
+ * Creates a test helper for query scenarios, given a way to parse them.
+ */
+fun <AF : ActionFactory, QF : QueryFactory> ScriptGenerationService<AF, *, QF, *, *, *>.createQueryTestHelper(
+    parser: ScenarioParser<ScenarioWithQueries<AF, QF>>
+) = ScriptGenerationTesting(::generateQueryScenario, parser)
