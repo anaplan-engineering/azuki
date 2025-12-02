@@ -208,7 +208,7 @@ class ScriptGenerationServiceStringFragmentsTest {
 
     companion object {
 
-        fun generateAndRender(body: ScriptGenerationService<*, *, *, *, *, *>.() -> ScenarioScript) =
+        fun generateAndRender(body: ScriptGenerationService<*, *, *, *, *, *, *>.() -> ScenarioScript) =
             ScriptGenerationService.standalone.body().render().trim()
     }
 }

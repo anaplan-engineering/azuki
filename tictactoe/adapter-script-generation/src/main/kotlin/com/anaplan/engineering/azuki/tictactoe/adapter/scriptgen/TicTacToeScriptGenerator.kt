@@ -12,7 +12,8 @@ val TicTacToeScriptGeneration = ScriptGenerationService.new(TicTacToeScriptGener
     TicTacToeScriptGenerationCheckFactory,
     ::TicTacToeDeclarationState).withEnvironmentFactory(::TicTacToeGenerationEnvironment)
     .withActionGeneratorFactory(TicTacToeScriptGenerationActionGeneratorFactory)
-    .withQueryFactories(TicTacToeScriptGenerationQueryQueryFactory, TicTacToeScriptGenerationVerificationQueryFactory)
+    .withQueryFactory(TicTacToeScriptGenerationQueryQueryFactory)
+    .withVerifyFactory(TicTacToeScriptGenerationVerificationQueryFactory)
     .build()
 
 // None of the declaration builders for TicTacToe use the environment:

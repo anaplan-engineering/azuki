@@ -14,7 +14,8 @@ import com.anaplan.engineering.azuki.declaration.*
 class ScriptGenerationService<
     out AF : ActionFactory,
     out CF : CheckFactory,
-    out QF : QueryFactory,
+    out QQF : QueryFactory,
+    out VQF : QueryFactory,
     out AGF : ActionGeneratorFactory,
     DS : DeclarationState,
     E : ScriptGenerationEnvironment,
@@ -25,8 +26,8 @@ class ScriptGenerationService<
     internal val declarationStateFactory: DeclarationStateFactory<DS>,
     // optional parameters
     internal val environmentFactory: ScriptGenerationEnvironmentFactory<E>,
-    internal val queryQueryFactory: QF,
-    internal val verifyQueryFactory: QF,
+    internal val queryQueryFactory: QQF,
+    internal val verifyQueryFactory: VQF,
     internal val actionGeneratorFactory: AGF,
 ) {
 
@@ -38,7 +39,8 @@ class ScriptGenerationService<
         out AF : ActionFactory,
         out CF : CheckFactory,
         // optional factories (these require calling 'withXYZFactory')
-        out QF : QueryFactory,
+        out QQF : QueryFactory,
+        out VQF : QueryFactory,
         out AGF : ActionGeneratorFactory,
         // mandatory non-factory parameters
         DS : DeclarationState,
@@ -51,8 +53,8 @@ class ScriptGenerationService<
         internal val declarationStateFactory: DeclarationStateFactory<DS>,
         // optional parameters
         internal val environmentFactory: ScriptGenerationEnvironmentFactory<E>,
-        internal val queryQueryFactory: QF,
-        internal val verifyQueryFactory: QF,
+        internal val queryQueryFactory: QQF,
+        internal val verifyQueryFactory: VQF,
         internal val actionGeneratorFactory: AGF,
     ) {
 
@@ -81,14 +83,27 @@ class ScriptGenerationService<
             )
 
         /**
-         * Adds query factories to this service, changing the type of accepted scenarios accordingly.
+         * Adds a `query`-query factory to this service, changing the type of accepted scenarios accordingly.
          */
-        fun <N : QueryFactory> withQueryFactories(query: N, verify: N) = Builder(
+        fun <N : QueryFactory> withQueryFactory(query: N) = Builder(
             actionFactory,
             checkFactory,
             declarationStateFactory,
             environmentFactory,
             queryQueryFactory = query,
+            verifyQueryFactory,
+            actionGeneratorFactory,
+        )
+
+        /**
+         * Adds a `verify`-query factory to this service, changing the type of accepted scenarios accordingly.
+         */
+        fun <N : QueryFactory> withVerifyFactory(verify: N) = Builder(
+            actionFactory,
+            checkFactory,
+            declarationStateFactory,
+            environmentFactory,
+            queryQueryFactory,
             verifyQueryFactory = verify,
             actionGeneratorFactory,
         )
@@ -138,7 +153,7 @@ class ScriptGenerationService<
     /**
      * Generates a script for a query scenario.
      */
-    fun generateQueryScenario(scenario: ScenarioWithQueries<in AF, in QF>) = given {
+    fun generateQueryScenario(scenario: ScenarioWithQueries<in AF, in QQF>) = given {
         fromScenario(scenario)
     }.whenever {
         fromScenario(scenario)
@@ -152,7 +167,7 @@ class ScriptGenerationService<
      * This allows the same builder to be used for the oracle scenario and for the verifiable scenario derived from its
      * answers.
      */
-    fun getOracleScenarioBuilder(scenario: OracleScenario<in AF, in QF, in AGF>) = given {
+    fun getOracleScenarioBuilder(scenario: OracleScenario<in AF, in VQF, in AGF>) = given {
         fromScenario(scenario)
     }.generateBlocks {
         fromScenario(scenario)
@@ -167,7 +182,7 @@ class ScriptGenerationService<
     /**
      * Generates a script for an oracle scenario.
      */
-    fun generateOracleScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
+    fun generateOracleScenario(scenario: OracleScenario<in AF, in VQF, in AGF>) =
         getOracleScenarioBuilder(scenario).oracleScenario
 
     /*
@@ -219,7 +234,7 @@ class ScriptGenerationService<
     /**
      * Builders that allow `.generate {}` (given, whenever, and the two types of generate block themselves).
      */
-    interface AllowsGenerate<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory, out N> {
+    interface AllowsGenerate<out AF : ActionFactory, out VQF : QueryFactory, out AGF : ActionGeneratorFactory, out N> {
         /**
          * Constructs a single generate block by mixing in generators from one or more sources.
          */
@@ -228,11 +243,11 @@ class ScriptGenerationService<
         /**
          * Constructs multiple generate blocks by mixing in generators from one or more sources.
          */
-        fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit): N
+        fun generateBlocks(body: GenerateBlocksBuilder<AF, VQF, AGF>.() -> Unit): N
     }
 
     inner class Given(internal val environment: E, contents: List<ScriptElement>) :
-        AllowsGenerate<AF, QF, AGF, GivenGenerate> {
+        AllowsGenerate<AF, VQF, AGF, GivenGenerate> {
 
         val block = ScriptBlock("given", contents)
 
@@ -245,8 +260,8 @@ class ScriptGenerationService<
         /**
          * Constructs multiple given-generate blocks by mixing in generators from one or more sources.
          */
-        override fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit) =
-            GivenGenerate(this, GivenGenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory).build(body))
+        override fun generateBlocks(body: GenerateBlocksBuilder<AF, VQF, AGF>.() -> Unit) =
+            GivenGenerate(this, GivenGenerateBlocksBuilder<AF, VQF, AGF>(actionGeneratorFactory).build(body))
     }
 
     abstract inner class Whenever(contents: List<ScriptElement>) {
@@ -270,7 +285,7 @@ class ScriptGenerationService<
         /**
          * Constructs a query block by mixing in queries from one or more sources.
          */
-        fun query(body: QueryBuilder<QF, E>.() -> Unit) =
+        fun query(body: QueryBuilder<QQF, E>.() -> Unit) =
             GivenWheneverQuery(this, QueryBuilder(queryQueryFactory, environment).build(body))
     }
 
@@ -300,7 +315,7 @@ class ScriptGenerationService<
      * A list of generate blocks in 'given' position.
      */
     inner class GivenGenerate(val given: Given, subBlocks: List<ScriptBlock>) :
-        AllowsGenerate<AF, QF, AGF, GivenGenerate> {
+        AllowsGenerate<AF, VQF, AGF, GivenGenerate> {
 
         var blockList = ScriptElementList<ScriptBlock>(subBlocks)
 
@@ -310,7 +325,7 @@ class ScriptGenerationService<
         fun whenever(body: WheneverBuilder<AF, E>.() -> Unit) =
             GivenGenerateWhenever(this, WheneverBuilder(actionFactory, environment).build(body))
 
-        override fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit) = apply {
+        override fun generateBlocks(body: GenerateBlocksBuilder<AF, VQF, AGF>.() -> Unit) = apply {
             blockList += given.generateBlocks(body).blockList
         }
 
@@ -321,23 +336,23 @@ class ScriptGenerationService<
      * A whenever block following a given-generate block.
      */
     inner class GivenGenerateWhenever(val givenGenerate: GivenGenerate, contents: List<ScriptElement>) :
-        Whenever(contents), AllowsGenerate<AF, QF, AGF, GivenGenerateWheneverGenerate> {
+        Whenever(contents), AllowsGenerate<AF, VQF, AGF, GivenGenerateWheneverGenerate> {
 
         override val given = givenGenerate.given
 
         /**
          * Constructs multiple whenever-generate blocks by mixing in generators from one or more sources.
          */
-        override fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit) =
+        override fun generateBlocks(body: GenerateBlocksBuilder<AF, VQF, AGF>.() -> Unit) =
             GivenGenerateWheneverGenerate(this,
-                WheneverGenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory).build(body))
+                WheneverGenerateBlocksBuilder<AF, VQF, AGF>(actionGeneratorFactory).build(body))
     }
 
     /**
      * A list of generate blocks in 'whenever' position.
      */
     inner class GivenGenerateWheneverGenerate(val whenever: GivenGenerateWhenever, subBlocks: List<ScriptBlock>) :
-        AllowsGenerate<AF, QF, AGF, GivenGenerateWheneverGenerate> {
+        AllowsGenerate<AF, VQF, AGF, GivenGenerateWheneverGenerate> {
 
         var blockList = ScriptElementList<ScriptBlock>(subBlocks)
         val givenGenerate = whenever.givenGenerate
@@ -346,10 +361,10 @@ class ScriptGenerationService<
         /**
          * Constructs a verify block by mixing in queries from one or more sources.
          */
-        fun verify(body: QueryBuilder<QF, E>.() -> Unit) =
+        fun verify(body: QueryBuilder<VQF, E>.() -> Unit) =
             GivenGenerateWheneverGenerateVerify(this, QueryBuilder(verifyQueryFactory, environment).build(body))
 
-        override fun generateBlocks(body: GenerateBlocksBuilder<AF, QF, AGF>.() -> Unit) = apply {
+        override fun generateBlocks(body: GenerateBlocksBuilder<AF, VQF, AGF>.() -> Unit) = apply {
             blockList += whenever.generateBlocks(body).blockList
         }
 

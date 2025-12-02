@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 
-import com.anaplan.engineering.azuki.script.generation.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationSystemWriter
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator

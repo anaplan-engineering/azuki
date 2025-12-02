@@ -107,20 +107,20 @@ class ScriptGenerationTesting<S : BuildableScenario<*>>(
 /**
  * Creates a test helper for verifiable scenarios, given a way to parse them.
  */
-fun <AF : ActionFactory, CF : CheckFactory> ScriptGenerationService<AF, CF, *, *, *, *>.createVerifiableTestHelper(
+fun <AF : ActionFactory, CF : CheckFactory> ScriptGenerationService<AF, CF, *, *, *, *, *>.createVerifiableTestHelper(
     parser: ScenarioParser<VerifiableScenario<AF, CF>>
 ) = ScriptGenerationTesting(::generateVerifiableScenario, parser)
 
 /**
  * Creates a test helper for oracle scenarios, given a way to parse them.
  */
-fun <AF : ActionFactory, QF : QueryFactory, AGF: ActionGeneratorFactory> ScriptGenerationService<AF, *, QF, AGF, *, *>.createOracleTestHelper(
-    parser: ScenarioParser<OracleScenario<AF, QF, AGF>>
+fun <AF : ActionFactory, VQF : QueryFactory, AGF: ActionGeneratorFactory> ScriptGenerationService<AF, *, *, VQF, AGF, *, *>.createOracleTestHelper(
+    parser: ScenarioParser<OracleScenario<AF, VQF, AGF>>
 ) = ScriptGenerationTesting(::generateOracleScenario, parser)
 
 /**
  * Creates a test helper for query scenarios, given a way to parse them.
  */
-fun <AF : ActionFactory, QF : QueryFactory> ScriptGenerationService<AF, *, QF, *, *, *>.createQueryTestHelper(
-    parser: ScenarioParser<ScenarioWithQueries<AF, QF>>
+fun <AF : ActionFactory, QQF : QueryFactory> ScriptGenerationService<AF, *, QQF, *, *, *, *>.createQueryTestHelper(
+    parser: ScenarioParser<ScenarioWithQueries<AF, QQF>>
 ) = ScriptGenerationTesting(::generateQueryScenario, parser)
