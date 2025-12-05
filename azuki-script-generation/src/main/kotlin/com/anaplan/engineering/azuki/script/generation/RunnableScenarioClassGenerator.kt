@@ -41,7 +41,7 @@ open class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *, *,
         appendLine("    fun test() {")
         appendLine(scenarioScript.render {
             indentLevel = 2
-            scriptType = ScriptType.Standalone
+            scriptType = ScriptType.Inline
             // We're going to format the whole test-case anyway, so formatting twice is pointless
             formatter = Formatter.None
         })
