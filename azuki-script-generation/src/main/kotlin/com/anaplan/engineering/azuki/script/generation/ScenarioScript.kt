@@ -163,7 +163,7 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
     val elements get() = if (inner is ScriptElementList<*>) inner.elements else listOf(inner)
 
     override fun render(ctx: RenderContext) = with(ctx) {
-        listOf("$indent$header", inner.render(nextIndentLevel), indent).joinToString("\n")
+        listOf("$indent$header {", inner.render(nextIndentLevel), "$indent}").joinToString("\n")
     }
 
     /**
