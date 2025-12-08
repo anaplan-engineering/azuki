@@ -42,3 +42,5 @@ includeBuild("build-conventions")
 includeBuild("vdm-animation")
 includeBuild("vdm-stub-generator")
 includeBuild("azuki-platform")
+
+include 'azuki-verify:azuki-verify-generation'

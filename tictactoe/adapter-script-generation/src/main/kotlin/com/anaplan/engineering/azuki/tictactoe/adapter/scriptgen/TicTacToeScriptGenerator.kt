@@ -2,6 +2,9 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.script.generation.*
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
+import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName
+import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toClassName
+import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeRunnableScenario
@@ -13,8 +16,7 @@ val TicTacToeScriptGeneration = ScriptGenerationService.new(TicTacToeScriptGener
     ::TicTacToeDeclarationState).withEnvironmentFactory(::TicTacToeGenerationEnvironment)
     .withActionGeneratorFactory(TicTacToeScriptGenerationActionGeneratorFactory)
     .withQueryFactory(TicTacToeScriptGenerationQueryQueryFactory)
-    .withVerifyFactory(TicTacToeScriptGenerationVerificationQueryFactory)
-    .build()
+    .withVerifyFactory(TicTacToeScriptGenerationVerificationQueryFactory).build()
 
 // None of the declaration builders for TicTacToe use the environment:
 typealias TicTacToeScriptGenerationDeclarationBuilder<D> = ScriptGenerationDeclarationBuilder<TicTacToeGenerationEnvironment, D>
@@ -60,14 +62,13 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
     }
 }
 
-object TicTacToeRunnableScenarioClassGenerator : RunnableScenarioClassGenerator<TicTacToeRunnableScenario>(
-    ticTacToeStandardImports.toList(),
-    TicTacToeRunnableScenario::class)
+object TicTacToeRunnableScenarioClassGenerator :
+    RunnableScenarioClassGenerator(ticTacToeStandardImports.toList(), TicTacToeRunnableScenario::class.toClassName())
 
 /**
  * Default imports that should be added to any tic-tac-toe script (generated or parsed).
  */
-val ticTacToeStandardImports = arrayOf(
-    "com.anaplan.engineering.azuki.tictactoe.dsl.*",
-    "com.anaplan.engineering.azuki.tictactoe.*"
+val ticTacToeStandardImports = listOf(
+    KotlinName.wildcard("com.anaplan.engineering.azuki.tictactoe"),
+    KotlinName.wildcard("com.anaplan.engineering.azuki.tictactoe.dsl"),
 )

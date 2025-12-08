@@ -278,7 +278,8 @@ class TicTacToeScriptGeneratorTest {
     }
 }
 
-class TicTacToeScenarioParser<S: TicTacToeBuildableScenario> : SimpleScenarioParser<S>() {
+class TicTacToeScenarioParser<S : TicTacToeBuildableScenario> : SimpleScenarioParser<S>() {
 
-    override val defaultImports: ScenarioParsingContext.() -> Unit = { import(*ticTacToeStandardImports) }
+    override val defaultImports: ScenarioParsingContext.() -> Unit =
+        { import(*ticTacToeStandardImports.map { it.fullName }.toTypedArray()) }
 }
