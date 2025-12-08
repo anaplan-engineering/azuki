@@ -24,9 +24,10 @@ class ScriptGenerationServiceStringFragmentsTest {
         """.trimIndent()) {
             generateAndRender {
                 given {
-                    fromFragments("thereIsAFoo(fooA)", "thereIsAFoo(fooB)")
+                    +"thereIsAFoo(fooA)"
+                    +"thereIsAFoo(fooB)"
                 }.whenever {
-                    fromFragments("deleteFoo(fooA)")
+                    +"deleteFoo(fooA)"
                 }.then {}.verifiableScenario
             }
         }
@@ -51,11 +52,13 @@ class ScriptGenerationServiceStringFragmentsTest {
         """.trimIndent()) {
             generateAndRender {
                 given {
-                    fromFragments("thereIsAFoo(fooA)", "thereIsAFoo(fooB)")
+                    +"thereIsAFoo(fooA)"
+                    +"thereIsAFoo(fooB)"
                 }.whenever {
-                    fromFragments("deleteFoo(fooA)")
+                    +"deleteFoo(fooA)"
                 }.then {
-                    fromFragments("fooExists(fooA)", "fooDoesNotExist(fooB)")
+                    +"fooExists(fooA)"
+                    +"fooDoesNotExist(fooB)"
                 }.verifiableScenario
             }
         }
@@ -80,11 +83,13 @@ class ScriptGenerationServiceStringFragmentsTest {
         """.trimIndent()) {
             generateAndRender {
                 given {
-                    fromFragments("thereIsAFoo(fooA)", "thereIsAFoo(fooB)")
+                    +"thereIsAFoo(fooA)"
+                    +"thereIsAFoo(fooB)"
                 }.whenever {
-                    fromFragments("deleteFoo(fooA)")
+                    +"deleteFoo(fooA)"
                 }.query {
-                    fromFragments("fooExists(fooA)", "fooExists(fooB)")
+                    +"fooExists(fooA)"
+                    +"fooExists(fooB)"
                 }.queryScenario
             }
         }
@@ -123,20 +128,23 @@ class ScriptGenerationServiceStringFragmentsTest {
         """.trimIndent()) {
             generateAndRender {
                 given {
-                    fromFragments("thereIsAFoo(fooA)")
+                    +"thereIsAFoo(fooA)"
                 }.generate {
-                    fromFragments("createFoo(fooB)")
-                    fromFragments("createFoo(fooC)")
+                    +"createFoo(fooB)"
+                    +"createFoo(fooC)"
                 }.generate {
-                    fromFragments("createBar(barA)")
+                    +"createBar(barA)"
                 }.whenever {
-                    fromFragments("deleteFoo(fooA)")
+                    +"deleteFoo(fooA)"
                 }.generate {
-                    fromFragments("deleteARandomFoo()")
+                    +"deleteARandomFoo()"
                 }.generate {
-                    fromFragments("deleteARandomBar()")
+                    +"deleteARandomBar()"
                 }.verify {
-                    fromFragments("fooExists(fooA)", "fooExists(fooB)", "fooExists(fooC)", "barExists(barA)")
+                    +"fooExists(fooA)"
+                    +"fooExists(fooB)"
+                    +"fooExists(fooC)"
+                    +"barExists(barA)"
                 }.oracleScenario
             }
         }
@@ -159,15 +167,15 @@ class ScriptGenerationServiceStringFragmentsTest {
         """.trimIndent()) {
             generateAndRender {
                 given {
-                    fromFragments("thereIsAFoo(fooA)")
+                    +"thereIsAFoo(fooA)"
                 }.generate {
                     // this can be left empty
                 }.whenever {
-                    fromFragments("deleteFoo(fooA)")
+                    +"deleteFoo(fooA)"
                 }.generate {
                     // this can be left empty
                 }.verify {
-                    fromFragments("fooExists(fooA)")
+                    +"fooExists(fooA)"
                 }.oracleScenario
             }
         }
@@ -192,15 +200,15 @@ class ScriptGenerationServiceStringFragmentsTest {
         """.trimIndent()) {
             generateAndRender {
                 given {
-                    fromFragments("thereIsAFoo(fooA)")
+                    +"thereIsAFoo(fooA)"
                 }.generateBlocks { /* this can be left empty */ }.whenever {
                     /* leaving this empty shouldn't cause whenever to disappear!
                      * it's needed to separate the given-generate and when-generate phases
                      */
                 }.generate {
-                    fromFragments("deleteARandomFoo()")
+                    +"deleteARandomFoo()"
                 }.verify {
-                    fromFragments("fooExists(fooA)")
+                    +"fooExists(fooA)"
                 }.oracleScenario
             }
         }
@@ -208,7 +216,7 @@ class ScriptGenerationServiceStringFragmentsTest {
 
     companion object {
 
-        fun generateAndRender(body: ScriptGenerationService<*, *, *, *, *, *>.() -> ScenarioScript) =
+        fun generateAndRender(body: ScriptGenerationService<*, *, *, *, *, *, *>.() -> ScenarioScript) =
             ScriptGenerationService.standalone.body().render().trim()
     }
 }

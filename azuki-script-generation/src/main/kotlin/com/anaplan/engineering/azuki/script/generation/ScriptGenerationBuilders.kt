@@ -37,17 +37,17 @@ import kotlin.collections.plusAssign
 abstract class BasicScriptBlockBuilder() {
 
     /**
-     * Supplies script fragments to this builder directly.
+     * Supplies a script fragment to this builder directly.
+     * Note that all directly-supplied fragments and elements appear _before_ those specified by other means.
      */
-    fun fromFragments(vararg fragments: String) {
-        fromElements(fragments.map(::ScriptStringFragment))
-    }
+    operator fun String.unaryPlus() = +ScriptStringFragment(this)
 
     /**
-     * Supplies script elements to this builder directly.
+     * Supplies a script element to this builder directly.
+     * Note that all directly-supplied fragments and elements appear _before_ those specified by other means.
      */
-    fun fromElements(elements: List<ScriptElement>) {
-        explicitScriptElements += elements
+    operator fun ScriptElement.unaryPlus() {
+        explicitScriptElements += this
     }
 
     private val explicitScriptElements = mutableListOf<ScriptElement>()
@@ -72,6 +72,7 @@ abstract class BasicStageBuilder<in S : BuildableScenario<*>, E : ScriptGenerati
     }
 }
 
+@ScriptGenerationDsl
 class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGenerationEnvironment>(
     private val actionFactory: AF, private val declarationStateFactory: DeclarationStateFactory<DS>, environment: E
 ) : BasicStageBuilder<BuildableScenario<in AF>, E>(environment) {
@@ -101,6 +102,7 @@ class GivenBuilder<out AF : ActionFactory, DS : DeclarationState, E : ScriptGene
     }
 }
 
+@ScriptGenerationDsl
 class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(val actionFactory: AF, environment: E) :
     BasicStageBuilder<BuildableScenario<in AF>, E>(environment) {
 
@@ -124,6 +126,7 @@ class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(v
     private val commands = mutableListOf<ScriptGenerationAction<E>>()
 }
 
+@ScriptGenerationDsl
 class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
     private val checkFactory: CF, environment: E
 ) : BasicStageBuilder<VerifiableScenario<*, in CF>, E>(environment) {
@@ -145,7 +148,7 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
      * Populates the script with checks derived from these validatable answers.
      */
     fun fromValidatableAnswers(answers: Collection<ValidatableAnswer<*, in CF>>) =
-        fromChecks(answers.flatMap { it.createValidationChecks(checkFactory)})
+        fromChecks(answers.flatMap { it.createValidationChecks(checkFactory) })
 
     /**
      * Populates the script with these checks.
@@ -171,6 +174,7 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
     private val checks = mutableListOf<ScriptGenerationCheck<E>>()
 }
 
+@ScriptGenerationDsl
 class QueryBuilder<out QF : QueryFactory, E : ScriptGenerationEnvironment>(
     private val queryFactory: QF, environment: E
 ) : BasicStageBuilder<ScenarioWithQueries<*, in QF>, E>(environment) {
@@ -232,12 +236,11 @@ abstract class GenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFacto
     /**
      * Adds the generate blocks from this oracle scenario.
      */
-    fun fromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) =
-        actionGeneratorsFromScenario(scenario).forEach {
-            block {
-                fromActionGenerators(it)
-            }
+    fun fromScenario(scenario: OracleScenario<in AF, in QF, in AGF>) = actionGeneratorsFromScenario(scenario).forEach {
+        block {
+            fromActionGenerators(it)
         }
+    }
 
     protected abstract fun actionGeneratorsFromScenario(scenario: OracleScenario<in AF, in QF, in AGF>): List<List<ActionGenerator>>
 
@@ -247,6 +250,7 @@ abstract class GenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFacto
 /**
  * Builds an individual block in a list of generate blocks.
  */
+@ScriptGenerationDsl
 class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
 
     fun build(body: GenerateBlockBuilder.() -> Unit) = apply(body).scriptElements
@@ -263,6 +267,7 @@ class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
     override val builtScriptElements get() = actionGenerators.map { ScriptStringFragment(it.getActionGeneratorScript()) }
 }
 
+@ScriptGenerationDsl
 class GivenGenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     actionGeneratorFactory: AGF
 ) : GenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory) {
@@ -271,6 +276,7 @@ class GivenGenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFactory, 
         scenario.givenActionGenerations(actionGeneratorFactory)
 }
 
+@ScriptGenerationDsl
 class WheneverGenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFactory, out AGF : ActionGeneratorFactory>(
     actionGeneratorFactory: AGF
 ) : GenerateBlocksBuilder<AF, QF, AGF>(actionGeneratorFactory) {
@@ -299,3 +305,7 @@ private inline fun <reified U> logRefineFailure(failure: Any?) {
     val why = if (failure is U) "unsupported" else "wrong type"
     BasicStageBuilder.Log.error(" * {}: {}", why, failure)
 }
+
+@DslMarker
+@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
+annotation class ScriptGenerationDsl

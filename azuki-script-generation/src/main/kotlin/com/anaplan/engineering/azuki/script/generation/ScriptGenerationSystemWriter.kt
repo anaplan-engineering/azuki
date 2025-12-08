@@ -16,7 +16,7 @@ import java.io.File
 abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> :
     SystemWriter<AF, CF, QF, AGF> {
 
-    protected abstract val scriptGeneration: ScriptGenerationService<AF, CF, QF, AGF, *, *>
+    protected abstract val scriptGeneration: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>
     protected abstract val classGeneration: RunnableScenarioClassGenerator<*>
     protected abstract val outputDir: File
 

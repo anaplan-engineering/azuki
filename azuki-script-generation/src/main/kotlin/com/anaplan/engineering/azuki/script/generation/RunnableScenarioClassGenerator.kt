@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 /**
  * Generates full Kotlin JUnit runnable scenario classes given a scenario script.
  */
-abstract class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *, *, *, *, *, *, *, *>>(
+open class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *, *, *, *, *, *, *, *>>(
     val adapterSpecificImports: List<String>,
     val scenarioClass: KClass<S>,
 ) {
@@ -41,7 +41,7 @@ abstract class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *
         appendLine("    fun test() {")
         appendLine(scenarioScript.render {
             indentLevel = 2
-            scriptType = ScriptType.Standalone
+            scriptType = ScriptType.Inline
             // We're going to format the whole test-case anyway, so formatting twice is pointless
             formatter = Formatter.None
         })

@@ -2,10 +2,10 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
-import com.anaplan.engineering.azuki.script.generation.ScriptGenerationTesting
+import com.anaplan.engineering.azuki.script.generation.createOracleTestHelper
+import com.anaplan.engineering.azuki.script.generation.createVerifiableTestHelper
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeOracleScenario
-import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeQueryScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeVerifiableScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.oracleScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.verifiableScenario
@@ -22,15 +22,10 @@ class TicTacToeScriptGeneratorTest {
         const val X = "X"
         const val O = "O"
 
-        val ScenarioScriptingTestUtils = ScriptGenerationTesting(generator = {
-            TicTacToeScriptGeneration.generateScenarioOfUnknownType(it,
-                { this as? TicTacToeVerifiableScenario },
-                { this as? TicTacToeOracleScenario },
-                { this as? TicTacToeQueryScenario })
-        }, parser = object : SimpleScenarioParser<TicTacToeBuildableScenario>() {
-
-            override val defaultImports: ScenarioParsingContext.() -> Unit = { import(*ticTacToeStandardImports) }
-        })
+        val VerifiableScenarioTesting =
+            TicTacToeScriptGeneration.createVerifiableTestHelper(TicTacToeScenarioParser<TicTacToeVerifiableScenario>())
+        val OracleScenarioTesting =
+            TicTacToeScriptGeneration.createOracleTestHelper(TicTacToeScenarioParser<TicTacToeOracleScenario>())
 
         private fun renderedThenElements(scenario: TicTacToeVerifiableScenario): List<String> =
             TicTacToeScriptGeneration.generateVerifiableScenario(scenario).then.elements.map { it.render() }
@@ -168,7 +163,7 @@ class TicTacToeScriptGeneratorTest {
                 boardHasToken(gameA, X, 3 to 3)
             }
         }
-        ScenarioScriptingTestUtils.assertScenariosProduceSameScript(composed, decomposed)
+        VerifiableScenarioTesting.assertScenariosProduceSameScript(composed, decomposed)
     }
 
     @Test
@@ -206,7 +201,7 @@ class TicTacToeScriptGeneratorTest {
 
     @Test
     fun moves() {
-        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        VerifiableScenarioTesting.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAPlayOrder(orderA, O, X)
                 thereIsAGame(gameA, orderA, """
@@ -228,7 +223,7 @@ class TicTacToeScriptGeneratorTest {
 
     @Test
     fun movesAndOnlyTheMoves() {
-        ScenarioScriptingTestUtils.checkScenarioGeneration(verifiableScenario {
+        VerifiableScenarioTesting.checkScenarioGeneration(verifiableScenario {
             given {
                 thereIsAPlayOrder(orderA, O, X)
                 thereIsAGame(gameA, orderA, """
@@ -253,7 +248,7 @@ class TicTacToeScriptGeneratorTest {
 
     @Test
     fun exampleOracleScenario() {
-        ScenarioScriptingTestUtils.checkScenarioGeneration(oracleScenario {
+        OracleScenarioTesting.checkScenarioGeneration(oracleScenario {
             generate {
                 createPlayOrder("orderA")
                 createPlayOrder("orderB")
@@ -281,4 +276,9 @@ class TicTacToeScriptGeneratorTest {
             }
         })
     }
+}
+
+class TicTacToeScenarioParser<S: TicTacToeBuildableScenario> : SimpleScenarioParser<S>() {
+
+    override val defaultImports: ScenarioParsingContext.() -> Unit = { import(*ticTacToeStandardImports) }
 }
