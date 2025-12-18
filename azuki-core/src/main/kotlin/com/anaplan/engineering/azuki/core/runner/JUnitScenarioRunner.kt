@@ -321,7 +321,9 @@ class JUnitScenarioRunner<
             val failure = runTask(TaskType.CheckVersion, scenario) { implementation ->
                 sinceVersionConstraints.find { !implementation.versionFilter.canVerify(it.version) }
             }.result
-            if (failure != null) incompatibleVersion("Skipping - scenario version ${failure.version} incompatible with $description")
+            if (failure != null) {
+                incompatibleVersion("Skipping - scenario version ${failure.version} incompatible with $description")
+            }
         }
 
         private val sinceVersionConstraints by lazy {
