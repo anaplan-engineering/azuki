@@ -45,7 +45,8 @@ annotation class ModellingExample(
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class ExtendedTimeout(
-    val timeout: Long, val timeUnit: TimeUnit
+    val timeout: Long,
+    val timeUnit: TimeUnit
 )
 
 @Target(AnnotationTarget.FUNCTION)
@@ -93,10 +94,7 @@ enum class JUnitScenarioResult(val category: Category) {
     InvalidSystem(Category.Error);
 
     enum class Category {
-        Pass,
-        Fail,
-        Skip,
-        Error
+        Pass, Fail, Skip, Error
     }
 }
 
@@ -232,7 +230,13 @@ class JUnitScenarioRunner<
         run.parameters,
     )
 
-    private class ScenarioInvoker<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory, S : VerifiableScenario<AF, CF>>(
+    private class ScenarioInvoker<
+        AF : ActionFactory,
+        CF : CheckFactory,
+        QF : QueryFactory,
+        AGF : ActionGeneratorFactory,
+        S : VerifiableScenario<AF, CF>
+        >(
         val build: Method,
         val testClass: KClass<S>,
         val implementationInstance: ImplementationInstance<AF, CF, QF, AGF>,
@@ -258,10 +262,12 @@ class JUnitScenarioRunner<
                         checkImplementationSatisfiesSince(scenario)
                         build.invoke(scenario)
                         val scenarioName = eacMetadata?.scenarioName ?: "${build.declaringClass.name}-${build.name}"
-                        val verifiableScenarioRunner = VerifiableScenarioRunner(implementationInstance,
+                        val verifiableScenarioRunner = VerifiableScenarioRunner(
+                            implementationInstance,
                             persistenceVerificationInstance,
                             scenario,
-                            scenarioName)
+                            scenarioName,
+                        )
                         when (verifiableScenarioRunner.run()) {
                             VerifiableScenarioRunner.Result.UnsupportedCommand -> unsupported("Skipping - unsupported action found",
                                 ::UnsupportedCommandException)
@@ -361,8 +367,8 @@ class JUnitScenarioRunner<
         val result: JUnitScenarioResult
     }
 
-    internal class ScenarioRunException(msg: String, override val result: JUnitScenarioResult) : Exception(msg),
-        ScenarioResultHolder
+    internal class ScenarioRunException(msg: String, override val result: JUnitScenarioResult) :
+        Exception(msg), ScenarioResultHolder
 
     internal abstract class ScenarioUnsupportedException(msg: String, override val result: JUnitScenarioResult) :
         AssumptionViolatedException(msg), ScenarioResultHolder
@@ -435,34 +441,40 @@ class JUnitScenarioRunner<
                         implementation = implementationInstance.implementationName,
                     )
                 }
-                ScenarioRun(eac.summary,
+                ScenarioRun(
+                    eac.summary,
                     JUnitScenarioType.Eac,
                     method,
                     implementationInstance,
                     persistenceVerificationInstance,
-                    eacMetadata = eacMetadata)
+                    eacMetadata = eacMetadata,
+                )
             }
         }
         val modellingExamples = getTestClass().getAnnotatedMethods(ModellingExample::class.java).flatMap { method ->
             val modellingExample = method.getAnnotation(ModellingExample::class.java)!!
             implementationInstances.map { implementationInstance ->
-                ScenarioRun(modellingExample.summary,
+                ScenarioRun(
+                    modellingExample.summary,
                     JUnitScenarioType.ModellingExample,
                     method,
                     implementationInstance,
-                    persistenceVerificationInstance)
+                    persistenceVerificationInstance,
+                )
             }
         }
         val adapterTests = getTestClass().getAnnotatedMethods(AdapterTest::class.java).flatMap { method ->
             val adapterTest = method.getAnnotation(AdapterTest::class.java)!!
             implementationInstances.map { implementationInstance ->
-                ScenarioRun(method.name,
+                ScenarioRun(
+                    method.name,
                     JUnitScenarioType.AdapterTest,
                     method,
                     implementationInstance,
                     persistenceVerificationInstance,
                     ignoreWhenUnsupported = false,
-                    expectSkip = adapterTest.expectSkip)
+                    expectSkip = adapterTest.expectSkip,
+                )
             }
         }
         val analysisScenarios = getTestClass().getAnnotatedMethods(AnalysisScenario::class.java).flatMap { method ->
@@ -533,12 +545,15 @@ class JUnitScenarioRunner<
         if (kbIssues != null) issues.addAll(kbIssues)
         val annotations =
             mutableListOf(TestImplementation(implementationName, child.implementationInstance.version ?: ""),
-                ScenarioInfo(testClass.name,
+                ScenarioInfo(
+                    testClass.name,
                     methodName,
                     child.type,
                     hasKnownBug,
                     hasToBeDone,
-                    issues.flatMap { it.jiraIds.toList() }.toTypedArray())).apply {
+                    issues.flatMap { it.jiraIds.toList() }.toTypedArray(),
+                ),
+            ).apply {
                 child.persistenceVerificationInstance.let {
                     if (it != null) {
                         add(PersistenceImplementation(it.implementationName, it.version ?: ""))
@@ -556,5 +571,4 @@ class JUnitScenarioRunner<
     private val excludeImplFromDescription by lazy {
         System.getProperty(excludeImplFromEacDescriptionPropertyName, "false").toBoolean()
     }
-
 }
