@@ -259,7 +259,7 @@ class JUnitScenarioRunner<
                             testClass.primaryConstructor!!.call(*nonSpecialParameters)
                         }
 
-                        checkImplementationSatisfiesSince(scenario)
+                        checkInstancesSatisfySince(scenario)
                         build.invoke(scenario)
                         val scenarioName = eacMetadata?.scenarioName ?: "${build.declaringClass.name}-${build.name}"
                         val verifiableScenarioRunner = VerifiableScenarioRunner(
@@ -314,14 +314,14 @@ class JUnitScenarioRunner<
         }
 
         @Throws(IncompatibleVersionException::class, UnexpectedSkipException::class)
-        private fun checkImplementationSatisfiesSince(scenario: S) {
-            implementationInstance.checkImplementationSatisfiesVersions(scenario, "implementation instance")
-            persistenceVerificationInstance?.checkImplementationSatisfiesVersions(scenario,
+        private fun checkInstancesSatisfySince(scenario: S) {
+            implementationInstance.checkSatisfiesSince(scenario, "implementation instance")
+            persistenceVerificationInstance?.checkSatisfiesSince(scenario,
                 "persistence verification implementation instance")
         }
 
         @Throws(IncompatibleVersionException::class, UnexpectedSkipException::class)
-        private fun ImplementationInstance<AF, CF, QF, AGF>.checkImplementationSatisfiesVersions(
+        private fun ImplementationInstance<AF, CF, QF, AGF>.checkSatisfiesSince(
             scenario: S, description: String
         ) {
             val failure = runTask(TaskType.CheckVersion, scenario) { implementation ->
@@ -512,10 +512,10 @@ class JUnitScenarioRunner<
     }
 
     private fun getParameterPermutations(): Collection<Array<Any>> {
-        val methodResult = parameterMethod!!.method.invoke(kClass.companionObjectInstance!!)
-        check(methodResult is Collection<*>) { "Parameter method $parameterMethod returns object with invalid type" }
-        val perms = methodResult.filterIsInstance<Array<Any>>()
-        check(perms.size == methodResult.size) { "Parameter method $parameterMethod returns collection with invalid element type" }
+        val invokeResult = parameterMethod!!.method.invoke(kClass.companionObjectInstance!!)
+        check(invokeResult is Collection<*>) { "Parameter method $parameterMethod returns object with invalid type" }
+        val perms = invokeResult.filterIsInstance<Array<Any>>()
+        check(perms.size == invokeResult.size) { "Parameter method $parameterMethod returns collection with invalid element type" }
         return perms
     }
 
