@@ -15,4 +15,5 @@ task publishAllToMavenLocal {
     dependsOn ':azuki-verify:azuki-batch-api:publishToMavenLocal'
     dependsOn ':azuki-verify:azuki-batch-guided:publishToMavenLocal'
     dependsOn ':azuki-verify:azuki-orchestrator:publishToMavenLocal'
+    dependsOn ':azuki-verify:azuki-verify-generation:publishToMavenLocal'
 }

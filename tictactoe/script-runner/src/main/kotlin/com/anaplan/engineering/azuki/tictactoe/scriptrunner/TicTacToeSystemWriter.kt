@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 
-import com.anaplan.engineering.azuki.script.generation.ScriptGenerationSystemWriter
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
@@ -8,6 +7,7 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScript
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerationActionGeneratorFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerationCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGenerationQueryQueryFactory
+import com.anaplan.engineering.azuki.verify.generation.ScriptGenerationSystemWriter
 import java.io.File
 
 class TicTacToeSystemWriter :

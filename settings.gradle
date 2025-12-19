@@ -10,6 +10,7 @@ include(
     "azuki-verify:azuki-batch-api",
     "azuki-verify:azuki-batch-guided",
     "azuki-verify:azuki-orchestrator",
+    "azuki-verify:azuki-verify-generation",
     "packaging-tools",
     "tictactoe:dsl",
     "tictactoe:adapter-api",

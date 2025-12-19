@@ -20,7 +20,7 @@ class TicTacToeResultsProcessor(
 ) : ScenarioScriptRunner.ResultProcessor<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory> {
 
     private val jUnitTestCaseWriter =
-        JUnitTestCaseWriter(verifiedTestsDir, unverifiedTestsDir, generatedTestPackage, generatedTestClass)
+        TicTacToeJUnitTestCaseWriter(verifiedTestsDir, unverifiedTestsDir, generatedTestPackage, generatedTestClass)
     private val queryResultsWriter = QueryResultWriter(outputDir, queryResultsFileName)
     private val generatedScenarioWriter = GeneratedScenarioWriter(scenarioName, outputDir)
 
@@ -30,7 +30,7 @@ class TicTacToeResultsProcessor(
         val testFile = jUnitTestCaseWriter.writeTestCase(result)
         queryResultsWriter.writeQueryResults(scenarioName, result)
         val runResult = recordOracleScenarioResult(result, testFile)
-        Log.info("Scenario completed result=$runResult")
+        Log.info("Scenario completed result={}", runResult)
         when (runResult) {
             TicTacToeScenarioRun.Result.Incomplete -> ScenarioScriptRunner.exit("Invalid scenario", ExitCode.InvalidScenario)
             TicTacToeScenarioRun.Result.Errored -> ScenarioScriptRunner.exit("Unknown error", ExitCode.UnknownError)

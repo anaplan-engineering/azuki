@@ -26,8 +26,6 @@ typealias OracleScenarioResult = MultiOracleScenarioRunner.Result<TicTacToeActio
 
 typealias OracleScenarioOracleResult = MultiOracleScenarioRunner.OracleResult<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory>
 
-typealias TicTacToeImplementationInstance = ImplementationInstance<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory>
-
 fun MultiOracleScenarioRunner.OracleResult<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory>.findTask(
     taskType: TaskType
 ) = taskResults.find { it.taskType == taskType }
