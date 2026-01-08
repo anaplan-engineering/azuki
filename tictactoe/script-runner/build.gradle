@@ -12,7 +12,7 @@ configurations {
 dependencies {
     implementation project(":tictactoe:adapter-script-generation")
     implementation project(":azuki-runner")
-    implementation project(":azuki-verify:azuki-verify-generation")
+    implementation project(":azuki-verify:azuki-generation-utilities")
 
     implementation libs.clikt.jvm
     implementation libs.kotlin.reflect
