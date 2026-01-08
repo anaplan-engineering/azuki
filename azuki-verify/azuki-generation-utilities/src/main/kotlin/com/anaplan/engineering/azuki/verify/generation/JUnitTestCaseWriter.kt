@@ -74,7 +74,7 @@ class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFacto
         answers: List<Answer<*, CF>>,
         testImplementation: ImplementationInstance<AF, CF, QF, AGF>,
         verifyingImplementation: ImplementationInstance<AF, CF, QF, AGF>,
-    ) = generateRunnable.generate(className = generatedTestClass ?: ("Generated_" + UUID.randomUUID().toString()),
+    ) = generateRunnable.generate(className = generatedTestClass ?: "Generated_${UUID.randomUUID()}",
         packageName = generatedTestPackage,
         scenarioScript = generateScript.generateVerifiableScenario(baseScenario, answers),
         implementationVersions = mapOf(
