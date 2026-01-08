@@ -1,24 +1,34 @@
-package com.anaplan.engineering.azuki.tictactoe.scriptrunner
+package com.anaplan.engineering.azuki.verify.generation
 
+import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
 import com.anaplan.engineering.azuki.core.runner.TaskType
+import com.anaplan.engineering.azuki.core.runner.oracle.MultiOracleScenarioRunner
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
+import com.anaplan.engineering.azuki.core.system.ActionFactory
+import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
 import com.anaplan.engineering.azuki.core.system.Answer
+import com.anaplan.engineering.azuki.core.system.CheckFactory
+import com.anaplan.engineering.azuki.core.system.QueryFactory
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
-import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator
-import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
+import com.anaplan.engineering.azuki.script.generation.RunnableScenarioClassGenerator
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.*
+import java.util.UUID
 
-class JUnitTestCaseWriter(
+/**
+ * Helper class for writing JUnit test cases produced by a scenario runner.
+ */
+class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
+    private val generateScript: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>,
+    private val generateRunnable: RunnableScenarioClassGenerator<*>,
     private val verifiedTestsDir: File,
     private val unverifiedTestsDir: File,
     private val generatedTestPackage: String,
     private val generatedTestClass: String?,
 ) {
 
-    fun writeTestCase(result: OracleScenarioResult): File? {
+    fun writeTestCase(result: MultiOracleScenarioRunner.Result<AF, CF, QF, AGF>): File? {
         val verifyingOracle = result.oracleResults.lastOrNull()
         if (verifyingOracle == null) {
             Log.debug("Skipping generation of test case as have no oracle results")
@@ -29,7 +39,7 @@ class JUnitTestCaseWriter(
             return null
         }
         val queryTaskResult = result.oracleResults.mapNotNull { it.findTask(TaskType.Query) }.lastOrNull()
-        @Suppress("UNCHECKED_CAST") val answers = queryTaskResult?.result as? List<Answer<*, TicTacToeCheckFactory>>
+        @Suppress("UNCHECKED_CAST") val answers = queryTaskResult?.result as? List<Answer<*, CF>>
         if (answers == null) {
             Log.error("Skipping generation of test case as query result is unexpectedly missing answers")
             return null
@@ -43,10 +53,10 @@ class JUnitTestCaseWriter(
     }
 
     private fun writeTestCase(
-        baseScenario: BuildableScenario<TicTacToeActionFactory>,
-        answers: List<Answer<*, TicTacToeCheckFactory>>,
-        testImplementation: TicTacToeImplementationInstance,
-        verifyingImplementation: TicTacToeImplementationInstance,
+        baseScenario: BuildableScenario<AF>,
+        answers: List<Answer<*, CF>>,
+        testImplementation: ImplementationInstance<AF, CF, QF, AGF>,
+        verifyingImplementation: ImplementationInstance<AF, CF, QF, AGF>,
         targetDir: File
     ): File {
         val runnableScenarioClass =
@@ -60,15 +70,13 @@ class JUnitTestCaseWriter(
     }
 
     private fun createRunnableScenario(
-        baseScenario: BuildableScenario<TicTacToeActionFactory>,
-        answers: List<Answer<*, TicTacToeCheckFactory>>,
-        testImplementation: TicTacToeImplementationInstance,
-        verifyingImplementation: TicTacToeImplementationInstance,
-    ) = TicTacToeRunnableScenarioClassGenerator.generate(
-        // TODO - add utility function for arbitrary name
-        className = generatedTestClass ?: ("Generated_" + UUID.randomUUID().toString().replace("-", "_")),
+        baseScenario: BuildableScenario<AF>,
+        answers: List<Answer<*, CF>>,
+        testImplementation: ImplementationInstance<AF, CF, QF, AGF>,
+        verifyingImplementation: ImplementationInstance<AF, CF, QF, AGF>,
+    ) = generateRunnable.generate(className = generatedTestClass ?: "Generated_${UUID.randomUUID()}",
         packageName = generatedTestPackage,
-        scenarioScript = TicTacToeScriptGeneration.generateVerifiableScenario(baseScenario, answers),
+        scenarioScript = generateScript.generateVerifiableScenario(baseScenario, answers),
         implementationVersions = mapOf(
             testImplementation.implementationName to (testImplementation.version ?: "0.0.0"),
             verifyingImplementation.implementationName to (verifyingImplementation.version ?: "0.0.0"),
@@ -78,4 +86,12 @@ class JUnitTestCaseWriter(
 
         private val Log = LoggerFactory.getLogger(JUnitTestCaseWriter::class.java)
     }
+
+    fun MultiOracleScenarioRunner.OracleResult<AF, CF, QF, AGF>.findTask(
+        taskType: TaskType
+    ) = taskResults.find { it.taskType == taskType }
+
+    fun MultiOracleScenarioRunner.OracleResult<AF, CF, QF, AGF>.hasTask(
+        taskType: TaskType
+    ) = taskResults.any { it.taskType == taskType }
 }

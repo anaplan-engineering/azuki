@@ -15,7 +15,7 @@ open class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *, *,
 ) {
 
     fun generate(
-        className: String = "Generated_" + UUID.randomUUID().toString(),
+        className: String = "Generated_${UUID.randomUUID()}",
         packageName: String = "",
         implementationVersions: Map<String, String> = emptyMap(),
         scenarioScript: ScenarioScript,
