@@ -4,6 +4,9 @@ import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.runner.ExitCode
 import com.anaplan.engineering.azuki.runner.ScenarioScriptRunner
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
+import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator
+import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
+import com.anaplan.engineering.azuki.verify.generation.JUnitTestCaseWriter
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -19,8 +22,12 @@ class TicTacToeResultsProcessor(
     queryResultsFileName: String,
 ) : ScenarioScriptRunner.ResultProcessor<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory> {
 
-    private val jUnitTestCaseWriter =
-        TicTacToeJUnitTestCaseWriter(verifiedTestsDir, unverifiedTestsDir, generatedTestPackage, generatedTestClass)
+    private val jUnitTestCaseWriter: JUnitTestCaseWriter<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory> =
+        JUnitTestCaseWriter(
+            TicTacToeScriptGeneration,
+            TicTacToeRunnableScenarioClassGenerator,
+            verifiedTestsDir, unverifiedTestsDir, generatedTestPackage, generatedTestClass,
+        )
     private val queryResultsWriter = QueryResultWriter(outputDir, queryResultsFileName)
     private val generatedScenarioWriter = GeneratedScenarioWriter(scenarioName, outputDir)
 

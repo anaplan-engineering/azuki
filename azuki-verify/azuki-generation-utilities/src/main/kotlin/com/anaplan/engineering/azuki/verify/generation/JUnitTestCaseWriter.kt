@@ -19,15 +19,14 @@ import java.util.UUID
 /**
  * Helper class for writing JUnit test cases produced by a scenario runner.
  */
-abstract class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
+class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
+    private val generateScript: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>,
+    private val generateRunnable: RunnableScenarioClassGenerator<*>,
     private val verifiedTestsDir: File,
     private val unverifiedTestsDir: File,
     private val generatedTestPackage: String,
     private val generatedTestClass: String?,
 ) {
-
-    abstract val generateScript: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>
-    abstract val generateRunnable: RunnableScenarioClassGenerator<*>
 
     fun writeTestCase(result: MultiOracleScenarioRunner.Result<AF, CF, QF, AGF>): File? {
         val verifyingOracle = result.oracleResults.lastOrNull()
