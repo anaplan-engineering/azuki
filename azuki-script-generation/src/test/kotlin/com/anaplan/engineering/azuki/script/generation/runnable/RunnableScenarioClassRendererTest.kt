@@ -1,10 +1,14 @@
 package com.anaplan.engineering.azuki.script.generation.runnable
 
+import com.anaplan.engineering.azuki.core.runner.AdapterTest
+import com.anaplan.engineering.azuki.core.runner.AnalysisScenario
 import com.anaplan.engineering.azuki.core.runner.Eac
+import com.anaplan.engineering.azuki.core.runner.GeneratedScenario
 import com.anaplan.engineering.azuki.core.scenario.Since
 import com.anaplan.engineering.azuki.core.system.BEH
 import com.anaplan.engineering.azuki.core.system.ImplementationVersion
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
+import com.anaplan.engineering.azuki.script.generation.VerifiableScenarioScript
 import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenarioClassRenderer.Companion.render
 import kotlin.test.*
 
@@ -87,22 +91,104 @@ class RunnableScenarioClassRendererTest {
         }
     }
 
+    @Test
+    fun renderAllScenarioTypes() {
+        val scenarioTypes = mapOf(
+            "normalAdapter" to AdapterTest(false).toMethodType(),
+            "skippedAdapter" to AdapterTest(true).toMethodType(),
+            "analysis" to AnalysisScenario().toMethodType(),
+            "eac" to Eac("foo", "bar", "baz").toMethodType(),
+            "generated" to GeneratedScenario().toMethodType(),
+            "custom" to object : RunnableScenarioMethodType {
+                override val annotation = AnalysisScenario()
+                override val kotlinName = KotlinName.create("com.example", "CustomScenario")
+            }
+        )
+
+        val expected = """
+            package com.example
+
+            import com.anaplan.engineering.azuki.core.runner.*
+            import com.anaplan.engineering.azuki.core.system.*
+            import com.example.AcmeRunnableScenario
+            import com.example.AllTheAnnotations
+            import com.example.CustomScenario
+
+            class AllTheAnnotations : AcmeRunnableScenario() {
+
+                @AdapterTest
+                fun normalAdapter() {
+                }
+
+                @AdapterTest(expectSkip = true)
+                fun skippedAdapter() {
+                }
+
+                @AnalysisScenario
+                fun analysis() {
+                }
+
+                @Eac("foo", "bar", "baz")
+                fun eac() {
+                }
+
+                @GeneratedScenario
+                fun generated() {
+                }
+
+                @CustomScenario
+                fun custom() {
+                }
+            }
+        """.trimIndent() + "\n"
+
+        expect(expected) {
+            val methods = scenarioTypes.map { (name, type) ->
+                RunnableScenarioClassScript.MethodScript(
+                    name = name,
+                    type = type,
+                    annotations = RunnableScenarioAnnotations(),
+                    body = emptyScenario,
+                )
+            }
+
+            val script = RunnableScenarioClassScript(
+                testName = KotlinName.create("com.example", "AllTheAnnotations"),
+                baseName = KotlinName.create("com.example", "AcmeRunnableScenario"),
+                methods = methods,
+                beh = null
+            )
+
+            script.render()
+        }
+    }
+
     companion object {
 
-        private val exampleScript: RunnableScenarioClassScript by lazy {
-            val scenario = ScriptGenerationService.standalone.given {
+        private val emptyScenario: VerifiableScenarioScript by lazy {
+            ScriptGenerationService.standalone.given {
+            }.whenever {
+            }.then {
+            }.verifiableScenario
+        }
+
+        private val exampleScenario: VerifiableScenarioScript by lazy {
+            ScriptGenerationService.standalone.given {
                 +"thereIsAFoo()"
             }.whenever {
                 +"aThingHappens()"
             }.then {
                 +"thereIsNoFoo()"
             }.verifiableScenario
+        }
+
+        private val exampleScript: RunnableScenarioClassScript by lazy {
 
             val method = RunnableScenarioClassScript.MethodScript(
                 name = "test",
-                type = EacMethodType(Eac("Tests a thing", "A thing should happen")),
+                type = Eac("Tests a thing", "A thing should happen").toMethodType(),
                 annotations = RunnableScenarioAnnotations(since = Since(ImplementationVersion("BarImpl", "1.0"))),
-                body = scenario,
+                body = exampleScenario,
             )
 
             RunnableScenarioClassScript(

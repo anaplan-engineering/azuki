@@ -33,7 +33,7 @@ open class RunnableScenarioClassGenerator(
     ): RunnableScenarioClass {
         val script = generateScript(className, implementationVersions, scenarioScript)
         val definition = ScenarioFormatter.formatScenario(script.render {
-            extraImports += adapterSpecificImports
+            imports += adapterSpecificImports
         })
         return RunnableScenarioClass(script.testName.identifier, script.testName.packageName, definition)
     }
@@ -47,13 +47,13 @@ open class RunnableScenarioClassGenerator(
     private fun generateMethod(
         implementationVersions: Map<String, String>, scenarioScript: VerifiableScenarioScript
     ) = RunnableScenarioClassScript.MethodScript("test",
-        GeneratedScenarioMethodType(GeneratedScenario()),
+        GeneratedScenario().toMethodType(),
         RunnableScenarioAnnotations(since = generateSince(implementationVersions)),
         scenarioScript)
 
     private fun generateSince(
         implementationVersions: Map<String, String>
-    ) = implementationVersions.takeUnless({ it.isEmpty() })?.map { (name, version) ->
+    ) = implementationVersions.takeUnless { it.isEmpty() }?.map { (name, version) ->
         ImplementationVersion(name, version)
     }?.let { Since(*it.toTypedArray()) }
 }

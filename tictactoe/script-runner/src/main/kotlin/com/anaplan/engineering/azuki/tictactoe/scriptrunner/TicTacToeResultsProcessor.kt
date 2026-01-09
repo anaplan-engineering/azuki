@@ -31,7 +31,7 @@ class TicTacToeResultsProcessor(
         JUnitTestCaseWriter(
             TicTacToeScriptGeneration,
             TicTacToeRunnableScenarioClassGenerator,
-            verifiedTestsDir, unverifiedTestsDir, generatedTestClass,
+            verifiedTestsDir, unverifiedTestsDir, generatedTestClassName,
         )
     private val queryResultsWriter = QueryResultWriter(outputDir, queryResultsFileName)
     private val generatedScenarioWriter = GeneratedScenarioWriter(scenarioName, outputDir)

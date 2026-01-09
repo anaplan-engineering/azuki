@@ -9,7 +9,7 @@ import com.anaplan.engineering.azuki.core.system.FunctionalElement
 import com.anaplan.engineering.azuki.core.system.ImplementationVersion
 import com.anaplan.engineering.azuki.script.generation.Formatter
 import com.anaplan.engineering.azuki.script.generation.ScriptType
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toClassName
+import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toKotlinName
 
 /**
  * A runnable scenario renderer.
@@ -18,14 +18,13 @@ class RunnableScenarioClassRenderer private constructor() {
 
     /**
      * Package and class names that are going to be imported at the start of the script.
-     * This will be added to during the rendering process.
+     * This will be added to during the rendering process, but can also be preloaded during configuration to add
+     * in imports.
      */
-    var extraImports = mutableSetOf<KotlinName>()
-
-    val imports get() = setOf(
+    var imports = mutableSetOf(
         KotlinName.wildcard("com.anaplan.engineering.azuki.core.runner"),
         KotlinName.wildcard("com.anaplan.engineering.azuki.core.system"),
-    ) + extraImports
+    )
 
     /**
      * Map from behavioral constants to their definitions (captured as `KotlinName`s).
@@ -64,28 +63,26 @@ class RunnableScenarioClassRenderer private constructor() {
         require(builder.isEmpty()) { "shouldn't re-use a renderer" }
 
         scenario.beh?.let(::beh)
-        builder.append("class ${kotlinName(scenario.testName)} : ${kotlinName(scenario.baseName)}() ")
-        nested {
-            builder.appendLine()
-            scenario.methods.forEach(::renderMethod)
+        builder.append("class ${kotlinName(scenario.testName)} : ${kotlinName(scenario.baseName)}() {")
+        indentLevel++
+        scenario.methods.forEach {
+            builder.appendLine().appendLine()
+            renderMethod(it)
         }
+        indentLevel--
+        builder.appendLine().append("}")
     }
 
     private fun renderMethod(method: RunnableScenarioClassScript.MethodScript) {
         annotations(method.annotations)
         scenarioType(method.type)
-        indent()
-        builder.append("fun ${method.name}() ")
-        nested {
-            builder.append(method.body.render {
-                // These two are needed because we're inserting into a function body
-                scriptType = ScriptType.Inline
-                indentLevel = this@RunnableScenarioClassRenderer.indentLevel
+        builder.append(method.body.render {
+            scriptType = ScriptType.method(method.name)
+            indentLevel = this@RunnableScenarioClassRenderer.indentLevel
 
-                // Don't format here, we'll format the JUnit in one go
-                formatter = Formatter.None
-            })
-        }
+            // Don't format here, we'll format the JUnit in one go
+            formatter = Formatter.None
+        })
     }
 
     private fun annotations(annotations: RunnableScenarioAnnotations) {
@@ -94,16 +91,27 @@ class RunnableScenarioClassRenderer private constructor() {
     }
 
     private fun scenarioType(type: RunnableScenarioMethodType) {
-        annotation(type.className) {
-            if (type is EacMethodType) {
-                member { string(type.annotation.summary) }
-                members(type.annotation.notes) { string(it) }
+        annotation(type.kotlinName) {
+            when (type) {
+                is AdapterTestMethodType -> adapterTestMethodType(type)
+                is EacMethodType -> eacMethodType(type)
             }
         }
     }
 
+    private fun AnnotationFragment.adapterTestMethodType(type: AdapterTestMethodType) {
+        if (type.annotation.expectSkip) {
+            member { append("expectSkip = true") }
+        }
+    }
+
+    private fun AnnotationFragment.eacMethodType(type: EacMethodType) {
+        member { string(type.annotation.summary) }
+        members(type.annotation.notes) { string(it) }
+    }
+
     private fun beh(beh: BEH) {
-        annotation(BEH::class.toClassName()) {
+        annotation(BEH::class.toKotlinName()) {
             member {
                 val behavior = beh.behavior
                 getBehaviourKotlinName(behavior)?.let { append(kotlinName(it)) } ?: append(behavior.toString())
@@ -117,13 +125,13 @@ class RunnableScenarioClassRenderer private constructor() {
     }
 
     private fun knownBug(knownBug: KnownBug) {
-        annotation(KnownBug::class.toClassName()) {
+        annotation(KnownBug::class.toKotlinName()) {
             knownBug.issues.forEach { member { issue(it) } }
         }
     }
 
     private fun issue(issue: Issue) {
-        nestedAnnotation(Issue::class.toClassName()) {
+        nestedAnnotation(Issue::class.toKotlinName()) {
             member {
                 val impl = issue.implementation
                 getImplementationKotlinName(impl)?.let { append(kotlinName(it)) } ?: string(impl)
@@ -133,13 +141,13 @@ class RunnableScenarioClassRenderer private constructor() {
     }
 
     private fun since(since: Since) {
-        annotation(Since::class.toClassName()) {
+        annotation(Since::class.toKotlinName()) {
             since.implementationVersion.forEach { member { implementationVersion(it) } }
         }
     }
 
     private fun implementationVersion(version: ImplementationVersion) {
-        nestedAnnotation(ImplementationVersion::class.toClassName()) {
+        nestedAnnotation(ImplementationVersion::class.toKotlinName()) {
             member {
                 val impl = version.name
                 getImplementationKotlinName(impl)?.let { append(kotlinName(it)) } ?: string(impl)
@@ -151,7 +159,7 @@ class RunnableScenarioClassRenderer private constructor() {
     private fun kotlinName(name: KotlinName) = name.also(::ensureKotlinNameIsImported).identifier
 
     private fun ensureKotlinNameIsImported(type: KotlinName) {
-        if (imports.none { it.satisfiesImport(type) }) extraImports.add(type)
+        if (imports.none { it.satisfiesImport(type) }) imports.add(type)
     }
 
     private fun annotation(type: KotlinName, body: AnnotationFragment.() -> Unit = {}) {
@@ -168,16 +176,6 @@ class RunnableScenarioClassRenderer private constructor() {
 
     private fun indent() = builder.append("    ".repeat(indentLevel))
 
-    private fun nested(body: RunnableScenarioClassRenderer.() -> Unit) {
-        builder.appendLine("{")
-        indentLevel++
-        body()
-        indentLevel--
-        builder.appendLine()
-        indent()
-        builder.append("}")
-    }
-
     companion object {
 
         /**
@@ -192,8 +190,7 @@ class RunnableScenarioClassRenderer private constructor() {
 
             return buildString {
                 if (packageName.isNotEmpty()) {
-                    appendLine("package $packageName")
-                    appendLine()
+                    appendLine("package $packageName").appendLine()
                 }
 
                 renderer.imports.sorted().joinTo(this, "\n", postfix = "\n\n") { "import ${it.import}" }
@@ -220,9 +217,7 @@ internal class AnnotationFragment(private val parent: Appendable) {
     fun <T> members(items: Array<T>, builder: Appendable.(T) -> Unit) {
         if (items.isEmpty()) return
         items.joinTo(parent, prefix = memberPrefix, separator = ", ", transform = {
-            buildString {
-                builder(it)
-            }
+            buildString { builder(it) }
         })
         hasMembers = true
     }

@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.script.generation.runnable
 
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toClassName
+import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toKotlinName
 import kotlin.test.*
 
 class KotlinNameTest {
@@ -51,7 +51,7 @@ class KotlinNameTest {
     }
 
     @Test
-    fun javaClass() = with(KotlinNameTest::class.toClassName()) {
+    fun javaClass() = with(KotlinNameTest::class.toKotlinName()) {
         expect("com.anaplan.engineering.azuki.script.generation.runnable.KotlinNameTest") { fullName }
         expect("com.anaplan.engineering.azuki.script.generation.runnable.KotlinNameTest") { import }
         expect("com.anaplan.engineering.azuki.script.generation.runnable") { packageName }

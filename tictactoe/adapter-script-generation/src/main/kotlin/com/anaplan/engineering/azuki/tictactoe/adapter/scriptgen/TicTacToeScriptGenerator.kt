@@ -3,7 +3,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 import com.anaplan.engineering.azuki.script.generation.*
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toClassName
+import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toKotlinName
 import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
@@ -63,7 +63,7 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
 }
 
 object TicTacToeRunnableScenarioClassGenerator :
-    RunnableScenarioClassGenerator(ticTacToeStandardImports.toList(), TicTacToeRunnableScenario::class.toClassName())
+    RunnableScenarioClassGenerator(ticTacToeStandardImports.toList(), TicTacToeRunnableScenario::class.toKotlinName())
 
 /**
  * Default imports that should be added to any tic-tac-toe script (generated or parsed).

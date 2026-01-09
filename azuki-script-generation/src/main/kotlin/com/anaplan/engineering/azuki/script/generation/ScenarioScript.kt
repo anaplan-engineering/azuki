@@ -63,6 +63,11 @@ fun interface ScriptType {
          * Wrap the script blocks in the appropriate scenario function.
          */
         val Standalone = ScriptType { typeName, blocks -> ScriptBlock("${typeName}Scenario", blocks) }
+
+        /**
+         * Wrap the script blocks in a method.
+         */
+        fun method(name: String) = ScriptType { _, blocks -> ScriptBlock("fun ${name}()", blocks) }
     }
 }
 
@@ -163,7 +168,10 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
     val elements get() = if (inner is ScriptElementList<*>) inner.elements else listOf(inner)
 
     override fun render(ctx: RenderContext) = with(ctx) {
-        listOf("$indent$header {", inner.render(nextIndentLevel), "$indent}").joinToString("\n")
+        // Don't bother rendering the block contents if they're empty, that'll produce an ugly spurious newline
+        val body = if (inner.isEmpty) null else inner.render(nextIndentLevel)
+
+        listOfNotNull("$indent$header {", body, "$indent}").joinToString("\n")
     }
 
     /**

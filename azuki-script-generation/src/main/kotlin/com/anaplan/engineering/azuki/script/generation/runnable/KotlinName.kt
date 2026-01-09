@@ -45,6 +45,9 @@ sealed class KotlinName: Comparable<KotlinName> {
 
     /**
      * Creates a nested name.
+     *
+     * A nested Kotlin name is imported in the same way as its parent, but has its identifier qualified by that
+     * of the parent.
      */
     infix fun dot(name: String): KotlinName = NestedName(this, name)
 
@@ -53,12 +56,12 @@ sealed class KotlinName: Comparable<KotlinName> {
         /**
          * Creates a `KotlinName` directly from a Kotlin class reference.
          */
-        fun KClass<*>.toClassName(): KotlinName = java.toClassName()
+        fun KClass<*>.toKotlinName(): KotlinName = java.toKotlinName()
 
         /**
          * Creates a `KotlinName` directly from a Java class reference.
          */
-        fun Class<*>.toClassName(): KotlinName = JavaClassName(this)
+        fun Class<*>.toKotlinName(): KotlinName = JavaClassName(this)
 
         /**
          * Creates a `KotlinName` directly from a package name and simple name.
@@ -80,9 +83,9 @@ sealed class KotlinName: Comparable<KotlinName> {
         )
 
         /**
-         * Create an arbitrary class name.
+         * Creates an arbitrary class name.
          */
-        fun generateArbitrary(packageName: String) = create(packageName, "Generated_" + UUID.randomUUID().toString())
+        fun generateArbitrary(packageName: String) = create(packageName, "Generated_${UUID.randomUUID()}")
 
         private val String.sanitized get() = replace("-", "_")
     }
