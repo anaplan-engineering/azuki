@@ -8,6 +8,7 @@ import com.anaplan.engineering.azuki.core.system.Behavior
 import com.anaplan.engineering.azuki.core.system.FunctionalElement
 import com.anaplan.engineering.azuki.core.system.ImplementationVersion
 import com.anaplan.engineering.azuki.script.generation.Formatter
+import com.anaplan.engineering.azuki.script.generation.RenderContext
 import com.anaplan.engineering.azuki.script.generation.ScriptType
 import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toKotlinName
 
@@ -56,42 +57,44 @@ class RunnableScenarioClassRenderer private constructor() {
      */
     var getImplementationKotlinName: (String) -> KotlinName? = { null }
 
+    /**
+     * The starting render context for the renderer.
+     */
+    var startingRenderContext = RenderContext()
+
     private val builder = StringBuilder()
-    private var indentLevel: Int = 0
 
     private fun doRendering(scenario: RunnableScenarioClassScript) {
         require(builder.isEmpty()) { "shouldn't re-use a renderer" }
 
-        scenario.beh?.let(::beh)
+        scenario.beh?.let { beh(startingRenderContext, it) }
         builder.append("class ${kotlinName(scenario.testName)} : ${kotlinName(scenario.baseName)}() {")
-        indentLevel++
         scenario.methods.forEach {
             builder.appendLine().appendLine()
-            renderMethod(it)
+            renderMethod(startingRenderContext.nextIndentLevel, it)
         }
-        indentLevel--
         builder.appendLine().append("}")
     }
 
-    private fun renderMethod(method: RunnableScenarioClassScript.MethodScript) {
-        annotations(method.annotations)
-        scenarioType(method.type)
+    private fun renderMethod(ctx: RenderContext, method: RunnableScenarioClassScript.MethodScript) {
+        annotations(ctx, method.annotations)
+        scenarioType(ctx, method.type)
         builder.append(method.body.render {
             scriptType = ScriptType.method(method.name)
-            indentLevel = this@RunnableScenarioClassRenderer.indentLevel
+            startingRenderContext = ctx
 
             // Don't format here, we'll format the JUnit in one go
             formatter = Formatter.None
         })
     }
 
-    private fun annotations(annotations: RunnableScenarioAnnotations) {
-        annotations.knownBug?.let(::knownBug)
-        annotations.since?.let(::since)
+    private fun annotations(ctx: RenderContext, annotations: RunnableScenarioAnnotations) {
+        annotations.knownBug?.let { knownBug(ctx, it) }
+        annotations.since?.let {since(ctx, it) }
     }
 
-    private fun scenarioType(type: RunnableScenarioMethodType) {
-        annotation(type.kotlinName) {
+    private fun scenarioType(ctx: RenderContext, type: RunnableScenarioMethodType) {
+        annotation(ctx, type.kotlinName) {
             when (type) {
                 is AdapterTestMethodType -> adapterTestMethodType(type)
                 is EacMethodType -> eacMethodType(type)
@@ -110,8 +113,8 @@ class RunnableScenarioClassRenderer private constructor() {
         members(type.annotation.notes) { string(it) }
     }
 
-    private fun beh(beh: BEH) {
-        annotation(BEH::class.toKotlinName()) {
+    private fun beh(ctx: RenderContext, beh: BEH) {
+        annotation(ctx, BEH::class.toKotlinName()) {
             member {
                 val behavior = beh.behavior
                 getBehaviourKotlinName(behavior)?.let { append(kotlinName(it)) } ?: append(behavior.toString())
@@ -124,8 +127,8 @@ class RunnableScenarioClassRenderer private constructor() {
         }
     }
 
-    private fun knownBug(knownBug: KnownBug) {
-        annotation(KnownBug::class.toKotlinName()) {
+    private fun knownBug(ctx: RenderContext, knownBug: KnownBug) {
+        annotation(ctx, KnownBug::class.toKotlinName()) {
             knownBug.issues.forEach { member { issue(it) } }
         }
     }
@@ -140,8 +143,8 @@ class RunnableScenarioClassRenderer private constructor() {
         }
     }
 
-    private fun since(since: Since) {
-        annotation(Since::class.toKotlinName()) {
+    private fun since(ctx: RenderContext, since: Since) {
+        annotation(ctx, Since::class.toKotlinName()) {
             since.implementationVersion.forEach { member { implementationVersion(it) } }
         }
     }
@@ -162,9 +165,8 @@ class RunnableScenarioClassRenderer private constructor() {
         if (imports.none { it.satisfiesImport(type) }) imports.add(type)
     }
 
-    private fun annotation(type: KotlinName, body: AnnotationFragment.() -> Unit = {}) {
-        indent()
-        builder.append("@${kotlinName(type)}")
+    private fun annotation(ctx: RenderContext, type: KotlinName, body: AnnotationFragment.() -> Unit = {}) {
+        builder.append("${ctx.indent}@${kotlinName(type)}")
         AnnotationFragment(builder).apply(body).end()
         builder.appendLine()
     }
@@ -173,8 +175,6 @@ class RunnableScenarioClassRenderer private constructor() {
         builder.append(kotlinName(type))
         AnnotationFragment(builder).apply(body).end()
     }
-
-    private fun indent() = builder.append("    ".repeat(indentLevel))
 
     companion object {
 
