@@ -24,16 +24,21 @@ object ScenarioFormatter {
 
     @JvmStatic
     fun formatScenario(scenarioText: String): String {
-        val code = Code.fromSnippet(scenarioText, true)
-
-        return ruleEngine.format(code) { error ->
-            if (error.canBeAutoCorrected) {
-                AutocorrectDecision.ALLOW_AUTOCORRECT
-            } else {
-                AutocorrectDecision.NO_AUTOCORRECT
-            }
-        }
+        // Workaround for https://github.com/pinterest/ktlint/issues/3220: KtLint assumes there is either no U+FEFF,
+        // or the first one is a BOM (ie at the start of the file).  If the first U+FEFF turns up elsewhere, it deletes
+        // it but doesn't reinsert it.  So we just add a BOM in all cases to force the correct behavior.
+        val hadBom = scenarioText.startsWith(BOM)
+        val code = Code.fromSnippet(if (hadBom) scenarioText else "${BOM}$scenarioText", true)
+        val formatted = runKtLint(code)
+        // make sure we drop the BOM if it wasn't one we spliced in
+        return if (hadBom) formatted else formatted.removePrefix(BOM)
     }
+
+    private fun runKtLint(code: Code) = ruleEngine.format(code) { error ->
+        if (error.canBeAutoCorrected) AutocorrectDecision.ALLOW_AUTOCORRECT else AutocorrectDecision.NO_AUTOCORRECT
+    }
+
+    const val BOM = "\uFEFF"
 }
 
 fun main(args: Array<String>) {
