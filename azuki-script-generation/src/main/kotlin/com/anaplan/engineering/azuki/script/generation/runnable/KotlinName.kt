@@ -34,10 +34,6 @@ sealed class KotlinName: Comparable<KotlinName> {
      */
     abstract val identifier: String
 
-    val hasImport get() = import.isNotEmpty()
-    val hasPackageName get() = packageName.isNotEmpty()
-    val hasIdentifier get() = identifier.isNotEmpty()
-
     /**
      * Does this name work as an import for another definition name?
      */
@@ -124,7 +120,7 @@ private class JavaClassName(jClass: Class<*>) : KotlinName() {
 private class NestedName(parent: KotlinName, child: String) : KotlinName() {
 
     init {
-        require(parent.hasIdentifier) { "parent of a nested name must have an identifier" }
+        require(parent.identifier.isNotEmpty()) { "parent of a nested name must have an identifier" }
     }
 
     override val fullName = "${parent.fullName}.$child"

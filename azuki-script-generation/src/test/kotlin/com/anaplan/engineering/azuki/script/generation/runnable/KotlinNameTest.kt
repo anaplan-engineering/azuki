@@ -11,9 +11,6 @@ class KotlinNameTest {
         expect("com.example.Test") { import }
         expect("com.example") { packageName }
         expect("Test") { identifier }
-        assertTrue { hasImport }
-        assertTrue { hasPackageName }
-        assertTrue { hasIdentifier }
     }
 
     @Test
@@ -22,9 +19,6 @@ class KotlinNameTest {
         expect("com.example.Foo") { import }
         expect("com.example") { packageName }
         expect("Foo.Bar") { identifier }
-        assertTrue { hasImport }
-        assertTrue { hasPackageName }
-        assertTrue { hasIdentifier }
     }
 
 
@@ -35,9 +29,6 @@ class KotlinNameTest {
         assertTrue { import.startsWith("com.example.") }
         expect("com.example") { packageName }
         assertTrue { identifier.isNotBlank() }
-        assertTrue { hasImport }
-        assertTrue { hasPackageName }
-        assertTrue { hasIdentifier }
     }
 
     @Test
@@ -45,9 +36,6 @@ class KotlinNameTest {
         expect("com.example.*") { fullName }
         expect("com.example.*") { import }
         expect("com.example") { packageName }
-        assertTrue { hasImport }
-        assertTrue { hasPackageName }
-        assertFalse { hasIdentifier }
     }
 
     @Test
@@ -56,8 +44,6 @@ class KotlinNameTest {
         expect("com.anaplan.engineering.azuki.script.generation.runnable.KotlinNameTest") { import }
         expect("com.anaplan.engineering.azuki.script.generation.runnable") { packageName }
         expect("KotlinNameTest") { identifier }
-        assertTrue { hasImport }
-        assertTrue { hasIdentifier }
     }
 
     @Test
