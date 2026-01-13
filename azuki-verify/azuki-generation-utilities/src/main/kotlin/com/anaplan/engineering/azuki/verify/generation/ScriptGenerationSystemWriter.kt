@@ -7,7 +7,7 @@ import com.anaplan.engineering.azuki.core.system.QueryFactory
 import com.anaplan.engineering.azuki.core.system.SystemDefinition
 import com.anaplan.engineering.azuki.core.system.SystemWriter
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
 import com.anaplan.engineering.azuki.script.generation.Formatter
 import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.script.generation.ScenarioScript
@@ -79,7 +79,7 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
                 fromChecks(listOf(checkFactory.systemValid()))
             }.verifiableScenario
 
-            val className = KotlinName.create(packageName = "debug", simpleName = context ?: "scenario-ocl")
+            val className = QualifiedIdentifier.create(packageName = "debug", simpleName = context ?: "scenario-ocl")
             val testCase = classGeneration.generate(className = className,
                 scenarioScript = scenarioScript,
                 implementationVersions = emptyMap())

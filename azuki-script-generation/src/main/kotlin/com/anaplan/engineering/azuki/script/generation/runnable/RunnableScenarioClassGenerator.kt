@@ -14,8 +14,8 @@ import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenario
  * intended for the most common purpose of lifting one scenario into one test method.
  */
 open class RunnableScenarioClassGenerator(
-    val adapterSpecificImports: List<KotlinName>,
-    val baseClassName: KotlinName,
+    val adapterSpecificImports: List<Importable>,
+    val baseClassName: QualifiedIdentifier,
 ) {
 
     /**
@@ -28,7 +28,7 @@ open class RunnableScenarioClassGenerator(
      */
     fun generate(
         scenarioScript: VerifiableScenarioScript,
-        className: KotlinName? = null,
+        className: QualifiedIdentifier? = null,
         implementationVersions: Map<String, String> = emptyMap(),
     ): RunnableScenarioClass {
         val script = generateScript(className, implementationVersions, scenarioScript)
@@ -39,8 +39,8 @@ open class RunnableScenarioClassGenerator(
     }
 
     private fun generateScript(
-        className: KotlinName?, implementationVersions: Map<String, String>, scenarioScript: VerifiableScenarioScript
-    ) = RunnableScenarioClassScript(testName = className ?: KotlinName.generateArbitrary(""),
+        className: QualifiedIdentifier?, implementationVersions: Map<String, String>, scenarioScript: VerifiableScenarioScript
+    ) = RunnableScenarioClassScript(testName = className ?: QualifiedIdentifier.generateArbitrary(""),
         baseClassName,
         listOf(generateMethod(implementationVersions, scenarioScript)))
 

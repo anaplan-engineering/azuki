@@ -2,8 +2,9 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.script.generation.*
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toKotlinName
+import com.anaplan.engineering.azuki.script.generation.runnable.Importable
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier.Companion.toQualifiedIdentifier
 import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
@@ -63,12 +64,12 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
 }
 
 object TicTacToeRunnableScenarioClassGenerator :
-    RunnableScenarioClassGenerator(ticTacToeStandardImports.toList(), TicTacToeRunnableScenario::class.toKotlinName())
+    RunnableScenarioClassGenerator(ticTacToeStandardImports.toList(), TicTacToeRunnableScenario::class.toQualifiedIdentifier())
 
 /**
  * Default imports that should be added to any tic-tac-toe script (generated or parsed).
  */
 val ticTacToeStandardImports = listOf(
-    KotlinName.wildcard("com.anaplan.engineering.azuki.tictactoe"),
-    KotlinName.wildcard("com.anaplan.engineering.azuki.tictactoe.dsl"),
+    Importable.wildcard("com.anaplan.engineering.azuki.tictactoe"),
+    Importable.wildcard("com.anaplan.engineering.azuki.tictactoe.dsl"),
 )

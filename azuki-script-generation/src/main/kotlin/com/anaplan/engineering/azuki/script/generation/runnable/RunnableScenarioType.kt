@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.core.runner.AdapterTest
 import com.anaplan.engineering.azuki.core.runner.AnalysisScenario
 import com.anaplan.engineering.azuki.core.runner.Eac
 import com.anaplan.engineering.azuki.core.runner.GeneratedScenario
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toKotlinName
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier.Companion.toQualifiedIdentifier
 
 /**
  * Represents one of the mutually exclusive annotations capturing the high-level 'type' of a scenario method.
@@ -21,8 +21,8 @@ interface RunnableScenarioMethodType {
     /**
      * The name that should be used to import or refer to the annotation.
      */
-    val kotlinName: KotlinName
-        get() = annotation.annotationClass.toKotlinName()
+    val kotlinName: QualifiedIdentifier
+        get() = annotation.annotationClass.toQualifiedIdentifier()
 }
 
 data class AdapterTestMethodType(override val annotation: AdapterTest) : RunnableScenarioMethodType

@@ -7,8 +7,8 @@ import com.anaplan.engineering.azuki.script.generation.VerifiableScenarioScript
  * A script representation of an Azuki runnable scenario.
  */
 data class RunnableScenarioClassScript(
-    val testName: KotlinName,
-    val baseName: KotlinName,
+    val testName: QualifiedIdentifier,
+    val baseName: QualifiedIdentifier,
     val methods: List<MethodScript>,
     val beh: BEH? = null,
 ) {

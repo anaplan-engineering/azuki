@@ -3,7 +3,7 @@ package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.runner.ExitCode
 import com.anaplan.engineering.azuki.runner.ScenarioScriptRunner
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
@@ -24,8 +24,8 @@ class TicTacToeResultsProcessor(
 ) : ScenarioScriptRunner.ResultProcessor<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory> {
 
     private val generatedTestClassName = generatedTestClass?.let {
-        KotlinName.create(generatedTestClass, it)
-    } ?: KotlinName.generateArbitrary(generatedTestPackage)
+        QualifiedIdentifier.create(generatedTestClass, it)
+    } ?: QualifiedIdentifier.generateArbitrary(generatedTestPackage)
 
     private val jUnitTestCaseWriter: JUnitTestCaseWriter<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory> =
         JUnitTestCaseWriter(

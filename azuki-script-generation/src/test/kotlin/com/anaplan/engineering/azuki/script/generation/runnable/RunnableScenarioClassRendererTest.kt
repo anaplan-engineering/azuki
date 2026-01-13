@@ -101,7 +101,7 @@ class RunnableScenarioClassRendererTest {
             "generated" to GeneratedScenario().toMethodType(),
             "custom" to object : RunnableScenarioMethodType {
                 override val annotation = AnalysisScenario()
-                override val kotlinName = KotlinName.create("com.example", "CustomScenario")
+                override val kotlinName = QualifiedIdentifier.create("com.example", "CustomScenario")
             }
         )
 
@@ -153,8 +153,8 @@ class RunnableScenarioClassRendererTest {
             }
 
             val script = RunnableScenarioClassScript(
-                testName = KotlinName.create("com.example", "AllTheAnnotations"),
-                baseName = KotlinName.create("com.example", "AcmeRunnableScenario"),
+                testName = QualifiedIdentifier.create("com.example", "AllTheAnnotations"),
+                baseName = QualifiedIdentifier.create("com.example", "AcmeRunnableScenario"),
                 methods = methods,
                 beh = null
             )
@@ -192,8 +192,8 @@ class RunnableScenarioClassRendererTest {
             )
 
             RunnableScenarioClassScript(
-                testName = KotlinName.create("com.example", "Foo"),
-                baseName = KotlinName.create("com.example", "AcmeRunnableScenario"),
+                testName = QualifiedIdentifier.create("com.example", "Foo"),
+                baseName = QualifiedIdentifier.create("com.example", "AcmeRunnableScenario"),
                 methods = listOf(method),
                 beh = BEH(behavior = 12, functionalElement = 345, summary = "Does things"),
             )
@@ -205,15 +205,15 @@ class RunnableScenarioClassRendererTest {
         private fun RunnableScenarioClassRenderer.setupExampleRenderer() {
             getBehaviourKotlinName = { b ->
                 // mapping backwards from behavior 12 to com.example.AcmeBehaviors.Foo
-                (KotlinName.create("com.example", "AcmeBehaviors") dot "Foo").takeIf { b == 12 }
+                (QualifiedIdentifier.create("com.example", "AcmeBehaviors") dot "Foo").takeIf { b == 12 }
             }
             getFunctionalElementKotlinName = { fe ->
                 // mapping backwards from FE 345 to com.example.ThingFe
-                (KotlinName.create("com.example", "AcmeFunctionalElements") dot "Thing").takeIf { fe == 345 }
+                (QualifiedIdentifier.create("com.example", "AcmeFunctionalElements") dot "Thing").takeIf { fe == 345 }
             }
             getImplementationKotlinName = { impl ->
                 // mapping backwards from implementation BarImpl to com.example.Bar
-                KotlinName.create("com.example", "Bar").takeIf { impl == "BarImpl" }
+                QualifiedIdentifier.create("com.example", "Bar").takeIf { impl == "BarImpl" }
             }
         }
     }

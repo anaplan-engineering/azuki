@@ -10,7 +10,7 @@ import com.anaplan.engineering.azuki.core.system.ImplementationVersion
 import com.anaplan.engineering.azuki.script.generation.Formatter
 import com.anaplan.engineering.azuki.script.generation.RenderContext
 import com.anaplan.engineering.azuki.script.generation.ScriptType
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName.Companion.toKotlinName
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier.Companion.toQualifiedIdentifier
 
 /**
  * A runnable scenario renderer.
@@ -23,39 +23,39 @@ class RunnableScenarioClassRenderer private constructor() {
      * in imports.
      */
     var imports = mutableSetOf(
-        KotlinName.wildcard("com.anaplan.engineering.azuki.core.runner"),
-        KotlinName.wildcard("com.anaplan.engineering.azuki.core.system"),
+        Importable.wildcard("com.anaplan.engineering.azuki.core.runner"),
+        Importable.wildcard("com.anaplan.engineering.azuki.core.system"),
     )
 
     /**
-     * Map from behavioral constants to their definitions (captured as `KotlinName`s).
+     * Map from behavioral constants to their definitions (captured as qualified identifiers).
      *
      * This is used to prettify BEH annotations.
      *
      * It should be the case that, for each `(key, value)` pair mapped by this function, if `value` is present in
      * the classpath then it evaluates to `key`.
      */
-    var getBehaviourKotlinName: (Behavior) -> KotlinName? = { null }
+    var getBehaviourKotlinName: (Behavior) -> QualifiedIdentifier? = { null }
 
     /**
-     * Map from functional element constants to their definitions (captured as `KotlinName`s).
+     * Map from functional element constants to their definitions (captured as qualified identifiers).
      *
      * This is used to prettify BEH annotations.
      *
      * It should be the case that, for each `(key, value)` pair mapped by this function, if `value` is present in
      * the classpath then it evaluates to `key`.
      */
-    var getFunctionalElementKotlinName: (FunctionalElement) -> KotlinName? = { null }
+    var getFunctionalElementKotlinName: (FunctionalElement) -> QualifiedIdentifier? = { null }
 
     /**
-     * Map from implementation name values to their definitions (captured as `KotlinName`s).
+     * Map from implementation name values to their definitions (captured as qualified identifiers).
      *
      * This is used to prettify annotations that rely on implementation names.
      *
      * It should be the case that, for each `(key, value)` pair mapped by this function, if `value` is present in
      * the classpath then it evaluates to `key`.
      */
-    var getImplementationKotlinName: (String) -> KotlinName? = { null }
+    var getImplementationKotlinName: (String) -> QualifiedIdentifier? = { null }
 
     /**
      * The starting render context for the renderer.
@@ -68,7 +68,7 @@ class RunnableScenarioClassRenderer private constructor() {
         require(builder.isEmpty()) { "shouldn't re-use a renderer" }
 
         scenario.beh?.let { beh(startingRenderContext, it) }
-        builder.append("class ${kotlinName(scenario.testName)} : ${kotlinName(scenario.baseName)}() {")
+        builder.append("class ${identifier(scenario.testName)} : ${identifier(scenario.baseName)}() {")
         scenario.methods.forEach {
             builder.appendLine().appendLine()
             renderMethod(startingRenderContext.nextIndentLevel, it)
@@ -114,65 +114,65 @@ class RunnableScenarioClassRenderer private constructor() {
     }
 
     private fun beh(ctx: RenderContext, beh: BEH) {
-        annotation(ctx, BEH::class.toKotlinName()) {
+        annotation(ctx, BEH::class.toQualifiedIdentifier()) {
             member {
                 val behavior = beh.behavior
-                getBehaviourKotlinName(behavior)?.let { append(kotlinName(it)) } ?: append(behavior.toString())
+                getBehaviourKotlinName(behavior)?.let { append(identifier(it)) } ?: append(behavior.toString())
             }
             member {
                 val fe = beh.functionalElement
-                getFunctionalElementKotlinName(fe)?.let { append(kotlinName(it)) } ?: append(fe.toString())
+                getFunctionalElementKotlinName(fe)?.let { append(identifier(it)) } ?: append(fe.toString())
             }
             member { string(beh.summary) }
         }
     }
 
     private fun knownBug(ctx: RenderContext, knownBug: KnownBug) {
-        annotation(ctx, KnownBug::class.toKotlinName()) {
+        annotation(ctx, KnownBug::class.toQualifiedIdentifier()) {
             knownBug.issues.forEach { member { issue(it) } }
         }
     }
 
     private fun issue(issue: Issue) {
-        nestedAnnotation(Issue::class.toKotlinName()) {
+        nestedAnnotation(Issue::class.toQualifiedIdentifier()) {
             member {
                 val impl = issue.implementation
-                getImplementationKotlinName(impl)?.let { append(kotlinName(it)) } ?: string(impl)
+                getImplementationKotlinName(impl)?.let { append(identifier(it)) } ?: string(impl)
             }
             members(issue.jiraIds) { string(it) }
         }
     }
 
     private fun since(ctx: RenderContext, since: Since) {
-        annotation(ctx, Since::class.toKotlinName()) {
+        annotation(ctx, Since::class.toQualifiedIdentifier()) {
             since.implementationVersion.forEach { member { implementationVersion(it) } }
         }
     }
 
     private fun implementationVersion(version: ImplementationVersion) {
-        nestedAnnotation(ImplementationVersion::class.toKotlinName()) {
+        nestedAnnotation(ImplementationVersion::class.toQualifiedIdentifier()) {
             member {
                 val impl = version.name
-                getImplementationKotlinName(impl)?.let { append(kotlinName(it)) } ?: string(impl)
+                getImplementationKotlinName(impl)?.let { append(identifier(it)) } ?: string(impl)
             }
             member { string(version.version) }
         }
     }
 
-    private fun kotlinName(name: KotlinName) = name.also(::ensureKotlinNameIsImported).identifier
+    private fun identifier(name: QualifiedIdentifier) = name.also(::ensureIdentifierIsImported).identifier
 
-    private fun ensureKotlinNameIsImported(type: KotlinName) {
-        if (imports.none { it.satisfiesImport(type) }) imports.add(type)
+    private fun ensureIdentifierIsImported(type: QualifiedIdentifier) {
+        if (imports.none { it canBeUsedToImport type }) imports.add(type)
     }
 
-    private fun annotation(ctx: RenderContext, type: KotlinName, body: AnnotationFragment.() -> Unit = {}) {
-        builder.append("${ctx.indent}@${kotlinName(type)}")
+    private fun annotation(ctx: RenderContext, type: QualifiedIdentifier, body: AnnotationFragment.() -> Unit = {}) {
+        builder.append("${ctx.indent}@${identifier(type)}")
         AnnotationFragment(builder).apply(body).end()
         builder.appendLine()
     }
 
-    private fun nestedAnnotation(type: KotlinName, body: AnnotationFragment.() -> Unit) {
-        builder.append(kotlinName(type))
+    private fun nestedAnnotation(type: QualifiedIdentifier, body: AnnotationFragment.() -> Unit) {
+        builder.append(identifier(type))
         AnnotationFragment(builder).apply(body).end()
     }
 

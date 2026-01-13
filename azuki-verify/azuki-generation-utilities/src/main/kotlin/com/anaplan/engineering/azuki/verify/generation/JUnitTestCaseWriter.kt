@@ -10,12 +10,11 @@ import com.anaplan.engineering.azuki.core.system.Answer
 import com.anaplan.engineering.azuki.core.system.CheckFactory
 import com.anaplan.engineering.azuki.core.system.QueryFactory
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
-import com.anaplan.engineering.azuki.script.generation.runnable.KotlinName
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
 import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.UUID
 
 /**
  * Helper class for writing JUnit test cases produced by a scenario runner.
@@ -25,7 +24,7 @@ class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFacto
     private val generateRunnable: RunnableScenarioClassGenerator,
     private val verifiedTestsDir: File,
     private val unverifiedTestsDir: File,
-    private val generatedTestClass: KotlinName,
+    private val generatedTestClass: QualifiedIdentifier,
 ) {
 
     fun writeTestCase(result: MultiOracleScenarioRunner.Result<AF, CF, QF, AGF>): File? {
