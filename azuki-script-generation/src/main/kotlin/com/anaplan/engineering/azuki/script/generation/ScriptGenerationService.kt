@@ -317,7 +317,7 @@ class ScriptGenerationService<
     inner class GivenGenerate(val given: Given, subBlocks: List<ScriptBlock>) :
         AllowsGenerate<AF, VQF, AGF, GivenGenerate> {
 
-        var blockList = ScriptElementList<ScriptBlock>(subBlocks)
+        var blockList = ScriptElementList(subBlocks)
 
         /**
          * Constructs a whenever block by mixing in declarations from one or more sources.
@@ -354,7 +354,7 @@ class ScriptGenerationService<
     inner class GivenGenerateWheneverGenerate(val whenever: GivenGenerateWhenever, subBlocks: List<ScriptBlock>) :
         AllowsGenerate<AF, VQF, AGF, GivenGenerateWheneverGenerate> {
 
-        var blockList = ScriptElementList<ScriptBlock>(subBlocks)
+        var blockList = ScriptElementList(subBlocks)
         val givenGenerate = whenever.givenGenerate
         val given = whenever.given
 
