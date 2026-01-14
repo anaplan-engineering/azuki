@@ -4,6 +4,8 @@ import com.anaplan.engineering.azuki.core.runner.AdapterTest
 import com.anaplan.engineering.azuki.core.runner.AnalysisScenario
 import com.anaplan.engineering.azuki.core.runner.Eac
 import com.anaplan.engineering.azuki.core.runner.GeneratedScenario
+import com.anaplan.engineering.azuki.core.runner.Issue
+import com.anaplan.engineering.azuki.core.runner.KnownBug
 import com.anaplan.engineering.azuki.core.scenario.Since
 import com.anaplan.engineering.azuki.core.system.BEH
 import com.anaplan.engineering.azuki.core.system.ImplementationVersion
@@ -30,6 +32,7 @@ class RunnableScenarioClassRendererTest {
             @BEH(12, 345, "Does things")
             class Foo : AcmeRunnableScenario() {
 
+                @KnownBug(Issue("BarImpl", "1.4"))
                 @Since(ImplementationVersion("BarImpl", "1.0"))
                 @Eac("Tests a thing", "A thing should happen")
                 fun test() {
@@ -70,6 +73,7 @@ class RunnableScenarioClassRendererTest {
             @BEH(AcmeBehaviors.Foo, AcmeFunctionalElements.Thing, "Does things")
             class Foo : AcmeRunnableScenario() {
 
+                @KnownBug(Issue(Bar, "1.4"))
                 @Since(ImplementationVersion(Bar, "1.0"))
                 @Eac("Tests a thing", "A thing should happen")
                 fun test() {
@@ -147,7 +151,7 @@ class RunnableScenarioClassRendererTest {
                 RunnableScenarioClassScript.MethodScript(
                     name = name,
                     type = type,
-                    annotations = RunnableScenarioAnnotations(),
+                    annotations = emptySet(),
                     body = emptyScenario,
                 )
             }
@@ -187,7 +191,10 @@ class RunnableScenarioClassRendererTest {
             val method = RunnableScenarioClassScript.MethodScript(
                 name = "test",
                 type = Eac("Tests a thing", "A thing should happen").toMethodType(),
-                annotations = RunnableScenarioAnnotations(since = Since(ImplementationVersion("BarImpl", "1.0"))),
+                annotations = setOf(
+                    Since(ImplementationVersion("BarImpl", "1.0")),
+                    KnownBug(Issue("BarImpl", "1.4"))
+                ),
                 body = exampleScenario,
             )
 

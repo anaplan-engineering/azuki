@@ -17,49 +17,25 @@ abstract class ScenarioScript(val typeName: String, val blocks: ScriptElementLis
     /**
      * Customisable renderer for scenario scripts.
      */
-    inner class Renderer(
+    inner class Renderer {
         /**
          * The formatter to use, if any.
          */
-        var formatter: Formatter = Formatter.Full,
+        var formatter: Formatter = Formatter.Full
+
         /**
          * How to convert the scenario's blocks into a script.
          */
-        var scriptType: ScriptType = ScriptType.Standalone,
-        /**
-         * The starting render context.
-         */
-        var startingRenderContext: RenderContext = RenderContext(0, "    "),
-    ) {
-        /**
-         * Shorthand constructor for setting up the render context in-place.
-         */
-        constructor(formatter: Formatter, scriptType: ScriptType, indentLevel: Int, indentString: String) : this(
-            formatter,
-            scriptType,
-            RenderContext(indentLevel, indentString))
+        var scriptType: ScriptType = ScriptType.Standalone
 
         /**
-         * The starting indent level for the renderer.
+         * The top-level render context.
          */
-        var indentLevel
-            get() = startingRenderContext.indentLevel
-            set(x) {
-                startingRenderContext = startingRenderContext.copy(indentLevel = x)
-            }
-
-        /**
-         * String to be repeated once for each indent level.  (Usually this will be some multiple of spaces or tabs.)
-         */
-        var indentString
-            get() = startingRenderContext.indentString
-            set(x) {
-                startingRenderContext = startingRenderContext.copy(indentString = x)
-            }
+        var topLevelRenderContext: RenderContext = RenderContext(0, "    ")
 
         internal fun render(blocks: ScriptElementList<ScriptBlock>): String {
             val wrapped = scriptType.wrap(typeName, blocks)
-            val rendered = wrapped.render(startingRenderContext)
+            val rendered = wrapped.render(topLevelRenderContext)
             return formatter.format(rendered)
         }
     }

@@ -51,7 +51,7 @@ open class RunnableScenarioClassGenerator(
         implementationVersions: Map<String, String>, scenarioScript: VerifiableScenarioScript
     ) = RunnableScenarioClassScript.MethodScript("test",
         GeneratedScenario().toMethodType(),
-        RunnableScenarioAnnotations(since = generateSince(implementationVersions)),
+        setOfNotNull(generateSince(implementationVersions)),
         scenarioScript)
 
     private fun generateSince(

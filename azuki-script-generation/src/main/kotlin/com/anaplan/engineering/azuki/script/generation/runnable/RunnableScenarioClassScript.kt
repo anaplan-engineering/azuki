@@ -19,7 +19,7 @@ data class RunnableScenarioClassScript(
     data class MethodScript(
         val name: String,
         val type: RunnableScenarioMethodType,
-        val annotations: RunnableScenarioAnnotations,
+        val annotations: Set<Annotation>,
         val body: VerifiableScenarioScript,
     )
 }

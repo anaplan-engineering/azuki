@@ -2,6 +2,7 @@ package com.anaplan.engineering.azuki.script.generation.runnable
 
 import com.anaplan.engineering.azuki.core.runner.Issue
 import com.anaplan.engineering.azuki.core.runner.KnownBug
+import com.anaplan.engineering.azuki.core.runner.ToBeDone
 import com.anaplan.engineering.azuki.core.scenario.Since
 import com.anaplan.engineering.azuki.core.system.BEH
 import com.anaplan.engineering.azuki.core.system.Behavior
@@ -26,6 +27,21 @@ class RunnableScenarioClassRenderer private constructor() {
         Importable.wildcard("com.anaplan.engineering.azuki.core.runner"),
         Importable.wildcard("com.anaplan.engineering.azuki.core.system"),
     )
+
+    /**
+     * Renderers for scenario method annotations.
+     *
+     * This associative list should be ordered in the top-down order the annotations should appear in the script, and
+     * each renderer should return true if it successfully handled the annotation.
+     *
+     * See `annotationRenderer` for a helper to create entries of the right type.  The default value is OK whenever the
+     * Azuki use case doesn't have its own custom annotations or preferences on their order.
+     */
+    var methodAnnotationRenderers =
+        mutableListOf<Function3<RunnableScenarioClassRenderer, RenderContext, Annotation, Boolean>>(annotationRenderer(
+            RunnableScenarioClassRenderer::knownBug),
+            annotationRenderer(RunnableScenarioClassRenderer::toBeDone),
+            annotationRenderer(RunnableScenarioClassRenderer::since))
 
     /**
      * Map from behavioral constants to their definitions (captured as qualified identifiers).
@@ -88,9 +104,16 @@ class RunnableScenarioClassRenderer private constructor() {
         })
     }
 
-    private fun annotations(ctx: RenderContext, annotations: RunnableScenarioAnnotations) {
-        annotations.knownBug?.let { knownBug(ctx, it) }
-        annotations.since?.let {since(ctx, it) }
+    private fun annotations(ctx: RenderContext, annotations: Set<Annotation>) {
+        // Quadratic, but we shouldn't have that many annotations.
+        methodAnnotationRenderers.forEach { renderer ->
+            for (ann in annotations) {
+                val success = renderer(this, ctx, ann)
+                if (success) {
+                    break
+                }
+            }
+        }
     }
 
     private fun scenarioType(ctx: RenderContext, type: RunnableScenarioMethodType) {
@@ -127,9 +150,29 @@ class RunnableScenarioClassRenderer private constructor() {
         }
     }
 
-    private fun knownBug(ctx: RenderContext, knownBug: KnownBug) {
+    internal fun identifier(name: QualifiedIdentifier) = name.also(::ensureIdentifierIsImported).identifier
+
+    private fun ensureIdentifierIsImported(type: QualifiedIdentifier) {
+        if (imports.none { it canBeUsedToImport type }) {
+            imports.add(type)
+        }
+    }
+
+    /**
+     * Renders a 'KnownBug' annotation.
+     */
+    fun knownBug(ctx: RenderContext, knownBug: KnownBug) {
         annotation(ctx, KnownBug::class.toQualifiedIdentifier()) {
             knownBug.issues.forEach { member { issue(it) } }
+        }
+    }
+
+    /**
+     * Renders a 'ToBeDone' annotation.
+     */
+    fun toBeDone(ctx: RenderContext, toBeDone: ToBeDone) {
+        annotation(ctx, KnownBug::class.toQualifiedIdentifier()) {
+            toBeDone.issues.forEach { member { issue(it) } }
         }
     }
 
@@ -143,35 +186,20 @@ class RunnableScenarioClassRenderer private constructor() {
         }
     }
 
-    private fun since(ctx: RenderContext, since: Since) {
-        annotation(ctx, Since::class.toQualifiedIdentifier()) {
-            since.implementationVersion.forEach { member { implementationVersion(it) } }
-        }
+    /**
+     * Renders a 'Since' annotation.
+     */
+    fun since(ctx: RenderContext, ann: Since) = annotation(ctx, Since::class.toQualifiedIdentifier()) {
+        ann.implementationVersion.forEach { member { implementationVersion(it) } }
     }
 
-    private fun implementationVersion(version: ImplementationVersion) {
-        nestedAnnotation(ImplementationVersion::class.toQualifiedIdentifier()) {
-            member {
-                val impl = version.name
-                getImplementationKotlinName(impl)?.let { append(identifier(it)) } ?: string(impl)
-            }
-            member { string(version.version) }
-        }
-    }
-
-    private fun identifier(name: QualifiedIdentifier) = name.also(::ensureIdentifierIsImported).identifier
-
-    private fun ensureIdentifierIsImported(type: QualifiedIdentifier) {
-        if (imports.none { it canBeUsedToImport type }) imports.add(type)
-    }
-
-    private fun annotation(ctx: RenderContext, type: QualifiedIdentifier, body: AnnotationFragment.() -> Unit = {}) {
+    internal fun annotation(ctx: RenderContext, type: QualifiedIdentifier, body: AnnotationFragment.() -> Unit = {}) {
         builder.append("${ctx.indent}@${identifier(type)}")
         AnnotationFragment(builder).apply(body).end()
         builder.appendLine()
     }
 
-    private fun nestedAnnotation(type: QualifiedIdentifier, body: AnnotationFragment.() -> Unit) {
+    internal fun nestedAnnotation(type: QualifiedIdentifier, body: AnnotationFragment.() -> Unit) {
         builder.append(identifier(type))
         AnnotationFragment(builder).apply(body).end()
     }
@@ -198,6 +226,29 @@ class RunnableScenarioClassRenderer private constructor() {
                 appendLine(renderer.builder)
             }
         }
+
+        /**
+         * Creates a new annotation renderer from a reified rendering function.
+         */
+        inline fun <reified T : Annotation> annotationRenderer(crossinline f: RunnableScenarioClassRenderer.(RenderContext, T) -> Unit) =
+            fun(
+                parent: RunnableScenarioClassRenderer, context: RenderContext, annotation: Annotation
+            ) = if (annotation is T) {
+                parent.f(context, annotation)
+                true
+            } else {
+                false
+            }
+    }
+}
+
+private fun RunnableScenarioClassRenderer.implementationVersion(version: ImplementationVersion) {
+    nestedAnnotation(ImplementationVersion::class.toQualifiedIdentifier()) {
+        member {
+            val impl = version.name
+            getImplementationKotlinName(impl)?.let { append(identifier(it)) } ?: string(impl)
+        }
+        member { string(version.version) }
     }
 }
 
