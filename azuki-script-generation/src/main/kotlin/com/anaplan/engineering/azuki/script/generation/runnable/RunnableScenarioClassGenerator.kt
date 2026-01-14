@@ -14,34 +14,37 @@ import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenario
  * intended for the most common purpose of lifting one scenario into one test method.
  */
 open class RunnableScenarioClassGenerator(
-    val adapterSpecificImports: List<Importable>,
-    val baseClassName: QualifiedIdentifier,
+    /**
+     * Any imports that are needed to bring in the adapter's `RunnableScenario` class and associated DSL.
+     */
+    val adapterDslImports: List<Importable>,
+    /**
+     * The name of the base `RunnableScenario` class for this adapter.
+     */
+    val runnableScenarioClassName: QualifiedIdentifier,
 ) {
 
     /**
      * Generates a runnable scenario given its script.
      *
-     * If `className` is given, it will be used for the test class name and package; otherwise, the class will get an
-     * arbitrary pseudorandomly-generated name and no package.
-     *
      * If `implementationVersions` is given, it will generate a `@Since` annotation on the test method.
      */
     fun generate(
         scenarioScript: VerifiableScenarioScript,
-        className: QualifiedIdentifier? = null,
+        testName: QualifiedIdentifier,
         implementationVersions: Map<String, String> = emptyMap(),
     ): RunnableScenarioClass {
-        val script = generateScript(className, implementationVersions, scenarioScript)
+        val script = generateScript(testName, implementationVersions, scenarioScript)
         val definition = ScenarioFormatter.formatScenario(script.render {
-            imports += adapterSpecificImports
+            imports += adapterDslImports
         })
         return RunnableScenarioClass(script.testName.identifier, script.testName.packageName, definition)
     }
 
     private fun generateScript(
-        className: QualifiedIdentifier?, implementationVersions: Map<String, String>, scenarioScript: VerifiableScenarioScript
-    ) = RunnableScenarioClassScript(testName = className ?: QualifiedIdentifier.generateArbitrary(""),
-        baseClassName,
+        testName: QualifiedIdentifier, implementationVersions: Map<String, String>, scenarioScript: VerifiableScenarioScript
+    ) = RunnableScenarioClassScript(testName,
+        runnableScenarioClassName,
         listOf(generateMethod(implementationVersions, scenarioScript)))
 
     private fun generateMethod(

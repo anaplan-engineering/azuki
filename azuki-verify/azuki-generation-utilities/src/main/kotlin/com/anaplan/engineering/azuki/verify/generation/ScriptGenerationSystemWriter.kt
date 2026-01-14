@@ -79,8 +79,8 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
                 fromChecks(listOf(checkFactory.systemValid()))
             }.verifiableScenario
 
-            val className = QualifiedIdentifier.create(packageName = "debug", simpleName = context ?: "scenario-ocl")
-            val testCase = classGeneration.generate(className = className,
+            val testName = QualifiedIdentifier.create(packageName = "debug", simpleName = context ?: "scenario-ocl")
+            val testCase = classGeneration.generate(testName = testName,
                 scenarioScript = scenarioScript,
                 implementationVersions = emptyMap())
             val definition = ScenarioFormatter.formatScenario(testCase.definition)

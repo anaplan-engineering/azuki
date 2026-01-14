@@ -21,16 +21,6 @@ class QualifiedIdentifierTest {
         expect("Foo.Bar") { identifier }
     }
 
-
-    @Test
-    fun arbitrary() = with(QualifiedIdentifier.generateArbitrary("com.example")) {
-        // we can't assume much about what the simple name is!
-        assertTrue { fullName.startsWith("com.example.") }
-        assertTrue { import.startsWith("com.example.") }
-        expect("com.example") { packageName }
-        assertTrue { identifier.isNotBlank() }
-    }
-
     @Test
     fun wildcard() = with(Importable.wildcard("com.example")) {
         expect("com.example.*") { fullName }
@@ -59,8 +49,8 @@ class QualifiedIdentifierTest {
     @Test
     fun canBeUsedToImportWildcard() {
         val pkg = Importable.wildcard("com.example")
-        val class1 = QualifiedIdentifier.create("com.example", "foo")
-        val class2 = QualifiedIdentifier.generateArbitrary("com.example")
+        val class1 = QualifiedIdentifier.create("com.example", "Foo")
+        val class2 = QualifiedIdentifier.create("com.example", "Bar") dot "Baz"
 
         assertTrue { pkg canBeUsedToImport class1 }
         assertTrue { pkg canBeUsedToImport class2 }

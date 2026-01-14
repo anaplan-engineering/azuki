@@ -74,7 +74,7 @@ class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFacto
         testImplementation: ImplementationInstance<AF, CF, QF, AGF>,
         verifyingImplementation: ImplementationInstance<AF, CF, QF, AGF>,
     ) = generateRunnable.generate(
-        className = generatedTestClass,
+        testName = generatedTestClass,
         scenarioScript = generateScript.generateVerifiableScenario(baseScenario, answers),
         implementationVersions = mapOf(
             testImplementation.implementationName to (testImplementation.version ?: "0.0.0"),

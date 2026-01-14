@@ -89,11 +89,6 @@ sealed class QualifiedIdentifier : Importable() {
             packageName.sanitizeForIdentifiers,
             simpleName.sanitizeForIdentifiers,
         )
-
-        /**
-         * Creates an arbitrary class name.
-         */
-        fun generateArbitrary(packageName: String) = create(packageName, "Generated_${UUID.randomUUID()}")
     }
 }
 
