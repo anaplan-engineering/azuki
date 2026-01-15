@@ -74,20 +74,20 @@ class RunnableScenarioClassRenderer private constructor() {
     var getImplementationKotlinName: (String) -> QualifiedIdentifier? = { null }
 
     /**
-     * The starting render context for the renderer.
+     * The top-level render context for the renderer.
      */
-    var startingRenderContext = RenderContext()
+    var topLevelRenderContext = RenderContext()
 
     private val builder = StringBuilder()
 
     private fun doRendering(scenario: RunnableScenarioClassScript) {
         require(builder.isEmpty()) { "shouldn't re-use a renderer" }
 
-        scenario.beh?.let { beh(startingRenderContext, it) }
+        scenario.beh?.let { beh(topLevelRenderContext, it) }
         builder.append("class ${identifier(scenario.testName)} : ${identifier(scenario.baseName)}() {")
         scenario.methods.forEach {
             builder.appendLine().appendLine()
-            renderMethod(startingRenderContext.nextIndentLevel, it)
+            renderMethod(topLevelRenderContext.nextIndentLevel, it)
         }
         builder.appendLine().append("}")
     }
@@ -97,7 +97,7 @@ class RunnableScenarioClassRenderer private constructor() {
         scenarioType(ctx, method.type)
         builder.append(method.body.render {
             scriptType = ScriptType.method(method.name)
-            startingRenderContext = ctx
+            topLevelRenderContext = ctx
 
             // Don't format here, we'll format the JUnit in one go
             formatter = Formatter.None

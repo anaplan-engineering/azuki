@@ -14,7 +14,6 @@ class ScriptGenerationServiceBomTest(
 
     @Test
     fun test() {
-
         expect(prefix + expected, "problem with BOMs in case $name") {
             ScriptGenerationService.standalone.bomScenario().render({
                 formatter = if (prefix.isNotEmpty()) {

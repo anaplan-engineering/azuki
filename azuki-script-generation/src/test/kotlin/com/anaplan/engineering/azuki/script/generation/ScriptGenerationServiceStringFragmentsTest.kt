@@ -234,7 +234,7 @@ class ScriptGenerationServiceStringFragmentsTest {
             }.then {
                 +ScriptElement { ctx -> "${ctx.indent}everythingIsOkay()" }
             }.verifiableScenario.render {
-                indentString = ".."
+                this.topLevelRenderContext = RenderContext(indentString = "..")
                 // this isn't valid Kotlin code, so we can't format it!
                 formatter = Formatter.None
             }
