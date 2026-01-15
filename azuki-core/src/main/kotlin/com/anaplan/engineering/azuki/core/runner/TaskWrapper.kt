@@ -92,7 +92,7 @@ private class LogAndCaptureOutputStream(
 
     override fun write(b: Int) {
         if (b.toChar() == '\n') {
-            logOutAndClear()
+            logAndClearBuffer()
         } else {
             buffer.add(b.toByte())
         }
@@ -105,17 +105,18 @@ private class LogAndCaptureOutputStream(
 
     override fun close() {
         if (buffer.isNotEmpty()) {
-            logOutAndClear()
+            logAndClearBuffer()
         }
         capture.close()
     }
 
-    private fun logOutAndClear() {
+    private fun logAndClearBuffer() {
         try {
             log(String(buffer.toByteArray()))
             buffer.clear()
-        } catch (e: ConcurrentModificationException) {
-            Log.warn("Unable to capture stdout for task: ${e.message}")
+        } catch (e: Exception) {
+            Log.warn("Unable to capture stdout for task: {}", e.message)
+            Log.warn("Stacktrace:\n{}", e.stackTraceToString())
         }
     }
 
