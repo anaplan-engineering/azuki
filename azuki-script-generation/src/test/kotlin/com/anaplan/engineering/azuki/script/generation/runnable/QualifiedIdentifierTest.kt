@@ -7,33 +7,33 @@ class QualifiedIdentifierTest {
 
     @Test
     fun basic() = with(QualifiedIdentifier.create("com.example", "Test")) {
-        expect("com.example.Test") { fullName }
-        expect("com.example.Test") { import }
-        expect("com.example") { packageName }
-        expect("Test") { identifier }
+        assertEquals("com.example.Test", fullName)
+        assertEquals("com.example.Test", import)
+        assertEquals("com.example", packageName)
+        assertEquals("Test", identifier)
     }
 
     @Test
     fun basicNested() = with(QualifiedIdentifier.create("com.example", "Foo") dot "Bar") {
-        expect("com.example.Foo.Bar") { fullName }
-        expect("com.example.Foo") { import }
-        expect("com.example") { packageName }
-        expect("Foo.Bar") { identifier }
+        assertEquals("com.example.Foo.Bar", fullName)
+        assertEquals("com.example.Foo", import)
+        assertEquals("com.example", packageName)
+        assertEquals("Foo.Bar", identifier)
     }
 
     @Test
     fun wildcard() = with(Importable.wildcard("com.example")) {
-        expect("com.example.*") { fullName }
-        expect("com.example.*") { import }
-        expect("com.example") { packageName }
+        assertEquals("com.example.*", fullName)
+        assertEquals("com.example.*", import)
+        assertEquals("com.example", packageName)
     }
 
     @Test
     fun javaClass() = with(QualifiedIdentifierTest::class.toQualifiedIdentifier()) {
-        expect("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifierTest") { fullName }
-        expect("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifierTest") { import }
-        expect("com.anaplan.engineering.azuki.script.generation.runnable") { packageName }
-        expect("QualifiedIdentifierTest") { identifier }
+        assertEquals("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifierTest", fullName)
+        assertEquals("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifierTest", import)
+        assertEquals("com.anaplan.engineering.azuki.script.generation.runnable", packageName)
+        assertEquals("QualifiedIdentifierTest", identifier)
     }
 
     @Test
@@ -42,8 +42,8 @@ class QualifiedIdentifierTest {
         val foo2 = QualifiedIdentifier.create("com.example", "foo")
         val bar = QualifiedIdentifier.create("com.example", "bar")
 
-        assertTrue { foo1 canBeUsedToImport foo2 }
-        assertFalse { foo1 canBeUsedToImport bar }
+        assertTrue(foo1 canBeUsedToImport foo2)
+        assertFalse(foo1 canBeUsedToImport bar)
     }
 
     @Test
@@ -52,10 +52,10 @@ class QualifiedIdentifierTest {
         val class1 = QualifiedIdentifier.create("com.example", "Foo")
         val class2 = QualifiedIdentifier.create("com.example", "Bar") dot "Baz"
 
-        assertTrue { pkg canBeUsedToImport class1 }
-        assertTrue { pkg canBeUsedToImport class2 }
-        assertTrue { pkg canBeUsedToImport pkg }
-        assertFalse { class1 canBeUsedToImport pkg }
-        assertFalse { class2 canBeUsedToImport pkg }
+        assertTrue(pkg canBeUsedToImport class1)
+        assertTrue(pkg canBeUsedToImport class2)
+        assertTrue(pkg canBeUsedToImport pkg)
+        assertFalse(class1 canBeUsedToImport pkg)
+        assertFalse(class2 canBeUsedToImport pkg)
     }
 }

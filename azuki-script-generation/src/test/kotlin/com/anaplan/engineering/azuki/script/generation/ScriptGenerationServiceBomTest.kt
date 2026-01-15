@@ -14,16 +14,16 @@ class ScriptGenerationServiceBomTest(
 
     @Test
     fun test() {
-        expect(prefix + expected, "problem with BOMs in case $name") {
-            ScriptGenerationService.standalone.bomScenario().render({
-                formatter = if (prefix.isNotEmpty()) {
-                    // slipstream in the prefix
-                    Formatter { this@ScriptGenerationServiceBomTest.formatter.format(prefix + it) }
-                } else {
-                    this@ScriptGenerationServiceBomTest.formatter
-                }
-            }).trim()
-        }
+        val script = ScriptGenerationService.standalone.bomScenario()
+        val actual = script.render {
+            formatter = if (prefix.isNotEmpty()) {
+                // slipstream in the prefix
+                Formatter { this@ScriptGenerationServiceBomTest.formatter.format(prefix + it) }
+            } else {
+                this@ScriptGenerationServiceBomTest.formatter
+            }
+        }.trim()
+        assertEquals(prefix + expected, actual, "problem with BOMs in case $name")
     }
 
     companion object {
