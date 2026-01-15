@@ -79,9 +79,7 @@ internal class TaskWrapper<
             } else {
                 "${this}ns"
             }
-
     }
-
 }
 
 private class LogAndCaptureOutputStream(
@@ -94,8 +92,7 @@ private class LogAndCaptureOutputStream(
 
     override fun write(b: Int) {
         if (b.toChar() == '\n') {
-            log(String(buffer.toByteArray()))
-            buffer.clear()
+            logAndClearBuffer()
         } else {
             buffer.add(b.toByte())
         }
@@ -108,9 +105,23 @@ private class LogAndCaptureOutputStream(
 
     override fun close() {
         if (buffer.isNotEmpty()) {
-            log(String(buffer.toByteArray()))
-            buffer.clear()
+            logAndClearBuffer()
         }
         capture.close()
+    }
+
+    private fun logAndClearBuffer() {
+        try {
+            log(String(buffer.toByteArray()))
+            buffer.clear()
+        } catch (e: Exception) {
+            Log.warn("Unable to capture stdout for task: {}", e.message)
+            Log.warn("Stacktrace:\n{}", e.stackTraceToString())
+        }
+    }
+
+    companion object {
+
+        private val Log = LoggerFactory.getLogger(LogAndCaptureOutputStream::class.java)
     }
 }
