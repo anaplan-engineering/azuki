@@ -39,7 +39,7 @@ class RunnableScenarioClassRenderer private constructor() {
      * Azuki use case doesn't have its own custom annotations or preferences on their order.
      */
     var methodAnnotationRenderers =
-        mutableListOf<Function3<RunnableScenarioClassRenderer, RenderContext, Annotation, Boolean>>(annotationRenderer(
+        mutableListOf<(RunnableScenarioClassRenderer, RenderContext, Annotation) -> Boolean>(annotationRenderer(
             RunnableScenarioClassRenderer::knownBug),
             annotationRenderer(RunnableScenarioClassRenderer::toBeDone),
             annotationRenderer(RunnableScenarioClassRenderer::since))
