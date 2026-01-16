@@ -11,6 +11,7 @@ import com.anaplan.engineering.azuki.core.system.ImplementationVersion
 import com.anaplan.engineering.azuki.script.generation.Formatter
 import com.anaplan.engineering.azuki.script.generation.RenderContext
 import com.anaplan.engineering.azuki.script.generation.ScriptType
+import com.anaplan.engineering.azuki.script.generation.literal
 import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier.Companion.toQualifiedIdentifier
 
 /**
@@ -127,26 +128,24 @@ class RunnableScenarioClassRenderer private constructor() {
 
     private fun AnnotationFragment.adapterTestMethodType(type: AdapterTestMethodType) {
         if (type.annotation.expectSkip) {
-            member { append("expectSkip = true") }
+            +"expectSkip = true"
         }
     }
 
     private fun AnnotationFragment.eacMethodType(type: EacMethodType) {
-        member { string(type.annotation.summary) }
-        members(type.annotation.notes) { string(it) }
+        +type.annotation.summary.literal
+        type.annotation.notes.forEach { +it.literal }
     }
 
     private fun beh(ctx: RenderContext, beh: BEH) {
         annotation(ctx, BEH::class.toQualifiedIdentifier()) {
-            member {
-                val behavior = beh.behavior
-                getBehaviourKotlinName(behavior)?.let { append(identifier(it)) } ?: append(behavior.toString())
-            }
-            member {
-                val fe = beh.functionalElement
-                getFunctionalElementKotlinName(fe)?.let { append(identifier(it)) } ?: append(fe.toString())
-            }
-            member { string(beh.summary) }
+            val behavior = beh.behavior
+            +(getBehaviourKotlinName(behavior)?.let(::identifier) ?: behavior.toString())
+
+            val fe = beh.functionalElement
+            +(getFunctionalElementKotlinName(fe)?.let(::identifier) ?: fe.toString())
+
+            +beh.summary.literal
         }
     }
 
@@ -163,7 +162,7 @@ class RunnableScenarioClassRenderer private constructor() {
      */
     fun knownBug(ctx: RenderContext, knownBug: KnownBug) {
         annotation(ctx, KnownBug::class.toQualifiedIdentifier()) {
-            knownBug.issues.forEach { member { issue(it) } }
+            knownBug.issues.forEach { +issue(it) }
         }
     }
 
@@ -172,26 +171,33 @@ class RunnableScenarioClassRenderer private constructor() {
      */
     fun toBeDone(ctx: RenderContext, toBeDone: ToBeDone) {
         annotation(ctx, KnownBug::class.toQualifiedIdentifier()) {
-            toBeDone.issues.forEach { member { issue(it) } }
+            toBeDone.issues.forEach { +issue(it) }
         }
     }
 
-    private fun issue(issue: Issue) {
-        nestedAnnotation(Issue::class.toQualifiedIdentifier()) {
-            member {
-                val impl = issue.implementation
-                getImplementationKotlinName(impl)?.let { append(identifier(it)) } ?: string(impl)
-            }
-            members(issue.jiraIds) { string(it) }
-        }
+    private fun issue(issue: Issue) = nestedAnnotation(Issue::class.toQualifiedIdentifier()) {
+        val implName = getImplementationKotlinName(issue.implementation)
+        +(implName?.let(::identifier) ?: issue.implementation.literal)
+
+        issue.jiraIds.forEach { +it.literal }
     }
 
     /**
      * Renders a 'Since' annotation.
      */
-    fun since(ctx: RenderContext, ann: Since) = annotation(ctx, Since::class.toQualifiedIdentifier()) {
-        ann.implementationVersion.forEach { member { implementationVersion(it) } }
+    fun since(ctx: RenderContext, ann: Since) {
+        annotation(ctx, Since::class.toQualifiedIdentifier()) {
+            ann.implementationVersion.forEach { +implementationVersion(it) }
+        }
     }
+
+    private fun implementationVersion(version: ImplementationVersion) =
+        nestedAnnotation(ImplementationVersion::class.toQualifiedIdentifier()) {
+            val implName = getImplementationKotlinName(version.name)
+            +(implName?.let(::identifier) ?: version.name.literal)
+
+            +version.version.literal
+        }
 
     internal fun annotation(ctx: RenderContext, type: QualifiedIdentifier, body: AnnotationFragment.() -> Unit = {}) {
         builder.append("${ctx.indent}@${identifier(type)}")
@@ -199,9 +205,9 @@ class RunnableScenarioClassRenderer private constructor() {
         builder.appendLine()
     }
 
-    internal fun nestedAnnotation(type: QualifiedIdentifier, body: AnnotationFragment.() -> Unit) {
-        builder.append(identifier(type))
-        AnnotationFragment(builder).apply(body).end()
+    internal fun nestedAnnotation(type: QualifiedIdentifier, body: AnnotationFragment.() -> Unit) = buildString {
+        append(identifier(type))
+        AnnotationFragment(this).apply(body).end()
     }
 
     companion object {
@@ -242,16 +248,6 @@ class RunnableScenarioClassRenderer private constructor() {
     }
 }
 
-private fun RunnableScenarioClassRenderer.implementationVersion(version: ImplementationVersion) {
-    nestedAnnotation(ImplementationVersion::class.toQualifiedIdentifier()) {
-        member {
-            val impl = version.name
-            getImplementationKotlinName(impl)?.let { append(identifier(it)) } ?: string(impl)
-        }
-        member { string(version.version) }
-    }
-}
-
 /**
  * Helper for constructing bits of annotations.
  */
@@ -259,37 +255,20 @@ internal class AnnotationFragment(private val parent: Appendable) {
 
     private var hasMembers = false
 
-    fun member(body: Appendable.() -> Unit) {
+    /**
+     * Adds a string into an annotation fragment.
+     */
+    operator fun String.unaryPlus() {
         parent.append(memberPrefix)
-        parent.body()
-        hasMembers = true
-    }
-
-    fun <T> members(items: Array<T>, builder: Appendable.(T) -> Unit) {
-        if (items.isEmpty()) return
-        items.joinTo(parent, prefix = memberPrefix, separator = ", ", transform = {
-            buildString { builder(it) }
-        })
+        parent.append(this)
         hasMembers = true
     }
 
     fun end() {
-        if (hasMembers) parent.append(")")
+        if (hasMembers) {
+            parent.append(")")
+        }
     }
 
     private val memberPrefix get() = if (hasMembers) ", " else "("
-}
-
-private val specials = Regex("[\\v\"$]+")
-
-internal fun Appendable.string(str: String) {
-    if (str.contains(specials)) {
-        append("\"\"\"")
-        append(str.replace("$", "\${'$'}").replace("\"\"\"", "\${'\"'}\${'\"'}\${'\"'}"))
-        append("\"\"\"")
-    } else {
-        append('"')
-        append(str)
-        append('"')
-    }
 }
