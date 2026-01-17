@@ -7,7 +7,7 @@ class QualifiedIdentifierTest {
 
     @Test
     fun basic() = with(QualifiedIdentifier.create("com.example", "Test")) {
-        assertEquals("com.example.Test", fullName)
+        assertEquals("com.example.Test", toString())
         assertEquals("com.example.Test", import)
         assertEquals("com.example", packageName)
         assertEquals("Test", identifier)
@@ -15,7 +15,7 @@ class QualifiedIdentifierTest {
 
     @Test
     fun basicNested() = with(QualifiedIdentifier.create("com.example", "Foo") dot "Bar") {
-        assertEquals("com.example.Foo.Bar", fullName)
+        assertEquals("com.example.Foo.Bar", toString())
         assertEquals("com.example.Foo", import)
         assertEquals("com.example", packageName)
         assertEquals("Foo.Bar", identifier)
@@ -23,14 +23,14 @@ class QualifiedIdentifierTest {
 
     @Test
     fun wildcard() = with(Importable.wildcard("com.example")) {
-        assertEquals("com.example.*", fullName)
+        assertEquals("com.example.*", toString())
         assertEquals("com.example.*", import)
         assertEquals("com.example", packageName)
     }
 
     @Test
     fun javaClass() = with(QualifiedIdentifierTest::class.toQualifiedIdentifier()) {
-        assertEquals("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifierTest", fullName)
+        assertEquals("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifierTest", toString())
         assertEquals("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifierTest", import)
         assertEquals("com.anaplan.engineering.azuki.script.generation.runnable", packageName)
         assertEquals("QualifiedIdentifierTest", identifier)

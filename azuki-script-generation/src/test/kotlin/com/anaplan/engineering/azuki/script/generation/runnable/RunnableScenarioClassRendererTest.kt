@@ -210,15 +210,15 @@ class RunnableScenarioClassRendererTest {
          * Set up reverse maps to convert various parts of the example script into their Kotlin identifiers.
          */
         private fun RunnableScenarioClassRenderer.setupExampleRenderer() {
-            getBehaviourKotlinName = { b ->
+            identifierContext.behaviorMapper = { b ->
                 // mapping backwards from behavior 12 to com.example.AcmeBehaviors.Foo
                 (QualifiedIdentifier.create("com.example", "AcmeBehaviors") dot "Foo").takeIf { b == 12 }
             }
-            getFunctionalElementKotlinName = { fe ->
+            identifierContext.functionalElementMapper = { fe ->
                 // mapping backwards from FE 345 to com.example.ThingFe
                 (QualifiedIdentifier.create("com.example", "AcmeFunctionalElements") dot "Thing").takeIf { fe == 345 }
             }
-            getImplementationKotlinName = { impl ->
+            identifierContext.implementationMapper = { impl ->
                 // mapping backwards from implementation BarImpl to com.example.Bar
                 QualifiedIdentifier.create("com.example", "Bar").takeIf { impl == "BarImpl" }
             }

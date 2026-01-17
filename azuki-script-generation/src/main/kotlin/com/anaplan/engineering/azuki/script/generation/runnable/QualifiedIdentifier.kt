@@ -1,20 +1,14 @@
 package com.anaplan.engineering.azuki.script.generation.runnable
 
-import java.util.UUID
+import com.anaplan.engineering.azuki.core.system.Behavior
+import com.anaplan.engineering.azuki.core.system.FunctionalElement
+import com.anaplan.engineering.azuki.script.generation.literal
 import kotlin.reflect.KClass
 
 /**
  * Information about a name that can be imported into a Kotlin script.
  */
-sealed class Importable : Comparable<Importable> {
-
-    override fun toString() = fullName
-    override fun compareTo(other: Importable) = fullName.compareTo(other.fullName)
-
-    /**
-     * The fully-qualified form of the identifier, used for stringification and comparison.
-     */
-    abstract val fullName: String
+sealed class Importable {
 
     /**
      * The (often canonical) name that must be imported to bring the name into scope.
@@ -94,8 +88,8 @@ sealed class QualifiedIdentifier : Importable() {
 
 private class WildcardImport(override val packageName: String) : Importable() {
 
-    override val fullName = "$packageName.*"
-    override val import = fullName
+    override fun toString() = import
+    override val import = "$packageName.*"
 
     /**
      * Wildcard imports can be used as imports for anything with the same package name.
@@ -105,8 +99,8 @@ private class WildcardImport(override val packageName: String) : Importable() {
 
 private class BasicQualifiedIdentifier(override val packageName: String, simpleName: String) : QualifiedIdentifier() {
 
-    override val fullName = "$packageName.$simpleName"
-    override val import = fullName
+    override fun toString() = import
+    override val import = "$packageName.$simpleName"
     override val identifier = simpleName
     override fun canBeUsedToImport(other: Importable) = import == other.import
 }
@@ -114,8 +108,8 @@ private class BasicQualifiedIdentifier(override val packageName: String, simpleN
 private class JavaClassName(jClass: Class<*>) : QualifiedIdentifier() {
 
     // TODO: detect and properly handle nesting?
-    override val fullName: String = checkNotNull(jClass.canonicalName)
-    override val import = fullName
+    override fun toString() = import
+    override val import: String = checkNotNull(jClass.canonicalName)
     override val packageName: String = checkNotNull(jClass.packageName)
     override val identifier: String = checkNotNull(jClass.simpleName)
     override fun canBeUsedToImport(other: Importable) = import == other.import
@@ -127,7 +121,9 @@ private class NestedIdentifier(parent: QualifiedIdentifier, child: String) : Qua
         require(parent.identifier.isNotEmpty()) { "parent of a nested name must have an identifier" }
     }
 
-    override val fullName = "${parent.fullName}.$child"
+    private val fullName = "$parent.$child"
+    override fun toString() = fullName
+
     override val import = parent.import
     override val packageName = parent.packageName
     override val identifier = "${parent.identifier}.$child"
@@ -140,4 +136,119 @@ private val String.sanitizeForIdentifiers get(): String {
     // We're more tolerant of the following, which are less likely to be errors in using QualifiedIdentifier
     // and more likely to be passing things in from other parts of a verification-generation setup verbatim
     return replace("-", "_")
+}
+
+/**
+ * An object can keep track of identifier usage (by logging imports, for instance) when called to expand qualified
+ * identifiers to regular identifiers.
+ */
+interface IdentifierTracker {
+
+    /**
+     * Retrieves the identifier of the name and tracks the import required to bring it into scope.
+     */
+    fun identifier(name: QualifiedIdentifier): String
+}
+
+/**
+ * Ordered set of imports with support for automatically tracking imports for referenced identifiers.
+ */
+class ImportSet(vararg initialImports: Importable): IdentifierTracker {
+
+    /**
+     * Gets the sorted imports tracked by this set.
+     */
+    val imports get() = _imports.map { it.import }.sorted()
+
+    private var _imports = initialImports.toMutableList()
+
+    /**
+     * Adds multiple imports, if they aren't already tracked.
+     */
+    operator fun plusAssign(imports: Collection<Importable>) {
+        imports.forEach { this += it }
+    }
+
+    /**
+     * Adds an import, if it isn't already tracked.
+     */
+    operator fun plusAssign(importable: Importable) {
+        if (_imports.none { it canBeUsedToImport importable }) {
+            _imports.add(importable)
+        }
+    }
+
+    /**
+     * Retrieves the identifier of the name, adding an import for it to the import set if needed.
+     */
+    override fun identifier(name: QualifiedIdentifier): String {
+        this += name
+        return name.identifier
+    }
+}
+
+/**
+ * Holds reverse maps from Kotlin identifiers of Azuki concepts (such as behaviors, functional elements, and
+ * identifiers) to their definitions, allowing the former to be substituted for the latter during scriptification.
+ *
+ * An IdentifierContext also holds a reference to an IdentifierTracker (such as an ImportSet) and this can be used to
+ * process identifiers.
+ */
+class IdentifierContext(
+    /**
+     * The downstream identifier tracker to which the various 'try and find an identifier' methods will be sent.
+     */
+    val tracker: IdentifierTracker,
+
+    /**
+     * Map from behavioral constants to their definitions (captured as qualified identifiers).
+     *
+     * This is used to prettify BEH annotations.
+     *
+     * It should be the case that, for each `(key, value)` pair mapped by this function, if `value` is present in
+     * the classpath then it evaluates to `key`.
+     */
+    var behaviorMapper: (Behavior) -> QualifiedIdentifier? = { null },
+
+    /**
+     * Map from functional element constants to their definitions (captured as qualified identifiers).
+     *
+     * This is used to prettify BEH annotations.
+     *
+     * It should be the case that, for each `(key, value)` pair mapped by this function, if `value` is present in
+     * the classpath then it evaluates to `key`.
+     */
+    var functionalElementMapper: (FunctionalElement) -> QualifiedIdentifier? = { null },
+
+    /**
+     * Map from implementation name values to their definitions (captured as qualified identifiers).
+     *
+     * This is used to prettify annotations that rely on implementation names.
+     *
+     * It should be the case that, for each `(key, value)` pair mapped by this function, if `value` is present in
+     * the classpath then it evaluates to `key`.
+     */
+    var implementationMapper: (String) -> QualifiedIdentifier? = { null }
+): IdentifierTracker by tracker {
+
+    /**
+     * Tries to reverse-lookup a behavior number as a constant identifier, and import it if successful.
+     * If there is no known identifier, the behavior will be escaped as a decimal integer literal.
+     */
+    fun behavior(behavior: Behavior) =
+        behaviorMapper(behavior)?.let(tracker::identifier) ?: behavior.toString()
+
+    /**
+     * Tries to reverse-lookup a functional element number as a constant identifier, and import it if successful.
+     * If there is no known identifier, the functional element will be escaped as a decimal integer literal.
+     */
+    fun functionalElement(fe: FunctionalElement) =
+        functionalElementMapper(fe)?.let(tracker::identifier) ?: fe.toString()
+
+    /**
+     * Tries to reverse-lookup a string implementation name as a constant identifier, and import it if successful.
+     * If there is no known identifier, the implementation string will be escaped as a string literal.
+     */
+    fun implementation(impl: String) =
+        implementationMapper(impl)?.let(tracker::identifier) ?: impl.literal
 }

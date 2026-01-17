@@ -36,7 +36,7 @@ open class RunnableScenarioClassGenerator(
     ): RunnableScenarioClass {
         val script = generateScript(testName, implementationVersions, scenarioScript)
         val definition = ScenarioFormatter.formatScenario(script.render {
-            imports += adapterDslImports
+            importSet += adapterDslImports
         })
         return RunnableScenarioClass(script.testName.identifier, script.testName.packageName, definition)
     }
