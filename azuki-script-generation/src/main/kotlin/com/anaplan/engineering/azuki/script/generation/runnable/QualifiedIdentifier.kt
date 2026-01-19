@@ -139,18 +139,6 @@ private val String.sanitizeForIdentifiers get(): String {
 }
 
 /**
- * An object can keep track of identifier usage (by logging imports, for instance) when called to expand qualified
- * identifiers to regular identifiers.
- */
-interface IdentifierTracker {
-
-    /**
-     * Retrieves the identifier of the name and tracks the import required to bring it into scope.
-     */
-    fun identifier(name: QualifiedIdentifier): String
-}
-
-/**
  * Ordered set of imports with support for automatically tracking imports for referenced identifiers.
  */
 class ImportSet(vararg initialImports: Importable) {
