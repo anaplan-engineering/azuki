@@ -27,8 +27,6 @@ class RunnableScenarioClassRenderer private constructor() {
      */
     var identifierMapper: IdentifierMapper = IdentifierMapper.Empty
 
-    private val identifierContext get() = IdentifierContext(importSet, identifierMapper)
-
     /**
      * Renderers for scenario method annotations.
      *
@@ -45,6 +43,7 @@ class RunnableScenarioClassRenderer private constructor() {
      */
     var topLevelRenderContext = RenderContext()
 
+    private val identifierContext get() = IdentifierContext(importSet, identifierMapper)
 
     private val builder = StringBuilder()
 
