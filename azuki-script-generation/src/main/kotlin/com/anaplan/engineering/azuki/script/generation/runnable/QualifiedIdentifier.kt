@@ -216,7 +216,7 @@ interface IdentifierMapper {
  * Holds information about how to resolve Azuki concepts (such as behaviors, functional elements, and implementations)
  * to identifiers, and associate identifiers to their imports.
  */
-class IdentifierContext(
+data class IdentifierContext(
     /**
      * Tracks imports that have been referenced by a script.
      */
