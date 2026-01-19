@@ -22,6 +22,10 @@ open class RunnableScenarioClassGenerator(
      * The name of the base `RunnableScenario` class for this adapter.
      */
     val runnableScenarioClassName: QualifiedIdentifier,
+    /**
+     * The optional mapper to use to reverse-map behavior, functional element, and implementation identifiers.
+     */
+    val identifierMapper: IdentifierMapper = IdentifierMapper.Empty,
 ) {
 
     /**

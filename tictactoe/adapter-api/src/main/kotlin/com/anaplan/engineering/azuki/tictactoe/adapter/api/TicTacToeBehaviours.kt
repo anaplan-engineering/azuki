@@ -11,7 +11,7 @@ object TicTacToeBehaviours {
     const val GameEnd = 6
     const val PlayerWon = 7
     const val PlayerLost = 8
-    const val GameDrawn = 8
+    const val GameDrawn = 9
 }
 
 open class StartAGameBehaviour : ReifiedBehavior {

@@ -8,6 +8,8 @@ import com.anaplan.engineering.azuki.core.runner.Issue
 import com.anaplan.engineering.azuki.core.runner.KnownBug
 import com.anaplan.engineering.azuki.core.scenario.Since
 import com.anaplan.engineering.azuki.core.system.BEH
+import com.anaplan.engineering.azuki.core.system.Behavior
+import com.anaplan.engineering.azuki.core.system.FunctionalElement
 import com.anaplan.engineering.azuki.core.system.ImplementationVersion
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import com.anaplan.engineering.azuki.script.generation.VerifiableScenarioScript
@@ -91,7 +93,9 @@ class RunnableScenarioClassRendererTest {
         """.trimIndent() + "\n"
 
         expect(expected) {
-            exampleScript.render { setupExampleRenderer() }
+            exampleScript.render {
+                identifierMapper = ExampleMapper
+            }
         }
     }
 
@@ -209,19 +213,16 @@ class RunnableScenarioClassRendererTest {
         /**
          * Set up reverse maps to convert various parts of the example script into their Kotlin identifiers.
          */
-        private fun RunnableScenarioClassRenderer.setupExampleRenderer() {
-            identifierContext.behaviorMapper = { b ->
-                // mapping backwards from behavior 12 to com.example.AcmeBehaviors.Foo
-                (QualifiedIdentifier.create("com.example", "AcmeBehaviors") dot "Foo").takeIf { b == 12 }
-            }
-            identifierContext.functionalElementMapper = { fe ->
-                // mapping backwards from FE 345 to com.example.ThingFe
+        private object ExampleMapper: IdentifierMapper {
+            // mapping backwards from behavior 12 to com.example.AcmeBehaviors.Foo
+            override fun getBehaviorIdentifier(beh: Behavior) =
+                (QualifiedIdentifier.create("com.example", "AcmeBehaviors") dot "Foo").takeIf { beh == 12 }
+            // mapping backwards from FE 345 to com.example.ThingFe
+            override fun getFunctionalElementIdentifier(fe: FunctionalElement) =
                 (QualifiedIdentifier.create("com.example", "AcmeFunctionalElements") dot "Thing").takeIf { fe == 345 }
-            }
-            identifierContext.implementationMapper = { impl ->
-                // mapping backwards from implementation BarImpl to com.example.Bar
+            // mapping backwards from implementation BarImpl to com.example.Bar
+            override fun getImplementationIdentifier(impl: String) =
                 QualifiedIdentifier.create("com.example", "Bar").takeIf { impl == "BarImpl" }
-            }
         }
     }
 }

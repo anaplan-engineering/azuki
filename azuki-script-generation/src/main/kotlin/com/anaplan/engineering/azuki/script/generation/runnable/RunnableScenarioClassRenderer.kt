@@ -10,7 +10,7 @@ import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentif
 /**
  * A runnable scenario renderer.
  */
-class RunnableScenarioClassRenderer private constructor(
+class RunnableScenarioClassRenderer private constructor() {
     /**
      * Package and class names that are going to be imported at the start of the script.
      * This will be added to during the rendering process, but can also be preloaded during configuration to add
@@ -20,7 +20,14 @@ class RunnableScenarioClassRenderer private constructor(
         Importable.wildcard("com.anaplan.engineering.azuki.core.runner"),
         Importable.wildcard("com.anaplan.engineering.azuki.core.system"),
     )
-) : IdentifierTracker by importSet {
+
+    /**
+     * Holds mapping functions from behavioral, functional-element, and implementation constants to their definitions.
+     * By default, there are no mapping functions.
+     */
+    var identifierMapper: IdentifierMapper = IdentifierMapper.Empty
+
+    private val identifierContext get() = IdentifierContext(importSet, identifierMapper)
 
     /**
      * Renderers for scenario method annotations.
@@ -34,14 +41,10 @@ class RunnableScenarioClassRenderer private constructor(
     val methodAnnotationRenderers = mutableListOf(*RunnableScenarioAnnotationRenderer.standardRenderers)
 
     /**
-     * Holds mapping functions from behavioral, functional-element, and implementation constants to their definitions.
-     */
-    val identifierContext = IdentifierContext(this)
-
-    /**
      * The top-level render context for the renderer.
      */
     var topLevelRenderContext = RenderContext()
+
 
     private val builder = StringBuilder()
 
@@ -49,8 +52,8 @@ class RunnableScenarioClassRenderer private constructor(
         require(builder.isEmpty()) { "shouldn't re-use a renderer" }
 
         scenario.beh?.let { beh(topLevelRenderContext, it) }
-        builder.append("class ${importSet.identifier(scenario.testName)}")
-        builder.append(" : ${importSet.identifier(scenario.baseName)}() {")
+        builder.append("class ${identifierContext.identifier(scenario.testName)}")
+        builder.append(" : ${identifierContext.identifier(scenario.baseName)}() {")
         scenario.methods.forEach {
             builder.appendLine().appendLine()
             renderMethod(topLevelRenderContext.nextIndentLevel, it)
@@ -108,7 +111,7 @@ class RunnableScenarioClassRenderer private constructor(
     }
 
     internal fun annotation(ctx: RenderContext, type: QualifiedIdentifier, body: AnnotationBuilder.() -> Unit = {}) {
-        builder.append("${ctx.indent}@${identifier(type)}")
+        builder.append("${ctx.indent}@${identifierContext.identifier(type)}")
         AnnotationBuilder(identifierContext, builder).apply(body).end()
         builder.appendLine()
     }

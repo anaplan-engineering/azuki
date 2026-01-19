@@ -153,7 +153,7 @@ interface IdentifierTracker {
 /**
  * Ordered set of imports with support for automatically tracking imports for referenced identifiers.
  */
-class ImportSet(vararg initialImports: Importable): IdentifierTracker {
+class ImportSet(vararg initialImports: Importable) {
 
     /**
      * Gets the sorted imports tracked by this set.
@@ -177,78 +177,94 @@ class ImportSet(vararg initialImports: Importable): IdentifierTracker {
             _imports.add(importable)
         }
     }
-
-    /**
-     * Retrieves the identifier of the name, adding an import for it to the import set if needed.
-     */
-    override fun identifier(name: QualifiedIdentifier): String {
-        this += name
-        return name.identifier
-    }
 }
 
 /**
- * Holds reverse maps from Kotlin identifiers of Azuki concepts (such as behaviors, functional elements, and
- * identifiers) to their definitions, allowing the former to be substituted for the latter during scriptification.
+ * Performs reverse mapping from Kotlin identifiers of Azuki concepts (such as behaviors, functional elements, and
+ * implementation names) to their definitions, allowing the former to be substituted for the latter during script
+ * generation.
  *
- * An IdentifierContext also holds a reference to an IdentifierTracker (such as an ImportSet) and this can be used to
- * process identifiers.
+ * This is an optional cosmetic step; most use cases can get away with using the default 'Empty' mapper.
  */
-class IdentifierContext(
-    /**
-     * The downstream identifier tracker to which the various 'try and find an identifier' methods will be sent.
-     */
-    val tracker: IdentifierTracker,
+interface IdentifierMapper {
 
     /**
-     * Map from behavioral constants to their definitions (captured as qualified identifiers).
+     * Partial map from behavioral constants to their definitions (captured as qualified identifiers).
      *
      * This is used to prettify BEH annotations.
      *
      * It should be the case that, for each `(key, value)` pair mapped by this function, if `value` is present in
      * the classpath then it evaluates to `key`.
      */
-    var behaviorMapper: (Behavior) -> QualifiedIdentifier? = { null },
+    fun getBehaviorIdentifier(beh: Behavior): QualifiedIdentifier? = null
 
     /**
-     * Map from functional element constants to their definitions (captured as qualified identifiers).
+     * Partial map from functional element constants to their definitions (captured as qualified identifiers).
      *
      * This is used to prettify BEH annotations.
      *
      * It should be the case that, for each `(key, value)` pair mapped by this function, if `value` is present in
      * the classpath then it evaluates to `key`.
      */
-    var functionalElementMapper: (FunctionalElement) -> QualifiedIdentifier? = { null },
+    fun getFunctionalElementIdentifier(fe: FunctionalElement): QualifiedIdentifier? = null
 
     /**
-     * Map from implementation name values to their definitions (captured as qualified identifiers).
+     * Partial map from implementation name values to their definitions (captured as qualified identifiers).
      *
      * This is used to prettify annotations that rely on implementation names.
      *
      * It should be the case that, for each `(key, value)` pair mapped by this function, if `value` is present in
      * the classpath then it evaluates to `key`.
      */
-    var implementationMapper: (String) -> QualifiedIdentifier? = { null }
-): IdentifierTracker by tracker {
+    fun getImplementationIdentifier(impl: String): QualifiedIdentifier? = null
+
+    /**
+     * An identifier mapper that maps nothing.
+     */
+    object Empty: IdentifierMapper
+}
+
+/**
+ * Holds information about how to resolve Azuki concepts (such as behaviors, functional elements, and implementations)
+ * to identifiers, and associate identifiers to their imports.
+ */
+class IdentifierContext(
+    /**
+     * Tracks imports that have been referenced by a script.
+     */
+    val imports: ImportSet,
+    /**
+     * Maps Azuki concepts to their definitions (captured as qualified identifiers).
+     */
+    val mapper: IdentifierMapper,
+) {
 
     /**
      * Tries to reverse-lookup a behavior number as a constant identifier, and import it if successful.
      * If there is no known identifier, the behavior will be escaped as a decimal integer literal.
      */
-    fun behavior(behavior: Behavior) =
-        behaviorMapper(behavior)?.let(tracker::identifier) ?: behavior.toString()
+    fun behavior(beh: Behavior) =
+        mapper.getBehaviorIdentifier(beh)?.let(this::identifier) ?: beh.toString()
 
     /**
      * Tries to reverse-lookup a functional element number as a constant identifier, and import it if successful.
      * If there is no known identifier, the functional element will be escaped as a decimal integer literal.
      */
     fun functionalElement(fe: FunctionalElement) =
-        functionalElementMapper(fe)?.let(tracker::identifier) ?: fe.toString()
+        mapper.getFunctionalElementIdentifier(fe)?.let(this::identifier) ?: fe.toString()
 
     /**
      * Tries to reverse-lookup a string implementation name as a constant identifier, and import it if successful.
      * If there is no known identifier, the implementation string will be escaped as a string literal.
      */
     fun implementation(impl: String) =
-        implementationMapper(impl)?.let(tracker::identifier) ?: impl.literal
+        mapper.getImplementationIdentifier(impl)?.let(this::identifier) ?: impl.literal
+
+    /**
+     * Retrieves the identifier of the name, adding an import for it to the import set if needed.
+     */
+    fun identifier(name: QualifiedIdentifier): String {
+        imports += name
+        return name.identifier
+    }
 }
