@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 
-import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
 import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.core.runner.oracle.MultiOracleScenarioRunner
 import com.anaplan.engineering.azuki.runner.ExitCode

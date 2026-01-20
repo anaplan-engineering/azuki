@@ -2,6 +2,7 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.core.parser.ScenarioParsingContext
 import com.anaplan.engineering.azuki.core.parser.SimpleScenarioParser
+import com.anaplan.engineering.azuki.script.generation.RenderContext
 import com.anaplan.engineering.azuki.script.generation.createOracleTestHelper
 import com.anaplan.engineering.azuki.script.generation.createVerifiableTestHelper
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeBuildableScenario
@@ -28,7 +29,7 @@ class TicTacToeScriptGeneratorTest {
             TicTacToeScriptGeneration.createOracleTestHelper(TicTacToeScenarioParser<TicTacToeOracleScenario>())
 
         private fun renderedThenElements(scenario: TicTacToeVerifiableScenario): List<String> =
-            TicTacToeScriptGeneration.generateVerifiableScenario(scenario).then.elements.map { it.render() }
+            TicTacToeScriptGeneration.generateVerifiableScenario(scenario).then.elements.map { it.render(RenderContext()) }
 
         private const val TRIPLE = "\"\"\""
     }
@@ -278,7 +279,8 @@ class TicTacToeScriptGeneratorTest {
     }
 }
 
-class TicTacToeScenarioParser<S: TicTacToeBuildableScenario> : SimpleScenarioParser<S>() {
+class TicTacToeScenarioParser<S : TicTacToeBuildableScenario> : SimpleScenarioParser<S>() {
 
-    override val defaultImports: ScenarioParsingContext.() -> Unit = { import(*ticTacToeStandardImports) }
+    override val defaultImports: ScenarioParsingContext.() -> Unit =
+        { import(*ticTacToeStandardImports.map { it.import }.toTypedArray()) }
 }

@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.runner.ExitCode
 import com.anaplan.engineering.azuki.runner.ScenarioScriptRunner
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
@@ -10,6 +11,7 @@ import com.anaplan.engineering.azuki.verify.generation.JUnitTestCaseWriter
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.UUID.randomUUID
 
 class TicTacToeResultsProcessor(
     private val scenarioName: String,
@@ -22,11 +24,15 @@ class TicTacToeResultsProcessor(
     queryResultsFileName: String,
 ) : ScenarioScriptRunner.ResultProcessor<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory> {
 
+    private val generatedTestClassName =
+        QualifiedIdentifier.create(generatedTestPackage,
+            generatedTestClass ?: "Generated_${randomUUID()}")
+
     private val jUnitTestCaseWriter: JUnitTestCaseWriter<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory> =
         JUnitTestCaseWriter(
             TicTacToeScriptGeneration,
             TicTacToeRunnableScenarioClassGenerator,
-            verifiedTestsDir, unverifiedTestsDir, generatedTestPackage, generatedTestClass,
+            verifiedTestsDir, unverifiedTestsDir, generatedTestClassName,
         )
     private val queryResultsWriter = QueryResultWriter(outputDir, queryResultsFileName)
     private val generatedScenarioWriter = GeneratedScenarioWriter(scenarioName, outputDir)
@@ -39,9 +45,13 @@ class TicTacToeResultsProcessor(
         val runResult = recordOracleScenarioResult(result, testFile)
         Log.info("Scenario completed result={}", runResult)
         when (runResult) {
-            TicTacToeScenarioRun.Result.Incomplete -> ScenarioScriptRunner.exit("Invalid scenario", ExitCode.InvalidScenario)
+            TicTacToeScenarioRun.Result.Incomplete -> ScenarioScriptRunner.exit("Invalid scenario",
+                ExitCode.InvalidScenario)
+
             TicTacToeScenarioRun.Result.Errored -> ScenarioScriptRunner.exit("Unknown error", ExitCode.UnknownError)
-            TicTacToeScenarioRun.Result.Unverified -> ScenarioScriptRunner.exit("Verification failed", ExitCode.VerificationFailed)
+            TicTacToeScenarioRun.Result.Unverified -> ScenarioScriptRunner.exit("Verification failed",
+                ExitCode.VerificationFailed)
+
             else -> {} // do nothing
         }
     }

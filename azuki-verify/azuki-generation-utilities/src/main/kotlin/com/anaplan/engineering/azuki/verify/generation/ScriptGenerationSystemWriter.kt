@@ -7,8 +7,9 @@ import com.anaplan.engineering.azuki.core.system.QueryFactory
 import com.anaplan.engineering.azuki.core.system.SystemDefinition
 import com.anaplan.engineering.azuki.core.system.SystemWriter
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
 import com.anaplan.engineering.azuki.script.generation.Formatter
-import com.anaplan.engineering.azuki.script.generation.RunnableScenarioClassGenerator
+import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.script.generation.ScenarioScript
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import com.anaplan.engineering.azuki.script.generation.ScriptType
@@ -22,7 +23,7 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
     SystemWriter<AF, CF, QF, AGF> {
 
     protected abstract val scriptGeneration: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>
-    protected abstract val classGeneration: RunnableScenarioClassGenerator<*>
+    protected abstract val classGeneration: RunnableScenarioClassGenerator
     protected abstract val outputDir: File
 
     private val scenarioDir by lazy {
@@ -78,8 +79,8 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
                 fromChecks(listOf(checkFactory.systemValid()))
             }.verifiableScenario
 
-            val testCase = classGeneration.generate(className = context ?: "scenario-ocl",
-                packageName = "debug",
+            val testName = QualifiedIdentifier.create(packageName = "debug", simpleName = context ?: "scenario-ocl")
+            val testCase = classGeneration.generate(testName = testName,
                 scenarioScript = scenarioScript,
                 implementationVersions = emptyMap())
             val definition = ScenarioFormatter.formatScenario(testCase.definition)
@@ -100,7 +101,6 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
 
     private fun ScenarioScript.write(prefix: String, suffix: String) {
         write(prefix, suffix, render {
-            indentLevel = 0
             formatter = Formatter.Full
             scriptType = ScriptType.Standalone
         })

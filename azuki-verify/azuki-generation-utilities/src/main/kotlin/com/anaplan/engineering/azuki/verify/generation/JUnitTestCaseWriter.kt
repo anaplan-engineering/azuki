@@ -10,22 +10,21 @@ import com.anaplan.engineering.azuki.core.system.Answer
 import com.anaplan.engineering.azuki.core.system.CheckFactory
 import com.anaplan.engineering.azuki.core.system.QueryFactory
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
-import com.anaplan.engineering.azuki.script.generation.RunnableScenarioClassGenerator
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
+import com.anaplan.engineering.azuki.script.generation.runnable.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.UUID
 
 /**
  * Helper class for writing JUnit test cases produced by a scenario runner.
  */
 class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
     private val generateScript: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>,
-    private val generateRunnable: RunnableScenarioClassGenerator<*>,
+    private val generateRunnable: RunnableScenarioClassGenerator,
     private val verifiedTestsDir: File,
     private val unverifiedTestsDir: File,
-    private val generatedTestPackage: String,
-    private val generatedTestClass: String?,
+    private val generatedTestClass: QualifiedIdentifier,
 ) {
 
     fun writeTestCase(result: MultiOracleScenarioRunner.Result<AF, CF, QF, AGF>): File? {
@@ -74,8 +73,8 @@ class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFacto
         answers: List<Answer<*, CF>>,
         testImplementation: ImplementationInstance<AF, CF, QF, AGF>,
         verifyingImplementation: ImplementationInstance<AF, CF, QF, AGF>,
-    ) = generateRunnable.generate(className = generatedTestClass ?: "Generated_${UUID.randomUUID()}",
-        packageName = generatedTestPackage,
+    ) = generateRunnable.generate(
+        testName = generatedTestClass,
         scenarioScript = generateScript.generateVerifiableScenario(baseScenario, answers),
         implementationVersions = mapOf(
             testImplementation.implementationName to (testImplementation.version ?: "0.0.0"),

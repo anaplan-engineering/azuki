@@ -214,6 +214,32 @@ class ScriptGenerationServiceStringFragmentsTest {
         }
     }
 
+    @Test
+    fun customIndent() {
+        expect("""
+            verifiableScenario {
+            ..given {
+            thereIsAFoo()
+            ..}
+            ..then {
+            ....everythingIsOkay()
+            ..}
+            }
+        """.trimIndent()) {
+            ScriptGenerationService.standalone.given {
+                // this won't indent automatically when formatting is turned off
+                +"thereIsAFoo()"
+            }.whenever {
+                // deliberately left empty
+            }.then {
+                +ScriptElement { ctx -> "${ctx.indent}everythingIsOkay()" }
+            }.verifiableScenario.render {
+                this.topLevelRenderContext = RenderContext(indentString = "..")
+                // this isn't valid Kotlin code, so we can't format it!
+                formatter = Formatter.None
+            }
+        }
+    }
 
     companion object {
 

@@ -17,32 +17,28 @@ abstract class ScenarioScript(val typeName: String, val blocks: ScriptElementLis
     /**
      * Customisable renderer for scenario scripts.
      */
-    inner class Renderer(
+    inner class Renderer {
         /**
          * The formatter to use, if any.
          */
-        var formatter: Formatter = Formatter.Full,
+        var formatter: Formatter = Formatter.Full
+
         /**
          * How to convert the scenario's blocks into a script.
          */
-        var scriptType: ScriptType = ScriptType.Standalone,
+        var scriptType: ScriptType = ScriptType.Standalone
+
         /**
-         * The starting indent level for the renderer.
+         * The top-level render context.
          */
-        var indentLevel: Int = 0,
-        /**
-         * String to be repeated once for each indent level.  (Usually this will be some multiple of spaces or tabs.)
-         */
-        var indentString: String = "    "
-    ) {
+        var topLevelRenderContext: RenderContext = RenderContext(0, "    ")
 
         internal fun render(blocks: ScriptElementList<ScriptBlock>): String {
             val wrapped = scriptType.wrap(typeName, blocks)
-            val rendered = wrapped.render(RenderContext(indentLevel, indentString))
+            val rendered = wrapped.render(topLevelRenderContext)
             return formatter.format(rendered)
         }
     }
-
 }
 
 /**
@@ -63,6 +59,11 @@ fun interface ScriptType {
          * Wrap the script blocks in the appropriate scenario function.
          */
         val Standalone = ScriptType { typeName, blocks -> ScriptBlock("${typeName}Scenario", blocks) }
+
+        /**
+         * Wrap the script blocks in a method.
+         */
+        fun method(name: String) = ScriptType { _, blocks -> ScriptBlock("fun ${name}()", blocks) }
     }
 }
 
@@ -120,18 +121,20 @@ data class OracleScenarioScript(
 
 /**
  * A component in a DSL script that is being generated.
+ *
+ * The minimal definition of a script element is a function from a rendering context to the rendered string.
  */
-interface ScriptElement {
+fun interface ScriptElement {
 
     /**
      * Is the element empty and therefore safe to skip?
      */
-    val isEmpty: Boolean
+    val isEmpty: Boolean get() = false
 
     /**
      * Renders the contents of the script element to a string with the given context.
      */
-    fun render(ctx: RenderContext = RenderContext()): String
+    fun render(ctx: RenderContext): String
 }
 
 /**
@@ -163,7 +166,10 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
     val elements get() = if (inner is ScriptElementList<*>) inner.elements else listOf(inner)
 
     override fun render(ctx: RenderContext) = with(ctx) {
-        listOf("$indent$header {", inner.render(nextIndentLevel), "$indent}").joinToString("\n")
+        // Don't bother rendering the block contents if they're empty, that'll produce an ugly spurious newline
+        val body = if (inner.isEmpty) null else inner.render(nextIndentLevel)
+
+        listOfNotNull("$indent$header {", body, "$indent}").joinToString("\n")
     }
 
     /**
