@@ -61,10 +61,11 @@ internal class TaskWrapper<
             Log.error("System error running task type=${taskType}", t)
             throw t
         } finally {
-            outCapture.close()
-            errCapture.close()
             System.setOut(out)
             System.setErr(err)
+            // Try to avoid stdout/stderr pointing to closed streams by delaying closing them:
+            outCapture.close()
+            errCapture.close()
         }
     }
 
