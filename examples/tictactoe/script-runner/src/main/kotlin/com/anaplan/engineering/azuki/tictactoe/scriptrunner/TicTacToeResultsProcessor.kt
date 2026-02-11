@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.runner.ExitCode
 import com.anaplan.engineering.azuki.runner.ScenarioScriptRunner
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeRunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen.TicTacToeScriptGeneration
@@ -17,8 +18,7 @@ class TicTacToeResultsProcessor(
     private val resultSummaryFileName: String,
     verifiedTestsDir: File,
     unverifiedTestsDir: File,
-    generatedTestPackage: String,
-    generatedTestClass: String?,
+    generatedTestName: QualifiedIdentifier,
     queryResultsFileName: String,
 ) : ScenarioScriptRunner.ResultProcessor<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory> {
 
@@ -26,7 +26,7 @@ class TicTacToeResultsProcessor(
         JUnitTestCaseWriter(
             TicTacToeScriptGeneration,
             TicTacToeRunnableScenarioClassGenerator,
-            verifiedTestsDir, unverifiedTestsDir, generatedTestPackage, generatedTestClass,
+            verifiedTestsDir, unverifiedTestsDir, generatedTestName,
         )
     private val queryResultsWriter = QueryResultWriter(outputDir, queryResultsFileName)
     private val generatedScenarioWriter = GeneratedScenarioWriter(scenarioName, outputDir)
