@@ -58,4 +58,48 @@ class QualifiedIdentifierTest {
         assertFalse(class1 canBeUsedToImport pkg)
         assertFalse(class2 canBeUsedToImport pkg)
     }
+
+    @Test
+    fun importSetAddIgnoresRedundantImports() {
+        val set = ImportSet(
+            Importable.wildcard("foo.bar"),
+        )
+        set += listOf(
+            QualifiedIdentifier.create("foo.bar", "baz"),
+            QualifiedIdentifier.create("foo.bar", "quux"),
+            Importable.wildcard("foo"),
+        )
+        assertEquals(listOf("foo.*", "foo.bar.*"), set.imports)
+    }
+
+    @Test
+    fun importSetAddCanRemoveSubsumedImports() {
+        val set = ImportSet(
+            QualifiedIdentifier.create("foo.bar", "baz"),
+            QualifiedIdentifier.create("foo.bar", "quux"),
+        )
+        set += listOf(
+            Importable.wildcard("foo.bar"),
+            Importable.wildcard("foo"),
+        )
+        assertEquals(listOf("foo.*", "foo.bar.*"), set.imports)
+    }
+
+    @Test
+    fun importSetInitialImportsCanWiden() {
+        val widen = ImportSet(
+            QualifiedIdentifier.create("foo.bar", "baz"),
+            Importable.wildcard("foo.bar"),
+        )
+        assertEquals(listOf("foo.bar.*"), widen.imports)
+    }
+
+    @Test
+    fun importSetInitialImportsCanDiscard() {
+        val discard = ImportSet(
+            Importable.wildcard("foo.bar"),
+            QualifiedIdentifier.create("foo.bar", "baz"),
+        )
+        assertEquals(listOf("foo.bar.*"), discard.imports)
+    }
 }

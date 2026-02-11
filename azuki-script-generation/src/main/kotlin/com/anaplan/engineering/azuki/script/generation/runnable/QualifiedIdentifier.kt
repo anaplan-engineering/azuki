@@ -138,14 +138,19 @@ private val String.sanitizeForIdentifiers get(): String {
 /**
  * Ordered set of imports with support for automatically tracking imports for referenced identifiers.
  */
-class ImportSet(vararg initialImports: Importable) {
+class ImportSet(vararg initialImports: Importable) : Collection<Importable> {
+
+    private var _imports = mutableListOf<Importable>()
+
+    init {
+        // Make sure we do filtering on the initial imports
+        this += initialImports.toList()
+    }
 
     /**
      * Gets the sorted imports tracked by this set.
      */
     val imports get() = _imports.map { it.import }.sorted()
-
-    private var _imports = initialImports.toMutableList()
 
     /**
      * Adds multiple imports, if they aren't already tracked.
@@ -158,8 +163,17 @@ class ImportSet(vararg initialImports: Importable) {
      * Adds an import, if it isn't already tracked.
      */
     operator fun plusAssign(importable: Importable) {
+        // Don't add if the import is already tracked...
         if (_imports.none { it canBeUsedToImport importable }) {
+            // ...and remove anything that is a more narrow equivalent of this import
+            _imports.removeAll { importable canBeUsedToImport it }
             _imports.add(importable)
         }
     }
+
+    override val size get() = _imports.size
+    override fun contains(element: Importable) = _imports.contains(element)
+    override fun containsAll(elements: Collection<Importable>) = _imports.containsAll(elements)
+    override fun isEmpty() = _imports.isEmpty()
+    override fun iterator() = _imports.sortedBy { it.import }.iterator()
 }

@@ -1,17 +1,24 @@
 package com.anaplan.engineering.azuki.script.generation
 
-import com.anaplan.engineering.azuki.core.runner.RunnableScenario
-import kotlin.collections.plus
-import kotlin.collections.sorted
+import com.anaplan.engineering.azuki.core.scenario.Since
+import com.anaplan.engineering.azuki.script.generation.runnable.ImportSet
+import com.anaplan.engineering.azuki.script.generation.runnable.Importable
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier.Companion.toQualifiedIdentifier
 import java.util.*
-import kotlin.reflect.KClass
 
 /**
  * Generates full Kotlin JUnit runnable scenario classes given a scenario script.
  */
-open class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *, *, *, *, *, *, *, *>>(
-    val adapterSpecificImports: List<String>,
-    val scenarioClass: KClass<S>,
+open class RunnableScenarioClassGenerator(
+    /**
+     * Any imports that are needed to bring in the adapter's `RunnableScenario` class and associated DSL.
+     */
+    val adapterDslImports: List<Importable>,
+    /**
+     * The name of the base `RunnableScenario` class for this adapter.
+     */
+    val runnableScenarioClassName: QualifiedIdentifier,
 ) {
 
     fun generate(
@@ -22,15 +29,16 @@ open class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *, *,
     ) = RunnableScenarioClass(className, packageName, buildString {
         if (packageName.isNotEmpty()) appendLine("package $packageName").appendLine()
 
-        val commonImports = listOfNotNull("com.anaplan.engineering.azuki.core.runner.*",
-            "com.anaplan.engineering.azuki.core.system.*",
-            "com.anaplan.engineering.azuki.core.scenario.Since".takeUnless { implementationVersions.isEmpty() },
-            scenarioClass.qualifiedName)
-        val imports = commonImports + adapterSpecificImports
-        imports.sorted().forEach { appendLine("import $it") }
+        val importSet = ImportSet(
+            Importable.wildcard("com.anaplan.engineering.azuki.core.runner"),
+            Importable.wildcard("com.anaplan.engineering.azuki.core.system"),
+        )
+        if (implementationVersions.isNotEmpty()) importSet += Since::class.toQualifiedIdentifier()
+        adapterDslImports.forEach { importSet += it }
+        importSet.imports.forEach { appendLine("import $it") }
         appendLine()
 
-        appendLine("class ${className.replace("-", "_")} : ${scenarioClass.simpleName}() {")
+        appendLine("class ${className.replace("-", "_")} : ${runnableScenarioClassName.identifier}() {")
         appendLine()
         appendLine("    @GeneratedScenario")
         if (implementationVersions.isNotEmpty()) {

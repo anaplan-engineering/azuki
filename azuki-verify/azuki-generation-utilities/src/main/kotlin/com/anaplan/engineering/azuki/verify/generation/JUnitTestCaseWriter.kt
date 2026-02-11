@@ -21,7 +21,7 @@ import java.util.UUID
  */
 class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory>(
     private val generateScript: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>,
-    private val generateRunnable: RunnableScenarioClassGenerator<*>,
+    private val generateRunnable: RunnableScenarioClassGenerator,
     private val verifiedTestsDir: File,
     private val unverifiedTestsDir: File,
     private val generatedTestPackage: String,

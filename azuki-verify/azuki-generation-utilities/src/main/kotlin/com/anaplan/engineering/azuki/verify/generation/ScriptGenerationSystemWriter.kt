@@ -19,7 +19,7 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
     abstract override val actionGeneratorFactory: AGF
 
     protected abstract val scriptGeneration: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>
-    protected abstract val classGeneration: RunnableScenarioClassGenerator<*>
+    protected abstract val classGeneration: RunnableScenarioClassGenerator
     protected abstract val outputDir: File
 
     private val scenarioDir by lazy {
