@@ -28,7 +28,7 @@ class TicTacToeScriptGeneratorTest {
             TicTacToeScriptGeneration.createOracleTestHelper(TicTacToeScenarioParser<TicTacToeOracleScenario>())
 
         private fun renderedThenElements(scenario: TicTacToeVerifiableScenario): List<String> =
-            TicTacToeScriptGeneration.generateVerifiableScenario(scenario).then.elements.map { it.render() }
+            TicTacToeScriptGeneration.generateVerifiableScenario(scenario).then.renderedElements()
 
         private const val TRIPLE = "\"\"\""
     }

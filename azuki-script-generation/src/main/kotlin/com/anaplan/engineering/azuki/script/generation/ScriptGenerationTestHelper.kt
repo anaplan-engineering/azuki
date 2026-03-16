@@ -13,6 +13,7 @@ import com.anaplan.engineering.azuki.core.system.CheckFactory
 import com.anaplan.engineering.azuki.core.system.QueryFactory
 import org.junit.Assert
 import org.slf4j.LoggerFactory
+import kotlin.test.assertEquals
 import kotlin.test.expect
 
 @Deprecated("Use ScriptGenerationTesting")
