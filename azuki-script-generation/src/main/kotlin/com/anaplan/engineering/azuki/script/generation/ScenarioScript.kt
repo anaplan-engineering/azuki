@@ -129,6 +129,11 @@ interface ScriptElement {
     val isEmpty: Boolean
 
     /**
+     * Is the element safe to lay out horizontally?
+     */
+    val isHorizontal: Boolean get() = false
+
+    /**
      * Renders the contents of the script element to a string with the given context.
      */
     fun render(ctx: RenderContext = RenderContext()): String
@@ -143,9 +148,58 @@ interface ScriptElement {
  */
 data class ScriptStringFragment(val fragment: String) : ScriptElement {
 
-    override val isEmpty: Boolean = fragment.isBlank()
+    override val isEmpty = fragment.isBlank()
+    override val isHorizontal = '\n' !in fragment
 
     override fun render(ctx: RenderContext) = fragment
+}
+
+/**
+ * A script element representing a function call.
+ */
+data class ScriptFunction(val name: String, val args: List<ScriptElement>) : ScriptElement {
+
+    override val isEmpty = false
+
+    override fun render(ctx: RenderContext) = buildString {
+        append("${ctx.indent}$name(")
+
+        val anyVertical = args.any { !it.isHorizontal }
+        if (anyVertical) {
+            appendLine()
+        }
+
+        args.forEachIndexed { i, arg ->
+            val wasHorizontal = args.getOrNull(i - 1)?.isHorizontal
+
+            val joiner = when {
+                i == 0 -> ""
+                arg.isHorizontal && wasHorizontal == true -> ", "
+                // force a linebreak when transitioning from horizontal to vertical, or between vertical, arguments
+                else -> ",\n"
+            }
+
+            val argCtx = if (arg.isHorizontal) {
+                // we'll handle indenting horizontally laid-out arguments
+                ctx.copy(indentLevel = 0)
+            } else {
+                ctx.nextIndentLevel
+            }
+
+            append(joiner)
+            val startOfHorizontalRun = anyVertical && arg.isHorizontal && wasHorizontal != true
+            if (startOfHorizontalRun) {
+                append(ctx.nextIndentLevel.indent)
+            }
+            append(arg.render(argCtx))
+        }
+
+        if (anyVertical) {
+            append(",\n${ctx.indent})")
+        } else {
+            append(")")
+        }
+    }
 }
 
 /**
@@ -156,6 +210,7 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
     constructor(header: String, contents: List<ScriptElement>) : this(header, ScriptElementList(contents))
 
     override val isEmpty get() = inner.isEmpty
+    override val isHorizontal = false
 
     /**
      * Gets the script elements contained within this block.
