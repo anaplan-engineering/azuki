@@ -5,6 +5,15 @@ import com.anaplan.engineering.azuki.core.system.Query
 interface ScriptGenerationQuery<T> : Query<T> {
 
     fun getQueryScript(): String
+
+    /**
+     * As `getQueryScript`, but returns a renderable script element instead of a string.
+     *
+     * By default, this returns an element that wraps the contents of `getQueryScript`.
+     * Override this for more control over the script generation of a query.
+     * (If doing so, consider making `getQueryScript` call the `render` method of the script element for consistency.)
+     */
+    fun getQueryScriptElement(): ScriptElement = ScriptStringFragment(getQueryScript())
 }
 
 /**
