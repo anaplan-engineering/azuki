@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.script.generation
 import kotlin.test.*
 
 class ScriptGenerationServiceFunctionsTest {
+
     @Test
     fun renderScriptFunctionsAllHorizontal() {
         val expected = """
@@ -35,11 +36,11 @@ class ScriptGenerationServiceFunctionsTest {
                 given {
                     thereIsAFoo(
                         a, b,
-            ${"\"\"\""}
+            $TRIPLE
             a b c
             d e f
             g h i
-            ${"\"\"\""},
+            $TRIPLE,
                         b, a,
                     )
                 }
@@ -52,6 +53,41 @@ class ScriptGenerationServiceFunctionsTest {
         assertEquals(expected, generateAndRender {
             given {
                 +scriptFunction("thereIsAFoo", argA, argB, longArg, argB, argA)
+            }.whenever {
+            }.then {
+                +everythingIsOkay
+            }.verifiableScenario
+        })
+    }
+
+    @Test
+    fun renderScriptFunctionsVerticalHorizontalVertical() {
+        val expected = """
+            verifiableScenario {
+                given {
+                    thereIsAFoo(
+            $TRIPLE
+            a b c
+            d e f
+            g h i
+            $TRIPLE,
+                        a, b, a,
+            $TRIPLE
+            a b c
+            d e f
+            g h i
+            $TRIPLE,
+                    )
+                }
+                then {
+                    everythingIsOkay()
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(expected, generateAndRender {
+            given {
+                +scriptFunction("thereIsAFoo", longArg, argA, argB, argA, longArg)
             }.whenever {
             }.then {
                 +everythingIsOkay
