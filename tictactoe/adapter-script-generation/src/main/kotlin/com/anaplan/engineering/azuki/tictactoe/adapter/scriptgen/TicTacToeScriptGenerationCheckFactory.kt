@@ -27,16 +27,19 @@ object GameScriptGenerationCheckFactory : GameCheckFactory {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::gameHasPlayOrder, gameName, players)
     }
 
+    // These next two checks can be scriptified as functions, but also have 'composable' forms:
+    // if we have enough token and space checks to cover a board for a game, we can emit one check for the whole board.
+
     override fun hasToken(gameName: String, playerName: String, position: Position) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasToken, gameName, playerName, position)
     }.asComposable {
-        boardCheckStates.tryRegister(gameName) { hasToken(playerName, position) }
+        boardCheckState.hasToken(gameName, playerName, position)
     }
 
     override fun hasSpace(gameName: String, position: Position) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasSpace, gameName, position)
     }.asComposable {
-        boardCheckStates.tryRegister(gameName) { hasSpace(position) }
+        boardCheckState.hasSpace(gameName, position)
     }
 
     override fun hasState(gameName: String, moves: MoveMap) = TicTacToeScriptGenerationCheck {

@@ -23,31 +23,53 @@ fun interface CheckComposer<E : ScriptGenerationEnvironment> {
 }
 
 /**
- * Holds a keyed map of check composers.
+ * Handles registering check composers against keys, allowing discovery and composition of related checks.
+ *
+ * A typical pattern of usage here is for every check that constrains a particular domain object to register itself
+ * in the registrar for that type of domain object, under a key that uniquely identifies that particular object.  Each
+ * registration will add that check's information to a composer for that key, ensuring that each domain object has
+ *
  */
-class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>(val constructor: (K) -> S) {
-
-    private val map = mutableMapOf<K, CheckComposerWrapper<E, S>>()
+interface CheckComposerRegistry<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>> {
 
     /**
      * Registers a check for composition inside this map, under the given key and with the given effect.
      * If an existing composer exists under the same key, the effect is applied cumulatively to it.
      */
-    fun register(key: K, effect: S.() -> S): CheckComposer<E> = getOrInit(key).register(effect)
+    fun register(key: K, effect: S.() -> S): CheckComposer<E> = tryRegister(key) {
+        Result.success(effect())
+    }
 
     /**
-     * As with register(), but can fail, permanently halting composition for this key
+     * As with register(), but can fail, permanently halting composition for this key.
      */
-    fun tryRegister(key: K, effect: S.() -> Result<S>): CheckComposer<E> = getOrInit(key).tryRegister(effect)
+    fun tryRegister(key: K, effect: S.() -> Result<S>): CheckComposer<E>
+
+    /**
+     * Gets the composer for a given key, if one exists.
+     */
+    operator fun get(key: K): S?
+
+    /**
+     * Gets all composers registered in this registry.
+     */
+    val composers: Collection<S>
+}
+
+/**
+ * Implements a check composer registry with a keyed map.
+ */
+class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>(val constructor: (K) -> S) :
+    CheckComposerRegistry<E, K, S> {
+
+    private val map = mutableMapOf<K, CheckComposerWrapper<E, S>>()
+
+    override fun register(key: K, effect: S.() -> S): CheckComposer<E> = getOrInit(key).register(effect)
+    override fun tryRegister(key: K, effect: S.() -> Result<S>): CheckComposer<E> = getOrInit(key).tryRegister(effect)
+    override operator fun get(key: K): S? = map[key]?.composer
+    override val composers get() = map.values.mapNotNull { it.composer }
 
     private fun getOrInit(key: K) = map.getOrPut(key) { CheckComposerWrapper(constructor(key)) }
-
-    /**
-     * Gets the composer for a key, provided that it hasn't been removed through failure.
-     */
-    operator fun get(key: K): S? = map[key]?.composer
-
-    val composers get() = map.values.mapNotNull { it.composer }
 }
 
 /**

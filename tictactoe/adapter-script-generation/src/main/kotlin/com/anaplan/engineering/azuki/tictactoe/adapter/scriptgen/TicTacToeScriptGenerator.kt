@@ -13,10 +13,8 @@ val TicTacToeScriptGeneration = ScriptGenerationService.new(TicTacToeScriptGener
     ::TicTacToeDeclarationState).withEnvironmentFactory(::TicTacToeGenerationEnvironment)
     .withActionGeneratorFactory(TicTacToeScriptGenerationActionGeneratorFactory)
     .withQueryFactory(TicTacToeScriptGenerationQueryQueryFactory)
-    .withVerifyFactory(TicTacToeScriptGenerationVerificationQueryFactory)
-    .build()
+    .withVerifyFactory(TicTacToeScriptGenerationVerificationQueryFactory).build()
 
-// None of the declaration builders for TicTacToe use the environment:
 typealias TicTacToeScriptGenerationDeclarationBuilder<D> = ScriptGenerationDeclarationBuilder<TicTacToeGenerationEnvironment, D>
 typealias TicTacToeScriptGenerationDeclarationBuilderFactory<D> = ScriptGenerationDeclarationBuilderFactory<TicTacToeGenerationEnvironment, D>
 
@@ -33,11 +31,28 @@ val TicTacToeScriptingHelper = ScriptingHelper(mapOf(
 
 class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
 
-    // We want to collapse individual board-has-X checks into a single board-has-state check,
-    // but only if the entire board is covered by them.
-    val boardCheckStates = CheckComposerMap(::BoardCheckState)
+    val boardCheckState = BoardCheckState()
 
-    class BoardCheckState(private val gameName: String) : CheckComposer<TicTacToeGenerationEnvironment> {
+    /**
+     * Holds state for composing game board checks, keyed on game names.
+     *
+     * We want to collapse individual board-has-X checks into a single board-has-state check,
+     * but only if the entire board is covered by them.  The board check-state facilitates
+     * this by providing a registrar for composers for these checks.
+     */
+    class BoardCheckState :
+        CheckComposerRegistry<TicTacToeGenerationEnvironment, String, BoardCheckSubstate> by CheckComposerMap(::BoardCheckSubstate) {
+
+        fun hasToken(gameName: String, player: String, position: Position) =
+            tryRegister(gameName) { hasToken(player, position) }
+
+        fun hasSpace(gameName: String, position: Position) = tryRegister(gameName) { hasSpace(position) }
+    }
+
+    /**
+     * Holds state for composing board checks for one game.
+     */
+    class BoardCheckSubstate(private val gameName: String) : CheckComposer<TicTacToeGenerationEnvironment> {
 
         private val tokens = mutableMapOf<Position, String>()
         private val spaces = mutableSetOf<Position>()
@@ -53,7 +68,7 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
         fun hasToken(player: String, position: Position) = at(position) { tokens[position] = player }
         fun hasSpace(position: Position) = at(position) { spaces.add(position) }
 
-        private fun at(position: Position, fn: BoardCheckState.() -> Unit) =
+        private fun at(position: Position, fn: BoardCheckSubstate.() -> Unit) =
             if (position in tokens || position in spaces) {
                 failure(IllegalStateException("position $position is checked already"))
             } else success(apply(fn))
@@ -67,7 +82,5 @@ object TicTacToeRunnableScenarioClassGenerator : RunnableScenarioClassGenerator<
 /**
  * Default imports that should be added to any tic-tac-toe script (generated or parsed).
  */
-val ticTacToeStandardImports = arrayOf(
-    "com.anaplan.engineering.azuki.tictactoe.dsl.*",
-    "com.anaplan.engineering.azuki.tictactoe.*"
-)
+val ticTacToeStandardImports =
+    arrayOf("com.anaplan.engineering.azuki.tictactoe.dsl.*", "com.anaplan.engineering.azuki.tictactoe.*")
