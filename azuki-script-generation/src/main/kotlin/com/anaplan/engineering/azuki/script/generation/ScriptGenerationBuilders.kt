@@ -121,7 +121,7 @@ class WheneverBuilder<out AF : ActionFactory, E : ScriptGenerationEnvironment>(v
 
     override fun fromScenario(scenario: BuildableScenario<in AF>) = fromActions(scenario.commands(actionFactory))
 
-    override val builtScriptElements get() = commands.map { ScriptStringFragment(it.getActionScript(environment)) }
+    override val builtScriptElements get() = commands.map { it.getActionScriptElement(environment) }
 
     private val commands = mutableListOf<ScriptGenerationAction<E>>()
 }
@@ -164,7 +164,7 @@ class ThenBuilder<out CF : CheckFactory, E : ScriptGenerationEnvironment>(
     override fun fromScenario(scenario: VerifiableScenario<*, in CF>) = fromChecks(scenario.checks(checkFactory))
 
     override val builtScriptElements
-        get() = (if (compose) composedChecks else checks).map { ScriptStringFragment(it.getCheckScript(environment)) }
+        get() = (if (compose) composedChecks else checks).map { it.getCheckScriptElement(environment) }
 
     private val composedChecks
         get() = checks.map {
@@ -215,7 +215,7 @@ class QueryBuilder<out QF : QueryFactory, E : ScriptGenerationEnvironment>(
         fromScenarioQueries(scenario.queries(queryFactory))
 
     override val builtScriptElements
-        get() = queries.map { ScriptStringFragment(it.getQueryScript()) } + derivedQueries.map { ScriptStringFragment(it.getDerivedQueryScript()) }
+        get() = queries.map { it.getQueryScriptElement() } + derivedQueries.map { it.getDerivedQueryScriptElement() }
 
     private val queries = mutableListOf<ScriptGenerationQuery<*>>()
     private val derivedQueries = mutableListOf<ScriptGenerationDerivedQuery<*>>()
@@ -251,7 +251,7 @@ abstract class GenerateBlocksBuilder<out AF : ActionFactory, out QF : QueryFacto
  * Builds an individual block in a list of generate blocks.
  */
 @ScriptGenerationDsl
-class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
+class GenerateBlockBuilder : BasicScriptBlockBuilder() {
 
     fun build(body: GenerateBlockBuilder.() -> Unit) = apply(body).scriptElements
 
@@ -264,7 +264,7 @@ class GenerateBlockBuilder() : BasicScriptBlockBuilder() {
     }
 
     private val actionGenerators = mutableListOf<ScriptGenerationActionGenerator>()
-    override val builtScriptElements get() = actionGenerators.map { ScriptStringFragment(it.getActionGeneratorScript()) }
+    override val builtScriptElements get() = actionGenerators.map { it.getActionGeneratorScriptElement() }
 }
 
 @ScriptGenerationDsl

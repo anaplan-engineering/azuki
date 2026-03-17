@@ -18,7 +18,7 @@ import kotlin.reflect.KFunction
  * Root class for the three types of query factory (queries in query position, queries in verification position,
  * and queries in derived position).
  */
-abstract class AbstractTicTacToeScriptGenerationQueryFactory() : TicTacToeQueryFactory {
+abstract class AbstractTicTacToeScriptGenerationQueryFactory : TicTacToeQueryFactory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T, C : Collection<T>> createForAllQuery(

@@ -11,6 +11,16 @@ interface ScriptGenerationCheck<E : ScriptGenerationEnvironment> : Check {
      */
     @Throws(IllegalStateException::class)
     fun getCheckScript(environment: E): String
+
+    /**
+     * As `getCheckScript`, but returns a renderable script element instead of a string.
+     *
+     * By default, this returns an element that wraps the contents of `getCheckScript`.
+     * Override this for more control over the script generation of a check.
+     * (If doing so, consider making `getCheckScript` call the `render` method of the script element for consistency.)
+     */
+    @Throws(IllegalStateException::class)
+    fun getCheckScriptElement(environment: E): ScriptElement = ScriptStringFragment(getCheckScript(environment))
 }
 
 interface ComposableScriptGenerationCheck<E : ScriptGenerationEnvironment> : ScriptGenerationCheck<E> {
@@ -44,5 +54,6 @@ inline fun <E : ScriptGenerationEnvironment> onlyComposable(crossinline register
 
         override val behavior = unsupportedBehavior
         override fun getCheckScript(environment: E) = error("This check cannot be scriptified directly and must be composed")
+        override fun getCheckScriptElement(environment: E) = error("This check cannot be scriptified directly and must be composed")
         override fun registerComposable(environment: E) = environment.register()
     }

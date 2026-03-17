@@ -6,7 +6,7 @@ import kotlin.reflect.KType
 
 class ScriptingHelper(private val valueScripters: Map<KClassifier, (Any?) -> String>) {
 
-    fun scriptifyFunction(fn: KFunction<*>, vararg values: Any?): String {
+    fun scriptifyFunctionAsElement(fn: KFunction<*>, vararg values: Any?): ScriptFunction {
         if (fn.parameters.filter { !it.isOptional }.size > values.size + 1) {
             throw IllegalStateException("Too few parameters for ${fn.name}: ${values.toList()}")
         }
@@ -19,10 +19,15 @@ class ScriptingHelper(private val valueScripters: Map<KClassifier, (Any?) -> Str
             } else {
                 null
             }
+            // TODO: scriptify parameter as element
             scriptifyParameter(p.type, v, p.isVararg, requiredName)
         }
-        return "${fn.name}(${paramStrings.filterNotNull().joinToString(", ")})"
+
+        return ScriptFunction(fn.name, paramStrings.filterNotNull().map(::ScriptStringFragment))
     }
+
+    fun scriptifyFunction(fn: KFunction<*>, vararg values: Any?) = scriptifyFunctionAsElement(fn, *values).render(
+        RenderContext())
 
     fun scriptifyParameter(
         expectedType: KType,
