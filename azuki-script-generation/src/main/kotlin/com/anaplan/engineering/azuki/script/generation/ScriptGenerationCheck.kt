@@ -12,7 +12,6 @@ interface ScriptGenerationCheck<E : ScriptGenerationEnvironment> : Check {
     @Throws(IllegalStateException::class)
     fun getCheckScript(environment: E): String
 
-
     /**
      * As `getCheckScript`, but returns a renderable script element instead of a string.
      *
