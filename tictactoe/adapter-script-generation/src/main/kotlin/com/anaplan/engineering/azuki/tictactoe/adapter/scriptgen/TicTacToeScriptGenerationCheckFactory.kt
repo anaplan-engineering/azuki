@@ -33,13 +33,13 @@ object GameScriptGenerationCheckFactory : GameCheckFactory {
     override fun hasToken(gameName: String, playerName: String, position: Position) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasToken, gameName, playerName, position)
     }.asComposable {
-        boardCheckState.hasToken(gameName, playerName, position)
+        boardCheckComposers.hasToken(gameName, playerName, position)
     }
 
     override fun hasSpace(gameName: String, position: Position) = TicTacToeScriptGenerationCheck {
         TicTacToeScriptingHelper.scriptifyFunction(TicTacToeThen::boardHasSpace, gameName, position)
     }.asComposable {
-        boardCheckState.hasSpace(gameName, position)
+        boardCheckComposers.hasSpace(gameName, position)
     }
 
     override fun hasState(gameName: String, moves: MoveMap) = TicTacToeScriptGenerationCheck {
