@@ -4,26 +4,12 @@ import kotlin.test.*
 
 class ScriptGenerationServiceFunctionsTest {
     @Test
-    fun renderScriptFunctionsExampleScenario() {
+    fun renderScriptFunctionsAllHorizontal() {
         val expected = """
             verifiableScenario {
                 given {
                     thereIsAFoo(a)
                     thereIsABar(a, b)
-                    thereIsABaz(
-                        a, a,
-            ${"\"\"\""}
-            a b c
-            d e f
-            g h i
-            ${"\"\"\""},
-                        b,
-            ${"\"\"\""}
-            a b c
-            d e f
-            g h i
-            ${"\"\"\""},
-                    )
                 }
                 then {
                     everythingIsOkay()
@@ -35,7 +21,6 @@ class ScriptGenerationServiceFunctionsTest {
             given {
                 +scriptFunction("thereIsAFoo", argA)
                 +scriptFunction("thereIsABar", argA, argB)
-                +scriptFunction("thereIsABaz", argA, argA, longArg, argB, longArg)
             }.whenever {
             }.then {
                 +everythingIsOkay
@@ -44,7 +29,7 @@ class ScriptGenerationServiceFunctionsTest {
     }
 
     @Test
-    fun renderScriptFunctionsWithHorizontalVerticalHorizontalArguments() {
+    fun renderScriptFunctionsHorizontalVerticalHorizontal() {
         val expected = """
             verifiableScenario {
                 given {
@@ -75,90 +60,7 @@ class ScriptGenerationServiceFunctionsTest {
     }
 
     @Test
-    fun renderScriptFunctionsWithVerticalThenHorizontalArguments() {
-        val expected = """
-            verifiableScenario {
-                given {
-                    thereIsAFoo(
-            $TRIPLE
-            a b c
-            d e f
-            g h i
-            $TRIPLE,
-                        a, b,
-                    )
-                }
-                then {
-                    everythingIsOkay()
-                }
-            }
-        """.trimIndent()
-
-        assertEquals(expected, generateAndRender {
-            given {
-                +scriptFunction("thereIsAFoo", longArg, argA, argB)
-            }.whenever {
-            }.then {
-                +everythingIsOkay
-            }.verifiableScenario
-        })
-    }
-
-    @Test
-    fun renderScriptFunctionsWithHorizontalThenVerticalArguments() {
-        val expected = """
-            verifiableScenario {
-                given {
-                    thereIsAFoo(
-                        a, b,
-            $TRIPLE
-            a b c
-            d e f
-            g h i
-            $TRIPLE,
-                    )
-                }
-                then {
-                    everythingIsOkay()
-                }
-            }
-        """.trimIndent()
-
-        assertEquals(expected, generateAndRender {
-            given {
-                +scriptFunction("thereIsAFoo", argA, argB, longArg)
-            }.whenever {
-            }.then {
-                +everythingIsOkay
-            }.verifiableScenario
-        })
-    }
-
-    @Test
-    fun renderScriptFunctionsWithAllHorizontalArguments() {
-        val expected = """
-            verifiableScenario {
-                given {
-                    thereIsAFoo(a, b, b, a)
-                }
-                then {
-                    everythingIsOkay()
-                }
-            }
-        """.trimIndent()
-
-        assertEquals(expected, generateAndRender {
-            given {
-                +scriptFunction("thereIsAFoo", argA, argB, argB, argA)
-            }.whenever {
-            }.then {
-                +everythingIsOkay
-            }.verifiableScenario
-        })
-    }
-
-    @Test
-    fun renderScriptFunctionsWithAllVerticalArguments() {
+    fun renderScriptFunctionsAllVertical() {
         val expected = """
             verifiableScenario {
                 given {
@@ -191,6 +93,60 @@ class ScriptGenerationServiceFunctionsTest {
         })
     }
 
+    @Test
+    fun renderScriptFunctionsNestedHorizontal() {
+        val expected = """
+            verifiableScenario {
+                given {
+                    thereIsAFoo(bar(a, b))
+                }
+                then {
+                    everythingIsOkay()
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(expected, generateAndRender {
+            given {
+                +scriptFunction("thereIsAFoo", scriptFunction("bar", argA, argB))
+            }.whenever {
+            }.then {
+                +everythingIsOkay
+            }.verifiableScenario
+        })
+    }
+
+    @Test
+    fun renderScriptFunctionsNestedVertical() {
+        val expected = """
+            verifiableScenario {
+                given {
+                    thereIsAFoo(
+                        bar(
+            $TRIPLE
+            a b c
+            d e f
+            g h i
+            $TRIPLE,
+                        ),
+                    )
+                }
+                then {
+                    everythingIsOkay()
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(expected, generateAndRender {
+            given {
+                +scriptFunction("thereIsAFoo", scriptFunction("bar", longArg))
+            }.whenever {
+            }.then {
+                +everythingIsOkay
+            }.verifiableScenario
+        })
+    }
+
     companion object {
 
         val argA = ScriptStringFragment("a")
@@ -200,7 +156,7 @@ class ScriptGenerationServiceFunctionsTest {
 
         val everythingIsOkay = scriptFunction("everythingIsOkay")
 
-        fun scriptFunction(name: String, vararg args: ScriptStringFragment) = ScriptFunction(name, listOf(*args))
+        fun scriptFunction(name: String, vararg args: ScriptElement) = ScriptFunction(name, listOf(*args))
 
         fun generateAndRender(
             body: ScriptGenerationService<*, *, *, *, *, *, *>.() -> ScenarioScript

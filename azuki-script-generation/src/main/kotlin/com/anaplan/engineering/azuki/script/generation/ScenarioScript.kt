@@ -129,15 +129,40 @@ interface ScriptElement {
     val isEmpty: Boolean
 
     /**
-     * Is the element safe to lay out horizontally?
+     * Which way should this element be oriented if rendered into a list?
      */
-    val isHorizontal: Boolean get() = false
+    val orientation: Orientation get() = Orientation.Horizontal
+
+    /**
+     * Renders initial indentation for this element.
+     * Override to remove or otherwise alter initial indentation.
+     */
+    fun initialIndent(ctx: RenderContext) = ctx.indent
 
     /**
      * Renders the contents of the script element to a string with the given context.
      */
     fun render(ctx: RenderContext = RenderContext()): String
+
+    /**
+     * Orientation of script elements in lists and similar constructs.
+     */
+    enum class Orientation {
+        /**
+         * Should be laid out horizontally in lists.
+         */
+        Horizontal,
+
+        /**
+         * Should be laid out vertically in lists.
+         */
+        Vertical;
+
+        val isHorizontal get() = this == Horizontal
+        val isVertical get() = this == Vertical
+    }
 }
+
 
 /**
  * A raw string fragment as a script element.
@@ -149,8 +174,11 @@ interface ScriptElement {
 data class ScriptStringFragment(val fragment: String) : ScriptElement {
 
     override val isEmpty = fragment.isBlank()
-    override val isHorizontal = '\n' !in fragment
+    override val orientation =
+        if ('\n' in fragment) ScriptElement.Orientation.Vertical else ScriptElement.Orientation.Horizontal
 
+    // don't initially indent string fragments, in case they have their own indentation or are sensitive to it
+    override fun initialIndent(ctx: RenderContext) = ""
     override fun render(ctx: RenderContext) = fragment
 }
 
@@ -160,44 +188,52 @@ data class ScriptStringFragment(val fragment: String) : ScriptElement {
 data class ScriptFunction(val name: String, val args: List<ScriptElement>) : ScriptElement {
 
     override val isEmpty = false
+    override val orientation: ScriptElement.Orientation = if (args.any { it.orientation.isVertical }) {
+        ScriptElement.Orientation.Vertical
+    } else {
+        ScriptElement.Orientation.Horizontal
+    }
 
     override fun render(ctx: RenderContext) = buildString {
-        append("${ctx.indent}$name(")
-
-        val anyVertical = args.any { !it.isHorizontal }
-        if (anyVertical) {
+        append("$name(")
+        if (orientation.isVertical) {
+            // put arguments on separate lines to the opening and closing parens
             appendLine()
         }
 
-        args.forEachIndexed { i, arg ->
-            val wasHorizontal = args.getOrNull(i - 1)?.isHorizontal
+        var last: ScriptElement? = null
+        for (arg in args) {
+            val argCtx = ctx.nextIndentLevel
 
-            val joiner = when {
-                i == 0 -> ""
-                arg.isHorizontal && wasHorizontal == true -> ", "
-                // force a linebreak when transitioning from horizontal to vertical, or between vertical, arguments
-                else -> ",\n"
-            }
-
-            val argCtx = if (arg.isHorizontal) {
-                // we'll handle indenting horizontally laid-out arguments
-                ctx.copy(indentLevel = 0)
-            } else {
-                ctx.nextIndentLevel
-            }
-
-            append(joiner)
-            val startOfHorizontalRun = anyVertical && arg.isHorizontal && wasHorizontal != true
-            if (startOfHorizontalRun) {
-                append(ctx.nextIndentLevel.indent)
-            }
+            append(argumentJoiner(last, arg))
+            append(argumentIndent(last, arg, argCtx))
             append(arg.render(argCtx))
+
+            last = arg
         }
 
-        if (anyVertical) {
-            append(",\n${ctx.indent})")
-        } else {
-            append(")")
+        if (orientation.isVertical) {
+            // add a trailing comma whenever rendering a vertical argument list
+            append(",\n${ctx.indent}")
+        }
+        append(")")
+    }
+
+    private fun argumentJoiner(last: ScriptElement?, arg: ScriptElement) = when {
+        last == null -> ""
+        arg.orientation.isHorizontal && last.orientation.isHorizontal -> ", "
+        // force a linebreak when transitioning from horizontal to vertical, or between vertical, arguments
+        else -> ",\n"
+    }
+
+    private fun argumentIndent(last: ScriptElement?, arg: ScriptElement, argCtx: RenderContext): String {
+        val lastVerticalIfPresent = last == null || last.orientation.isVertical
+        val atHorizontalRunStart = orientation.isVertical && arg.orientation.isHorizontal && lastVerticalIfPresent
+        return when (arg.orientation) {
+            // always apply indentation at the start of runs of horizontal arguments
+            ScriptElement.Orientation.Horizontal -> if (atHorizontalRunStart) argCtx.indent else ""
+            // apply whatever indentation vertical arguments need
+            ScriptElement.Orientation.Vertical -> arg.initialIndent(argCtx)
         }
     }
 }
@@ -210,7 +246,7 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
     constructor(header: String, contents: List<ScriptElement>) : this(header, ScriptElementList(contents))
 
     override val isEmpty get() = inner.isEmpty
-    override val isHorizontal = false
+    override val orientation = ScriptElement.Orientation.Vertical
 
     /**
      * Gets the script elements contained within this block.
@@ -218,7 +254,9 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
     val elements get() = if (inner is ScriptElementList<*>) inner.elements else listOf(inner)
 
     override fun render(ctx: RenderContext) = with(ctx) {
-        listOf("$indent$header {", inner.render(nextIndentLevel), "$indent}").joinToString("\n")
+        val innerCtx = nextIndentLevel
+        val body = inner.takeUnless { it.isEmpty }?.let { it.initialIndent(innerCtx) + it.render(innerCtx) }
+        listOfNotNull("$header {", body, "$indent}").joinToString("\n")
     }
 
     /**
@@ -243,8 +281,14 @@ data class ScriptElementList<E : ScriptElement>(val elements: List<E>) : ScriptE
     constructor(vararg elements: E) : this(listOf(*elements))
 
     override val isEmpty get() = elements.all { it.isEmpty }
+    override val orientation = ScriptElement.Orientation.Vertical
 
-    override fun render(ctx: RenderContext) = elements.filterNot { it.isEmpty }.joinToString("\n") { it.render(ctx) }
+    // distribute any initial indentation to the script elements
+    override fun initialIndent(ctx: RenderContext) = ""
+
+    override fun render(ctx: RenderContext) = elements.filterNot { it.isEmpty }.joinToString("\n") {
+        it.initialIndent(ctx) + it.render(ctx)
+    }
 
     operator fun plus(other: ScriptElementList<E>) = ScriptElementList(elements + other.elements)
 }
