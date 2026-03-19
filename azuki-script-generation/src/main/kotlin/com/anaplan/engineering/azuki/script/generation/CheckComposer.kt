@@ -85,7 +85,7 @@ class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>
         getOrInit(key).tryRegister(Unit, effect)
 
     override operator fun get(key: K): S? = map[key]?.get(Unit)
-    override val composers get() = map.values.flatMap { it.composers }
+    override val composers get() = map.values.mapNotNull { it[Unit] }
 
     private fun getOrInit(key: K) = map.getOrPut(key) { CheckComposerWrapper(constructor(key)) }
 }
