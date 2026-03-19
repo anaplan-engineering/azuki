@@ -25,15 +25,18 @@ fun interface CheckComposer<E : ScriptGenerationEnvironment> {
 /**
  * Handles registering check composers against keys, allowing discovery and composition of related checks.
  *
- * A typical pattern of usage here is for every check that constrains a particular domain object to register itself
- * in the registrar for that type of domain object, under a key that uniquely identifies that particular object.  Each
- * registration will add that check's information to a composer for that key, ensuring that each domain object has
- *
+ * A typical use case is for composable checks that constrain a particular domain object to <code>register</code>
+ * themselves in a registry corresponding to a group of checks that can be composed into each other.  Each object is
+ * registered under a key that uniquely identifies that object.  Each registration then adds that check's information to
+ * a composer for that key, ensuring that each domain object has one and only one distinct composer.  Said composer is
+ * then returned by <code>register</code>, and eventually used to look up the checks that resulted from the composition
+ * effort.
  */
 interface CheckComposerRegistry<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>> {
 
     /**
      * Registers a check for composition inside this map, under the given key and with the given effect.
+     *
      * If an existing composer exists under the same key, the effect is applied cumulatively to it.
      */
     fun register(key: K, effect: S.() -> S): CheckComposer<E> = tryRegister(key) {
@@ -41,27 +44,40 @@ interface CheckComposerRegistry<E : ScriptGenerationEnvironment, K, S : CheckCom
     }
 
     /**
-     * As with register(), but can fail, permanently halting composition for this key.
+     * As with <code>register()</code>, but can fail, permanently halting composition for this key.
      */
     fun tryRegister(key: K, effect: S.() -> Result<S>): CheckComposer<E>
 
     /**
-     * Gets the composer for a given key, if one exists.
+     * Gets the current composer for a given key, if one exists.
+     *
+     * It is not safe to use the output of this function after calling <code>register</code> or <code>tryRegister</code>
+     * on this key, as they may cause the composer under that key to change its object identity.
      */
     operator fun get(key: K): S?
 
     /**
-     * Gets all composers registered in this registry.
+     * Gets all currently-active composers registered in this registry.
+     *
+     * It is not safe to use the value of this property after calling <code>register</code> or <code>tryRegister</code>,
+     * as they may cause composers to fail or
      */
     val composers: Collection<S>
 }
 
 /**
  * Implements a check composer registry with a keyed map.
+ *
+ * This is usable directly or through delegation from another <code>CheckComposerRegistry</code>.
  */
 class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>(val constructor: (K) -> S) :
     CheckComposerRegistry<E, K, S> {
 
+    /* We use CheckComposerWrapper here because, when register/tryRegister are applied to an existing key, they can
+     * replace the underlying S object inside the map.  This would ordinarily leave the CheckComposer<E> that was
+     * returned to previous calls dangling and pointing to the old S object.  Instead, we always store the same wrapper,
+     * return that wrapper as the CheckComposer<E>, and cascade all registration attempts into the wrapper.
+     */
     private val map = mutableMapOf<K, CheckComposerWrapper<E, S>>()
 
     override fun register(key: K, effect: S.() -> S): CheckComposer<E> = getOrInit(key).register(effect)
