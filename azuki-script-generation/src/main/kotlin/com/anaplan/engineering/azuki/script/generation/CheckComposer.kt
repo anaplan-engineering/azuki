@@ -35,9 +35,9 @@ fun interface CheckComposer<E : ScriptGenerationEnvironment> {
 interface CheckComposerRegistry<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>> {
 
     /**
-     * Registers a check for composition inside this map, under the given key and with the given effect.
+     * Registers a check for composition inside this registry, under the given key and with the given effect.
      *
-     * If an existing composer exists under the same key, the effect is applied cumulatively to it.
+     * If a composer already exists under the same key, the effect is applied cumulatively to it.
      */
     fun register(key: K, effect: S.() -> S): CheckComposer<E> = tryRegister(key) {
         Result.success(effect())
@@ -90,34 +90,49 @@ class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>
 }
 
 /**
+ * A check composer registry with only one valid composer (and therefore a single unit key).
+ */
+interface SingleKeyCheckComposerRegistry<E : ScriptGenerationEnvironment, S : CheckComposer<E>> :
+    CheckComposerRegistry<E, Unit, S> {
+
+    /**
+     * Registers a check for composition inside this registry, with the given effect.
+     *
+     * If a composer already exists, the effect is applied cumulatively to it.
+     */
+    fun register(effect: S.() -> S): CheckComposer<E> = tryRegister { Result.success(effect()) }
+
+    /**
+     * As with <code>register()</code>, but can fail, permanently halting composition.
+     */
+    fun tryRegister(effect: S.() -> Result<S>): CheckComposer<E>
+
+    /**
+     * The single composer held by the registry, if active.
+     */
+    val composer: S?
+
+    override fun get(key: Unit): S? = composer
+    override fun register(key: Unit, effect: S.() -> S) = register(effect)
+    override fun tryRegister(key: Unit, effect: S.() -> Result<S>) = tryRegister(effect)
+    override val composers get() = listOfNotNull(composer)
+}
+
+/**
  * Wraps a composer to ensure that effects that replace it with another object propagate correctly to the generator.
  *
  * This behaves as a composer registry, but with one fixed key and whose registration functions return the wrapper as
  * a composer in its own right.
  */
 class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>>(initial: S) : CheckComposer<E>,
-    CheckComposerRegistry<E, Unit, S> {
+    SingleKeyCheckComposerRegistry<E, S> {
 
     private var _inner = Result.success(initial)
 
-    override fun register(key: Unit, effect: S.() -> S) = register(effect)
-    override fun tryRegister(key: Unit, effect: S.() -> Result<S>) = tryRegister(effect)
-    override operator fun get(key: Unit): S? = composer
-    override val composers get() = listOfNotNull(_inner.getOrNull())
+    override val composer: S? get() = _inner.getOrNull()
+    override fun register(effect: S.() -> S) = apply { _inner = _inner.map(effect) }
+    override fun tryRegister(effect: S.() -> Result<S>) = apply { _inner = bind(effect) }
     override fun compose(environment: E): Result<List<ScriptGenerationCheck<E>>> = bind { compose(environment) }
-
-    val composer: S? get() = _inner.getOrNull()
-
-    /**
-     * Registers a check on the inner composer by applying an effect to it.
-     * If the effect returns a new object, this wrapper updates to point to it.
-     */
-    fun register(effect: S.() -> S) = apply { _inner = _inner.map(effect) }
-
-    /**
-     * As with register(), but can fail, permanently halting composition.
-     */
-    fun tryRegister(effect: S.() -> Result<S>) = apply { _inner = bind(effect) }
 
     private fun <T> bind(fn: S.() -> Result<T>) = _inner.fold(onSuccess = fn, onFailure = { Result.failure(it) })
 }
