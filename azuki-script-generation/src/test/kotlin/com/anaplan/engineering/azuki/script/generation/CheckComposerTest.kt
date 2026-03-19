@@ -16,7 +16,7 @@ class CheckComposerTest {
     }
 
     @Test
-    fun mapTryRegisterRemovesFromMapOnFailure() {
+    fun mapTryRegisterNullifiesOnFailure() {
         assertTryRegisterNullifiesOnFailure("a", makeMap())
     }
 
@@ -103,48 +103,51 @@ class CheckComposerTest {
         fun makeWrapper(): CheckComposerWrapper<NoScriptGenerationEnvironment, Example> =
             CheckComposerWrapper(Example.new("a"))
 
-        // These tests are identical for maps and wrappers, except for registry type and the key(s) in use:
+        // These tests are identical for maps and wrappers, except for registry type and the key(s) in use.
+        // Note that we could change most tests to take `registry.onKey(key)` directly, but then we'd lose the
+        // implicit exercising of assertions about `registry.onKey(key)`'s correctness.
 
         private fun <K> assertRegisterReusesSameComposer(
             keyIncrements: List<K>, registry: CheckComposerRegistry<NoScriptGenerationEnvironment, K, Example>
         ) {
-            keyIncrements.forEach { registry.register(it) { increment() } }
+            keyIncrements.forEach { registry.onKey(it).register { increment() } }
 
             val keyCounts = keyIncrements.groupBy { it }.mapValues { it.value.size }
             assertEquals(keyCounts.size, registry.composers.size, "should only be as many composers as keys")
             keyCounts.forEach { (k, expected) ->
-                assertEquals(expected, registry[k]?.counter, "increments to $k should have been cumulative")
+                val actual = registry.onKey(k).composer?.counter
+                assertEquals(expected, actual, "increments to $k should have been cumulative")
             }
         }
 
         private fun <K> assertRegisterUpdatesRegistryOnObjectChange(
             key: K, registry: CheckComposerRegistry<NoScriptGenerationEnvironment, K, Example>
         ) {
-            registry.register(key) { increment() }
-            assertIs<Forwards>(registry[key])
-            registry.register(key) { reverse() }
-            assertIs<Backwards>(registry[key])
+            registry.onKey(key).register { increment() }
+            assertIs<Forwards>(registry.onKey(key).composer)
+            registry.onKey(key).register { reverse() }
+            assertIs<Backwards>(registry.onKey(key).composer)
         }
 
         private fun <K> assertTryRegisterNullifiesOnFailure(
             key: K, registry: CheckComposerRegistry<NoScriptGenerationEnvironment, K, Example>
         ) {
-            registry.register(key) { increment() }
-            assertIs<Forwards>(registry[key])
-            registry.tryRegister(key) { Result.failure(IllegalStateException("oops")) }
-            assertNull(registry[key], "the composer should now appear to have been removed")
+            registry.onKey(key).register { increment() }
+            assertIs<Forwards>(registry.onKey(key).composer)
+            registry.onKey(key).tryRegister { Result.failure(IllegalStateException("oops")) }
+            assertNull(registry.onKey(key).composer, "the composer should now appear to have been removed")
         }
 
         private fun <K> assertRegistryPropagatesComposerObjectChanges(
             key: K, registry: CheckComposerRegistry<NoScriptGenerationEnvironment, K, Example>
         ) {
-            val composerA = registry.register(key) { increment() }
+            val composerA = registry.onKey(key).register { increment() }
             assertEquals("forwards(1)", composerA.toScript())
-            val composerB = registry.register(key) { reverse() }
+            val composerB = registry.onKey(key).register { reverse() }
             listOf(composerA, composerB).forEach { c -> assertEquals("backwards(0)", c.toScript()) }
-            val composerC = registry.register(key) { increment() }
+            val composerC = registry.onKey(key).register { increment() }
             listOf(composerA, composerB, composerC).forEach { c -> assertEquals("backwards(-1)", c.toScript()) }
-            val composerD = registry.tryRegister(key) { fail() }
+            val composerD = registry.onKey(key).tryRegister { fail() }
             listOf(composerA, composerB, composerC, composerD).forEach { c ->
                 assertIs<IllegalStateException>(c.compose(NoScriptGenerationEnvironment).exceptionOrNull())
             }
@@ -154,9 +157,9 @@ class CheckComposerTest {
             key: K,
             registry: CheckComposerRegistry<NoScriptGenerationEnvironment, K, Example>,
         ) {
-            val composer = registry.register(key) { increment() }
-            assertIs<Forwards>(registry[key])
-            registry.tryRegister(key) { Result.failure(IllegalStateException("oops")) }
+            val composer = registry.onKey(key).register { increment() }
+            assertIs<Forwards>(registry.onKey(key).composer)
+            registry.onKey(key).tryRegister { Result.failure(IllegalStateException("oops")) }
             assertIs<IllegalStateException>(composer.compose(NoScriptGenerationEnvironment).exceptionOrNull(),
                 "should have changed the inner object")
         }

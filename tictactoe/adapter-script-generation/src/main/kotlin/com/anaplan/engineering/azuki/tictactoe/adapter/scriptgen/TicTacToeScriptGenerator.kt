@@ -44,9 +44,9 @@ class TicTacToeGenerationEnvironment : ScriptGenerationEnvironment {
         CheckComposerRegistry<TicTacToeGenerationEnvironment, String, BoardCheckComposer> by CheckComposerMap(::BoardCheckComposer) {
 
         fun hasToken(gameName: String, player: String, position: Position) =
-            tryRegister(gameName) { hasToken(player, position) }
+            onKey(gameName).tryRegister { hasToken(player, position) }
 
-        fun hasSpace(gameName: String, position: Position) = tryRegister(gameName) { hasSpace(position) }
+        fun hasSpace(gameName: String, position: Position) = onKey(gameName).tryRegister { hasSpace(position) }
     }
 
     /**

@@ -35,32 +35,16 @@ fun interface CheckComposer<E : ScriptGenerationEnvironment> {
 interface CheckComposerRegistry<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>> {
 
     /**
-     * Registers a check for composition inside this registry, under the given key and with the given effect.
+     * Gets the composer container for a particular key, creating one if one doesn't yet exist.
      *
-     * If a composer already exists under the same key, the effect is applied cumulatively to it.
+     * This container permits registering a composable check for the domain object corresponding to its key.
      */
-    fun register(key: K, effect: S.() -> S): CheckComposer<E> = tryRegister(key) {
-        Result.success(effect())
-    }
-
-    /**
-     * As with <code>register()</code>, but can fail, permanently halting composition for this key.
-     */
-    fun tryRegister(key: K, effect: S.() -> Result<S>): CheckComposer<E>
-
-    /**
-     * Gets the current composer for a given key, if one exists.
-     *
-     * It is not safe to use the output of this function after calling <code>register</code> or <code>tryRegister</code>
-     * on this key, as they may cause the composer under that key to change its object identity.
-     */
-    operator fun get(key: K): S?
+    fun onKey(key: K): CheckComposerContainer<E, S>
 
     /**
      * Gets all currently-active composers registered in this registry.
      *
-     * It is not safe to use the value of this property after calling <code>register</code> or <code>tryRegister</code>,
-     * as they may cause composers to fail or
+     * It is not safe to use the value of this property after modifying a registration through <code>on</code>.
      */
     val composers: Collection<S>
 }
@@ -80,20 +64,48 @@ class CheckComposerMap<E : ScriptGenerationEnvironment, K, S : CheckComposer<E>>
      */
     private val map = mutableMapOf<K, CheckComposerWrapper<E, S>>()
 
-    override fun register(key: K, effect: S.() -> S): CheckComposer<E> = getOrInit(key).register(effect)
-    override fun tryRegister(key: K, effect: S.() -> Result<S>): CheckComposer<E> = getOrInit(key).tryRegister(effect)
+    override fun onKey(key: K) = map.getOrPut(key) { CheckComposerWrapper(constructor(key)) }
 
-    override operator fun get(key: K): S? = map[key]?.composer
     override val composers get() = map.values.mapNotNull { it.composer }
 
-    private fun getOrInit(key: K) = map.getOrPut(key) { CheckComposerWrapper(constructor(key)) }
+    /**
+     * Registers a check for composition inside this registry, under the given key and with the given effect.
+     *
+     * If a composer already exists under the same key, the effect is applied cumulatively to it.
+     */
+    @Deprecated("Use onKey(key)", ReplaceWith("onKey(key).register(effect)"))
+    fun register(key: K, effect: S.() -> S): CheckComposer<E> = onKey(key).register(effect)
+
+    /**
+     * As with <code>register()</code>, but can fail, permanently halting composition for this key.
+     */
+    @Deprecated("Use onKey(key)", ReplaceWith("onKey(key).tryRegister(effect)"))
+    fun tryRegister(key: K, effect: S.() -> Result<S>): CheckComposer<E> = onKey(key).tryRegister(effect)
+
+    /**
+     * Gets the current composer for a given key, if one exists.
+     *
+     * The difference between this and <code>onKey(key).composer</code> is that this function returns null if
+     * <code>on</code> has never been called for <code>key</code>.
+     *
+     * It is not safe to use the output of this function after modifying a registration for this key through
+     * <code>on</code>.  Doing so may cause the composer under that key to change its object identity.
+     */
+    @Deprecated("Use onKey(key) but note difference in behavior")
+    operator fun get(key: K): S? = map[key]?.composer
 }
 
 /**
- * A check composer registry with only one valid composer (and therefore a single unit key).
+ * A container for a single registration of one composer.
+ *
+ * Such a container can be viewed as a registry with only one valid composer (and therefore a single unit key).
+ * It can also be used as a composer (by composing it into its inner composer).
  */
-interface SingleKeyCheckComposerRegistry<E : ScriptGenerationEnvironment, S : CheckComposer<E>> :
-    CheckComposerRegistry<E, Unit, S> {
+interface CheckComposerContainer<E : ScriptGenerationEnvironment, S : CheckComposer<E>> :
+    CheckComposerRegistry<E, Unit, S>, CheckComposer<E> {
+
+    override fun onKey(key: Unit) = this
+    override val composers get() = listOfNotNull(composer)
 
     /**
      * Registers a check for composition inside this registry, with the given effect.
@@ -111,11 +123,6 @@ interface SingleKeyCheckComposerRegistry<E : ScriptGenerationEnvironment, S : Ch
      * The single composer held by the registry, if active.
      */
     val composer: S?
-
-    override fun get(key: Unit): S? = composer
-    override fun register(key: Unit, effect: S.() -> S) = register(effect)
-    override fun tryRegister(key: Unit, effect: S.() -> Result<S>) = tryRegister(effect)
-    override val composers get() = listOfNotNull(composer)
 }
 
 /**
@@ -124,8 +131,8 @@ interface SingleKeyCheckComposerRegistry<E : ScriptGenerationEnvironment, S : Ch
  * This behaves as a composer registry, but with one fixed key and whose registration functions return the wrapper as
  * a composer in its own right.
  */
-class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>>(initial: S) : CheckComposer<E>,
-    SingleKeyCheckComposerRegistry<E, S> {
+class CheckComposerWrapper<E : ScriptGenerationEnvironment, S : CheckComposer<E>>(initial: S) :
+    CheckComposerContainer<E, S> {
 
     private var _inner = Result.success(initial)
 
