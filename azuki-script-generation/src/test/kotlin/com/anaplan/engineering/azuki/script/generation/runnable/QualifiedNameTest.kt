@@ -1,24 +1,24 @@
 package com.anaplan.engineering.azuki.script.generation.runnable
 
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier.Companion.toQualifiedIdentifier
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName.Companion.asQualifiedName
 import kotlin.test.*
 
-class QualifiedIdentifierTest {
+class QualifiedNameTest {
 
     @Test
-    fun basic() = with(QualifiedIdentifier.create("com.example", "Test")) {
+    fun basic() = with(QualifiedName.create("com.example", "Test")) {
         assertEquals("com.example.Test", toString())
         assertEquals("com.example.Test", import)
         assertEquals("com.example", packageName)
-        assertEquals("Test", identifier)
+        assertEquals("Test", simpleName)
     }
 
     @Test
-    fun basicNested() = with(QualifiedIdentifier.create("com.example", "Foo") dot "Bar") {
+    fun basicNested() = with(QualifiedName.create("com.example", "Foo") dot "Bar") {
         assertEquals("com.example.Foo.Bar", toString())
         assertEquals("com.example.Foo", import)
         assertEquals("com.example", packageName)
-        assertEquals("Foo.Bar", identifier)
+        assertEquals("Foo.Bar", simpleName)
     }
 
     @Test
@@ -29,18 +29,18 @@ class QualifiedIdentifierTest {
     }
 
     @Test
-    fun javaClass() = with(QualifiedIdentifierTest::class.toQualifiedIdentifier()) {
-        assertEquals("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifierTest", toString())
-        assertEquals("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifierTest", import)
+    fun javaClass() = with(QualifiedNameTest::class.asQualifiedName()) {
+        assertEquals("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedNameTest", toString())
+        assertEquals("com.anaplan.engineering.azuki.script.generation.runnable.QualifiedNameTest", import)
         assertEquals("com.anaplan.engineering.azuki.script.generation.runnable", packageName)
-        assertEquals("QualifiedIdentifierTest", identifier)
+        assertEquals("QualifiedNameTest", simpleName)
     }
 
     @Test
     fun canBeUsedToImportDirectly() {
-        val foo1 = QualifiedIdentifier.create("com.example", "foo")
-        val foo2 = QualifiedIdentifier.create("com.example", "foo")
-        val bar = QualifiedIdentifier.create("com.example", "bar")
+        val foo1 = QualifiedName.create("com.example", "foo")
+        val foo2 = QualifiedName.create("com.example", "foo")
+        val bar = QualifiedName.create("com.example", "bar")
 
         assertTrue(foo1 canBeUsedToImport foo2)
         assertFalse(foo1 canBeUsedToImport bar)
@@ -49,8 +49,8 @@ class QualifiedIdentifierTest {
     @Test
     fun canBeUsedToImportWildcard() {
         val pkg = Importable.wildcard("com.example")
-        val class1 = QualifiedIdentifier.create("com.example", "Foo")
-        val class2 = QualifiedIdentifier.create("com.example", "Bar") dot "Baz"
+        val class1 = QualifiedName.create("com.example", "Foo")
+        val class2 = QualifiedName.create("com.example", "Bar") dot "Baz"
 
         assertTrue(pkg canBeUsedToImport class1)
         assertTrue(pkg canBeUsedToImport class2)
@@ -65,8 +65,8 @@ class QualifiedIdentifierTest {
             Importable.wildcard("foo.bar"),
         )
         set += listOf(
-            QualifiedIdentifier.create("foo.bar", "baz"),
-            QualifiedIdentifier.create("foo.bar", "quux"),
+            QualifiedName.create("foo.bar", "baz"),
+            QualifiedName.create("foo.bar", "quux"),
             Importable.wildcard("foo"),
         )
         assertEquals(listOf("foo.*", "foo.bar.*"), set.imports)
@@ -75,8 +75,8 @@ class QualifiedIdentifierTest {
     @Test
     fun importSetAddCanRemoveSubsumedImports() {
         val set = ImportSet(
-            QualifiedIdentifier.create("foo.bar", "baz"),
-            QualifiedIdentifier.create("foo.bar", "quux"),
+            QualifiedName.create("foo.bar", "baz"),
+            QualifiedName.create("foo.bar", "quux"),
         )
         set += listOf(
             Importable.wildcard("foo.bar"),
@@ -88,7 +88,7 @@ class QualifiedIdentifierTest {
     @Test
     fun importSetInitialImportsCanWiden() {
         val widen = ImportSet(
-            QualifiedIdentifier.create("foo.bar", "baz"),
+            QualifiedName.create("foo.bar", "baz"),
             Importable.wildcard("foo.bar"),
         )
         assertEquals(listOf("foo.bar.*"), widen.imports)
@@ -98,7 +98,7 @@ class QualifiedIdentifierTest {
     fun importSetInitialImportsCanDiscard() {
         val discard = ImportSet(
             Importable.wildcard("foo.bar"),
-            QualifiedIdentifier.create("foo.bar", "baz"),
+            QualifiedName.create("foo.bar", "baz"),
         )
         assertEquals(listOf("foo.bar.*"), discard.imports)
     }

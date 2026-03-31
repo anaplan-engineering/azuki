@@ -12,7 +12,7 @@ import com.anaplan.engineering.azuki.core.system.QueryFactory
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 import com.anaplan.engineering.azuki.script.generation.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -24,7 +24,7 @@ class JUnitTestCaseWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFacto
     private val generateRunnable: RunnableScenarioClassGenerator,
     private val verifiedTestsDir: File,
     private val unverifiedTestsDir: File,
-    private val generatedTestName: QualifiedIdentifier,
+    private val generatedTestName: QualifiedName,
 ) {
 
     fun writeTestCase(result: MultiOracleScenarioRunner.Result<AF, CF, QF, AGF>): File? {

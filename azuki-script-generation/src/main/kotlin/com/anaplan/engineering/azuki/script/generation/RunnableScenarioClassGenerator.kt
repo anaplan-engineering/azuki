@@ -3,8 +3,8 @@ package com.anaplan.engineering.azuki.script.generation
 import com.anaplan.engineering.azuki.core.scenario.Since
 import com.anaplan.engineering.azuki.script.generation.runnable.ImportSet
 import com.anaplan.engineering.azuki.script.generation.runnable.Importable
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedIdentifier.Companion.toQualifiedIdentifier
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName
+import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName.Companion.asQualifiedName
 
 /**
  * Generates full Kotlin JUnit runnable scenario classes given a scenario script.
@@ -17,15 +17,15 @@ open class RunnableScenarioClassGenerator(
     /**
      * The name of the base `RunnableScenario` class for this adapter.
      */
-    val runnableScenarioClassName: QualifiedIdentifier,
+    val runnableScenarioClassName: QualifiedName,
 ) {
 
     fun generate(
-        classQualifiedIdentifier: QualifiedIdentifier,
+        classQualifiedName: QualifiedName,
         implementationVersions: Map<String, String> = emptyMap(),
         scenarioScript: ScenarioScript,
-    ) = RunnableScenarioClass(classQualifiedIdentifier, buildString {
-        classQualifiedIdentifier.packageName.let {
+    ) = RunnableScenarioClass(classQualifiedName, buildString {
+        classQualifiedName.packageName.let {
             if (it.isNotEmpty()) {
                 appendLine("package $it").appendLine()
             }
@@ -37,12 +37,12 @@ open class RunnableScenarioClassGenerator(
             Importable.wildcard("com.anaplan.engineering.azuki.core.system"),
             runnableScenarioClassName,
         )
-        if (implementationVersions.isNotEmpty()) importSet += Since::class.toQualifiedIdentifier()
+        if (implementationVersions.isNotEmpty()) importSet += Since::class.asQualifiedName()
         importSet += adapterDslImports
         importSet.imports.forEach { appendLine("import $it") }
         appendLine()
 
-        appendLine("class ${classQualifiedIdentifier.identifier} : ${runnableScenarioClassName.identifier}() {")
+        appendLine("class ${classQualifiedName.simpleName} : ${runnableScenarioClassName.simpleName}() {")
         appendLine()
         appendLine("    @GeneratedScenario")
         if (implementationVersions.isNotEmpty()) {
@@ -62,8 +62,8 @@ open class RunnableScenarioClassGenerator(
     })
 }
 
-data class RunnableScenarioClass(val classQualifiedIdentifier: QualifiedIdentifier, val definition: String) {
+data class RunnableScenarioClass(val classQualifiedName: QualifiedName, val definition: String) {
 
-    val className = classQualifiedIdentifier.identifier
-    val packageName = classQualifiedIdentifier.packageName
+    val className = classQualifiedName.simpleName
+    val packageName = classQualifiedName.packageName
 }
