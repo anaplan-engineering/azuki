@@ -169,7 +169,7 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
     /**
      * Shorthand for rendering each of the block's elements separately.
      */
-    fun renderedElements(ctx: RenderContext = RenderContext()) = elements.map { it.render(ctx) }
+    fun renderElements(ctx: RenderContext = RenderContext()) = elements.map { it.render(ctx) }
 
     /**
      * A script block with the same header and contents, but with `isEmpty` forced to false.
