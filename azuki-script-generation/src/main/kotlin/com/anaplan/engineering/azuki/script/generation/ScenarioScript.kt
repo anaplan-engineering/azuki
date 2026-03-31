@@ -121,17 +121,17 @@ data class OracleScenarioScript(
 /**
  * A component in a DSL script that is being generated.
  */
-interface ScriptElement {
+fun interface ScriptElement {
 
     /**
      * Is the element empty and therefore safe to skip?
      */
-    val isEmpty: Boolean
+    val isEmpty: Boolean get() = false
 
     /**
      * Renders the contents of the script element to a string with the given context.
      */
-    fun render(ctx: RenderContext = RenderContext()): String
+    fun render(ctx: RenderContext): String
 }
 
 /**
@@ -165,6 +165,11 @@ data class ScriptBlock(val header: String, val inner: ScriptElement) : ScriptEle
     override fun render(ctx: RenderContext) = with(ctx) {
         listOf("$indent$header {", inner.render(nextIndentLevel), "$indent}").joinToString("\n")
     }
+
+    /**
+     * Shorthand for rendering each of the block's elements separately.
+     */
+    fun renderElements(ctx: RenderContext = RenderContext()) = elements.map { it.render(ctx) }
 
     /**
      * A script block with the same header and contents, but with `isEmpty` forced to false.

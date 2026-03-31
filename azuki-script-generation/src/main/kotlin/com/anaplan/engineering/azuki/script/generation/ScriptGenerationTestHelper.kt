@@ -13,6 +13,7 @@ import com.anaplan.engineering.azuki.core.system.CheckFactory
 import com.anaplan.engineering.azuki.core.system.QueryFactory
 import org.junit.Assert
 import org.slf4j.LoggerFactory
+import kotlin.test.assertEquals
 import kotlin.test.expect
 
 @Deprecated("Use ScriptGenerationTesting")
@@ -56,8 +57,8 @@ open class ScriptGenerationTestHelper<S : BuildableScenario<AF>, AF : ActionFact
  * This class is flexible as to which kind of scenarios it takes as input.  Typically, you'll want to instantiate one
  * for each scenario type (verifiable, query, oracle) supported by your script generation adapter.
  */
-open class ScriptGenerationTesting<S : BuildableScenario<*>>(
-    val generator: (S) -> ScenarioScript,
+open class ScriptGenerationTesting<S : BuildableScenario<*>, SCRIPT : ScenarioScript>(
+    val generator: (S) -> SCRIPT,
     val parser: ScenarioParser<S> = SimpleScenarioParser(),
 ) {
 
@@ -73,7 +74,7 @@ open class ScriptGenerationTesting<S : BuildableScenario<*>>(
      *
      * Returns the regenerated scenario script, so that it can be used in further assertions.
      */
-    fun checkScenarioGeneration(scenario: S, initContext: ScenarioParsingContext.() -> Unit = {}): ScenarioScript {
+    fun checkScenarioGeneration(scenario: S, initContext: ScenarioParsingContext.() -> Unit = {}): SCRIPT {
         Log.debug("Generating script")
         val generatedScript = generator(scenario)
         val renderedGeneratedScript = generatedScript.render()
@@ -86,7 +87,7 @@ open class ScriptGenerationTesting<S : BuildableScenario<*>>(
         val renderedRegeneratedScript = regeneratedScript.render()
         Log.debug("Regenerated:\n{}", renderedRegeneratedScript)
 
-        expect(renderedRegeneratedScript) { renderedGeneratedScript }
+        assertEquals(renderedRegeneratedScript, renderedGeneratedScript)
 
         return regeneratedScript
     }
