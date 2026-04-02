@@ -1,10 +1,10 @@
 package com.anaplan.engineering.azuki.script.generation
 
 import com.anaplan.engineering.azuki.core.scenario.Since
-import com.anaplan.engineering.azuki.script.generation.runnable.ImportSet
-import com.anaplan.engineering.azuki.script.generation.runnable.Importable
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName.Companion.asQualifiedName
+import com.anaplan.engineering.azuki.reflect.metadata.Importable
+import com.anaplan.engineering.azuki.reflect.metadata.ImportSet
+import com.anaplan.engineering.azuki.reflect.metadata.asQualifiedName
+import com.anaplan.engineering.azuki.reflect.metadata.QualifiedName
 
 /**
  * Generates full Kotlin JUnit runnable scenario classes given a scenario script.

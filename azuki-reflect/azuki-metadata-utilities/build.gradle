@@ -1,0 +1,21 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'azuki.jar-publishing-conventions'
+}
+
+dependencies {
+    implementation libs.kotlin.test
+    implementation libs.slf4j.api
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Azuki Metadata Utilities'
+                description = 'Tools to assist with handling metadata about Azuki scenario classes and functions'
+            }
+        }
+    }
+}
+

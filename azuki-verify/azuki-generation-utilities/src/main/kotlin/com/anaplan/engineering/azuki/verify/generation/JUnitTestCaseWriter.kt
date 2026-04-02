@@ -12,7 +12,7 @@ import com.anaplan.engineering.azuki.core.system.QueryFactory
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 import com.anaplan.engineering.azuki.script.generation.RunnableScenarioClassGenerator
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName
+import com.anaplan.engineering.azuki.reflect.metadata.QualifiedName
 import org.slf4j.LoggerFactory
 import java.io.File
 

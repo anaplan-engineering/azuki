@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.core.runner.oracle.MultiOracleScenarioRunner
 import com.anaplan.engineering.azuki.runner.ExitCode
 import com.anaplan.engineering.azuki.runner.ScenarioScriptRunner
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName
+import com.anaplan.engineering.azuki.reflect.metadata.QualifiedName
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context

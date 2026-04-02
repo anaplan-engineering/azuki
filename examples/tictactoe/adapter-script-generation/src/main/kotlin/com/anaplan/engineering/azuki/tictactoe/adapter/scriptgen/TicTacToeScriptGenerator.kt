@@ -2,9 +2,9 @@ package com.anaplan.engineering.azuki.tictactoe.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.script.generation.*
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
-import com.anaplan.engineering.azuki.script.generation.runnable.ImportSet
-import com.anaplan.engineering.azuki.script.generation.runnable.Importable
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName.Companion.asQualifiedName
+import com.anaplan.engineering.azuki.reflect.metadata.ImportSet
+import com.anaplan.engineering.azuki.reflect.metadata.Importable
+import com.anaplan.engineering.azuki.reflect.metadata.asQualifiedName
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
 import com.anaplan.engineering.azuki.tictactoe.adapter.declaration.TicTacToeDeclarationState
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeRunnableScenario

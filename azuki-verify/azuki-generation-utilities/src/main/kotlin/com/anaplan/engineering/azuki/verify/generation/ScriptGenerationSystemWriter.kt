@@ -3,7 +3,7 @@ package com.anaplan.engineering.azuki.verify.generation
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 import com.anaplan.engineering.azuki.script.generation.*
-import com.anaplan.engineering.azuki.script.generation.runnable.QualifiedName
+import com.anaplan.engineering.azuki.reflect.metadata.QualifiedName
 import org.slf4j.LoggerFactory
 import java.io.File
 
