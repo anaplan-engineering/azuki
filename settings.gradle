@@ -48,8 +48,13 @@ include(
     'examples:right-of-way:eacs',
     'examples:right-of-way:implementation',
     'examples:right-of-way:implementation-V1',
+    "mondex:dsl",
+    "mondex:adapter-api",
+    "mondex:eacs",
 )
 includeBuild("build-conventions")
 includeBuild("vdm-animation")
 includeBuild("vdm-stub-generator")
 includeBuild("azuki-platform")
+
+include 'mondex:adapter-api'
