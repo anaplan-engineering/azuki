@@ -83,38 +83,41 @@ internal class TaskWrapper<
     }
 }
 
-private class LogAndCaptureOutputStream(
+internal class LogAndCaptureOutputStream(
     private val log: (String) -> Unit
 ) : OutputStream() {
-    private val capture = ByteArrayOutputStream()
-    private val buffer = mutableListOf<Byte>()
 
-    fun getCapturedText() = String(capture.toByteArray())
+    private val capture = ByteArrayOutputStream()
+    private val buffer = ByteArrayOutputStream()
+
+    fun getCapturedText(): String = capture.toString(Charsets.UTF_8)
 
     override fun write(b: Int) {
         if (b.toChar() == '\n') {
             logAndClearBuffer()
         } else {
-            buffer.add(b.toByte())
+            buffer.write(b)
         }
         capture.write(b)
     }
 
     override fun flush() {
+        buffer.flush()
         capture.flush()
     }
 
     override fun close() {
-        if (buffer.isNotEmpty()) {
+        if (buffer.size() != 0) {
             logAndClearBuffer()
         }
+        buffer.close()
         capture.close()
     }
 
     private fun logAndClearBuffer() {
         try {
-            log(String(buffer.toByteArray()))
-            buffer.clear()
+            log(buffer.toString(Charsets.UTF_8))
+            buffer.reset()
         } catch (e: Exception) {
             Log.warn("Unable to capture stdout for task: {}", e.message)
             Log.warn("Stacktrace:\n{}", e.stackTraceToString())

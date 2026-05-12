@@ -30,6 +30,7 @@ guava = { group = "com.google.guava", name = "guava", version = "28.2-jre" }
 jna = { group = "net.java.dev.jna", name = "jna", version = "5.8.0" }
 
 mockk = { group = "io.mockk", name = "mockk", version = "1.10.2" }
+lincheck = { group = "org.jetbrains.lincheck", name = "lincheck", version = "3.2" }
 
 semver4j = { group = "org.semver4j", name = "semver4j", version = "5.2.2" }
 
