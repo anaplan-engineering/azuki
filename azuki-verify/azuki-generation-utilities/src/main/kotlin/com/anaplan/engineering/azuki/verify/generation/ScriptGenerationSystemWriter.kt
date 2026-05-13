@@ -1,17 +1,8 @@
 package com.anaplan.engineering.azuki.verify.generation
 
-import com.anaplan.engineering.azuki.core.system.ActionFactory
-import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
-import com.anaplan.engineering.azuki.core.system.CheckFactory
-import com.anaplan.engineering.azuki.core.system.QueryFactory
-import com.anaplan.engineering.azuki.core.system.SystemDefinition
-import com.anaplan.engineering.azuki.core.system.SystemWriter
+import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
-import com.anaplan.engineering.azuki.script.generation.Formatter
-import com.anaplan.engineering.azuki.script.generation.RunnableScenarioClassGenerator
-import com.anaplan.engineering.azuki.script.generation.ScenarioScript
-import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
-import com.anaplan.engineering.azuki.script.generation.ScriptType
+import com.anaplan.engineering.azuki.script.generation.*
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -20,6 +11,12 @@ import java.io.File
  */
 abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> :
     SystemWriter<AF, CF, QF, AGF> {
+
+    /* The factories used for script generating must be provided */
+    abstract override val actionFactory: AF
+    abstract override val checkFactory: CF
+    abstract override val queryFactory: QF
+    abstract override val actionGeneratorFactory: AGF
 
     protected abstract val scriptGeneration: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>
     protected abstract val classGeneration: RunnableScenarioClassGenerator<*>
@@ -111,7 +108,6 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
     }
 
     companion object {
-
         private const val ScenarioSuffix = "scn"
         private const val TestSuffix = "kt"
         private val Log = LoggerFactory.getLogger(ScriptGenerationSystemWriter::class.java)

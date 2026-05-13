@@ -41,7 +41,6 @@ open class SimpleScenarioParser<out S : BuildableScenario<*>> : ScenarioParser<S
     ): S {
         val script = scenarioString.toScriptSource()
         val scenarioContext = ScenarioParsingContext().apply(defaultImports).apply(initContext)
-
         // TODO: do we need this lock for the Kotlin host?
         val evalResult = try {
             lock.lock()

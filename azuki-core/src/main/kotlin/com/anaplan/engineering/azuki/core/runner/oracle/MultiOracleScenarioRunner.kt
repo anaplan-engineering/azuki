@@ -119,11 +119,11 @@ class MultiOracleScenarioRunner<
             Log.debug("Declarations contain unsupported action")
             false
         } else {
-            val dclSystemWriter = systemWriter ?: DefaultImplementationSystemWriter(implementation)
+            val dclSystemWriter = systemWriter ?: DefaultImplementationSystemWriter()
             dclSystemWriter.write(SystemDefinition(
-                declarations = scenario.declarations(dclSystemWriter.actionFactory),
+                declarations = scenario.declarations(dclSystemWriter.actionFactory ?: systemFactory.actionFactory),
                 commands = emptyList(),
-                checks = listOf(dclSystemWriter.checkFactory.systemValid()),
+                checks = listOf((dclSystemWriter.checkFactory ?: systemFactory.checkFactory).systemValid()),
             ), "declarationValidation")
             val system = systemFactory.create(SystemDefinition(
                 declarations = declarations,
@@ -157,11 +157,11 @@ class MultiOracleScenarioRunner<
         } else if (commands.any { it is UnsupportedAction }) {
             false
         } else {
-            val cmdSystemWriter = systemWriter ?: DefaultImplementationSystemWriter(implementation)
+            val cmdSystemWriter = systemWriter ?: DefaultImplementationSystemWriter()
             cmdSystemWriter.write(SystemDefinition(
-                declarations = scenario.declarations(cmdSystemWriter.actionFactory),
-                commands = scenario.commands(cmdSystemWriter.actionFactory),
-                checks = listOf(cmdSystemWriter.checkFactory.systemValid()),
+                declarations = scenario.declarations(cmdSystemWriter.actionFactory ?: systemFactory.actionFactory),
+                commands = scenario.commands(cmdSystemWriter.actionFactory ?: systemFactory.actionFactory),
+                checks = listOf((cmdSystemWriter.checkFactory ?: systemFactory.checkFactory).systemValid()),
             ), "commandValidation")
             val system = systemFactory.create(SystemDefinition(
                 declarations = declarations,
@@ -184,7 +184,7 @@ class MultiOracleScenarioRunner<
         }
     }
 
-    private val systemWriter = SystemWriter.locateScenarioWriter<AF, CF, QF, AGF>()
+    private val systemWriter = SystemWriter.locateSystemWriter<AF, CF, QF, AGF>()
 
     private fun generateScenario(resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>): OracleScenario<AF, QF, AGF> {
         fun getActionGeneratingSystemFactory(implementation: Implementation<AF, CF, QF, AGF, *>) =
@@ -199,7 +199,7 @@ class MultiOracleScenarioRunner<
                 scenario::commands,
                 scenario::givenActionGenerations,
                 scenario::whenActionGenerations,
-                systemWriter ?: DefaultImplementationSystemWriter(implementation)
+                systemWriter ?: DefaultImplementationSystemWriter()
             )
             try {
                 while (systemCursor.hasNext()) {
@@ -230,11 +230,12 @@ class MultiOracleScenarioRunner<
                 if (queries.isEmpty()) {
                     Log.warn("No queries found!!")
                 }
-                val querySystemWriter = systemWriter ?: DefaultImplementationSystemWriter(implementation)
-                val queriesToWrite = scenario.queries(querySystemWriter.queryFactory)
+                val querySystemWriter = systemWriter ?: DefaultImplementationSystemWriter()
+                val queriesToWrite = scenario.queries(querySystemWriter.queryFactory ?: systemFactory.queryFactory)
                 querySystemWriter.write(SystemDefinition(
-                    declarations = scenario.declarations(querySystemWriter.actionFactory),
-                    commands = scenario.commands(querySystemWriter.actionFactory),
+                    declarations = scenario.declarations(querySystemWriter.actionFactory
+                        ?: systemFactory.actionFactory),
+                    commands = scenario.commands(querySystemWriter.actionFactory ?: systemFactory.actionFactory),
                     queries = queriesToWrite.queries.filter { it !is UnsupportedQuery<*> },
                     forAllQueries = queriesToWrite.forAllQueries,
                 ), "query")
@@ -265,15 +266,17 @@ class MultiOracleScenarioRunner<
                 ?: throw IllegalStateException("Trying to verify, but system factory does not create verifiable systems")
         val declarations = scenario.declarations(systemFactory.actionFactory)
         val commands = scenario.commands(systemFactory.actionFactory)
-        val checkSystemWriter = systemWriter ?: DefaultImplementationSystemWriter(implementation)
+        val checkSystemWriter = systemWriter ?: DefaultImplementationSystemWriter()
         checkSystemWriter.write(SystemDefinition(
-            declarations = scenario.declarations(checkSystemWriter.actionFactory),
-            commands = scenario.commands(checkSystemWriter.actionFactory),
+            declarations = scenario.declarations(checkSystemWriter.actionFactory ?: systemFactory.actionFactory),
+            commands = scenario.commands(checkSystemWriter.actionFactory ?: systemFactory.actionFactory),
             checks = answers.flatMap {
                 if (it is ValidatableAnswer<*, *>) {
-                    (it as ValidatableAnswer<*, CF>).createValidationChecks(checkSystemWriter.checkFactory)
+                    (it as ValidatableAnswer<*, CF>).createValidationChecks(
+                        checkSystemWriter.checkFactory ?: systemFactory.checkFactory
+                    )
                 } else {
-                    it.createChecks(checkSystemWriter.checkFactory)
+                    it.createChecks(checkSystemWriter.checkFactory ?: systemFactory.checkFactory)
                 }
             },
         ), "check")
