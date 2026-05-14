@@ -76,6 +76,9 @@ class ScenarioScriptRunner<
                 is UnsupportedScenarioTypeException -> exit("Currently unsupported scenario type: ${error.type}",
                     ExitCode.UnsupportedScenarioType)
 
+                is UnknownImplementationInstanceError -> exit("No implementation instance named ${error.instanceName} found",
+                    ExitCode.UnknownImplementation)
+
                 else -> exit("Unknown error:\n${error.message}", ExitCode.UnknownError)
             }
         }
@@ -112,31 +115,38 @@ class ScenarioScriptRunner<
 
     private fun runOracleScenario(scenario: OracleScenario<AF, QF, AGF>) {
         val testInstance = getImplementationInstance(testImplementationInstance)
-        val oracleInstances = oracleImplementationInstances.map { getImplementationInstance(it) }
-        val result = MultiOracleScenarioRunner(
-            testInstance,
-            oracleInstances,
-            scenario,
-            "RunAt${System.currentTimeMillis()}").run()
-        resultProcessor.processOracleScenario(result)
+        val oracleInstances = oracleImplementationInstances.mapNotNull { getImplementationInstance(it) }
+        if (testInstance != null && oracleInstances.isNotEmpty()) {
+            val result = MultiOracleScenarioRunner(
+                testInstance,
+                oracleInstances,
+                scenario,
+                "RunAt${System.currentTimeMillis()}"
+            ).run()
+            resultProcessor.processOracleScenario(result)
+        }
     }
 
-    private fun getImplementationInstance(instanceName: String): ImplementationInstance<AF, CF, QF, AGF> {
+    private fun getImplementationInstance(instanceName: String): ImplementationInstance<AF, CF, QF, AGF>? {
         val implementationInstances = ImplementationInstance.getImplementationInstances<AF, CF, QF, AGF>()
-        return implementationInstances.find { it.instanceName == instanceName }
-            ?: exit("No implementation named $instanceName found", ExitCode.UnknownImplementation)
+        val implementationInstance = implementationInstances.find { it.instanceName == instanceName }
+        if (implementationInstance == null) {
+            resultProcessor.handleError(UnknownImplementationInstanceError(instanceName))
+        }
+        return implementationInstance
     }
 
 
     private fun runVerifiableScenario(scenario: VerifiableScenario<AF, CF>) {
         val implementationInstance = getImplementationInstance(testImplementationInstance)
-
-        val result = VerifiableScenarioRunner(
-            implementationInstance,
-            getPersistenceVerificationInstance(),
-            scenario,
-            "RunAt${System.currentTimeMillis()}").run()
-        resultProcessor.processVerifiableScenario(result)
+        if (implementationInstance != null) {
+            val result = VerifiableScenarioRunner(
+                implementationInstance,
+                getPersistenceVerificationInstance(),
+                scenario,
+                "RunAt${System.currentTimeMillis()}").run()
+            resultProcessor.processVerifiableScenario(result)
+        }
     }
 
     private fun getPersistenceVerificationInstance() =
@@ -158,6 +168,7 @@ class ScenarioScriptRunner<
 
     class InvalidScenarioException(e: RuntimeException) : RuntimeException(e)
     class UnsupportedScenarioTypeException(val type: KClass<*>) : RuntimeException()
+    class UnknownImplementationInstanceError(val instanceName: String) : RuntimeException()
 }
 
 // we don't have any means to infer generics from the environment

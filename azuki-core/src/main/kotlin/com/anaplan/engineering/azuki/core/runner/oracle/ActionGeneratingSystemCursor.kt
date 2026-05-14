@@ -1,20 +1,6 @@
 package com.anaplan.engineering.azuki.core.runner.oracle
 
-import com.anaplan.engineering.azuki.core.system.Action
-import com.anaplan.engineering.azuki.core.system.ActionFactory
-import com.anaplan.engineering.azuki.core.system.ActionGeneratingSystem
-import com.anaplan.engineering.azuki.core.system.ActionGeneratingSystemFactory
-import com.anaplan.engineering.azuki.core.system.ActionGenerator
-import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
-import com.anaplan.engineering.azuki.core.system.CheckFactory
-import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedActionException
-import com.anaplan.engineering.azuki.core.system.MutableSystem
-import com.anaplan.engineering.azuki.core.system.QueryFactory
-import com.anaplan.engineering.azuki.core.system.System
-import com.anaplan.engineering.azuki.core.system.SystemWriter
-import com.anaplan.engineering.azuki.core.system.SystemDefinition
-import com.anaplan.engineering.azuki.core.system.SystemIteration
-import com.anaplan.engineering.azuki.core.system.UnsupportedActionGenerator
+import com.anaplan.engineering.azuki.core.system.*
 import org.slf4j.LoggerFactory
 
 
@@ -55,8 +41,13 @@ internal class ActionGeneratingSystemCursor<
         testWhenActionGenerations = scenarioWhenActionGenerations(systemFactory.actionGeneratorFactory).toMutableList()
 
         writerGivenActionGenerations =
-            scenarioGivenActionGenerations(systemWriter.actionGeneratorFactory).toMutableList()
-        writerWhenActionGenerations = scenarioWhenActionGenerations(systemWriter.actionGeneratorFactory).toMutableList()
+            scenarioGivenActionGenerations(
+                systemWriter.actionGeneratorFactory ?: systemFactory.actionGeneratorFactory
+            ).toMutableList()
+        writerWhenActionGenerations =
+            scenarioWhenActionGenerations(
+                systemWriter.actionGeneratorFactory ?: systemFactory.actionGeneratorFactory
+            ).toMutableList()
 
         if (testGivenActionGenerations.size != writerGivenActionGenerations.size) {
             throw ActionGenerationException("Unexpected mismatch in given action generations")
@@ -99,7 +90,7 @@ internal class ActionGeneratingSystemCursor<
     }
 
     private fun writeGivenGeneration(actionGeneration: List<ActionGenerator>) {
-        val actionFactory = systemWriter.actionFactory
+        val actionFactory = systemWriter.actionFactory ?: systemFactory.actionFactory
         val systemDefinition = SystemDefinition(
             declarations = scenarioDeclarations(actionFactory) + generatedDeclarations.map { it(actionFactory) },
             actionGenerators = actionGeneration,
@@ -108,7 +99,7 @@ internal class ActionGeneratingSystemCursor<
     }
 
     private fun writeWhenGeneration(actionGeneration: List<ActionGenerator>) {
-        val actionFactory = systemWriter.actionFactory
+        val actionFactory = systemWriter.actionFactory ?: systemFactory.actionFactory
         val systemDefinition = SystemDefinition(
             declarations = scenarioDeclarations(actionFactory) + generatedDeclarations.map { it(actionFactory) },
             commands = scenarioCommands(actionFactory) + generatedCommands.map { it(actionFactory) },

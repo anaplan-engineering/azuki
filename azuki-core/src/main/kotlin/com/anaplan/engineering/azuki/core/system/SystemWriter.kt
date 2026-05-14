@@ -2,7 +2,6 @@ package com.anaplan.engineering.azuki.core.system
 
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.nio.file.Files
 import java.util.*
 
 interface SystemWriter<
@@ -12,25 +11,30 @@ interface SystemWriter<
     AGF : ActionGeneratorFactory
     > {
 
-    val actionFactory: AF
-    val checkFactory: CF
-    val queryFactory: QF
-    val actionGeneratorFactory: AGF
+    /*
+     * If non-null, the below factories will be used to create the system definition provided to the write function.
+     * If null, the execution factories will be used.
+     */
+    val actionFactory: AF? get() = null
+    val checkFactory: CF? get() = null
+    val queryFactory: QF? get() = null
+    val actionGeneratorFactory: AGF? get() = null
 
     fun write(systemDefinition: SystemDefinition, context: String? = null)
 
     companion object {
-        fun <AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> locateScenarioWriter(): SystemWriter<AF, CF, QF, AGF>? {
+        fun <AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> locateSystemWriter(): SystemWriter<AF, CF, QF, AGF>? {
             val loader = ServiceLoader.load(SystemWriter::class.java)
-            val scenarioWriters =
+            val systemWriters =
                 loader.iterator().asSequence().filterIsInstance<SystemWriter<AF, CF, QF, AGF>>().toList()
-            return if (scenarioWriters.isEmpty()) {
+            Log.debug("Located system writers: ${systemWriters.joinToString(", ") { it::class.simpleName!! }}")
+            return if (systemWriters.isEmpty()) {
                 null
             } else {
-                if (scenarioWriters.size > 1) {
-                    Log.warn("More than one scenario writer on class path choosing ${scenarioWriters.first().javaClass} arbitrarily")
+                if (systemWriters.size > 1) {
+                    Log.warn("More than one scenario writer on class path choosing ${systemWriters.first().javaClass} arbitrarily")
                 }
-                scenarioWriters.first()
+                systemWriters.first()
             }
         }
 
@@ -44,14 +48,7 @@ class DefaultImplementationSystemWriter<
     CF : CheckFactory,
     QF : QueryFactory,
     AGF : ActionGeneratorFactory
-    >(private val implementation: Implementation<AF, CF, QF, AGF, *>) : SystemWriter<AF, CF, QF, AGF> {
-
-    private val systemFactory = implementation.createSystemFactory()
-
-    override val actionFactory = systemFactory.actionFactory
-    override val checkFactory by lazy { (systemFactory as? VerifiableSystemFactory)!!.checkFactory }
-    override val queryFactory by lazy { (systemFactory as? QueryableSystemFactory)!!.queryFactory }
-    override val actionGeneratorFactory by lazy { (systemFactory as? ActionGeneratingSystemFactory)!!.actionGeneratorFactory }
+    > : SystemWriter<AF, CF, QF, AGF> {
 
     override fun write(
         systemDefinition: SystemDefinition,
@@ -85,4 +82,13 @@ class DefaultImplementationSystemWriter<
         private val Log = LoggerFactory.getLogger(DefaultImplementationSystemWriter::class.java)
     }
 
+}
+
+class NoSystemWriter<AF : ActionFactory, CF : CheckFactory, QF : QueryFactory, AGF : ActionGeneratorFactory> :
+    SystemWriter<AF, CF, QF, AGF>
+{
+
+    override fun write(systemDefinition: SystemDefinition, context: String?) {
+        // do nothing
+    }
 }
