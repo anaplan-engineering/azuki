@@ -10,6 +10,8 @@ import com.anaplan.engineering.azuki.core.system.NoActionGeneratorFactory
 import com.anaplan.engineering.azuki.core.system.NoQueryFactory
 import com.anaplan.engineering.azuki.core.system.NoSystemDefaults
 import com.anaplan.engineering.azuki.core.system.SystemFactory
+import org.jetbrains.lincheck.Lincheck
+import java.io.ByteArrayOutputStream
 import kotlin.concurrent.thread
 import kotlin.test.*
 
@@ -37,7 +39,23 @@ class TaskWrapperTest {
         assertEquals("hello, world\n".repeat(10), result.log.error)
     }
 
-    // TODO: add concurrency tests here
+    @Test
+    fun logAndCaptureOutputStreamThreadSafety() = Lincheck.runConcurrentTest {
+        val out = ByteArrayOutputStream()
+
+        val os = LogAndCaptureOutputStream { out.write(it.toByteArray()) }
+
+        val w = thread { os.write("hello,\nworld".toByteArray()) }
+        val c1 = thread { os.close() }
+        val c2 = thread { os.close() }
+
+        w.join()
+        c1.join()
+        c2.join()
+
+        assertTrue("hello,world".startsWith(out.toString()));
+        assertTrue("hello,\nworld".startsWith(os.getCapturedText()));
+    }
 
     object DummyScenario : BuildableScenario<ActionFactory> {
         override fun declarations(actionFactory: ActionFactory) = listOf<Action>()
