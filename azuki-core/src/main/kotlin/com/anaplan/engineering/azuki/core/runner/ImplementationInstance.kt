@@ -106,11 +106,15 @@ interface ImplementationInstance<
             private fun List<ImplementationInstance<AF, CF, QF, AGF>>.filterImplementations(): List<ImplementationInstance<AF, CF, QF, AGF>> {
                 val includedImplementations = getListProperty(includedImplementationsPropertyName)
                 val excludedImplementations = getListProperty(excludedImplementationsPropertyName)
-                return this.filter {
+                val filteredImplementations = this.filter {
                     includedImplementations == null || it.implementationName in includedImplementations
                 }.filter {
                     excludedImplementations == null || it.implementationName !in excludedImplementations
                 }
+                if (filteredImplementations.isEmpty() && this.isNotEmpty() && includedImplementations?.isNotEmpty() == true) {
+                    Log.warn("All implementations have been filtered out, available=$this included=$includedImplementations excluded=$excludedImplementations")
+                }
+                return filteredImplementations
             }
 
             private fun createInstancesFromClasspath() =
