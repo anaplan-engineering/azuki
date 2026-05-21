@@ -1,6 +1,4 @@
-- BEH1: (Ab) Able to transfer a chosen amount of value from one purse to another
-- BEH2: (C) Purse (abort)
-- BEH3: (C) Purse (start operations)
-- BEH4: (C) Purse (transfer operations: req, val, ack)
-- BEH5: (C) Purse (read log)
-- BEH6: (C) Purse (clear log)
+The behaviours with the index AB are expressed in terms of the abstract model A. The behaviour with the index CON is
+expressed in terms of the concrete model C.
+
+- BEHAB1 No value may be created in the system: the sum of all the purses balances does not increase
