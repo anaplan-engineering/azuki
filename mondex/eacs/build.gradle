@@ -1,0 +1,8 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":mondex:dsl")
+    testRuntimeOnly libs.slf4j.impl
+}

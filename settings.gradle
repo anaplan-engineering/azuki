@@ -37,6 +37,9 @@ include(
     "graphs:tests",
     "graphs:script-runner",
     "graphs:verification-runner",
+    "mondex:dsl",
+    "mondex:adapter-api",
+    "mondex:eacs",
 )
 includeBuild("build-conventions")
 includeBuild("vdm-animation")
