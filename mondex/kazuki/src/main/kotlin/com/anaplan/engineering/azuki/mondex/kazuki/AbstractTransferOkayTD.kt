@@ -15,6 +15,12 @@ class AbstractTransferOkayTD(world: Delta<World>, aQ: AIN, aE: AOUT, transferDet
     @Invariant
     fun pursesDistinct() = transferDetails.from != transferDetails.to
 
+    @Invariant
+    fun authPurseChanges() = world.dash.authPurses[transferDetails.from].balance == world.old.authPurses[transferDetails.from].balance - transferDetails.value
+        && world.dash.authPurses[transferDetails.to].balance == world.old.authPurses[transferDetails.to].balance + transferDetails.value
+        && world.dash.authPurses[transferDetails.from].lost == world.old.authPurses[transferDetails.from].lost
+        && world.dash.authPurses[transferDetails.to].lost == world.old.authPurses[transferDetails.to].lost
+
 
 }
 
