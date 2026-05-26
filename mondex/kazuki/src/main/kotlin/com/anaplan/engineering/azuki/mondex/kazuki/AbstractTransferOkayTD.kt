@@ -2,8 +2,8 @@ package com.anaplan.engineering.azuki.mondex.kazuki
 
 import com.anaplan.engineering.kazuki.core.*
 
-class AbstractTransferOkayTD(world: Delta<World>, aQ: AIN, aE: AOUT, transferDetails: TransferDetails):
-    AbstractWorldSecureOperation(world, aQ, aE, transferDetails) {
+@Module
+interface AbstractTransferOkayTD: AbstractWorldSecureOperation {
 
     @Invariant
     fun pursesAuthentic() = transferDetails.from in world.old.authPurses.dom
