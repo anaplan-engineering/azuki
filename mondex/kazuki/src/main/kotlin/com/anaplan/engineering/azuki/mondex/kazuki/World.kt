@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.mondex.kazuki
 
+import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.mk_Purse
 import com.anaplan.engineering.kazuki.core.*
 
 typealias Name = String
