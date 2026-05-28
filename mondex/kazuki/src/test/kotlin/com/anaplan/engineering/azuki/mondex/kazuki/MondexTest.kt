@@ -1,12 +1,11 @@
 package com.anaplan.engineering.azuki.mondex.kazuki
 
-import com.anaplan.engineering.azuki.mondex.kazuki.AbstractTransferOkayTD_Module.mk_AbstractTransferOkayTD
-import com.anaplan.engineering.azuki.mondex.kazuki.Delta_Module.mk_Delta
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.mk_Purse
 import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails_Module.mk_TransferDetails
 import com.anaplan.engineering.azuki.mondex.kazuki.World_Module.mk_World
 import com.anaplan.engineering.kazuki.core.*
 import org.junit.Test
+import kotlin.test.*
 
 class MondexTest {
 
@@ -15,17 +14,22 @@ class MondexTest {
         val purse1 = mk_Purse(3UL,0UL)
         val purse2 = mk_Purse(1UL,0UL)
 
-        val purse1Dash = mk_Purse(2UL, 0UL)
-        val purse2Dash = mk_Purse(2UL, 0UL)
+        val world = mk_World(mk_Mapping(mk_("person1", purse1), mk_("person2", purse2)))
 
-        val transferDetail = mk_TransferDetails("Erin", "Erin2", 1UL)
+        val transferDetails = mk_TransferDetails("person1", "person2", 3UL)
 
-        val authPurseMapping = mk_Mapping(mk_("Erin", purse1), mk_("Erin2", purse2))
-        val authPurseMappingDash = mk_Mapping(mk_("Erin", purse1Dash), mk_("Erin2", purse2Dash))
+        val world2 = world.functions.abstractTransferOkayTD(transfer(transferDetails), transferDetails)
 
-        val deltaWorld: Delta<World> = mk_Delta(mk_World(authPurseMapping), mk_World(authPurseMappingDash))
+        assertEquals(world2.authPurses["person1"].balance, 0UL)
+        assertEquals(world2.authPurses["person2"].balance, 4UL)
 
-        val absOp = mk_AbstractTransferOkayTD(deltaWorld, transfer(transferDetail), aNullOut, transferDetail)
-    }
+        val world3 = world.functions.abstractTransferLostTD(transfer(transferDetails), transferDetails)
 
+        assertEquals(world3.authPurses["person1"].balance, 0UL)
+        assertEquals(world3.authPurses["person1"].lost, 3UL)
+
+        val world4 = world.functions.abstractIgnore(transfer(transferDetails))
+
+        assertEquals(world, world4)
+        }
 }

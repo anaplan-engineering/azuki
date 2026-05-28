@@ -67,7 +67,7 @@ class WorldFunctions(world: World) {
         },
         post = { a, transferDetails, result: World ->
             abstractWorldSecureOperation.post(a, transferDetails, result)
-                && result.authPurses[transferDetails.from].balance == world.authPurses[transferDetails.from].balance - transferDetails.value + transferDetails.value
+                && result.authPurses[transferDetails.from].balance == world.authPurses[transferDetails.from].balance - transferDetails.value
                 && result.authPurses[transferDetails.from].lost == world.authPurses[transferDetails.from].lost
                 && result.authPurses[transferDetails.to].balance == world.authPurses[transferDetails.to].balance + transferDetails.value
                 && result.authPurses[transferDetails.to].lost == world.authPurses[transferDetails.to].lost
@@ -78,7 +78,7 @@ class WorldFunctions(world: World) {
         command = { a: AIN, transferDetails: TransferDetails ->
             world.transform(
                 authPurses = world.authPurses * mk_(
-                    transferDetails.from, world.authPurses[transferDetails.from].transform(lost = world.authPurses[transferDetails.from].lost + transferDetails.value)
+                    transferDetails.from, world.authPurses[transferDetails.from].transform(balance = world.authPurses[transferDetails.from].balance - transferDetails.value, lost = world.authPurses[transferDetails.from].lost + transferDetails.value)
                 )
             )
         },
@@ -90,8 +90,8 @@ class WorldFunctions(world: World) {
         },
         post = { a, transferDetails, result: World ->
             abstractWorldSecureOperation.post(a, transferDetails, result)
-                && result.authPurses[transferDetails.from].balance == world.authPurses[transferDetails.from].balance
-                && result.authPurses[transferDetails.to].lost == world.authPurses[transferDetails.to].lost + transferDetails.value
+                && result.authPurses[transferDetails.from].balance == world.authPurses[transferDetails.from].balance - transferDetails.value
+                && result.authPurses[transferDetails.from].lost == world.authPurses[transferDetails.from].lost + transferDetails.value
                 && result.authPurses[transferDetails.to] == world.authPurses[transferDetails.to]
         }
     )
