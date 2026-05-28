@@ -87,6 +87,7 @@ class WorldFunctions(world: World) {
                 && transferDetails.from in world.authPurses.dom
                 && transferDetails.to in world.authPurses.dom
                 && world.authPurses[transferDetails.from].balance >= transferDetails.value
+                && transferDetails.from != transferDetails.to
         },
         post = { a, transferDetails, result: World ->
             abstractWorldSecureOperation.post(a, transferDetails, result)
