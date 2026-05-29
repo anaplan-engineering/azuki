@@ -31,6 +31,9 @@ class WorldFunctions(world: World) {
         command = { a: AIN ->
             world
         },
+        pre = { a ->
+            abstractOperation.pre(a)
+        },
         post = { _, result: World ->
             result.authPurses == world.authPurses
         }
@@ -41,7 +44,8 @@ class WorldFunctions(world: World) {
             world
         },
         pre = { a, transferDetails ->
-            a is transfer
+            abstractOperation.pre(a)
+                && a is transfer
                 && a.transferDetails == transferDetails
         },
         post = { _, transferDetails, result ->
