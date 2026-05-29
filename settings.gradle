@@ -37,6 +37,10 @@ include(
     "graphs:tests",
     "graphs:script-runner",
     "graphs:verification-runner",
+    'right-of-way',
+    'right-of-way:adapter-api',
+    'right-of-way:dsl',
+    'right-of-way:kauzki',
 )
 includeBuild("build-conventions")
 includeBuild("vdm-animation")
