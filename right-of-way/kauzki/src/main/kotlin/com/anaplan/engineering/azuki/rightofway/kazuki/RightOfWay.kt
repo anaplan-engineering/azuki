@@ -1,12 +1,13 @@
 package com.anaplan.engineering.azuki.rightofway.kazuki
 
 //import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay_Module.mk_Game
-//import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay_Module.mk_Position
+//import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay_Module.mk_RVector
+import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay_Module.mk_RVector
 import com.anaplan.engineering.kazuki.core.*
 
 @Module
 object RightOfWay {
-    const val test = 1UL
+    const val DEFAULT_SQRT_ERROR: PNZReal = 0.000001;
 
     @PrimitiveInvariant(name = "PReal", base = Double::class)
     fun pReal(r: Double) = r >= 0.0
@@ -27,11 +28,19 @@ object RightOfWay {
     @PrimitiveInvariant(name = "Angle", base = Double::class)
     fun planeAngle(r: Double) = pReal(r) && r < 360.0
 
+    interface RVector {
+        val x: Double
+        val y: Double
+    }
+
     // plane position
     interface Position {
         val x: PReal
         val y: PReal
+        val other: integer
     }
+
+    //typealias Position = RVector + PReal(x) + PReal(y)
 
     // plane velocity
     interface Velocity {
@@ -40,10 +49,63 @@ object RightOfWay {
         val dummy: bool // to disambiguate on the Velocity_Rec x Position_Rec :-(
     }
 
+//    interface Velocity : Position {
+//        val dummy: Boolean // must have fields error
+//        @Invariant
+//        fun isValid() = x > 0.0 && y > 0.0
+//    }
+
     interface Aircraft {
         val position: Position
         val velocity: Velocity
     }
+
+    val sumVectors = function(
+        command = { rv1: RVector, rv2: RVector ->
+            mk_RVector(rv1.x + rv2.x, rv1.y + rv2.y)
+        }
+    )
+
+    val minusVector = function(
+        command = { rv: RVector ->
+            mk_RVector(-rv.x, -rv.y)
+        }
+    )
+
+    val subtractVectors = function(
+        command = { rv1: RVector, rv2: RVector ->
+            sumVectors(rv1, minusVector(rv2))
+        }
+    )
+
+    val rotate90 = function(
+        command = { rv: RVector ->
+            mk_RVector(rv.y, -rv.x)
+        }
+    )
+
+    val dot_product = function(
+        command = { rv1: RVector, rv2: RVector ->
+            rv1.x * rv2.x + rv1.y * rv2.y // could be zero? Result is Double.
+        }
+    )
+
+    val scalar_product = function(
+        command = { x: Double, rv: RVector ->
+            mk_RVector(x * rv.x, x * rv.y )
+        }
+    )
+
+//    //TODO when to use a function like this or an @Invariant?
+//    val Q1 = function(
+//        command = { a: Aircraft, p: Position ->
+//            val psub = subtractVectors(p, a.position)
+//            dot_product(psub, rotate90(a.velocity)) > 0.0
+//                &&
+//                dot_product(psub, a.velocity) >= 0.0
+//        }
+//    )
+
 }
 
 //
