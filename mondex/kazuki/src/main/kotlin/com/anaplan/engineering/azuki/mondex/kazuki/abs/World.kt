@@ -18,9 +18,6 @@ object aNullOut: AOUT
 interface World {
     val authPurses: Mapping<Name, Purse>
 
-    // using modules here with function proviers but not inheritance, how are the invariants nad pres being checked?
-    // manually.
-    // if through inheritance and @Invariant, then the invariants are checked automatically.? [for AP]
     @FunctionProvider(WorldFunctions::class)
     val functions: WorldFunctions
 }
@@ -63,7 +60,6 @@ class WorldFunctions(world: World) {
             )
         },
         pre = { a, transferDetails ->
-            abstractOperation.pre(a) &&
             abstractWorldSecureOperation.pre(a, transferDetails)
                 && transferDetails.from in world.authPurses.dom
                 && transferDetails.to in world.authPurses.dom
