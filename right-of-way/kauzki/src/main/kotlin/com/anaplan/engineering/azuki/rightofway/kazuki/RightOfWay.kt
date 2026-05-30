@@ -5,6 +5,7 @@ import com.anaplan.engineering.azuki.rightofway.kazuki.RVector_Module.mk_RVector
 import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay.orientation
 import com.anaplan.engineering.azuki.rightofway.kazuki.Velocity_Module.as_Velocity
 import com.anaplan.engineering.kazuki.core.*
+import kotlin.math.abs
 import kotlin.math.atan
 import kotlin.math.sqrt
 
@@ -210,12 +211,12 @@ object RightOfWay {
 
     // Aircrafrt track (i.e. angle between north and aircraft directon)
     val track = function(
-        command = { a: Aircraft, p: Position ->
+        command = { a: Aircraft ->
             // a.velocity.y is NZReal
             //TODO: how to "cast" the result type to impose invariant?
             atan(a.velocity.x / a.velocity.y) as Angle
         },
-        post = { _, _, r -> isAngle(r) }
+        post = { _, r -> isAngle(r) }
     )
 
     // Time to Closest Point of Approach
@@ -366,6 +367,83 @@ object RightOfWay {
                 Q4(a1, a2.position) && Q4(a2, a1.position)
         }
     )
+
+    val converging = function(
+        command = { a1: Aircraft, a2: Aircraft ->
+            val inner = function(
+                command = { delta_c: PReal ->
+                    QC(a1, a2) &&
+                        horizontalMissDistance(a1, a2) < delta_c
+                }
+            )
+            inner
+        }
+    )
+
+    val conv_not_headon = function(
+        command = { a1: Aircraft, a2: Aircraft ->
+            val inner = function(
+                command = { delta_c: PReal, delta_h: Angle ->
+                    val track_delta = abs(track(a1) - track(a2))
+                    converging(a1, a2)(delta_c) &&
+                        (180 + delta_h < track_delta)
+                        ||
+                        (track_delta < 180 - delta_h)
+                }
+            )
+            inner
+        }
+    )
+
+    val headon = function(
+        command = { a1: Aircraft, a2: Aircraft ->
+            val inner = function(
+                command = { delta_c: PReal, delta_h: Angle ->
+                    val track_delta = abs(track(a1) - track(a2))
+                    converging(a1, a2)(delta_c) &&
+                        (180 + delta_h <= track_delta)
+                        ||
+                        (track_delta < 180 + delta_h)
+                }
+            )
+            inner
+        }
+    )
+
+    val overtaking = function(
+        command = { a1: Aircraft, a2: Aircraft ->
+            val inner = function(
+                command = { delta_o: PReal ->
+                    Q1(a1, a2.position) || Q2(a1, a2.position)
+                        &&
+                    Q3(a2, a1.position) || Q4(a2, a1.position)
+                        &&
+                        horizontalMissDistance(a1, a2) < delta_o
+                }
+            )
+            inner
+        }
+    )
+
+    val right_of_way = function(
+        command = { a1: Aircraft, a2: Aircraft ->
+            val inner = function(
+                command = { delta_o: PReal, delta_c: PReal, delta_h: PReal ->
+                    overtaking(a1, a2)(delta_o)
+                        ||
+                       ( conv_not_headon(a1, a2)(delta_c, delta_h)
+                        &&
+                        to_the_right_of(a1, a2.position)
+                        &&
+                        zero_crossed(a1, a2))
+                }
+            )
+            inner
+        }
+    )
+
+    /*
+     */
 }
 
 //
