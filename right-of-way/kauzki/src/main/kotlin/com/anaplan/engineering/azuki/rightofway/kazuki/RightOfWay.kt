@@ -2,6 +2,8 @@ package com.anaplan.engineering.azuki.rightofway.kazuki
 
 //import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay_Module.mk_Game
 //import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay_Module.mk_RVector
+import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay.dot_product
+import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay.to_the_right_of
 import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay_Module.mk_RVector
 import com.anaplan.engineering.kazuki.core.*
 
@@ -9,14 +11,17 @@ import com.anaplan.engineering.kazuki.core.*
 object RightOfWay {
     const val DEFAULT_SQRT_ERROR: PNZReal = 0.000001;
 
+    @PrimitiveInvariant(name = "Real", base = Double::class)
+    fun isReal(r: Double) = !r.isNaN() && !r.isInfinite()
+
     @PrimitiveInvariant(name = "PReal", base = Double::class)
-    fun pReal(r: Double) = r >= 0.0
+    fun pReal(r: Double) = isReal(r) && r >= 0.0
 
     @PrimitiveInvariant(name = "NZReal", base = Double::class)
-    fun nzReal(r: Double) = r != 0.0
+    fun nzReal(r: Double) = isReal(r) && r != 0.0
 
     @PrimitiveInvariant(name = "NReal", base = Double::class)
-    fun nReal(r: Double) = r < 0.0
+    fun nReal(r: Double) = isReal(r) && r < 0.0
 
 //    @PrimitiveInvariant(name = "PNZReal", base = PReal::class)
     @PrimitiveInvariant(name = "PNZReal", base = Double::class)
@@ -31,6 +36,9 @@ object RightOfWay {
     interface RVector {
         val x: Double
         val y: Double
+
+        @Invariant
+        fun isReal() = isReal(x) && isReal(y)
     }
 
     // plane position
@@ -61,50 +69,83 @@ object RightOfWay {
     }
 
     val sumVectors = function(
-        command = { rv1: RVector, rv2: RVector ->
-            mk_RVector(rv1.x + rv2.x, rv1.y + rv2.y)
+        command = { u: RVector, v: RVector ->
+            mk_RVector(u.x + v.x, u.y + v.y)
         }
     )
 
     val minusVector = function(
-        command = { rv: RVector ->
-            mk_RVector(-rv.x, -rv.y)
+        command = { u: RVector ->
+            mk_RVector(-u.x, -u.y)
         }
     )
 
     val subtractVectors = function(
-        command = { rv1: RVector, rv2: RVector ->
-            sumVectors(rv1, minusVector(rv2))
+        command = { u: RVector, v: RVector ->
+            sumVectors(u, minusVector(v))
         }
     )
 
     val rotate90 = function(
-        command = { rv: RVector ->
-            mk_RVector(rv.y, -rv.x)
+        command = { u: RVector ->
+            mk_RVector(u.y, -u.x)
+        }
+    )
+
+    val isZeroVector = function(
+        command = { u: RVector ->
+            u.x == 0.0 && u.y == 0.0
         }
     )
 
     val dot_product = function(
-        command = { rv1: RVector, rv2: RVector ->
-            rv1.x * rv2.x + rv1.y * rv2.y // could be zero? Result is Double.
+        command = { u: RVector, v: RVector ->
+            if (isZeroVector(u) || isZeroVector(v))  0.0
+            else if (u.y == 0.0 || v.y == 0.0) u.x * v.x
+            else if (u.x == 0.0 || v.x == 0.0) u.y * v.y
+            else u.x * v.x + u.y * v.y
+        },
+        // no need for pre given the invariant of RVector?
+        pre = { u, v -> u.isReal() && v.isReal() },
+        post = { u, v, _ ->
+            // (u . v)^2 <= (u . u) * (v . v)
+            (u.x*v.x + u.y*v.y) * (u.x*v.x + u.y*v.y) <=
+            (u.x*u.x + u.y*u.y) * (v.x*v.x + v.y*v.y)
         }
     )
 
     val scalar_product = function(
-        command = { x: Double, rv: RVector ->
-            mk_RVector(x * rv.x, x * rv.y )
+        command = { x: Double, u: RVector ->
+            mk_RVector(x * u.x, x * u.y )
         }
     )
 
-//    //TODO when to use a function like this or an @Invariant?
-//    val Q1 = function(
-//        command = { a: Aircraft, p: Position ->
-//            val psub = subtractVectors(p, a.position)
-//            dot_product(psub, rotate90(a.velocity)) > 0.0
-//                &&
-//                dot_product(psub, a.velocity) >= 0.0
-//        }
+    //TODO when to use a function like this or an @FunctionProvider??
+    val Q1 = function(
+        command = { a: Aircraft, p: Position ->
+            val psub = subtractVectors(p, a.position)
+            dot_product(psub, rotate90(a.velocity)) > 0.0
+                &&
+                dot_product(psub, a.velocity) >= 0.0
+        },
+        post = { a, p, r ->
+            r implies to_the_right_of(a, p)
+        }
+    )
+
+//    val Q2 = function(
+//        command = { }
 //    )
+
+
+
+    val to_the_right_of = function(
+        command = { a: Aircraft, p: Position ->
+            dot_product(
+                subtractVectors(p, a.position),
+                rotate90(a.velocity)) > 0.0
+        }
+    )
 
 }
 
