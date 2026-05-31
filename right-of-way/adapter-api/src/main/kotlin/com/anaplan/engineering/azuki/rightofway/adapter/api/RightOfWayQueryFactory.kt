@@ -21,9 +21,7 @@ interface RightOfWayQueryFactory : QueryFactory {
      */
     fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>): DerivedQuery<T>
 
-    fun getPlayOrder(gameName: String): Query<List<String>> = UnsupportedQuery()
-    fun getPositions(gameName: String): Query<List<Position>> = UnsupportedQuery()
-    fun getToken(gameName: String, position: Position): Query<String?> = UnsupportedQuery()
-    fun canPlayerPlaceToken(gameName: String, playerName: String, position: Position): Query<Boolean> =
-        UnsupportedQuery()
+    fun getVelocities(aircraftName: String): Query<List<Velocity>> = UnsupportedQuery()
+    fun getPositions(aircraftName: String): Query<List<Position>> = UnsupportedQuery()
+    fun hasRightOfWay(aircraftName: String): Query<Boolean> = UnsupportedQuery()
 }

@@ -8,6 +8,10 @@ class RightOfWayGiven(private val actionFactory: RightOfWayActionFactory): Given
 
     private val actionList = mutableListOf<Action>()
 
+    fun thereIsAnAircraft(aircraftName: String) {
+        actionList.add(actionFactory.aircraft.create(aircraftName))
+    }
+
 //    fun thereIsAPlayOrder(orderName: String, vararg players: String) {
 //        actionList.add(actionFactory.playOrder.create(orderName, players.toList()))
 //    }

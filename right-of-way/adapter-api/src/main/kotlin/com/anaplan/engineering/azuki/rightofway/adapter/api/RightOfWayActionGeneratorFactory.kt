@@ -3,6 +3,8 @@ package com.anaplan.engineering.azuki.rightofway.adapter.api
 import com.anaplan.engineering.azuki.core.system.ActionGenerator
 import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
 
+enum class Quadrant { FRONT_RIGHT, FRONT_LEFT, BACK_LEFT, BACK_RIGHT }
+
 interface RightOfWayActionGeneratorFactory : ActionGeneratorFactory {
 
     /**
@@ -20,5 +22,7 @@ interface RightOfWayActionGeneratorFactory : ActionGeneratorFactory {
     /**
      * Generates a sequence of valid quadrant moves for the given aircraft.
      */
-    fun generateQuadrant(aircraftName: String, numMoves: Int): ActionGenerator
+    fun generateQuadrant(aircraftName: String, quadrant: Quadrant): ActionGenerator
+
+    fun generateMoves(aircraftName: String, numMoves: Int): ActionGenerator
 }

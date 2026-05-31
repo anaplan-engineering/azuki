@@ -5,11 +5,11 @@ import com.anaplan.engineering.azuki.core.system.CheckFactory
 
 interface RightOfWayCheckFactory : CheckFactory {
 
-    val player: PlayerCheckFactory
+    val aircraft: AircraftCheckFactory
     val game: GameCheckFactory
 }
 
-interface PlayerCheckFactory {
+interface AircraftCheckFactory {
 
     fun moveCount(gameName: String, playerName: String, times: Int): Check
     fun canPlaceToken(gameName: String, playerName: String, position: Position, expected: Boolean): Check
