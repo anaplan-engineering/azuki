@@ -1,18 +1,13 @@
 package com.anaplan.engineering.azuki.mondex.kazuki
 
-import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.mk_Purse
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.World_Module.transform
 import com.anaplan.engineering.kazuki.core.*
 
 typealias Name = String
 
-sealed interface AIN
-object aNullIn: AIN
-data class transfer(val transferDetails: TransferDetails): AIN
-
-sealed interface AOUT
-object aNullOut: AOUT
+sealed interface AOut
+object aNullOut: AOut
 
 @Module
 interface World {
@@ -24,12 +19,12 @@ interface World {
 
 class WorldFunctions(world: World) {
     val abstractOperation = function (
-        command = { a: AIN -> world }
+        command = { a: AbstractInput -> world }
     )
 
     val abstractIgnore = function (
-        command = { a: AIN ->
-            world
+        command = { a: AbstractInput ->
+            abstractOperation(a)
         },
         pre = { a ->
             abstractOperation.pre(a)
@@ -40,12 +35,12 @@ class WorldFunctions(world: World) {
     )
 
     val abstractWorldSecureOperation = function (
-        command = { a: AIN, transferDetails: TransferDetails ->
-            world
+        command = { a: AbstractInput, transferDetails: TransferDetails ->
+            abstractOperation(a)
         },
         pre = { a, transferDetails ->
             abstractOperation.pre(a)
-                && a is transfer
+                && a is Transfer
                 && a.transferDetails == transferDetails
         },
         post = { _, transferDetails, result ->
@@ -55,7 +50,7 @@ class WorldFunctions(world: World) {
     )
 
     val abstractTransferOkayTD = function (
-        command = { a: AIN, transferDetails: TransferDetails ->
+        command = { a: AbstractInput, transferDetails: TransferDetails ->
             world.transform(
                 authPurses = world.authPurses * mk_Mapping(
                     mk_(transferDetails.from, world.authPurses[transferDetails.from].transform(balance = world.authPurses[transferDetails.from].balance - transferDetails.value)),
@@ -80,7 +75,7 @@ class WorldFunctions(world: World) {
     )
 
     val abstractTransferLostTD = function (
-        command = { a: AIN, transferDetails: TransferDetails ->
+        command = { a: AbstractInput, transferDetails: TransferDetails ->
             world.transform(
                 authPurses = world.authPurses * mk_(
                     transferDetails.from, world.authPurses[transferDetails.from].transform(balance = world.authPurses[transferDetails.from].balance - transferDetails.value, lost = world.authPurses[transferDetails.from].lost + transferDetails.value)
