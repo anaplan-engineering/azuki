@@ -40,6 +40,8 @@ include(
     "mondex:dsl",
     "mondex:adapter-api",
     "mondex:eacs",
+    "mondex:implementation",
+    "mondex:kazuki",
 )
 includeBuild("build-conventions")
 includeBuild("vdm-animation")
