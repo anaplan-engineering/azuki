@@ -8,18 +8,6 @@ class RightOfWayRegardlessOf(private val actionFactory: RightOfWayActionFactory)
 
     private val actionList = mutableListOf<Action>()
 
-//    fun saveGame(gameName: String) {
-//        actionList.add(actionFactory.game.save(gameName))
-//    }
-//
-//    fun closeGame(gameName: String) {
-//        actionList.add(actionFactory.game.close(gameName))
-//    }
-//
-//    fun loadGame(gameName: String) {
-//        actionList.add(actionFactory.game.load(gameName))
-//    }
-
     override fun actions(): List<Action> = actionList
 
 }

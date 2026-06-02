@@ -14,34 +14,19 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionGene
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayCheckFactory
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayQueryFactory
 
-open class RightOfWayScenario :
+open class RightOfWayRunnableScenario :
     RunnableScenario<RightOfWayActionFactory, RightOfWayCheckFactory, RightOfWayQueryFactory,
         RightOfWayActionGeneratorFactory, RightOfWayGiven, RightOfWayWhen, RightOfWayThen,
         RightOfWayVerify, RightOfWayQueries, RightOfWayGenerate, RightOfWayRegardlessOf,
         NoSystemDefaults>(RightOfWayDslProvider)
 
 interface RightOfWayBuildableScenario : BuildableScenario<RightOfWayActionFactory> {
-
     fun given(givenFunction: RightOfWayGiven.() -> Unit)
     fun whenever(whenFunction: RightOfWayWhen.() -> Unit)
 }
 
-open class RightOfWayRunnableScenario : RunnableScenario<
-    RightOfWayActionFactory,
-    RightOfWayCheckFactory,
-    RightOfWayQueryFactory,
-    RightOfWayActionGeneratorFactory,
-    RightOfWayGiven,
-    RightOfWayWhen,
-    RightOfWayThen,
-    RightOfWayVerify,
-    RightOfWayQueries,
-    RightOfWayGenerate,
-    RightOfWayRegardlessOf,
-    NoSystemDefaults,
-    >(RightOfWayDslProvider)
-
-interface RightOfWayVerifiableScenario : VerifiableScenario<RightOfWayActionFactory, RightOfWayCheckFactory>,
+interface RightOfWayVerifiableScenario :
+    VerifiableScenario<RightOfWayActionFactory, RightOfWayCheckFactory>,
     RightOfWayBuildableScenario {
 
     fun then(thenFunction: RightOfWayThen.() -> Unit)

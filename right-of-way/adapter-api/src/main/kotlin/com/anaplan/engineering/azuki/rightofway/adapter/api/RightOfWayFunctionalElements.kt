@@ -1,5 +1,5 @@
 package com.anaplan.engineering.azuki.rightofway.adapter.api
 
 object RightOfWayFunctionalElements {
-    const val Aircraft = 1
+    const val Airspace = 1
 }

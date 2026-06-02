@@ -21,7 +21,9 @@ interface RightOfWayQueryFactory : QueryFactory {
      */
     fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>): DerivedQuery<T>
 
-    fun getVelocities(aircraftName: String): Query<List<Velocity>> = UnsupportedQuery()
-    fun getPositions(aircraftName: String): Query<List<Position>> = UnsupportedQuery()
-    fun hasRightOfWay(aircraftName: String): Query<Boolean> = UnsupportedQuery()
+    fun getAircraftNames(airspaceName: String): Query<List<String>> = UnsupportedQuery()
+    fun getAircrafts(airspaceName: String): Query<List<Aircraft>> = UnsupportedQuery()
+    fun getVelocities(airspaceName: String): Query<List<Velocity>> = UnsupportedQuery()
+    fun getPositions(airspaceName: String): Query<List<Position>> = UnsupportedQuery()
+    fun hasRightOfWay(airspaceName: String, aircraftName: String): Query<Boolean> = UnsupportedQuery()
 }
