@@ -19,6 +19,7 @@ dependencies {
         api "com.anaplan.engineering:azuki-orchestrator:$version"
         api "com.anaplan.engineering:vdm-animation-api:$version"
         api "com.anaplan.engineering:vdm-animation-overture:$version"
+        //api "com.anaplan.engineering:vdm-animation-vdmj:$version"
         api "com.anaplan.engineering:vdm-stub-generator:$version"
     }
 }
