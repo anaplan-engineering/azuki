@@ -4,13 +4,24 @@ import com.anaplan.engineering.azuki.core.dsl.Given
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionFactory
 
+/**
+ * What can the model declare
+ */
 class RightOfWayGiven(private val actionFactory: RightOfWayActionFactory): Given<RightOfWayActionFactory> {
 
     private val actionList = mutableListOf<Action>()
 
-    fun thereIsAnAircraft(aircraftName: String) {
-        actionList.add(actionFactory.aircraft.create(aircraftName))
+    fun thereIsAnAirspace(airSpaceName: String) {
+        actionList.add(actionFactory.airspace.start(airSpaceName))
     }
+
+    fun thereIsAnAirspaceWithAircraft(airSpaceName: String, numberOfAircraft: UInt) {
+        //actionList.add(actionFactory.aircrafts.create())
+    }
+
+//    fun thereIsAnAircraft(aircraftName: String) {
+//        //actionList.add(actionFactory.aircraft.create(aircraftName))
+//    }
 
 //    fun thereIsAPlayOrder(orderName: String, vararg players: String) {
 //        actionList.add(actionFactory.playOrder.create(orderName, players.toList()))

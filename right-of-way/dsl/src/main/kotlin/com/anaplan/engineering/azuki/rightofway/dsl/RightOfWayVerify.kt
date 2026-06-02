@@ -27,11 +27,11 @@ class RightOfWayVerify(private val queryFactory: RightOfWayQueryFactory) : Verif
         })
     }
 
-    fun gameHasPlayOrder(gameName: String) = addQuery { getPlayOrder(gameName) }
-    fun gameHasPositions(gameName: String) = addQuery { getPositions(gameName) }
-    fun gameHasToken(gameName: String, position: Pair<Int, Int>) = addQuery { getToken(gameName, Position(position)) }
-    fun playerCanPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) =
-        addQuery { canPlayerPlaceToken(gameName, playerName, Position(position)) }
+//    fun gameHasPlayOrder(gameName: String) = addQuery { getPlayOrder(gameName) }
+//    fun gameHasPositions(gameName: String) = addQuery { getPositions(gameName) }
+//    fun gameHasToken(gameName: String, position: Pair<Int, Int>) = addQuery { getToken(gameName, Position(position)) }
+//    fun playerCanPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) =
+//        addQuery { canPlayerPlaceToken(gameName, playerName, Position(position)) }
 
     override fun queries() = ScenarioQueries(queriesList, derivedQueriesList)
 

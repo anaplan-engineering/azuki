@@ -2,7 +2,7 @@ package com.anaplan.engineering.azuki.rightofway.kazuki
 
 import com.anaplan.engineering.azuki.rightofway.kazuki.Position_Module.as_Position
 import com.anaplan.engineering.azuki.rightofway.kazuki.RVector_Module.mk_RVector
-import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay.orientation
+//import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay.Companion.rightOfWay
 import com.anaplan.engineering.azuki.rightofway.kazuki.Velocity_Module.as_Velocity
 import com.anaplan.engineering.kazuki.core.*
 import kotlin.math.abs
@@ -34,6 +34,7 @@ fun isNNZReal(r: Double) = isNReal(r) && isNZReal(r)
 fun isAngle(r: Double) = isPReal(r) && r <= 360.0
 
 @Module
+@ComparableTypeLimit
 interface RVector {
 //    val x: Real
 //    val y: Real
@@ -61,37 +62,61 @@ interface Velocity : RVector {
 }
 
 @Module
-object RightOfWay {
+interface Aircraft {
+    val position: Position
+    val velocity: Velocity
+}
 
-//    interface RVector {
-//        val x: Double
-//        val y: Double
-//
-//            @Invariant
-//            fun isReal() = isReal(x) && isReal(y)
-//        }
-//    // plane position
-//    interface Position {
-//        val x: PReal
-//        val y: PReal
-//        val other: integer
-//    }
-    //    interface Velocity {
-//        val x: PNZReal
-//        val y: PNZReal
-//        val dummy: bool // to disambiguate on the Velocity_Rec x Position_Rec :-(
-//    }
+@Module
+interface ConvergingAircraft {
+    val a0: Aircraft
+    val a1: Aircraft
+    val delta_c: PReal
 
-//    interface Velocity : Position {
-//        val dummy: Boolean // must have fields error
-//        @Invariant
-//        fun isValid() = x > 0.0 && y > 0.0
-//    }
+//    @Invariant
+//    fun converges() = (a0 != a1) implies { rightOfWay.converging(a0, a1)(delta_c) }
+}
 
-    interface Aircraft {
-        val position: Position
-        val velocity: Velocity
+@Module
+interface AirSpace {
+
+    val aircrafts: Set<Aircraft>
+
+    @Invariant
+    fun uniquePositions() = properties.allPositions.card == aircrafts.card
+
+    @Invariant
+    fun noHeadOn() = forall(aircrafts) {
+        a -> forall(aircrafts) {
+            b -> (a != b) implies {
+//                !functions.headon(a, b)(properties.delta_c, properties.Theta_h)
+                true
+            }
+        }
     }
+
+    @FunctionProvider(AirspaceProperties::class)
+    val properties: AirspaceProperties
+
+//    FunctionProvider(RightOfWay::class)
+//    val functions: RightOfWay
+}
+
+class AirspaceProperties(private val airspace: AirSpace) {
+    val delta_o by property { 1.0 }
+    val delta_c by property { 2.0 }
+    val Theta_h by property { 170.0 }
+    val allPositions by property { airspace.aircrafts.map { it.position }.toSet() }
+}
+
+//TODO Can this be just an object in that sense ?
+@Module
+object RightOfWay {
+//class RightOfWay(private val airspace: AirSpace) {
+//
+//    companion object {
+//        val rightOfWay = RightOfWay()
+//    }
 
     val sumVectors = function(
         command = { u: RVector, v: RVector ->
@@ -221,31 +246,30 @@ object RightOfWay {
 
     // Time to Closest Point of Approach
     val tCPA = function( //: VFunction2<RightOfWay.Aircraft, RightOfWay.Aircraft, out Double>
-        command = { a1: Aircraft, a2: Aircraft ->
-            if (a1.velocity == a2.velocity)
+        command = { a0: Aircraft, a1: Aircraft ->
+            if (a0.velocity == a1.velocity)
                 0.0 // if 0, type gets captured as Number!!!!
             else {
-                val pDiff = as_Position(subtractVectors(a1.position, a2.position))
-                val vDiff = as_Velocity(subtractVectors(a1.velocity, a2.velocity))
+                val pDiff = as_Position(subtractVectors(a0.position, a1.position))
+                val vDiff = as_Velocity(subtractVectors(a0.velocity, a1.velocity))
                 // Because Velocity are different, then their difference is not zero
                 val vDiffProd = dot_product(vDiff, vDiff)
                 (- ( dot_product(pDiff, vDiff) / vDiffProd)) as Double // why isn't result double? as Double
             }
         },
-        //pre fails for example!
         post = { _, _, r -> isNZReal(r) }
     )
 
     // Horizontal Miss Distance is the distance at the Closest Point of Approach
     // when their position and velocity vectors are projected in time.
     val horizontalMissDistance = function(
-        command = { a1: Aircraft, a2: Aircraft ->
+        command = { a0: Aircraft, a1: Aircraft ->
             magnitude(
                 sumVectors(
-                    subtractVectors(a1.position, a2.position),
+                    subtractVectors(a0.position, a1.position),
                     scalar_product(
-                        tCPA(a1, a2),
-                        subtractVectors(a1.velocity, a2.velocity)
+                        tCPA(a0, a1),
+                        subtractVectors(a0.velocity, a1.velocity)
                     )
                 )
             )
@@ -271,109 +295,109 @@ object RightOfWay {
 
     // Aircraft relative velocity/motion
     val left_to_right = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            dot_product(a1.velocity, a2.velocity) < 0.0
+        command = { a0: Aircraft, a1: Aircraft ->
+            dot_product(a0.velocity, a1.velocity) < 0.0
         }
     )
 
     val right_to_left = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            dot_product(a1.velocity, a2.velocity) > 0.0
+        command = { a0: Aircraft, a1: Aircraft ->
+            dot_product(a0.velocity, a1.velocity) > 0.0
         }
     )
 
     // Check trajectories will cross in future
     val going_to_cross = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            to_the_left_of(a1, a2.position) && left_to_right(a1, a2)
+        command = { a0: Aircraft, a1: Aircraft ->
+            to_the_left_of(a0, a1.position) && left_to_right(a0, a1)
                 ||
-                to_the_right_of(a1, a2.position) && right_to_left(a1, a2)
+                to_the_right_of(a0, a1.position) && right_to_left(a0, a1)
         }
     )
 
     // Check trajectories have already crossed
     val crossed = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            to_the_left_of(a1, a2.position) && right_to_left(a1, a2)
+        command = { a0: Aircraft, a1: Aircraft ->
+            to_the_left_of(a0, a1.position) && right_to_left(a0, a1)
                 ||
-                to_the_right_of(a1, a2.position) && left_to_right(a1, a2)
+                to_the_right_of(a0, a1.position) && left_to_right(a0, a1)
         }
     )
 
     // Check trajectories are going to cross but have not yet crossed
     val zero_crossed = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            going_to_cross(a1, a2) && going_to_cross(a2, a1)
+        command = { a0: Aircraft, a1: Aircraft ->
+            going_to_cross(a0, a1) && going_to_cross(a1, a0)
         }
     )
 
-    // One aircraft (a1) has crossed trajectory of other (a2) but not other way round
+    // One aircraft (a0) has crossed trajectory of other (a1) but not other way round
     val one_crossed = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            going_to_cross(a1, a2) && crossed(a1, a2)
+        command = { a0: Aircraft, a1: Aircraft ->
+            going_to_cross(a0, a1) && crossed(a0, a1)
                 ||
-                going_to_cross(a2, a1) && crossed(a2, a1)
+                going_to_cross(a1, a0) && crossed(a1, a0)
         }
     )
 
     // both aircraft crossed each other's trajectories
     val both_crossed = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            crossed(a1, a2) && crossed(a2, a1)
+        command = { a0: Aircraft, a1: Aircraft ->
+            crossed(a0, a1) && crossed(a1, a0)
         }
     )
 
     val orientation = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            dot_product(a1.velocity, rotate90(a2.velocity)) //as Angle
+        command = { a0: Aircraft, a1: Aircraft ->
+            dot_product(a0.velocity, rotate90(a1.velocity)) //as Angle
         },
         //post = { _, _, r -> isAngle(r) }
     )
     val parallel = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            orientation(a1, a2) == 0.0
+        command = { a0: Aircraft, a1: Aircraft ->
+            orientation(a0, a1) == 0.0
         }
     )
 
     val same_orientation = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            orientation(a1, a2) > 0.0
+        command = { a0: Aircraft, a1: Aircraft ->
+            orientation(a0, a1) > 0.0
         }
     )
 
     val opposite_orientation = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            orientation(a1, a2) < 0.0
+        command = { a0: Aircraft, a1: Aircraft ->
+            orientation(a0, a1) < 0.0
         }
     )
 
     val isInQ1andWasInQ2 = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            Q1(a1, a2.position) && Q1(a2, a1.position)
+        command = { a0: Aircraft, a1: Aircraft ->
+            Q1(a0, a1.position) && Q1(a1, a0.position)
                 ||
-                (opposite_orientation(a1, a2) and left_to_right(a1, a2));
+                (opposite_orientation(a0, a1) and left_to_right(a0, a1));
         }
     )
 
     // Quadrant convergence
     val QC = function(
-        command = { a1: Aircraft, a2: Aircraft ->
-            Q1(a1, a2.position) && Q1(a2, a1.position)
+        command = { a0: Aircraft, a1: Aircraft ->
+            Q1(a0, a1.position) && Q1(a1, a0.position)
                 ||
-                Q2(a1, a2.position) && Q2(a2, a1.position)
+                Q2(a0, a1.position) && Q2(a1, a0.position)
                 ||
-                Q3(a1, a2.position) && Q3(a2, a1.position)
+                Q3(a0, a1.position) && Q3(a1, a0.position)
                 ||
-                Q4(a1, a2.position) && Q4(a2, a1.position)
+                Q4(a0, a1.position) && Q4(a1, a0.position)
         }
     )
 
     val converging = function(
-        command = { a1: Aircraft, a2: Aircraft ->
+        command = { a0: Aircraft, a1: Aircraft ->
             val inner = function(
                 command = { delta_c: PReal ->
-                    QC(a1, a2) &&
-                        horizontalMissDistance(a1, a2) < delta_c
+                    QC(a0, a1) &&
+                        horizontalMissDistance(a0, a1) < delta_c
                 }
             )
             inner
@@ -381,14 +405,14 @@ object RightOfWay {
     )
 
     val conv_not_headon = function(
-        command = { a1: Aircraft, a2: Aircraft ->
+        command = { a0: Aircraft, a1: Aircraft ->
             val inner = function(
-                command = { delta_c: PReal, delta_h: Angle ->
-                    val track_delta = abs(track(a1) - track(a2))
-                    converging(a1, a2)(delta_c) &&
-                        (180 + delta_h < track_delta)
+                command = { delta_c: PReal, Theta_h: Angle ->
+                    val track_delta = abs(track(a0) - track(a1))
+                    converging(a0, a1)(delta_c) &&
+                        (180.0 + Theta_h < track_delta)
                         ||
-                        (track_delta < 180 - delta_h)
+                        (track_delta < 180.0 - Theta_h)
                 }
             )
             inner
@@ -396,14 +420,14 @@ object RightOfWay {
     )
 
     val headon = function(
-        command = { a1: Aircraft, a2: Aircraft ->
+        command = { a0: Aircraft, a1: Aircraft ->
             val inner = function(
-                command = { delta_c: PReal, delta_h: Angle ->
-                    val track_delta = abs(track(a1) - track(a2))
-                    converging(a1, a2)(delta_c) &&
-                        (180 + delta_h <= track_delta)
+                command = { delta_c: PReal, Theta_h: Angle ->
+                    val track_delta = abs(track(a0) - track(a1))
+                    converging(a0, a1)(delta_c) &&
+                        (180.0 + Theta_h <= track_delta)
                         ||
-                        (track_delta < 180 + delta_h)
+                        (track_delta < 180.0 + Theta_h)
                 }
             )
             inner
@@ -411,14 +435,14 @@ object RightOfWay {
     )
 
     val overtaking = function(
-        command = { a1: Aircraft, a2: Aircraft ->
+        command = { a0: Aircraft, a1: Aircraft ->
             val inner = function(
-                command = { delta_o: PReal ->
-                    Q1(a1, a2.position) || Q2(a1, a2.position)
+                command = { delta_o: Real ->
+                    Q1(a0, a1.position) || Q2(a0, a1.position)
                         &&
-                    Q3(a2, a1.position) || Q4(a2, a1.position)
+                    Q3(a1, a0.position) || Q4(a1, a0.position)
                         &&
-                        horizontalMissDistance(a1, a2) < delta_o
+                        horizontalMissDistance(a0, a1) < delta_o
                 }
             )
             inner
@@ -426,169 +450,20 @@ object RightOfWay {
     )
 
     val right_of_way = function(
-        command = { a1: Aircraft, a2: Aircraft ->
+        command = { a0: Aircraft, a1: Aircraft ->
             val inner = function(
-                command = { delta_o: PReal, delta_c: PReal, delta_h: PReal ->
-                    overtaking(a1, a2)(delta_o)
+                command = { delta_o: Real, delta_c: PReal, Theta_h: Angle ->
+                    overtaking(a0, a1)(delta_o)
                         ||
-                       ( conv_not_headon(a1, a2)(delta_c, delta_h)
+                       ( conv_not_headon(a0, a1)(delta_c, Theta_h)
                         &&
-                        to_the_right_of(a1, a2.position)
+                        to_the_right_of(a0, a1.position)
                         &&
-                        zero_crossed(a1, a2))
+                        zero_crossed(a0, a1))
                 }
             )
             inner
         }
     )
-
-    /*
-     */
 }
 
-//
-//@Module
-//object XO {
-//
-//    const val Size = 3uL
-//
-//    val MaxMoves = Size * Size
-//
-//    enum class Player {
-//        Nought,
-//        Cross
-//    }
-//
-//    interface Position {
-//        val row: Coord
-//        val col: Coord
-//    }
-//
-//    @PrimitiveInvariant(name = "Coord", base = nat1::class)
-//    fun coordInvariant(c: nat) = c in 1uL..Size
-//
-//    // A legal game play sequence
-//    interface Moves : Sequence1<Position> {
-//        @Invariant
-//        fun noDuplicatePositions() = len == elems.card
-//
-//        @Invariant
-//        fun hasMinMovesToWin() = len > Players.card * (Size - 1uL)
-//
-//        @Invariant
-//        fun doesntHaveTooManyMoves() = len <= MaxMoves
-//    }
-//
-//    val Players = asSet<Player>()
-//
-//    interface PlayOrder : Sequence1<Player> {
-//
-//        @Invariant
-//        fun noDuplicatePlayers() = len == elems.card
-//
-//        @Invariant
-//        fun correctNumberOfPlayers() = elems == Players
-//    }
-//
-//    val S: Set<nat1> = as_Set(1uL..Size)
-//
-//    val winningLines: Set<Set<Position>> = dunion(
-//        mk_Set(
-//            set(S) { r: nat1 -> set(S) { c: nat1 -> mk_Position(r, c) } },
-//            set(S) { c: nat1 -> set(S) { r: nat1 -> mk_Position(r, c) } },
-//            mk_Set(
-//                as_Set(set(S) { x: nat1 -> mk_Position(x, x) }),
-//                as_Set(set(S) { x: nat1 -> mk_Position(x, Size - x + 1u) })
-//            )
-//        ),
-//    )
-//
-//    interface Game {
-//        val board: Mapping<Position, Player>
-//        val order: PlayOrder
-//
-//        @Invariant
-//        fun cantHaveMoreThanMaxMoves() = moveCountLeft(this) >= 0uL
-//
-//        @Invariant
-//        fun noPlayerMoreThanOneMoveAhead() =
-//            forall(order.inds - order.len) { i ->
-//                val current = order[i]
-//                val next = order[i + 1uL]
-//                movesForPlayer(this, current).card - movesForPlayer(this, next).card in mk_Set(0uL, 1uL)
-//            }
-//    }
-//
-//    val hasWon = function(
-//        command = { g: Game, p: Player ->
-//            val moves = movesForPlayer(g, p)
-//            exists(winningLines) { line -> line subset moves }
-//        }
-//    )
-//
-//    val hasLost = function(
-//        command = { g: Game, p: Player ->
-//            !hasWon(g, p)
-//        }
-//    )
-//
-//    val whoWon = function(
-//        command = { g: Game -> iota(Players) { p -> hasWon(g, p) } },
-//        pre = { g -> isWon(g) }
-//    )
-//
-//    val isWon = function(
-//        command = { g: Game -> exists1(Players) { p -> hasWon(g, p) } },
-//    )
-//
-//    val isDraw = function(
-//        command = { g: Game -> (!(isWon(g)) and (moveCountLeft(g) == 0uL)) },
-//    )
-//
-//    val isUnfinished = function(
-//        command = { g: Game -> (!(isWon(g)) and !(isDraw(g))) },
-//    )
-//
-//    val movesSoFar = function(
-//        command = { g: Game -> g.board.dom }
-//    )
-//
-//    val moveCountSoFar = function(
-//        command = { g: Game -> movesSoFar(g).card }
-//    )
-//
-//    val moveCountLeft = function(
-//        command = { g: Game -> MaxMoves - moveCountSoFar(g) }
-//    )
-//
-//    val movesForPlayer = function(
-//        command = { g: Game, p: Player -> (g.board rrt mk_Set(p)).dom }
-//    )
-//
-//    val move = function(
-//        command = { g: Game, p: Player, pos: Position ->
-//            mk_Game(g.board + mk_Mapping(mk_(pos, p)), g.order)
-//        },
-//        pre = { g, p, pos -> canMove(g, p, pos) },
-//        post = { g, _, _, result ->
-//            moveCountSoFar(result) == moveCountSoFar(g) + 1uL
-//        }
-//    )
-//
-//    val canMove = function(
-//        command = { g: Game, p: Player, pos: Position ->
-//            hasTurn(g, p) &&
-//                pos !in movesSoFar(g) &&
-//                moveCountLeft(g) > 0uL
-//        }
-//    )
-//
-//    val hasTurn = function(
-//        command = { g: Game, p: Player ->
-//            val order = g.order
-//            val numPlayers = order.len
-//            val numMoves = movesSoFar(g).card
-//            order[(numMoves % numPlayers) + 1uL] == p
-//        }
-//    )
-//}
