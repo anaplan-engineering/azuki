@@ -12,9 +12,6 @@ class CreateAircraftAction(
 
     override fun act(env: ExecutionEnvironment) {
         env.withAirspace(airspaceName) {
-            //TODO when is this@qualifier needed? get there are two "this" in context but not needed here, added for clarity
-//            addAircraft(aircraftName, this@CreateAircraftAction.position.toPair(),
-//                this@CreateAircraftAction.velocity.toPair())
 
             // adds an aircraft in fresh position and velocity
             addAircraft(aircraftName)

@@ -1,65 +1,70 @@
 package com.anaplan.engineering.azuki.rightofway.adapter.implementation.query
 
-import com.anaplan.engineering.azuki.core.system.Behavior
-import com.anaplan.engineering.azuki.core.system.Check
-import com.anaplan.engineering.azuki.core.system.DerivedQuery
-import com.anaplan.engineering.azuki.core.system.RunnableDerivedQuery
-import com.anaplan.engineering.azuki.core.system.RunnableQuery
-import com.anaplan.engineering.azuki.core.system.ForAllRunnableDerivedQuery
-import com.anaplan.engineering.azuki.core.system.Query
-import com.anaplan.engineering.azuki.core.system.RunnableQueriesAsDerivedQuery
-import com.anaplan.engineering.azuki.core.system.UnsupportedCheck
-import com.anaplan.engineering.azuki.core.system.ensureRunnable
-import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.PlayerCheckFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.Position
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.canMove
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.tokenAt
+import com.anaplan.engineering.azuki.core.system.*
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircrafts
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
+import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayCheckFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayQueryFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Velocity
+import com.anaplan.engineering.azuki.rightofway.adapter.implementation.ExecutionEnvironment
 
-class SampleQueryFactory : TicTacToeQueryFactory {
+class SampleQueryFactory : RightOfWayQueryFactory {
 
     override fun <T, C : Collection<T>> createForAllQuery(
-        derivedFrom: (TicTacToeQueryFactory) -> Query<C>, deriveQuery: (T, TicTacToeQueryFactory) -> DerivedQuery<*>
+        derivedFrom: (RightOfWayQueryFactory) -> Query<C>, deriveQuery: (T, RightOfWayQueryFactory) -> DerivedQuery<*>
     ) = ForAllRunnableDerivedQuery(derivedFrom(this).ensureRunnable()) { t ->
         @Suppress("UNCHECKED_CAST") (deriveQuery(t,
-            this) as RunnableDerivedQuery<ExecutionEnvironment, TicTacToeCheckFactory, *>)
+            this) as RunnableDerivedQuery<ExecutionEnvironment, RightOfWayCheckFactory, *>)
     }
 
     override fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>) =
-        RunnableQueriesAsDerivedQuery.fromQueries<ExecutionEnvironment, TicTacToeCheckFactory, T>(queries)
+        RunnableQueriesAsDerivedQuery.fromQueries<ExecutionEnvironment, RightOfWayCheckFactory, T>(queries)
 
-    override fun getPlayOrder(gameName: String) = query(value = { env ->
-        env.withGame(gameName) { playOrder.map { it.token.symbol } }
-    }, checks = { playOrder -> { listOf(game.hasPlayOrder(gameName, playOrder)) } })
+    override fun getAirspaces(): Query<List<String>> = query(
+        value = { env ->
+            env.airspaceManager.activeAirspaces.toList()
+        },
+        checks = { airSpaces -> airSpaces.isNotEmpty() }
+    )
+//    override fun getAircrafts(airspaceName: String): Query<Aircrafts> = UnsupportedQuery()
+//    override fun getVelocities(airspaceName: String): Query<Map<String,Velocity>> = UnsupportedQuery()
+//    override fun getPositions(airspaceName: String): Query<Map<String,Position>> = UnsupportedQuery()
+//    override fun hasRightOfWay(airspaceName: String): Query<Aircrafts> = UnsupportedQuery()
 
-    override fun getPositions(gameName: String) = query(value = { env ->
-        env.withGame(gameName) { (1..height).flatMap { row -> (1..width).map { col -> Position(row, col) } } }
-    }, checks = {
-        // This query is only intended as a driver for for-all quantifiers, so we don't support checking it
-        { emptyList() }
-    })
+//    override fun getAircraft(airspaceName: String) = query(
+//        value = { env ->
+//            env.withAirspace(airspaceName) {
+//                this.
+//        //    .map { it.token.symbol }
+//            }
+//        },
+//        checks = { playOrder -> { listOf(game.hasPlayOrder(airspaceName, playOrder)) } })
 
-    override fun getToken(gameName: String, position: Position) =
-        query(value = { env -> env.withGame(gameName) { tokenAt(position)?.symbol } }, checks = { token ->
-            token?.let { { listOf(game.hasToken(gameName, it, position)) } } ?: {
-                listOf(game.hasSpace(gameName, position))
-            }
-        })
-
-    override fun canPlayerPlaceToken(gameName: String, playerName: String, position: Position) = query(value = { env ->
-        env.withGame(gameName) { canMove(playerName, position) }
-    }, checks = { canPlace ->
-        { listOf(player.canPlaceToken(gameName, playerName, position, canPlace)) }
-    })
+//    override fun getPositions(gameName: String) = query(value = { env ->
+//        env.withGame(gameName) { (1..height).flatMap { row -> (1..width).map { col -> Position(row, col) } } }
+//    }, checks = {
+//        // This query is only intended as a driver for for-all quantifiers, so we don't support checking it
+//        { emptyList() }
+//    })
+//
+//    override fun getToken(gameName: String, position: Position) =
+//        query(value = { env -> env.withGame(gameName) { tokenAt(position)?.symbol } }, checks = { token ->
+//            token?.let { { listOf(game.hasToken(gameName, it, position)) } } ?: {
+//                listOf(game.hasSpace(gameName, position))
+//            }
+//        })
+//
+//    override fun canPlayerPlaceToken(gameName: String, playerName: String, position: Position) = query(value = { env ->
+//        env.withGame(gameName) { canMove(playerName, position) }
+//    }, checks = { canPlace ->
+//        { listOf(player.canPlaceToken(gameName, playerName, position, canPlace)) }
+//    })
 }
 
 private fun <T> query(
     value: (ExecutionEnvironment) -> T,
-    checks: (T) -> TicTacToeCheckFactory.() -> List<Check>
-): Query<T> = object : RunnableQuery<ExecutionEnvironment, TicTacToeCheckFactory, T> {
+    checks: (T) -> RightOfWayCheckFactory.() -> List<Check>
+): Query<T> = object : RunnableQuery<ExecutionEnvironment, RightOfWayCheckFactory, T> {
 
     override val behavior: Behavior get() = unsupportedBehavior
     override fun run(environment: ExecutionEnvironment) = value(environment).let { SampleAnswer(this, it, checks(it)) }

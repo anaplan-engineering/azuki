@@ -6,7 +6,6 @@ import kotlin.text.get
 
 class ExecutionEnvironment(val airspaceManager: AirspaceManager) {
 
-    val playOrders = mutableMapOf<String, List<String>>()
-
+    // because of the get method, this always returns non-null
     fun <T> withAirspace(name: String, op: Airspace.() -> T) = airspaceManager[name].op()
 }

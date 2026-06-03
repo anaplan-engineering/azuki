@@ -5,12 +5,12 @@ import com.anaplan.engineering.azuki.core.system.ActionGeneratorFactory
 
 interface RightOfWayActionGeneratorFactory : ActionGeneratorFactory {
 
-    fun generateAirspace(airspaceName: String, numberOfAircraft: UInt): ActionGenerator
+    fun generateAirspace(airspaceName: String): ActionGenerator
 
     /**
      * Generates a valid aircraft and assigns it to the given name.
      * An aircraft must not already exist with this name.
      */
-    fun generateAircraft(airspaceName: String): ActionGenerator
+    fun generateAircraft(airspaceName: String, numberOfAircraft: Int = 2): ActionGenerator
 
 }
