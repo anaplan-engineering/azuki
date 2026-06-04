@@ -1,37 +1,66 @@
 package com.anaplan.engineering.azuki.rightofway.adapter.implementation.check
 
 import com.anaplan.engineering.azuki.core.system.Check
-import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
-import com.anaplan.engineering.azuki.tictactoe.adapter.implementation.ExecutionEnvironment
+import com.anaplan.engineering.azuki.rightofway.adapter.api.*
+import com.anaplan.engineering.azuki.rightofway.adapter.implementation.ExecutionEnvironment
+import com.anaplan.engineering.azuki.rightofway.implementation.Airspace
 
-class SampleCheckFactory : TicTacToeCheckFactory {
+class SampleCheckFactory : RightOfWayCheckFactory {
 
-    override val player = SamplePlayerCheckFactory
-    override val game = SampleGameCheckFactory
+//    override val player = SamplePlayerCheckFactory
+//    override val game = SampleGameCheckFactory
+    override val airspace: SampleAirspaceCheckFactory
+    override val aircraft: SampleAircraftCheckFactory
 
     override fun systemValid() = SystemValidCheck()
 }
 
-object SamplePlayerCheckFactory : PlayerCheckFactory {
+object SampleAircraftCheckFactory : AircraftCheckFactory {
 
-    override fun moveCount(gameName: String, playerName: String, times: Int) =
-        PlayerMoveCountCheck(gameName, playerName, times)
-    override fun canPlaceToken(gameName: String, playerName: String, position: Position, expected: Boolean) = CanPlaceTokenCheck(gameName, playerName, position, expected)
-    override fun hasWon(gameName: String, playerName: String) = HasWonCheck(gameName, playerName)
-    override fun hasLost(gameName: String, playerName: String) = HasLostCheck(gameName, playerName)
+    override fun onTrack(aircraftName: String, angle: Double) = OnTrackCheck(aircraftName, angle)
+    override fun onQuadrantRelativeTo(aircraftName: String, position: Position, quadrant: Quadrant) =
+        OnQuadrantRelativeToCheck(aircraftName, position, quadrant)
 }
 
-object SampleGameCheckFactory : GameCheckFactory {
+object SampleAirspaceCheckFactory : AirspaceCheckFactory {
 
-    override fun hasPlayOrder(gameName: String, players: List<String>) = HasPlayOrderCheck(gameName, players)
-    override fun hasToken(gameName: String, playerName: String, position: Position) = HasTokenCheck(gameName, playerName, position)
-    override fun hasSpace(gameName: String, position: Position) = HasSpaceCheck(gameName, position)
-    override fun hasState(gameName: String, moves: MoveMap) = HasStateCheck(gameName, moves)
-    override fun isComplete(gameName: String) = IsCompleteCheck(gameName)
-    override fun isDraw(gameName: String) = IsDrawnCheck(gameName)
+    override fun hasRightOfWay(airspaceName: String, aircraft1: String, aircraft2: String) =
+        HasRightOfWayCheck(airspaceName, aircraft1, aircraft2)
+
+    override fun isConverging(airspaceName: String, aircraft1: String, aircraft2: String) =
+        IsConvergingCheck(airspaceName, aircraft1, aircraft2)
+
+    override fun isOvertaking(airspaceName: String, aircraft1: String, aircraft2: String) =
+        IsOvertakingCheck(airspaceName, aircraft1, aircraft2)
+
+    override fun isGoingToCross(airspaceName: String, aircraft1: String, aircraft2: String) =
+        IsGoingToCross(airspaceName, aircraft1, aircraft2)
+
+    override fun hasCrossed(airspaceName: String, aircraft1: String, aircraft2: String) =
+        HasCrossed(airspaceName, aircraft1, aircraft2)
+
+    override fun hasZeroCrossed(airspaceName: String, aircraft1: String, aircraft2: String) =
+        HasZeroCrossed(airspaceName, aircraft1, aircraft2)
+
+    override fun hasOneCrossed(airspaceName: String, aircraft1: String, aircraft2: String) =
+        HasOneCrossed(airspaceName, aircraft1, aircraft2)
+
+    override fun hasBothCrossed(airspaceName: String, aircraft1: String, aircraft2: String) =
+        HasBothCrossed(airspaceName, aircraft1, aircraft2)
+
+    override fun hasQuadrantConvergence(airspaceName: String, aircraft1: String, aircraft2: String) =
+        HasQuadrantConversionCheck(airspaceName, aircraft1, aircraft2)
+
+    override fun horizontalMissDistanceIs(airspaceName: String, aircraft1: String, aircraft2: String, hmd: Double) =
+        HorizontalMissDistanceIs(aircraft1, aircraft2, hmd)
+
+    override fun hasOrientation(airspaceName: String, aircraft1: String, aircraft2: String, same: Boolean) =
+        HasOrientationCheck(airspaceName, aircraft1, aircraft2, same)
+
+    override fun timeToClosestPointApproachIs(aircraft1: String, aircraft2: String, tcpa: Double) = // tcpa: NReal, NNZReal
+        TimeToClosestPointApproachIs(aircraft1, aircraft2, tcpa)
 }
 
 interface SampleCheck : Check {
-
     fun check(env: ExecutionEnvironment): Boolean
 }

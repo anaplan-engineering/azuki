@@ -24,7 +24,10 @@ class SampleQueryFactory : RightOfWayQueryFactory {
         value = { env ->
             env.airspaceManager.activeAirspaces.toList()
         },
-        checks = { airSpaces -> airSpaces.isNotEmpty() }
+        checks = { names ->
+            val x = this
+            if (x != null) println(x)
+        }
     )
 //    override fun getAircrafts(airspaceName: String): Query<Aircrafts> = UnsupportedQuery()
 //    override fun getVelocities(airspaceName: String): Query<Map<String,Velocity>> = UnsupportedQuery()

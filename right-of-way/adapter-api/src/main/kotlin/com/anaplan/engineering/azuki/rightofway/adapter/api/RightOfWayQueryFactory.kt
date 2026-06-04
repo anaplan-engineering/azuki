@@ -23,7 +23,5 @@ interface RightOfWayQueryFactory : QueryFactory {
 
     fun getAirspaces(): Query<List<String>> = UnsupportedQuery()
     fun getAircrafts(airspaceName: String): Query<Aircrafts> = UnsupportedQuery()
-    fun getVelocities(airspaceName: String): Query<Map<String,Velocity>> = UnsupportedQuery()
-    fun getPositions(airspaceName: String): Query<Map<String,Position>> = UnsupportedQuery()
     fun hasRightOfWay(airspaceName: String): Query<Aircrafts> = UnsupportedQuery()
 }
