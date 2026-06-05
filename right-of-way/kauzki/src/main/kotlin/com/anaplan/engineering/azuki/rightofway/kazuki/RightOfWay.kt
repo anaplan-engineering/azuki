@@ -115,6 +115,7 @@ class AirspaceProperties(private val airspace: AirSpace) {
 //TODO add @ComparableProperty, @ComparableTypeLimit etc.
 class RightOfWay(private val airspace: AirSpace) {
 
+    // Arguably refactor this out to RVector?
     val sumVectors = function(
         command = { u: RVector, v: RVector ->
             mk_RVector(u.x + v.x, u.y + v.y)
@@ -377,14 +378,14 @@ class RightOfWay(private val airspace: AirSpace) {
 
     val orientation = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            dot_product(a0.velocity, rotate90(a1.velocity)) //as Angle
+            dot_product(a0.velocity, a1.velocity) //as Angle
         },
         //post = { _, _, r -> isAngle(r) }
     )
 
     val parallel = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            orientation(a0, a1) == 0.0
+            dot_product(a0.velocity, rotate90(a1.velocity)) == 0.0
         }
     )
 
@@ -413,11 +414,11 @@ class RightOfWay(private val airspace: AirSpace) {
         command = { a0: Aircraft, a1: Aircraft ->
             (Q1(a0, a1.position) && Q1(a1, a0.position))
                 ||
+                (Q2(a0, a1.position) && Q1(a1, a0.position))
+                ||
+                (Q2(a0, a1.position) && Q1(a1, a0.position))
+                ||
                 (Q2(a0, a1.position) && Q2(a1, a0.position))
-                ||
-                (Q3(a0, a1.position) && Q3(a1, a0.position))
-                ||
-                (Q4(a0, a1.position) && Q4(a1, a0.position))
         }
     )
 

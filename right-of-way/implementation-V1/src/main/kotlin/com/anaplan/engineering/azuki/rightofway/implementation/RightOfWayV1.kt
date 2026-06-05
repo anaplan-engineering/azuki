@@ -1,28 +1,5 @@
 package com.anaplan.engineering.azuki.rightofway.implementation
 
-class RightOfWayV1 {
-}
-
-data class Vector2(val x: Double, val y: Double) {
-    // Plus Operator: v1 + v2
-    operator fun plus(other: Vector2) = Vector2(this.x + other.x, this.y + other.y)
-
-    // Minus Operator: v1 - v2
-    operator fun minus(other: Vector2) = Vector2(this.x - other.x, this.y - other.y)
-
-    // Scalar Multiplication (Vector * Scalar): v1 * 2.0
-    operator fun times(scalar: Double) = Vector2(this.x * scalar, this.y * scalar)
-
-    // Scalar Division (Vector / Scalar): v1 / 2.0
-    operator fun div(scalar: Double) = Vector2(this.x / scalar, this.y / scalar)
-
-    // Dot Product: v1 dot v2
-    infix fun dot(other: Vector2): Double = (this.x * other.x) + (this.y * other.y)
-
-    // Vector Length/Magnitude
-    val length: Double get() = kotlin.math.sqrt((x * x) + (y * y))
-}
-
 /*
 // Usage:
 val a = Vector2(1.0, 2.0)
@@ -57,5 +34,23 @@ fun main() {
     // 5. Length/Magnitude of vector
     val magnitude = length(v1)
 }
+
+convergence with EnumMAp
+
+import java.util.EnumMap
+
+enum class Color { RED, GREEN, BLUE }
+
+fun main() {
+    // Initialize an EnumMap backed internally by a flat array
+    val colorHexCode = EnumMap<Color, String>(Color::class.java)
+
+    // Direct access (safely restricted only to keys inside the Color enum)
+    colorHexCode[Color.RED] = "#FF0000"
+    colorHexCode[Color.GREEN] = "#00FF00"
+
+    println(colorHexCode[Color.RED]) // Output: #FF0000
+}
+
 
  */

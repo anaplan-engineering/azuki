@@ -30,19 +30,3 @@ const val delta_c = 1000.0
 const val Theta_h = 80.0
 
 enum class Quadrant { FRONT_RIGHT, FRONT_LEFT, BACK_LEFT, BACK_RIGHT }
-
-//typealias PositionMap = Map<Position, String>
-//typealias VelocityMap = Map<Velocity, String>
-//typealias AircraftMap = Map<Aircraft, String>
-
-
-//fun PositionMap.pretty(rowMax:Int, colMax: Int): String = buildString {
-//    (1..rowMax).forEach { x ->
-//        (1 until colMax).forEach { y ->
-//            append(getOrDefault(Position(x.toDouble(), y.toDouble()), "."))
-//            append(" | ")
-//        }
-//        append(getOrDefault(Position(x.toDouble(), colMax.toDouble()), "."))
-//        appendLine()
-//    }
-//}

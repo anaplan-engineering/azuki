@@ -9,6 +9,11 @@ typealias Aircraft = Pair<Position, Velocity>
 typealias AircraftData = Map<String, Aircraft>
 typealias Aircrafts = MutableMap<String, Aircraft>
 
+fun Aircraft.position(): Position = first
+fun Aircraft.velocity(): Velocity = second
+fun Pair<Double, Double>.x(): Double = first
+fun Pair<Double, Double>.y(): Double = second
+
 data class AirspaceState(
     val delta_o: Double,
     val delta_c: Double,
@@ -17,8 +22,8 @@ data class AirspaceState(
 )
 
 abstract class Airspace protected constructor(
-    val state: AirspaceState
-) {
+    protected val state: AirspaceState,
+)  {
     protected abstract val log: Logger
 
     // shadow the data class
@@ -71,10 +76,7 @@ fun Airspace.spiralVelocitiesSequence() = spiralSequence(delta_o)
 fun Airspace.freshPosition() = spiralPositionsSequence().first { it !in positions }
 fun Airspace.freshVelocity() = spiralVelocitiesSequence().first { it !in velocities }
 
-/**
- * Lazily generates an infinite stream of (X, Y) coordinates winding outward
- * as a spiral from (0, 0).
- */
+// stepwise change of position/velocity in spiral pattern
 fun spiralSequence(step: Double): Sequence<Pair<Double, Double>> = sequence {
     var x = 0.0
     var y = 0.0

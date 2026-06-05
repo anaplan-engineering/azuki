@@ -6,8 +6,9 @@ import com.anaplan.engineering.azuki.rightofway.adapter.implementation.Execution
 import com.anaplan.engineering.azuki.rightofway.adapter.implementation.toPlayer
 
 class HasRightOfWayCheck(
-    private val airSpaceName: String,
-    private val playerName: String,
+    private val airspaceName: String,
+    private val aircraft1: String,
+    private val aircraft2: String,
 ) : RightOfWayBehaviour(), SampleCheck {
 
     override fun check(env: ExecutionEnvironment): Boolean {

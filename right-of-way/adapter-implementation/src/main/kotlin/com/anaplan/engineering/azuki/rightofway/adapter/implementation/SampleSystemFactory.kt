@@ -58,7 +58,7 @@ data class SampleSystemIteration(
     val actionGenerators: List<SampleActionGenerator>,
     val checks: List<SampleCheck>,
     val regardlessOfActions: List<List<SampleAction>>,
-    // These two are Runnable*Query to allow us to use generic query combinators as well as RightOfWay-specific queries
+    // These two are Runnable*Query to allow us to use generic query combinators as well as RightOfWayBehaviours-specific queries
     val queries: List<RunnableQuery<ExecutionEnvironment, RightOfWayCheckFactory, *>>,
     val derivedQueries: List<RunnableDerivedQuery<ExecutionEnvironment, RightOfWayCheckFactory, *>>,
 ) {
@@ -109,7 +109,7 @@ data class SampleSystemDefinition(
     val actionGenerators: List<SampleActionGenerator>,
     val checks: List<SampleCheck>,
     val regardlessOfActions: List<List<SampleAction>>,
-    // These two are Runnable*Query to allow us to use generic query combinators as well as RightOfWay-specific queries.
+    // These two are Runnable*Query to allow us to use generic query combinators as well as RightOfWayBehaviours-specific queries.
     val queries: List<RunnableQuery<ExecutionEnvironment, RightOfWayCheckFactory, *>>,
     val derivedQueries: List<RunnableDerivedQuery<ExecutionEnvironment, RightOfWayCheckFactory, *>>,
 )
