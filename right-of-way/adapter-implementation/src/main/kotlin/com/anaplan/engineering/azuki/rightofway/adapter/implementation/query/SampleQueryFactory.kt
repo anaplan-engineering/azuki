@@ -20,48 +20,33 @@ class SampleQueryFactory : RightOfWayQueryFactory {
     override fun <T> liftQueriesToDerivedQuery(queries: List<Query<*>>) =
         RunnableQueriesAsDerivedQuery.fromQueries<ExecutionEnvironment, RightOfWayCheckFactory, T>(queries)
 
-    override fun getAirspaces(): Query<List<String>> = query(
+    override fun getAircrafts(airspaceName: String) = query(
+        value = { env -> env.withAirspace(airspaceName) { aircraftIds.toSet() } },
+        // this checks param is curried: first parameter is a List<Aircraft> and second is the RightOfWayCheckFactory
+        // This query is only intended as a driver for for-all quantifiers, so we don't support checking it
+        checks = { { emptyList() } })
+
+    // TODO not sure this is the intention for queries (i.e. more general for all aircraft in airspace)
+    //      or more specific, for individual aircraft
+    override fun hasRightOfWay(airspaceName: String) = query(
         value = { env ->
-            env.airspaceManager.activeAirspaces.toList()
+            env.withAirspace(airspaceName) {
+                // { (x, y) in pairs(aircraftIds) | hasRightOfWay(x, y) }
+                aircraftIds.flatMap { x ->
+                    (aircraftIds - x).map { y -> x to y }
+                }.filter { (x, y) ->
+                    hasRightOfWay(getAircraft(x), getAircraft(y))
+                }.toSet()
+            }
         },
-        checks = { names ->
-            val x = this
-            if (x != null) println(x)
+        checks = { pairs ->
+            {
+                pairs.map { (x, y) ->
+                    airspace.hasRightOfWay(airspaceName, x, y)
+                }
+            }
         }
     )
-//    override fun getAircrafts(airspaceName: String): Query<Aircrafts> = UnsupportedQuery()
-//    override fun getVelocities(airspaceName: String): Query<Map<String,Velocity>> = UnsupportedQuery()
-//    override fun getPositions(airspaceName: String): Query<Map<String,Position>> = UnsupportedQuery()
-//    override fun hasRightOfWay(airspaceName: String): Query<Aircrafts> = UnsupportedQuery()
-
-//    override fun getAircraft(airspaceName: String) = query(
-//        value = { env ->
-//            env.withAirspace(airspaceName) {
-//                this.
-//        //    .map { it.token.symbol }
-//            }
-//        },
-//        checks = { playOrder -> { listOf(game.hasPlayOrder(airspaceName, playOrder)) } })
-
-//    override fun getPositions(gameName: String) = query(value = { env ->
-//        env.withGame(gameName) { (1..height).flatMap { row -> (1..width).map { col -> Position(row, col) } } }
-//    }, checks = {
-//        // This query is only intended as a driver for for-all quantifiers, so we don't support checking it
-//        { emptyList() }
-//    })
-//
-//    override fun getToken(gameName: String, position: Position) =
-//        query(value = { env -> env.withGame(gameName) { tokenAt(position)?.symbol } }, checks = { token ->
-//            token?.let { { listOf(game.hasToken(gameName, it, position)) } } ?: {
-//                listOf(game.hasSpace(gameName, position))
-//            }
-//        })
-//
-//    override fun canPlayerPlaceToken(gameName: String, playerName: String, position: Position) = query(value = { env ->
-//        env.withGame(gameName) { canMove(playerName, position) }
-//    }, checks = { canPlace ->
-//        { listOf(player.canPlaceToken(gameName, playerName, position, canPlace)) }
-//    })
 }
 
 private fun <T> query(

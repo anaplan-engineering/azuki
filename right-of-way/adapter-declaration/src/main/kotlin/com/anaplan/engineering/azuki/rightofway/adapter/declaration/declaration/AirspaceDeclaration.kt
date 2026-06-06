@@ -1,10 +1,10 @@
 package com.anaplan.engineering.azuki.rightofway.adapter.declaration.declaration
 
 import com.anaplan.engineering.azuki.declaration.Declaration
-//import com.anaplan.engineering.azuki.rightofway.adapter.api.AircraftMap
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircrafts
 
-class AirspaceDeclaration(
+data class AirspaceDeclaration(
     override val name: String,
-//    val aircrafts: AircraftMap = emptyMap(),
+    val aircrafts: Aircrafts = emptyMap(),
     override val standalone: Boolean = true,
 ) : Declaration

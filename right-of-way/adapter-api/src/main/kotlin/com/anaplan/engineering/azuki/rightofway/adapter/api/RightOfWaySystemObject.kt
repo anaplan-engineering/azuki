@@ -23,7 +23,7 @@ data class Aircraft(val p: Position, val v: Velocity) {
     override fun toString(): String = "A($p, $v)"
 }
 
-typealias Aircrafts = MutableMap<String, Aircraft>
+typealias Aircrafts = Map<String, Aircraft>
 
 const val delta_o = 100.0
 const val delta_c = 1000.0

@@ -5,7 +5,6 @@ import com.anaplan.engineering.azuki.core.system.CheckFactory
 
 interface RightOfWayCheckFactory : CheckFactory {
     val airspace: AirspaceCheckFactory
-    val aircraft: AircraftCheckFactory
 }
 
 interface AirspaceCheckFactory {
@@ -23,14 +22,8 @@ interface AirspaceCheckFactory {
     fun hasQuadrantConvergence(airspaceName: String, aircraft1: String, aircraft2: String): Check
     fun horizontalMissDistanceIs(airspaceName: String, aircraft1: String, aircraft2: String, hmd: Double): Check
     fun hasOrientation(airspaceName: String, aircraft1: String, aircraft2: String, same: Boolean): Check
+    fun timeToClosestPointApproachIs(airspaceName: String, aircraft1: String, aircraft2: String, tcpa: Double): Check // tcpa: NReal, NNZReal
 
-    fun timeToClosestPointApproachIs(aircraft1: String, aircraft2: String, tcpa: Double): Check // tcpa: NReal, NNZReal
-}
-
-interface AircraftCheckFactory {
-
-    //TODO should this be linked with the Kazuki Angle type?
-    fun onTrack(aircraftName: String, angle: Double): Check
-
-    fun onQuadrantRelativeTo(aircraftName: String, position: Position, quadrant: Quadrant): Check
+    fun onTrack(airspaceName: String, aircraftName: String, angle: Double): Check
+    fun onQuadrantRelativeTo(airspaceName: String, aircraft1: String, aircraft2: String, quadrant: Quadrant): Check
 }

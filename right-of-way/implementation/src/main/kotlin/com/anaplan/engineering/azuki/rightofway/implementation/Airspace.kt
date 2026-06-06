@@ -22,8 +22,14 @@ data class AirspaceState(
 )
 
 abstract class Airspace protected constructor(
-    protected val state: AirspaceState,
-)  {
+    protected val state: AirspaceState):
+    QuadrantBehaviours ,
+    PositionBehaviours ,
+    OrientationBehaviours ,
+    CrossingBehaviours,
+    ConvergenceBehaviours,
+    RightOfWayBehaviours
+{
     protected abstract val log: Logger
 
     // shadow the data class

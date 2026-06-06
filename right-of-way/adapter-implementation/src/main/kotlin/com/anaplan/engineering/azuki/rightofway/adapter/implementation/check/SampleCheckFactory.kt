@@ -1,25 +1,19 @@
 package com.anaplan.engineering.azuki.rightofway.adapter.implementation.check
 
 import com.anaplan.engineering.azuki.core.system.Check
-import com.anaplan.engineering.azuki.rightofway.adapter.api.*
+import com.anaplan.engineering.azuki.rightofway.adapter.api.AirspaceCheckFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayCheckFactory
 import com.anaplan.engineering.azuki.rightofway.adapter.implementation.ExecutionEnvironment
-import com.anaplan.engineering.azuki.rightofway.implementation.Airspace
+import com.anaplan.engineering.azuki.rightofway.implementation.Convergence
+import com.anaplan.engineering.azuki.rightofway.implementation.Direction
+import com.anaplan.engineering.azuki.rightofway.implementation.Quadrant
+
+// TODO this looks ugly. Either change name, or how best to map these "api-level" x "impl-level" enums?
+fun com.anaplan.engineering.azuki.rightofway.adapter.api.Quadrant.toImplQuadrant() = Quadrant.entries[ordinal]
 
 class SampleCheckFactory : RightOfWayCheckFactory {
-
-//    override val player = SamplePlayerCheckFactory
-//    override val game = SampleGameCheckFactory
-    override val airspace: SampleAirspaceCheckFactory
-    override val aircraft: SampleAircraftCheckFactory
-
+    override val airspace = SampleAirspaceCheckFactory
     override fun systemValid() = SystemValidCheck()
-}
-
-object SampleAircraftCheckFactory : AircraftCheckFactory {
-
-    override fun onTrack(aircraftName: String, angle: Double) = OnTrackCheck(aircraftName, angle)
-    override fun onQuadrantRelativeTo(aircraftName: String, position: Position, quadrant: Quadrant) =
-        OnQuadrantRelativeToCheck(aircraftName, position, quadrant)
 }
 
 object SampleAirspaceCheckFactory : AirspaceCheckFactory {
@@ -28,37 +22,44 @@ object SampleAirspaceCheckFactory : AirspaceCheckFactory {
         HasRightOfWayCheck(airspaceName, aircraft1, aircraft2)
 
     override fun isConverging(airspaceName: String, aircraft1: String, aircraft2: String) =
-        IsConvergingCheck(airspaceName, aircraft1, aircraft2)
+        ConvergingCheck(airspaceName, aircraft1, aircraft2)
 
     override fun isOvertaking(airspaceName: String, aircraft1: String, aircraft2: String) =
-        IsOvertakingCheck(airspaceName, aircraft1, aircraft2)
+        OvertakingCheck(airspaceName, aircraft1, aircraft2)
 
     override fun isGoingToCross(airspaceName: String, aircraft1: String, aircraft2: String) =
-        IsGoingToCross(airspaceName, aircraft1, aircraft2)
+        CrossingCheck(airspaceName, aircraft1, aircraft2, Crossing.Crossing)
 
     override fun hasCrossed(airspaceName: String, aircraft1: String, aircraft2: String) =
-        HasCrossed(airspaceName, aircraft1, aircraft2)
+        CrossingCheck(airspaceName, aircraft1, aircraft2, Crossing.Crossed)
 
     override fun hasZeroCrossed(airspaceName: String, aircraft1: String, aircraft2: String) =
-        HasZeroCrossed(airspaceName, aircraft1, aircraft2)
+        CrossingCheck(airspaceName, aircraft1, aircraft2, Crossing.ZeroCrossed)
 
     override fun hasOneCrossed(airspaceName: String, aircraft1: String, aircraft2: String) =
-        HasOneCrossed(airspaceName, aircraft1, aircraft2)
+        CrossingCheck(airspaceName, aircraft1, aircraft2, Crossing.OneCrossed)
 
     override fun hasBothCrossed(airspaceName: String, aircraft1: String, aircraft2: String) =
-        HasBothCrossed(airspaceName, aircraft1, aircraft2)
+        CrossingCheck(airspaceName, aircraft1, aircraft2, Crossing.BothCrossed)
 
     override fun hasQuadrantConvergence(airspaceName: String, aircraft1: String, aircraft2: String) =
-        HasQuadrantConversionCheck(airspaceName, aircraft1, aircraft2)
+        QuadrantConvergenceCheck(airspaceName, aircraft1, aircraft2, Convergence.Convergence)
 
     override fun horizontalMissDistanceIs(airspaceName: String, aircraft1: String, aircraft2: String, hmd: Double) =
-        HorizontalMissDistanceIs(aircraft1, aircraft2, hmd)
+        HorizontalMissDistanceCheck(airspaceName, aircraft1, aircraft2, hmd)
 
     override fun hasOrientation(airspaceName: String, aircraft1: String, aircraft2: String, same: Boolean) =
-        HasOrientationCheck(airspaceName, aircraft1, aircraft2, same)
+        DirectionCheck(airspaceName, aircraft1, aircraft2, if (same) Direction.Same else Direction.Opposite)
 
-    override fun timeToClosestPointApproachIs(aircraft1: String, aircraft2: String, tcpa: Double) = // tcpa: NReal, NNZReal
-        TimeToClosestPointApproachIs(aircraft1, aircraft2, tcpa)
+    override fun timeToClosestPointApproachIs(airspaceName: String, aircraft1: String, aircraft2: String, tcpa: Double) = // tcpa: NReal, NNZReal
+        TimeClosestPointApproachCheck(airspaceName, aircraft1, aircraft2, tcpa)
+
+    override fun onTrack(airspaceName: String, aircraftName: String, angle: Double) =
+        TrackCheck(airspaceName, aircraftName, angle)
+
+    override fun onQuadrantRelativeTo(airspaceName: String, aircraft1: String, aircraft2: String,
+                                      quadrant: com.anaplan.engineering.azuki.rightofway.adapter.api.Quadrant) =
+        QuadrantCheck(airspaceName, aircraft1, aircraft2, quadrant.toImplQuadrant())
 }
 
 interface SampleCheck : Check {
