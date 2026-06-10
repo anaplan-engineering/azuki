@@ -4,8 +4,8 @@ import com.anaplan.engineering.azuki.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.rightofway.adapter.api.StartAirspaceBehaviour
 import com.anaplan.engineering.azuki.rightofway.adapter.declaration.RightOfWayDeclarationState
 
-open class StartAirspaceDeclarableAction(protected val airSpaceName: String) :
+open class StartAirspaceDeclarableAction(protected val airspaceName: String) :
         StartAirspaceBehaviour(), DeclarableAction<RightOfWayDeclarationState> {
-    override fun declare(state: RightOfWayDeclarationState) = state.declareAirspace(airSpaceName)
+    override fun declare(state: RightOfWayDeclarationState) = state.declareAirspace(airspaceName)
 }
 

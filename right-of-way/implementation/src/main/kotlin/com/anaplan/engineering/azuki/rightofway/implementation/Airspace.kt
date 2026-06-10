@@ -22,7 +22,7 @@ data class AirspaceState(
 )
 
 abstract class Airspace protected constructor(
-    protected val state: AirspaceState):
+    val state: AirspaceState):
     QuadrantBehaviours ,
     PositionBehaviours ,
     OrientationBehaviours ,

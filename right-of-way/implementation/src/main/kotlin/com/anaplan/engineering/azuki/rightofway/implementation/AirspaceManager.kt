@@ -35,7 +35,7 @@ class AirspaceManager(private val store: File) {
 
     fun add(name: String, airspace: Airspace): Airspace {
         if (airspaces.containsKey(name)) {
-            throw IllegalArgumentException("Game '$name' already exists")
+            throw IllegalArgumentException("Airspace '$name' already exists")
         }
         airspaces[name] = airspace
         Log.info("Added airpsace: (${airspace::class.simpleName})\n$airspace")

@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.rightofway.kazuki
 
+import com.anaplan.engineering.azuki.rightofway.kazuki.Airspace_Module.mk_Airspace
 import com.anaplan.engineering.azuki.rightofway.kazuki.Position_Module.as_Position
 import com.anaplan.engineering.azuki.rightofway.kazuki.Position_Module.is_Position
 import com.anaplan.engineering.azuki.rightofway.kazuki.RVector_Module.mk_RVector
@@ -7,6 +8,8 @@ import com.anaplan.engineering.azuki.rightofway.kazuki.RVector_Module.mk_RVector
 import com.anaplan.engineering.azuki.rightofway.kazuki.Velocity_Module.as_Velocity
 import com.anaplan.engineering.azuki.rightofway.kazuki.Velocity_Module.is_Velocity
 import com.anaplan.engineering.kazuki.core.*
+import com.anaplan.engineering.kazuki.core.minus
+import com.anaplan.engineering.kazuki.core.plus
 import kotlin.math.abs
 import kotlin.math.atan
 import kotlin.math.sqrt
@@ -70,28 +73,20 @@ interface Aircraft {
 }
 
 @Module
-interface AirSpace {
+interface Airspace {
 
+    //TODO LF: this better be `asSet`? Kazuki set type?
+    //         or perhaps have interface Aircrafts : Set<Aircraft> as a module?
     val aircrafts: Set<Aircraft>
 
     @Invariant
-    fun uniquePositions() = properties.allPositions.card == aircrafts.card
+    fun uniquePositions() = properties.allPositions.size.toNat() == aircrafts.card
+
+//    @Invariant
+//    fun noHeadOn() = functions.noHeadOn()
 
     @Invariant
-    fun noHeadOn() = functions.noHeadOn()
-
-    @Invariant
-    fun safeAirspace() = forall(aircrafts) { a0 ->
-        forall( aircrafts - {a0} ) { a1 ->
-            // note that different from VDM-SL, thmX definitions uses properties directly (e.g., akin to how would be in VDM-PP)
-            functions.thm1_determnistic_rw(a0, a1) &&
-            functions.thm2_zero_crossed_only_one_to_right(a0, a1) &&
-            functions.thm3_overtaking_asymmetric(a0, a1) &&
-            functions.thm4_no_rw_after_crossing(a0, a1) &&
-            functions.thm5_mutual_awareness(a0, a1) &&
-            functions.thm6_had_rw(a0, a1)
-        }
-    }
+    fun safeAirspace() = functions.thm_safe_airspace(aircrafts)
 
     @FunctionProvider(AirspaceProperties::class)
     val properties: AirspaceProperties
@@ -100,12 +95,13 @@ interface AirSpace {
     val functions: RightOfWay
 }
 
-class AirspaceProperties(private val airspace: AirSpace) {
+class AirspaceProperties(private val airspace: Airspace) {
     val delta_o by property { 1.0 }
     val delta_c by property { 2.0 }
     val Theta_h by property { 150.0 }
-    val allPositions by property { airspace.aircrafts.map { it.position }.toSet() }
-    val allVelocities by property { airspace.aircrafts.map { it.velocity }.toSet() }
+    //TODO LF: should this have an `as_Set` or just `toSet()` would do?
+    val allPositions by property { as_Set(airspace.aircrafts.map { it.position }) }
+    val allVelocities by property { as_Set(airspace.aircrafts.map { it.velocity }) }
 }
 
 /**
@@ -113,7 +109,7 @@ class AirspaceProperties(private val airspace: AirSpace) {
  * Wanted to explore other aspects of Azuki/Kazuki linkage
  */
 //TODO add @ComparableProperty, @ComparableTypeLimit etc.
-class RightOfWay(private val airspace: AirSpace) {
+class RightOfWay(private val airspace: Airspace) {
 
     // Arguably refactor this out to RVector?
     val sumVectors = function(
@@ -608,6 +604,35 @@ class RightOfWay(private val airspace: AirSpace) {
                     isInQ1andWasInQ2(a1, a0)
             }
         }
+    )
+
+    val thm_safe_airspace = function(
+        command = { space: Set<Aircraft> ->
+            forall(space) { a0 ->
+                forall(space - { a0 }) { a1 ->
+                    // note that different from VDM-SL, thmX definitions uses properties directly (e.g., akin to how would be in VDM-PP)
+                    thm1_determnistic_rw(a0, a1) &&
+                        thm2_zero_crossed_only_one_to_right(a0, a1) &&
+                        thm3_overtaking_asymmetric(a0, a1) &&
+                        thm4_no_rw_after_crossing(a0, a1) &&
+                        thm5_mutual_awareness(a0, a1) &&
+                        thm6_had_rw(a0, a1)
+                }
+            }
+        }
+    )
+
+    val addAircraft = function(
+        //TODO LF: should this be + {a} or as_Set(a)?
+        command = { a: Aircraft -> mk_Airspace(airspace.aircrafts + {a}) }, //as_Set(a)) },
+        pre = { a ->
+            // positions are unique (and by implication aircrafts)
+            a.position !in airspace.properties.allPositions
+                &&
+                // aircraft addition must keep airspace safe
+                thm_safe_airspace(airspace.aircrafts + {a})
+        },
+        post = { a, space -> a in space.aircrafts }
     )
 }
 

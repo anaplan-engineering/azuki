@@ -40,16 +40,16 @@ include(
     'right-of-way',
     'right-of-way:adapter-api',
     'right-of-way:adapter-declaration',
+    'right-of-way:adapter-implementation',
+    'right-of-way:adapter-kazuki',
 //    'right-of-way:adapter-vdm',
     'right-of-way:dsl',
     'right-of-way:kauzki',
 //    'right-of-way:eacs',
+    'right-of-way:implementation',
+    'right-of-way:implementation-V1',
 )
 includeBuild("build-conventions")
 includeBuild("vdm-animation")
 includeBuild("vdm-stub-generator")
 includeBuild("azuki-platform")
-
-include 'right-of-way:adapter-implementation'
-include 'right-of-way:implementation'
-include 'right-of-way:implementation-V1'

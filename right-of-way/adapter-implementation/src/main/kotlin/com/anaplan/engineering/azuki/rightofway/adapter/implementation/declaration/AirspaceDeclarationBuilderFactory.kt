@@ -3,7 +3,6 @@ package com.anaplan.engineering.azuki.rightofway.adapter.implementation.declarat
 import com.anaplan.engineering.azuki.rightofway.adapter.declaration.declaration.AirspaceDeclaration
 import com.anaplan.engineering.azuki.rightofway.adapter.implementation.ExecutionEnvironment
 
-
 class AirspaceDeclarationBuilderFactory : SampleDeclarationBuilderFactory<AirspaceDeclaration> {
 
     override val declarationClass = AirspaceDeclaration::class.java
@@ -13,14 +12,17 @@ class AirspaceDeclarationBuilderFactory : SampleDeclarationBuilderFactory<Airspa
     private class AirspaceDeclarationBuilder(declaration: AirspaceDeclaration) :
         SampleDeclarationBuilder<AirspaceDeclaration>(declaration) {
 
+        // Maps adapter-api type (Aircrafts = Map<String, Aircraft(Position, Velocity)>) into
+        // implementation type (Aircrafts = Map<String, Pair<Pair<Double, Double>, Pair<Double, Double>>)
+        //
+        // Here the mapping is somewhat artificial (e.g., data class to pair of corresponding types)
+        // In practice, adapter-api is an abstraction representation of implementation detailed representation.
         override fun build(env: ExecutionEnvironment) {
-            val playOrder = env.playOrders[declaration.orderName]!!.map(::toPlayer)
-            val prepopulated = declaration.moves.map { (pos, sym) ->
-                (pos.col - 1 to pos.row - 1) to toPlayer(sym).token
+            val prepopulated = declaration.aircrafts.map { (name, aircraft) ->
+                name to aircraft.toPair()
             }.toMap()
             env.airspaceManager.add(declaration.name,
-                env.airspaceManager.airspaceCreator.create(
-                    *playOrder.toTypedArray(), prepopulated = prepopulated))
+                env.airspaceManager.airspaceCreator.create(prepopulated = prepopulated))
         }
     }
 }

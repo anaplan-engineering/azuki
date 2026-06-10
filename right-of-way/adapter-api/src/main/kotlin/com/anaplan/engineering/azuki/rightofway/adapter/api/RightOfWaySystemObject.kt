@@ -16,11 +16,11 @@ data class Velocity(val x: Double, val y: Double) {
     override fun toString(): String = "V($x, $y)"
 }
 
-data class Aircraft(val p: Position, val v: Velocity) {
+data class Aircraft(val position: Position, val velocity: Velocity) {
     constructor(coordinates: Pair<Position, Velocity>) : this(coordinates.first, coordinates.second)
 
-    fun toPair() = Pair(p.toPair(), v.toPair())
-    override fun toString(): String = "A($p, $v)"
+    fun toPair() = Pair(position.toPair(), velocity.toPair())
+    override fun toString(): String = "A($position, $velocity)"
 }
 
 typealias Aircrafts = Map<String, Aircraft>

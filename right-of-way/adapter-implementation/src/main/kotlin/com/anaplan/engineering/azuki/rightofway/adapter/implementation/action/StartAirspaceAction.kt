@@ -8,11 +8,11 @@ class StartAirspaceAction(
 ) : StartAirspaceDeclarableAction(airspaceName), SampleAction {
 
     override fun act(env: ExecutionEnvironment) {
-        env.withAirspace(airSpaceName) {
+        env.withAirspace(airspaceName) {
             println(this.aircraftIds)
             println(positions)
         }
-        env.airspaceManager.add(airSpaceName, env.airspaceManager.airspaceCreator.create())
+        env.airspaceManager.add(airspaceName, env.airspaceManager.airspaceCreator.create())
         TODO("Need a way to encode positions in execution environment")
 //        val playOrder = env.playOrders[orderName]!!.map(::toPlayer)
 //        env.gameManager.add(gameName, env.gameManager.gameCreator.create(*playOrder.toTypedArray()))
