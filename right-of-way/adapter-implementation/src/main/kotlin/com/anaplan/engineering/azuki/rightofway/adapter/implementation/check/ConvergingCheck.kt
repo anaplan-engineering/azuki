@@ -4,11 +4,8 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayBehaviours
 import com.anaplan.engineering.azuki.rightofway.implementation.Aircraft
 import com.anaplan.engineering.azuki.rightofway.implementation.Airspace
 
-class ConvergingCheck(
-    private val airspaceName: String,
-    private val aircraft1: String,
-    private val aircraft2: String,
-) : AbstractCheck(airspaceName, aircraft1, aircraft2, RightOfWayBehaviours.Convergence)
+class ConvergingCheck(airspaceName: String, aircraft0: String, aircraft1: String,
+) : AbstractCheck(airspaceName, aircraft0, aircraft1, RightOfWayBehaviours.Convergence)
 {
-    override fun Airspace.booleanCheck(aircraft1: Aircraft, aircraft2: Aircraft) = converging(aircraft1, aircraft2)
+    override fun Airspace.booleanCheck(aircraft0: Aircraft, aircraft1: Aircraft) = converging(aircraft0, aircraft1)
 }

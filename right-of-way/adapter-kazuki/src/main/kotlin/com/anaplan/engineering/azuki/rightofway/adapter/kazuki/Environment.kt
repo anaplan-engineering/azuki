@@ -35,13 +35,18 @@ class ExecutionEnvironment {
 
     val variables = mutableMapOf<String, Any>()
 
-    inline fun <reified T> get(name: String) = variables[name] as T
+    inline fun <reified T> get(name: String) = (variables[name] as T) ?: throw IllegalArgumentException("No such name $name")
 
     inline fun <reified T : Any> set(name: String, value: T) {
         variables[name] = value
     }
 
     internal fun airspace(name: String) = get<Airspace>(name)
+
+    internal fun aircraft(airspaceName: String, aircraftName: String) = get<Aircraft>("${airspaceName}.${aircraftName}")
+
+    // because of the get method, this always returns non-null
+    fun <T> withAirspace(name: String, op: Airspace.() -> T) = airspace(name).op()
 }
 
 //TODO change the overloaded names from across different projects - unhelpful

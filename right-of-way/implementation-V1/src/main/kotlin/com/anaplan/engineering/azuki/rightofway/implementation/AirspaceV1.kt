@@ -1,6 +1,6 @@
 package com.anaplan.engineering.azuki.rightofway.implementation
 
-import com.anaplan.engineering.azuki.rightofway.implementation.QuadrantBehaviours.Companion.CONVERGENCE_MATRIX
+import com.anaplan.engineering.azuki.rightofway.implementation.QuadrantBehaviours.Companion.CONVERGENCE_MATRICES
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.math.abs
@@ -16,21 +16,21 @@ class SampleQuadrantBehaviours : QuadrantBehaviours {
         return Vector2(psub dot vrot, psub dot aircraft.velocity().toVector())
     }
 
-    override fun quadrant(aircraft: Aircraft,position: Position): Quadrant {
+    override fun quadrant(aircraft: Aircraft,position: Position): QuadrantImpl {
         val q = getQuadrant(aircraft, position)
         return when {
-            q.x > 0.0 && q.y >= 0.0 -> Quadrant.Q1
-            q.x <= 0.0 && q.y > 0.0 -> Quadrant.Q2
-            q.x < 0.0 && q.y <= 0.0 -> Quadrant.Q3
-            q.x >= 0.0 && q.y < 0.0 -> Quadrant.Q4
+            q.x > 0.0 && q.y >= 0.0 -> QuadrantImpl.Q1
+            q.x <= 0.0 && q.y > 0.0 -> QuadrantImpl.Q2
+            q.x < 0.0 && q.y <= 0.0 -> QuadrantImpl.Q3
+            q.x >= 0.0 && q.y < 0.0 -> QuadrantImpl.Q4
             else -> throw IllegalStateException("Invalid quadrant for vector $q")
         }
     }
 
-    override fun quadrantConvergence(aircraft1: Aircraft, aircraft2: Aircraft): Convergence {
+    override fun quadrantConvergence(aircraft1: Aircraft, aircraft2: Aircraft): ConvergenceImpl {
         val a1Q = quadrant(aircraft1, aircraft2.position())
         val a2Q = quadrant(aircraft2, aircraft1.position())
-        return CONVERGENCE_MATRIX[a1Q, a2Q]
+        return CONVERGENCE_MATRICES[a1Q, a2Q]
     }
 }
 
@@ -80,11 +80,11 @@ class SampleOrientationBehaviours : OrientationBehaviours {
     override fun orientation(aircraft1: Aircraft, aircraft2: Aircraft) =
         (aircraft1.velocity().toVector() dot aircraft2.velocity().toVector())
 
-    override fun direction(aircraft1: Aircraft, aircraft2: Aircraft): Direction {
+    override fun direction(aircraft1: Aircraft, aircraft2: Aircraft): DirectionImpl {
         val ori = orientation(aircraft1, aircraft2)
         return when {
-            ori < 0.0 -> Direction.Opposite
-            ori > 0.0 -> Direction.Same
+            ori < 0.0 -> DirectionImpl.Opposite
+            ori > 0.0 -> DirectionImpl.Same
             else -> throw IllegalStateException("Invalid direction orientation at $ori degrees")
         }
     }
@@ -133,7 +133,7 @@ class SampleConvergenceBehaviours(
     var Theta_h: Double = THETA_H
 
     override fun converging(aircraft1: Aircraft, aircraft2: Aircraft) =
-        quadrantBehaviours.quadrantConvergence(aircraft1, aircraft2) == Convergence.Convergence &&
+        quadrantBehaviours.quadrantConvergence(aircraft1, aircraft2) == ConvergenceImpl.Convergence &&
             orientationBehaviours.horizontalMissDistance(aircraft1, aircraft2) < delta_c
 
     override fun headon(aircraft1: Aircraft, aircraft2: Aircraft) =
@@ -182,8 +182,8 @@ class SampleRightOfWayBehaviours(
 
     override fun overtaking(aircraft1: Aircraft, aircraft2: Aircraft) =
         // won't work given it's not a class inheritance
-        quadrantBehaviours.quadrant(aircraft1, aircraft2.position()) in setOf(Quadrant.Q1, Quadrant.Q2) &&
-            quadrantBehaviours.quadrant(aircraft2, aircraft1.position()) in setOf(Quadrant.Q3, Quadrant.Q4) &&
+        quadrantBehaviours.quadrant(aircraft1, aircraft2.position()) in setOf(QuadrantImpl.Q1, QuadrantImpl.Q2) &&
+            quadrantBehaviours.quadrant(aircraft2, aircraft1.position()) in setOf(QuadrantImpl.Q3, QuadrantImpl.Q4) &&
             orientationBehaviours.horizontalMissDistance(aircraft1, aircraft2) < delta_o
 
     override fun hasRightOfWay(aircraft1: Aircraft, aircraft2: Aircraft) =

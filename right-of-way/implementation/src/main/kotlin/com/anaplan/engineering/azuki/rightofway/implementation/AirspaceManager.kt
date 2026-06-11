@@ -13,6 +13,7 @@ class AirspaceManager(private val store: File) {
     operator fun get(name: String) = airspaces[name] ?: throw IllegalArgumentException("Unknown airspace $name")
 
     fun close(name: String) {
+        require(airspaces.containsKey(name)) { "Airspace $name does not exist" }
         airspaces.remove(name)
         Log.info("Closed $name, active airspaces = ${airspaces.keys}")
     }
@@ -34,9 +35,7 @@ class AirspaceManager(private val store: File) {
     private fun airspaceFile(name: String) = File(store, name)
 
     fun add(name: String, airspace: Airspace): Airspace {
-        if (airspaces.containsKey(name)) {
-            throw IllegalArgumentException("Airspace '$name' already exists")
-        }
+        require(!airspaces.containsKey(name)) { "Airspace '$name' already exists" }
         airspaces[name] = airspace
         Log.info("Added airpsace: (${airspace::class.simpleName})\n$airspace")
         Log.info("Active airspaces = ${airspaces.keys}")

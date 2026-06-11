@@ -32,6 +32,14 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayQueryFacto
 import com.anaplan.engineering.azuki.rightofway.adapter.declaration.RightOfWayDeclarationState
 import com.anaplan.engineering.azuki.rightofway.adapter.implementation.action.SampleAction
 import com.anaplan.engineering.azuki.rightofway.adapter.implementation.action.SampleActionFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.implementation.actionGenerator.SampleActionGenerator
+import com.anaplan.engineering.azuki.rightofway.adapter.implementation.actionGenerator.SampleActionGeneratorFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.implementation.check.SampleCheck
+import com.anaplan.engineering.azuki.rightofway.adapter.implementation.check.SampleCheckFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.implementation.declaration.SampleDeclarationBuilder
+import com.anaplan.engineering.azuki.rightofway.adapter.implementation.declaration.SampleDeclarationBuilderFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.implementation.query.SampleQueryFactory
+import com.anaplan.engineering.azuki.rightofway.implementation.AirspaceManager
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.slf4j.Logger
@@ -141,11 +149,7 @@ private fun <T> DerivedQuery<T>.toSampleDerivedQuery() =
         "Invalid derived query: $this"
     }
 
-/**
- * An example of a mutable system for tic-tac-toe.
- *
- * This system handles persistence and is capable of action generation and querying.
- */
+// Mutable right of way system handling persistence and is capable of action generation and querying.
 class SampleSystem(private val initialDefinition: SampleSystemDefinition) :
     ActionGeneratingSystem<RightOfWayActionFactory, RightOfWayCheckFactory>,
     PersistableSystem<RightOfWayActionFactory, RightOfWayCheckFactory>,
@@ -188,18 +192,18 @@ class SampleSystem(private val initialDefinition: SampleSystemDefinition) :
 
     private val objectMapper = jacksonObjectMapper()
 
-    data class PersistableSystemState(val activeGames: List<String>, val store: File)
+    data class PersistableSystemState(val activeAirspaces: List<String>, val store: File)
 
     override fun verifyAndSerialize(): VerificationResult {
         val result = verify()
         return if (result is VerificationResult.Verified) {
             try {
-                val activeGames = env.gameManager.activeGames.map { name ->
-                    env.gameManager.save(name)
+                val activeAirspaces = env.airspaceManager.activeAirspaces.map { name ->
+                    env.airspaceManager.save(name)
                     name
                 }
-                val file = Files.createTempFile("sample", "json").toFile()
-                objectMapper.writeValue(file, PersistableSystemState(activeGames, store))
+                val file = Files.createTempFile("sample_rightofway", "json").toFile()
+                objectMapper.writeValue(file, PersistableSystemState(activeAirspaces, store))
                 VerificationResult.VerifiedAndSerialized(file)
             } catch (e: Exception) {
                 Log.error("Unable to serialize", e)
@@ -213,7 +217,7 @@ class SampleSystem(private val initialDefinition: SampleSystemDefinition) :
     override fun deserializeAndVerify(file: File): VerificationResult {
         val systemState = objectMapper.readValue<PersistableSystemState>(file)
         currentIteration = initialize(systemState.store)
-        systemState.activeGames.forEach { env.gameManager.load(it) }
+        systemState.activeAirspaces.forEach { env.airspaceManager.load(it) }
         return verify()
     }
 
@@ -231,7 +235,7 @@ class SampleSystem(private val initialDefinition: SampleSystemDefinition) :
         runQueries(env)
     }
 
-    private fun newStore() = Files.createTempDirectory("XO").toFile()
+    private fun newStore() = Files.createTempDirectory("RightOfWay").toFile()
 
     override fun applyIteration(systemIteration: SystemIteration) {
         currentIteration = if (currentIteration == null) {
@@ -244,7 +248,7 @@ class SampleSystem(private val initialDefinition: SampleSystemDefinition) :
     // This is a bit fiddly as we want to defer any system initialization until a 'command' function is invoked
     private fun initialize(store: File, initialIteration: SystemIteration? = null) = try {
         _store = store
-        _env = ExecutionEnvironment(GameManager(store))
+        _env = ExecutionEnvironment(AirspaceManager(store))
         val declarationBuilders =
             declarationStateBuilder.build(initialDefinition.declarableActions).map { declarationBuilder(it) }
         declarationBuilders.forEach { it.declare(env) }

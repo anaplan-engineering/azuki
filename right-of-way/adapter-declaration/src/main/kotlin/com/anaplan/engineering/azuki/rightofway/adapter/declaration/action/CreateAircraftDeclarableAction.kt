@@ -13,5 +13,6 @@ open class CreateAircraftDeclarableAction(
     protected val velocity: Velocity
 ) :
     CreateAircraftBehaviour(), DeclarableAction<RightOfWayDeclarationState> {
-    override fun declare(state: RightOfWayDeclarationState) = state.declareAircraft(airspaceName, aircraftName, position, velocity)
+    override fun declare(state: RightOfWayDeclarationState) =
+        state.declareAircraft(airspaceName, aircraftName, position, velocity)
 }

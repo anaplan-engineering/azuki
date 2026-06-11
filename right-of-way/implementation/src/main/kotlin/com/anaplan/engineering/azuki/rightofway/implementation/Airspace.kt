@@ -56,13 +56,7 @@ abstract class Airspace protected constructor(
 //    }
     fun getAircraft(id: String) = aircrafts[id] ?: throw IllegalArgumentException("No such aircraft $id")
 
-    fun getAircraftAt(position: Position) = aircrafts.values.find { it.first == position }
-
-    fun getPosition(id: String) = getAircraft(id).first
-    fun getVelocity(id: String) = getAircraft(id).second
-
     fun hasAircraft(id: String) = aircrafts.containsKey(id)
-    fun hasPosition(position: Position) = positions.contains(position)
 
     fun addAircraft(id: String, position: Position, velocity: Velocity) {
         require(!aircrafts.containsKey(id)) { "Aircraft $id already exists" }
@@ -70,34 +64,4 @@ abstract class Airspace protected constructor(
         aircrafts[id] = position to velocity
     }
 
-    fun addAircraft(id: String) {
-        addAircraft(id, freshPosition(), freshVelocity())
-    }
-}
-
-// Lazily creates fresh positions/velocities according to the airspace constants
-fun Airspace.spiralPositionsSequence() = spiralSequence(delta_c)
-fun Airspace.spiralVelocitiesSequence() = spiralSequence(delta_o)
-
-fun Airspace.freshPosition() = spiralPositionsSequence().first { it !in positions }
-fun Airspace.freshVelocity() = spiralVelocitiesSequence().first { it !in velocities }
-
-// stepwise change of position/velocity in spiral pattern
-fun spiralSequence(step: Double): Sequence<Pair<Double, Double>> = sequence {
-    var x = 0.0
-    var y = 0.0
-    var dx = 0.0
-    var dy = step
-
-    while (true) {
-        yield(x to y)
-        // Change direction when we hit a corner of the spiral boundary
-        if (x == y || (x < 0.0 && x == -y) || (x > 0.0 && x == 1.0 - y)) {
-            val temp = dx
-            dx = -dy
-            dy = temp
-        }
-        x += dx
-        y += dy
-    }
 }

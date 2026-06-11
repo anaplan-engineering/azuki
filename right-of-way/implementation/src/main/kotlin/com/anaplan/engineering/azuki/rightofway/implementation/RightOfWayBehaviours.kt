@@ -2,20 +2,22 @@ package com.anaplan.engineering.azuki.rightofway.implementation
 
 import kotlin.math.atan
 
-enum class Convergence { Convergence, Divergence, Overtake }
-enum class Quadrant { Q1, Q2, Q3, Q4 }
-enum class Direction { Same, Opposite }
+//TODO LF: these are in the system objects, but not accessible here, bit ugly?
+enum class QuadrantImpl { Q1, Q2, Q3, Q4 }
+enum class ConvergenceImpl { Convergence, Divergence, Overtake }
+enum class DirectionImpl { Same, Opposite }
 
 interface QuadrantBehaviours {
-    fun quadrant(aircraft: Aircraft, position: Position): Quadrant
-    fun quadrantConvergence(aircraft1: Aircraft, aircraft2: Aircraft): Convergence
+    fun quadrant(aircraft: Aircraft, position: Position): QuadrantImpl
+    fun quadrantConvergence(aircraft1: Aircraft, aircraft2: Aircraft): ConvergenceImpl
 
+    // Delphi/Ada idiom to index on arrays by enum types to avoid complicated if-then-else-chains
     companion object {
-        val CONVERGENCE_MATRIX = arrayOf(
-            arrayOf(Convergence.Convergence, Convergence.Convergence, Convergence.Overtake, Convergence.Overtake),
-            arrayOf(Convergence.Convergence, Convergence.Convergence, Convergence.Overtake, Convergence.Overtake),
-            arrayOf(Convergence.Overtake, Convergence.Overtake, Convergence.Divergence, Convergence.Divergence),
-            arrayOf(Convergence.Overtake, Convergence.Overtake, Convergence.Divergence, Convergence.Divergence),
+        val CONVERGENCE_MATRICES = arrayOf(
+            arrayOf(ConvergenceImpl.Convergence, ConvergenceImpl.Convergence, ConvergenceImpl.Overtake, ConvergenceImpl.Overtake),
+            arrayOf(ConvergenceImpl.Convergence, ConvergenceImpl.Convergence, ConvergenceImpl.Overtake, ConvergenceImpl.Overtake),
+            arrayOf(ConvergenceImpl.Overtake, ConvergenceImpl.Overtake, ConvergenceImpl.Divergence, ConvergenceImpl.Divergence),
+            arrayOf(ConvergenceImpl.Overtake, ConvergenceImpl.Overtake, ConvergenceImpl.Divergence, ConvergenceImpl.Divergence),
         )
     }
 }
@@ -27,7 +29,7 @@ interface OrientationBehaviours {
 
     fun orientation(aircraft1: Aircraft, aircraft2: Aircraft): Double
     fun parallel(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun direction(aircraft1: Aircraft, aircraft2: Aircraft): Direction
+    fun direction(aircraft1: Aircraft, aircraft2: Aircraft): DirectionImpl
 }
 
 interface PositionBehaviours {
@@ -56,8 +58,8 @@ interface RightOfWayBehaviours {
     fun hasRightOfWay(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
 }
 
-operator fun <T> Array<Array<T>>.get(row: Quadrant, col: Quadrant): T = this[row.ordinal][col.ordinal]
-operator fun <T> Array<Array<T>>.set(row: Quadrant, col: Quadrant, value: T) { this[row.ordinal][col.ordinal] = value }
+operator fun <T> Array<Array<T>>.get(row: QuadrantImpl, col: QuadrantImpl): T = this[row.ordinal][col.ordinal]
+operator fun <T> Array<Array<T>>.set(row: QuadrantImpl, col: QuadrantImpl, value: T) { this[row.ordinal][col.ordinal] = value }
 
 
 

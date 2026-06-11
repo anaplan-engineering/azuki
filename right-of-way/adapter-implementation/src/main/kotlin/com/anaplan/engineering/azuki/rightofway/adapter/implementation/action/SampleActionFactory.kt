@@ -2,7 +2,9 @@ package com.anaplan.engineering.azuki.rightofway.adapter.implementation.action
 
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.rightofway.adapter.api.AirspaceActionFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Velocity
 import com.anaplan.engineering.azuki.rightofway.adapter.implementation.ExecutionEnvironment
 
 class SampleActionFactory : RightOfWayActionFactory {
@@ -14,8 +16,8 @@ object SampleAirspaceActionFactory : AirspaceActionFactory {
     override fun save(airspaceName: String) = SaveAirspaceAction(airspaceName)
     override fun close(airspaceName: String) = CloseAirspaceAction(airspaceName)
     override fun load(airspaceName: String) = LoadAirspaceAction(airspaceName)
-    override fun addAircraft(airspaceName: String, aircraftName: String) =
-        CreateAircraftAction(aircraftName, aircraftName)
+    override fun addAircraft(airspaceName: String, aircraftName: String, position: Position, velocity: Velocity) =
+        CreateAircraftAction(airspaceName, aircraftName, position, velocity)
 }
 
 interface SampleAction : Action {

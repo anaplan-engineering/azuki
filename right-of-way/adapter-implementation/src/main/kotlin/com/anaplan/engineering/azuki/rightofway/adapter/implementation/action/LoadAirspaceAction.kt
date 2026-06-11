@@ -1,15 +1,15 @@
 package com.anaplan.engineering.azuki.rightofway.adapter.implementation.action
 
-import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
+import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayBehaviours
 import com.anaplan.engineering.azuki.rightofway.adapter.implementation.ExecutionEnvironment
 
 class LoadAirspaceAction(
-    private val airspaceName: String,
+    private val airspaceFileName: String,
 ) : SampleAction {
 
     override fun act(env: ExecutionEnvironment) {
-        env.airspaceManager.load(airspaceName)
+        env.airspaceManager.load(airspaceFileName)
     }
 
-    override val behavior = unsupportedBehavior
+    override val behavior = RightOfWayBehaviours.LoadAirspace
 }

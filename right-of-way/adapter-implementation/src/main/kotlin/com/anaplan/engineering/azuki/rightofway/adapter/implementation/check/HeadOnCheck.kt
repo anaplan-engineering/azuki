@@ -4,8 +4,8 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayBehaviours
 import com.anaplan.engineering.azuki.rightofway.implementation.Aircraft
 import com.anaplan.engineering.azuki.rightofway.implementation.Airspace
 
-class HeadOnCheck(private val airspaceName: String, private val aircraft1: String, private val aircraft2: String)
-    : AbstractCheck(airspaceName, aircraft1, aircraft2, RightOfWayBehaviours.ConvergeHeadon)
+class HeadOnCheck(airspaceName: String, aircraft0: String, aircraft1: String)
+    : AbstractCheck(airspaceName, aircraft0, aircraft1, RightOfWayBehaviours.ConvergeHeadon)
 {
-    override fun Airspace.booleanCheck(aircraft1: Aircraft, aircraft2: Aircraft) = headon(aircraft1, aircraft2)
+    override fun Airspace.booleanCheck(aircraft0: Aircraft, aircraft1: Aircraft) = headon(aircraft0, aircraft1)
 }

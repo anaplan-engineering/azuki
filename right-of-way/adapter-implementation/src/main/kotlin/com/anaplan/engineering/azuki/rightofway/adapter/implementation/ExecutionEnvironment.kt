@@ -2,7 +2,6 @@ package com.anaplan.engineering.azuki.rightofway.adapter.implementation
 
 import com.anaplan.engineering.azuki.rightofway.implementation.Airspace
 import com.anaplan.engineering.azuki.rightofway.implementation.AirspaceManager
-import kotlin.text.get
 
 class ExecutionEnvironment(val airspaceManager: AirspaceManager) {
 

@@ -7,7 +7,8 @@ import com.anaplan.engineering.azuki.core.system.ReifiedBehavior
 object RightOfWayBehaviours {
     const val StartAirspace = 1
     const val NewAircraft = 2
-    const val MoveAircraft = 3
+    const val LoadAirspace = 3
+    const val SaveAirspace = 21
 
     const val RightOfWay = 4
     const val Convergence = 5
@@ -19,13 +20,12 @@ object RightOfWayBehaviours {
     const val BothCrossed = 11
     const val QuadrantConvergence = 12
     const val HMD = 13
-    const val Orientation = 14
+    const val Direction = 14
     const val TCPA = 15
     const val OnTrack = 16
     const val OnQuadrant = 17
     const val ConvergeNotHeadon = 18
     const val ConvergeHeadon = 19
-    const val Direction = 20
 }
 
 // Each behaviour will have a corresponding factory, be that for an action or a check
@@ -37,10 +37,14 @@ open class CreateAircraftBehaviour : ReifiedBehavior {
     override val behavior = RightOfWayBehaviours.NewAircraft
 }
 
-open class MoveAircraftBehaviour : ReifiedBehavior {
-    override val behavior = RightOfWayBehaviours.MoveAircraft
+open class LoadAirspaceBehaviour : ReifiedBehavior {
+    override val behavior = RightOfWayBehaviours.LoadAirspace
 }
 
+//open class MoveAircraftBehaviour : ReifiedBehavior {
+//    override val behavior = RightOfWayBehaviours.MoveAircraft
+//}
+//
 //open class RightOfWayBehaviour : ReifiedBehavior {
 //    override val behavior = RightOfWayBehaviours.RightOfWay
 //}

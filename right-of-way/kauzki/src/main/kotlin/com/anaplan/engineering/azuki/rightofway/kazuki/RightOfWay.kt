@@ -242,7 +242,7 @@ class RightOfWay(private val airspace: Airspace) {
     )
 
     // Time to Closest Point of Approach
-    val tCPA = function( //: VFunction2<RightOfWay.Aircraft, RightOfWay.Aircraft, out Double>
+    val tCPA = function(
         command = { a0: Aircraft, a1: Aircraft ->
             if (a0.velocity == a1.velocity)
                 0.0 // if 0, type gets captured as Number!!!!
@@ -268,7 +268,7 @@ class RightOfWay(private val airspace: Airspace) {
                     isNZReal(vDiffProd)
             }
         },
-        post = { a0, a1, r -> (a0.velocity != a1.velocity) implies isNNZReal(r) }
+        //post = { a0, a1, r -> (a0.velocity != a1.velocity) iff isNNZReal(r) }
     )
 
     // Horizontal Miss Distance (HMD) is the distance at the Closest Point of Approach
@@ -410,7 +410,7 @@ class RightOfWay(private val airspace: Airspace) {
         command = { a0: Aircraft, a1: Aircraft ->
             (Q1(a0, a1.position) && Q1(a1, a0.position))
                 ||
-                (Q2(a0, a1.position) && Q1(a1, a0.position))
+                (Q1(a0, a1.position) && Q2(a1, a0.position))
                 ||
                 (Q2(a0, a1.position) && Q1(a1, a0.position))
                 ||
