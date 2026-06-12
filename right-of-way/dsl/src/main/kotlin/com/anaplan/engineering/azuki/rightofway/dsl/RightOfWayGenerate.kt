@@ -10,7 +10,7 @@ class RightOfWayGenerate(private val actionGeneratorFactory: RightOfWayActionGen
 
     fun createAirspace(airspaceName: String) =
         addGenerator { generateAirspace(airspaceName) }
-    fun createAircraft(aircraftName: String, numberOfAirCraft: Int = MIN_AIRCRAFT) =
+    fun createAircraft(aircraftName: String, numberOfAirCraft: UInt = MIN_AIRCRAFT) =
         addGenerator { generateAircraft(aircraftName, numberOfAirCraft) }
 
     private val generatorList = mutableListOf<ActionGenerator>()

@@ -9,7 +9,7 @@ object RightOfWayBehaviours {
     const val NewAircraft = 2
     const val LoadAirspace = 3
     const val SaveAirspace = 21
-
+    const val HasAircraft = 20
     const val RightOfWay = 4
     const val Convergence = 5
     const val Overtaking = 6

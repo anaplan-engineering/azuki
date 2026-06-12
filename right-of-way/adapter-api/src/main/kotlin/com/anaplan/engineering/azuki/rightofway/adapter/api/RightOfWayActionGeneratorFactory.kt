@@ -11,6 +11,6 @@ interface RightOfWayActionGeneratorFactory : ActionGeneratorFactory {
      * Generates a valid aircraft and assigns it to the given name.
      * An aircraft must not already exist with this name.
      */
-    fun generateAircraft(airspaceName: String, numberOfAircraft: Int = MIN_AIRCRAFT): ActionGenerator
+    fun generateAircraft(airspaceName: String, numberOfAircraft: UInt = MIN_AIRCRAFT): ActionGenerator
 
 }

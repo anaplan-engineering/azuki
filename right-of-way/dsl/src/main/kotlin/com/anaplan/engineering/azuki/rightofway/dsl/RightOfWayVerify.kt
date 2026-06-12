@@ -4,7 +4,6 @@ import com.anaplan.engineering.azuki.core.dsl.Verify
 import com.anaplan.engineering.azuki.core.scenario.ScenarioQueries
 import com.anaplan.engineering.azuki.core.system.DerivedQuery
 import com.anaplan.engineering.azuki.core.system.Query
-import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayQueryFactory
 
 class RightOfWayVerify(private val queryFactory: RightOfWayQueryFactory) : Verify<RightOfWayQueryFactory> {
@@ -27,11 +26,12 @@ class RightOfWayVerify(private val queryFactory: RightOfWayQueryFactory) : Verif
         })
     }
 
-//    fun gameHasPlayOrder(gameName: String) = addQuery { getPlayOrder(gameName) }
-//    fun gameHasPositions(gameName: String) = addQuery { getPositions(gameName) }
-//    fun gameHasToken(gameName: String, position: Pair<Int, Int>) = addQuery { getToken(gameName, Position(position)) }
-//    fun playerCanPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) =
-//        addQuery { canPlayerPlaceToken(gameName, playerName, Position(position)) }
+    fun hasRightOfWay(airspaceName: String) =
+        addQuery { hasRightOfWay(airspaceName) }
+    fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) =
+        addQuery { hasRightOfWay(airspaceName, aircraft0, aircraft1) }
+    fun airspaceHasAircraft(airspaceName: String, aircraftName: String) =
+        addQuery { airspaceHasAircraft(airspaceName, airspaceName) }
 
     override fun queries() = ScenarioQueries(queriesList, derivedQueriesList)
 

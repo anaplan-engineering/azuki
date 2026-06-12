@@ -8,6 +8,7 @@ interface RightOfWayCheckFactory : CheckFactory {
 }
 
 interface AirspaceCheckFactory {
+    fun hasAircraft(airspaceName: String, aircraftName: String): Check
     fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String): Check
 
     fun isConverging(airspaceName: String, aircraft0: String, aircraft1: String): Check

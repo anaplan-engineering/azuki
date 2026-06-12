@@ -50,10 +50,6 @@ abstract class Airspace protected constructor(
             postfix = "\n--------------------"
         ) { (key, value) -> "$key -> $value" }
 
-//    fun getAircraft(id: String): Aircraft? {
-//        require(aircrafts.containsKey(id)) { "No such aircraft $id" }
-//        aircrafts[id] //?: throw IllegalArgumentException("No such aircraft $id")
-//    }
     fun getAircraft(id: String) = aircrafts[id] ?: throw IllegalArgumentException("No such aircraft $id")
 
     fun hasAircraft(id: String) = aircrafts.containsKey(id)

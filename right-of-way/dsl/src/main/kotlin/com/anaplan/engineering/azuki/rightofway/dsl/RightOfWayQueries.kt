@@ -9,6 +9,9 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayQueryFacto
 
 class RightOfWayQueries(private val queryFactory: RightOfWayQueryFactory) : Queries<RightOfWayQueryFactory> {
 
+    fun allAircraftsIn(airspaceName: String) = addQuery { allAircraftsIn(airspaceName) }
+    fun hasRightOfWay(airspaceName: String) = addQuery { hasRightOfWay(airspaceName) }
+
     override fun queries() = ScenarioQueries(queriesList, derivedQueriesList)
 
     private val queriesList = mutableListOf<Query<*>>()

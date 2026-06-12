@@ -12,5 +12,6 @@ interface AirspaceActionFactory {
     fun save(airspaceName: String): Action
     fun close(airspaceName: String): Action
     fun load(airspaceName: String): Action
-    fun addAircraft(airspaceName: String, aircraftName: String, position: Position, velocity: Velocity): Action
+    //TODO LF: perhaps remove aircraft name and identify on position alone?
+    fun addAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft): Action
 }

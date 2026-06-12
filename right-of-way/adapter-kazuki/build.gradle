@@ -3,9 +3,7 @@ plugins {
 }
 
 dependencies {
-//    api project(":right-of-way:adapter-api")
     api project(":right-of-way:adapter-declaration")
     compileOnly project(":right-of-way:kauzki")
     implementation libs.slf4j.api
-    implementation libs.jackson.module
 }

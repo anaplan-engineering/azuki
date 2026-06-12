@@ -2,26 +2,23 @@ package com.anaplan.engineering.azuki.rightofway.adapter.declaration
 
 import com.anaplan.engineering.azuki.declaration.DeclarationState
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircraft
-import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
-import com.anaplan.engineering.azuki.rightofway.adapter.api.Theta_h
-import com.anaplan.engineering.azuki.rightofway.adapter.api.Velocity
-import com.anaplan.engineering.azuki.rightofway.adapter.api.delta_c
-import com.anaplan.engineering.azuki.rightofway.adapter.api.delta_o
+import com.anaplan.engineering.azuki.rightofway.adapter.api.THETA_H
+import com.anaplan.engineering.azuki.rightofway.adapter.api.DELTA_C
+import com.anaplan.engineering.azuki.rightofway.adapter.api.DELTA_O
 import com.anaplan.engineering.azuki.rightofway.adapter.declaration.declaration.AirspaceDeclaration
 import kotlin.collections.plus
 
 class RightOfWayDeclarationState : DeclarationState() {
-    fun declareAirspace(airspaceName: String, deltaO: Double = delta_c, deltaC: Double = delta_o, thetaH: Double = Theta_h) {
+    fun declareAirspace(airspaceName: String, deltaO: Double = DELTA_C, deltaC: Double = DELTA_O, thetaH: Double = THETA_H) {
         checkForDuplicate(airspaceName)
         declarations[airspaceName] = AirspaceDeclaration(airspaceName, emptyMap(), deltaO, deltaC, thetaH)
     }
 
-    fun declareAircraft(airspaceName: String, aircraftName: String, position: Position, velocity: Velocity) {
+    fun declareAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) {
         checkForDuplicateAircraft(airspaceName, aircraftName)
         val airspace = getDeclaration<AirspaceDeclaration>(airspaceName)
         declarations[airspaceName] = airspace.copy(
-            aircrafts = airspace.aircrafts.plus(
-                aircraftName to Aircraft(position to velocity)))
+            aircrafts = airspace.aircrafts.plus(aircraftName to aircraft))
     }
 
     private fun checkForDuplicateAircraft(airspaceName: String, aircraftName: String) {

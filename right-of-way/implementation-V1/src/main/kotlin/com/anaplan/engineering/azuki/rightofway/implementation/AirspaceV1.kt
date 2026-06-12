@@ -153,7 +153,7 @@ class SampleRightOfWayBehaviours(
     private val orientationBehaviours: OrientationBehaviours = SampleOrientationBehaviours(),
     private val positionBehaviours: PositionBehaviours = SamplePositionBehaviours(),
     private val crossingBehaviours: CrossingBehaviours = SampleCrossingBehaviours(),
-    //TODO not sure here, becuase needs to pass through the delta_c and Theta_h through
+    //TODO not sure here, because needs to pass through the delta_c and Theta_h through
     private val convergenceBehaviours: ConvergenceBehaviours = SampleConvergenceBehaviours(),
     val delta_c: Double = DELTA_C,
     val Theta_h: Double = THETA_H,
@@ -177,7 +177,7 @@ class SampleRightOfWayBehaviours(
 
         //TODO this looks ugly :-(. Wasn't sure how to "pass through" fields in composite interfaces chaining
         (convergenceBehaviours as SampleConvergenceBehaviours).delta_c = delta_c
-        (convergenceBehaviours as SampleConvergenceBehaviours).Theta_h = Theta_h
+        convergenceBehaviours.Theta_h = Theta_h
     }
 
     override fun overtaking(aircraft1: Aircraft, aircraft2: Aircraft) =

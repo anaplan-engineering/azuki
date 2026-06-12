@@ -16,6 +16,9 @@ class SampleCheckFactory : RightOfWayCheckFactory {
 
 object SampleAirspaceCheckFactory : AirspaceCheckFactory {
 
+    override fun hasAircraft(airspaceName: String, aircraftName: String) =
+        HasAircraftCheck(airspaceName, aircraftName)
+
     override fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) =
         HasRightOfWayCheck(airspaceName, aircraft0, aircraft1)
 
