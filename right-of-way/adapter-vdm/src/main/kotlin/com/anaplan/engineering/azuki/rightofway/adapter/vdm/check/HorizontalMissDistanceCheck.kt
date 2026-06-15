@@ -32,7 +32,7 @@ class HorizontalMissDistanceCheck(private val airspaceName: String, private val 
                 --dcl airspace: ${RightOfWayRulesModule.Airspace} := $airspaceGetter;
                 dcl a0: ${RightOfWayRulesModule.Aircraft} := $aircraft0Getter;
                 dcl a1: ${RightOfWayRulesModule.Aircraft} := $aircraft1Getter;
-                dcl expected: bool := $hmd;
+                dcl expected: real := ${hmd};
                 ${checkEquals(actual = "${RightOfWayRulesModule.HMD}(a0, a1)")}
             );
             """

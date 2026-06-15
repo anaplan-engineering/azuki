@@ -4,6 +4,6 @@ plugins {
 
 dependencies {
     api project(":right-of-way:adapter-declaration")
-    compileOnly project(":right-of-way:kauzki")
+    compileOnly project(":right-of-way:kazuki")
     implementation libs.slf4j.api
 }

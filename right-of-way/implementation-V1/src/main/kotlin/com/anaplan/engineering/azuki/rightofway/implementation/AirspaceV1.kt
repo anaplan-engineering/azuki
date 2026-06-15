@@ -221,12 +221,13 @@ class AirspaceV1 internal constructor(
         this(AirspaceState(deltaO, deltaC, thetaH, opened,
             prepopulated.toMutableMap()),
             SampleRightOfWayBehaviours(
-                SampleQuadrantBehaviours(),
-                SampleOrientationBehaviours(),
-                SamplePositionBehaviours(),
-               SampleCrossingBehaviours(),
-                SampleConvergenceBehaviours(),
-                DELTA_O, DELTA_C, THETA_H)
+//                SampleQuadrantBehaviours(),
+//                SampleOrientationBehaviours(),
+//                SamplePositionBehaviours(),
+//               SampleCrossingBehaviours(),
+//                SampleConvergenceBehaviours(),
+//                DELTA_O, DELTA_C, THETA_H
+                            )
         )
 
 
@@ -242,17 +243,15 @@ class AirspaceV1 internal constructor(
         )
 
      */
-
-
 }
 
 class AirspaceV1Creator : AirspaceCreator {
 
     override fun create(state: AirspaceState) = AirspaceV1(state)
 
-    override fun create(deltaC: Double, deltaO: Double, thetaH: Double,
+    override fun create(deltaO: Double, deltaC: Double, thetaH: Double,
                         opened: Boolean, prepopulated: AircraftData) =
-        AirspaceV1(deltaC, deltaO, thetaH, opened, prepopulated)
+        AirspaceV1(deltaO, deltaC, thetaH, opened, prepopulated)
 }
 
 // TODO Varying imoplementation say on vector functionalities?

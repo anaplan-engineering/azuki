@@ -30,7 +30,7 @@ class TimeClosestPointApproachCheck(private val airspaceName: String, private va
                 --dcl airspace: ${RightOfWayRulesModule.Airspace} := $airspaceGetter;
                 dcl a0: ${RightOfWayRulesModule.Aircraft} := $aircraft0Getter;
                 dcl a1: ${RightOfWayRulesModule.Aircraft} := $aircraft1Getter;
-                dcl expected: bool := $tCPA;
+                dcl expected: real := ${tCPA};
                 ${checkEquals(actual = "${RightOfWayRulesModule.tCPA}(a0, a1)")}
             );
             """

@@ -22,6 +22,7 @@ class TrackCheck(private val airspaceName: String, private val aircraft0: String
             requiredImports = setOf(
                 RightOfWayRulesModule.Airspace.import,
                 RightOfWayRulesModule.Aircraft.import,
+                RightOfWayRulesModule.Angle.import,
                 RightOfWayRulesModule.track.import,
             ),
             // TODO LF how to "get" the aircraft from the airspace? i.e. a0 in airspace.aircrafts etc...
@@ -30,7 +31,7 @@ class TrackCheck(private val airspaceName: String, private val aircraft0: String
             (
                 --dcl airspace: ${RightOfWayRulesModule.Airspace} := $airspaceGetter;
                 dcl a0: ${RightOfWayRulesModule.Aircraft} := $aircraft0Getter;
-                dcl expected: bool := $angle;
+                dcl expected: ${RightOfWayRulesModule.Angle} := ${angle};
                 ${checkEquals(actual = "${RightOfWayRulesModule.track}(a0)")}
             );
             """

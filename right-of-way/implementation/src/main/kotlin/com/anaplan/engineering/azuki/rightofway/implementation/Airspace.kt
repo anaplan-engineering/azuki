@@ -9,10 +9,11 @@ typealias Aircraft = Pair<Position, Velocity>
 typealias AircraftData = Map<String, Aircraft>
 typealias Aircrafts = MutableMap<String, Aircraft>
 
-fun Aircraft.position(): Position = first
-fun Aircraft.velocity(): Velocity = second
-fun Pair<Double, Double>.x(): Double = first
-fun Pair<Double, Double>.y(): Double = second
+fun Aircraft.position() = first
+fun Aircraft.velocity() = second
+fun Aircraft.toJsonString() = "[[${position().x()}, ${first.y()}], [${velocity().x()}, ${velocity().y()}]]"
+fun Pair<Double, Double>.x() = first
+fun Pair<Double, Double>.y() = second
 
 data class AirspaceState(
     val delta_o: Double,
@@ -51,6 +52,13 @@ abstract class Airspace protected constructor(
             prefix = "----- Airspace -----\n",
             postfix = "\n--------------------"
         ) { (key, value) -> "$key -> $value" }
+
+    fun toJsonString() =
+        aircrafts.entries.joinToString(
+            separator = ",\n",
+            prefix = "{\n",
+            postfix = "\n}"
+        ) { (key, value) -> "\"${key}\" : ${value.toJsonString()}" }
 
     fun getAircraft(id: String) = aircrafts[id] ?: throw IllegalArgumentException("No such aircraft $id")
 
