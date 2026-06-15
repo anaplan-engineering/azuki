@@ -27,9 +27,9 @@ class SampleQuadrantBehaviours : QuadrantBehaviours {
         }
     }
 
-    override fun quadrantConvergence(aircraft1: Aircraft, aircraft2: Aircraft): ConvergenceImpl {
-        val a1Q = quadrant(aircraft1, aircraft2.position())
-        val a2Q = quadrant(aircraft2, aircraft1.position())
+    override fun quadrantConvergence(aircraft0: Aircraft, aircraft1: Aircraft): ConvergenceImpl {
+        val a1Q = quadrant(aircraft0, aircraft1.position())
+        val a2Q = quadrant(aircraft1, aircraft0.position())
         return CONVERGENCE_MATRICES[a1Q, a2Q]
     }
 }
@@ -39,8 +39,8 @@ class SamplePositionBehaviours : PositionBehaviours {
     private fun relativePosition(aircraft: Aircraft, position: Position) =
         (position.toVector() - aircraft.position().toVector()) dot aircraft.velocity().toVector().rotate90()
 
-    private fun relativeVelocity(aircraft1: Aircraft, aircraft2: Aircraft) =
-        aircraft1.velocity().toVector() dot aircraft2.velocity().toVector().rotate90()
+    private fun relativeVelocity(aircraft0: Aircraft, aircraft1: Aircraft) =
+        aircraft0.velocity().toVector() dot aircraft1.velocity().toVector().rotate90()
 
     override fun toTheLeftOf(aircraft: Aircraft, position: Position) =
         relativePosition(aircraft, position) < 0.0
@@ -48,21 +48,21 @@ class SamplePositionBehaviours : PositionBehaviours {
     override fun toTheRightOf(aircraft: Aircraft, position: Position) =
         relativePosition(aircraft, position) > 0.0
 
-    override fun leftToRight(aircraft1: Aircraft, aircraft2: Aircraft) =
-        relativePosition(aircraft1, aircraft2.position()) < 0.0
+    override fun leftToRight(aircraft0: Aircraft, aircraft1: Aircraft) =
+        relativePosition(aircraft0, aircraft1.position()) < 0.0
 
-    override fun rightToLeft(aircraft1: Aircraft, aircraft2: Aircraft) =
-        relativePosition(aircraft1, aircraft2.position()) > 0.0
+    override fun rightToLeft(aircraft0: Aircraft, aircraft1: Aircraft) =
+        relativePosition(aircraft0, aircraft1.position()) > 0.0
 }
 
 class SampleOrientationBehaviours : OrientationBehaviours {
-    override fun timeToClosestPointApproach(aircraft1: Aircraft, aircraft2: Aircraft): Double {
-        if (aircraft1.velocity() == aircraft2.velocity()) {
+    override fun timeToClosestPointApproach(aircraft0: Aircraft, aircraft1: Aircraft): Double {
+        if (aircraft0.velocity() == aircraft1.velocity()) {
             return 0.0
         }
         else {
-            val subP1P2 = aircraft1.position().toVector() - aircraft2.position().toVector()
-            val subV1V2 = aircraft1.velocity().toVector() - aircraft2.velocity().toVector()
+            val subP1P2 = aircraft0.position().toVector() - aircraft1.position().toVector()
+            val subV1V2 = aircraft0.velocity().toVector() - aircraft1.velocity().toVector()
             val vDiffDot = subV1V2 dot subV1V2
             val r = - ((subP1P2 dot subV1V2) / vDiffDot)
             return r
@@ -70,18 +70,18 @@ class SampleOrientationBehaviours : OrientationBehaviours {
     }
 
     // HMD(a0, 01) = ||(a0.p - a1.p) + (a0.v - a1.v) * t||
-    override fun horizontalMissDistance(aircraft1: Aircraft, aircraft2: Aircraft): Double {
-        val subP1P2 = aircraft1.position().toVector() - aircraft2.position().toVector()
-        val subV1V2 = aircraft1.velocity().toVector() - aircraft2.velocity().toVector()
-        val sprod = subV1V2 * timeToClosestPointApproach(aircraft1, aircraft2)
+    override fun horizontalMissDistance(aircraft0: Aircraft, aircraft1: Aircraft): Double {
+        val subP1P2 = aircraft0.position().toVector() - aircraft1.position().toVector()
+        val subV1V2 = aircraft0.velocity().toVector() - aircraft1.velocity().toVector()
+        val sprod = subV1V2 * timeToClosestPointApproach(aircraft0, aircraft1)
         return (subP1P2 + sprod).length
     }
 
-    override fun orientation(aircraft1: Aircraft, aircraft2: Aircraft) =
-        (aircraft1.velocity().toVector() dot aircraft2.velocity().toVector())
+    override fun orientation(aircraft0: Aircraft, aircraft1: Aircraft) =
+        (aircraft0.velocity().toVector() dot aircraft1.velocity().toVector())
 
-    override fun direction(aircraft1: Aircraft, aircraft2: Aircraft): DirectionImpl {
-        val ori = orientation(aircraft1, aircraft2)
+    override fun direction(aircraft0: Aircraft, aircraft1: Aircraft): DirectionImpl {
+        val ori = orientation(aircraft0, aircraft1)
         return when {
             ori < 0.0 -> DirectionImpl.Opposite
             ori > 0.0 -> DirectionImpl.Same
@@ -89,37 +89,37 @@ class SampleOrientationBehaviours : OrientationBehaviours {
         }
     }
 
-    override fun parallel(aircraft1: Aircraft, aircraft2: Aircraft) =
-        (aircraft1.velocity().toVector() dot aircraft2.velocity().toVector().rotate90()) == 0.0
+    override fun parallel(aircraft0: Aircraft, aircraft1: Aircraft) =
+        (aircraft0.velocity().toVector() dot aircraft1.velocity().toVector().rotate90()) == 0.0
 }
 
 class SampleCrossingBehaviours(
     val positionBehaviours: PositionBehaviours = SamplePositionBehaviours()
 ) : CrossingBehaviours, PositionBehaviours by positionBehaviours {
-    override fun crossing(aircraft1: Aircraft, aircraft2: Aircraft) =
-        (positionBehaviours.toTheLeftOf(aircraft1, aircraft2.position()) &&
-            positionBehaviours.leftToRight(aircraft1, aircraft2))
+    override fun crossing(aircraft0: Aircraft, aircraft1: Aircraft) =
+        (positionBehaviours.toTheLeftOf(aircraft0, aircraft1.position()) &&
+            positionBehaviours.leftToRight(aircraft0, aircraft1))
             ||
-            (positionBehaviours.toTheRightOf(aircraft1, aircraft2.position()) &&
-            positionBehaviours.rightToLeft(aircraft1, aircraft2))
+            (positionBehaviours.toTheRightOf(aircraft0, aircraft1.position()) &&
+            positionBehaviours.rightToLeft(aircraft0, aircraft1))
 
-    override fun crossed(aircraft1: Aircraft, aircraft2: Aircraft) =
-        (positionBehaviours.toTheLeftOf(aircraft1, aircraft2.position()) &&
-            positionBehaviours.rightToLeft(aircraft1, aircraft2))
+    override fun crossed(aircraft0: Aircraft, aircraft1: Aircraft) =
+        (positionBehaviours.toTheLeftOf(aircraft0, aircraft1.position()) &&
+            positionBehaviours.rightToLeft(aircraft0, aircraft1))
             ||
-            (positionBehaviours.toTheRightOf(aircraft1, aircraft2.position()) &&
-            positionBehaviours.leftToRight(aircraft1, aircraft2))
+            (positionBehaviours.toTheRightOf(aircraft0, aircraft1.position()) &&
+            positionBehaviours.leftToRight(aircraft0, aircraft1))
 
-    override fun zeroCrossed(aircraft1: Aircraft, aircraft2: Aircraft) =
-        crossing(aircraft1, aircraft2) && crossing(aircraft2, aircraft1)
+    override fun zeroCrossed(aircraft0: Aircraft, aircraft1: Aircraft) =
+        crossing(aircraft0, aircraft1) && crossing(aircraft1, aircraft0)
 
-    override fun oneCrossed(aircraft1: Aircraft, aircraft2: Aircraft) =
-        (crossing(aircraft1, aircraft2) && crossed(aircraft2, aircraft1))
+    override fun oneCrossed(aircraft0: Aircraft, aircraft1: Aircraft) =
+        (crossing(aircraft0, aircraft1) && crossed(aircraft1, aircraft0))
             ||
-            (crossing(aircraft2, aircraft1) && crossed(aircraft1, aircraft2))
+            (crossing(aircraft1, aircraft0) && crossed(aircraft0, aircraft1))
 
-    override fun bothCrossed(aircraft1: Aircraft, aircraft2: Aircraft) =
-        crossed(aircraft1, aircraft2) && crossed(aircraft2, aircraft1)
+    override fun bothCrossed(aircraft0: Aircraft, aircraft1: Aircraft) =
+        crossed(aircraft0, aircraft1) && crossed(aircraft1, aircraft0)
 }
 
 class SampleConvergenceBehaviours(
@@ -132,18 +132,18 @@ class SampleConvergenceBehaviours(
     var delta_c: Double = DELTA_C
     var Theta_h: Double = THETA_H
 
-    override fun converging(aircraft1: Aircraft, aircraft2: Aircraft) =
-        quadrantBehaviours.quadrantConvergence(aircraft1, aircraft2) == ConvergenceImpl.Convergence &&
-            orientationBehaviours.horizontalMissDistance(aircraft1, aircraft2) < delta_c
+    override fun converging(aircraft0: Aircraft, aircraft1: Aircraft) =
+        quadrantBehaviours.quadrantConvergence(aircraft0, aircraft1) == ConvergenceImpl.Convergence &&
+            orientationBehaviours.horizontalMissDistance(aircraft0, aircraft1) < delta_c
 
-    override fun headon(aircraft1: Aircraft, aircraft2: Aircraft) =
-        converging(aircraft1, aircraft2) &&
-            abs(orientationBehaviours.track(aircraft1) - orientationBehaviours.track(aircraft2)) in
+    override fun headon(aircraft0: Aircraft, aircraft1: Aircraft) =
+        converging(aircraft0, aircraft1) &&
+            abs(orientationBehaviours.track(aircraft0) - orientationBehaviours.track(aircraft1)) in
             (180.0 - Theta_h)..(180.0 + Theta_h)
 
-    override fun convergingNotHeadon(aircraft1: Aircraft, aircraft2: Aircraft) =
-        converging(aircraft1, aircraft2) &&
-            abs(orientationBehaviours.track(aircraft1) - orientationBehaviours.track(aircraft2)) <
+    override fun convergingNotHeadon(aircraft0: Aircraft, aircraft1: Aircraft) =
+        converging(aircraft0, aircraft1) &&
+            abs(orientationBehaviours.track(aircraft0) - orientationBehaviours.track(aircraft1)) <
             (180.0 - Theta_h)
 
 }
@@ -155,9 +155,9 @@ class SampleRightOfWayBehaviours(
     private val crossingBehaviours: CrossingBehaviours = SampleCrossingBehaviours(),
     //TODO not sure here, because needs to pass through the delta_c and Theta_h through
     private val convergenceBehaviours: ConvergenceBehaviours = SampleConvergenceBehaviours(),
+    val delta_o: Double = DELTA_O,
     val delta_c: Double = DELTA_C,
     val Theta_h: Double = THETA_H,
-    val delta_o: Double = DELTA_O,
 ) : RightOfWayBehaviours,
     QuadrantBehaviours by quadrantBehaviours,
     OrientationBehaviours by orientationBehaviours,
@@ -180,18 +180,18 @@ class SampleRightOfWayBehaviours(
         convergenceBehaviours.Theta_h = Theta_h
     }
 
-    override fun overtaking(aircraft1: Aircraft, aircraft2: Aircraft) =
+    override fun overtaking(aircraft0: Aircraft, aircraft1: Aircraft) =
         // won't work given it's not a class inheritance
-        quadrantBehaviours.quadrant(aircraft1, aircraft2.position()) in setOf(QuadrantImpl.Q1, QuadrantImpl.Q2) &&
-            quadrantBehaviours.quadrant(aircraft2, aircraft1.position()) in setOf(QuadrantImpl.Q3, QuadrantImpl.Q4) &&
-            orientationBehaviours.horizontalMissDistance(aircraft1, aircraft2) < delta_o
+        quadrantBehaviours.quadrant(aircraft0, aircraft1.position()) in setOf(QuadrantImpl.Q1, QuadrantImpl.Q2) &&
+            quadrantBehaviours.quadrant(aircraft1, aircraft0.position()) in setOf(QuadrantImpl.Q3, QuadrantImpl.Q4) &&
+            orientationBehaviours.horizontalMissDistance(aircraft0, aircraft1) < delta_o
 
-    override fun hasRightOfWay(aircraft1: Aircraft, aircraft2: Aircraft) =
-        overtaking(aircraft1, aircraft2) ||
+    override fun hasRightOfWay(aircraft0: Aircraft, aircraft1: Aircraft) =
+        overtaking(aircraft0, aircraft1) ||
             //TODO needs initialiser for passing the constant airspace parameters; didn't want to have it as API parameters
-            (convergenceBehaviours.convergingNotHeadon(aircraft1, aircraft2) &&
-                positionBehaviours.toTheRightOf(aircraft1, aircraft2.position()) &&
-                crossingBehaviours.zeroCrossed(aircraft1, aircraft2))
+            (convergenceBehaviours.convergingNotHeadon(aircraft0, aircraft1) &&
+                positionBehaviours.toTheRightOf(aircraft0, aircraft1.position()) &&
+                crossingBehaviours.zeroCrossed(aircraft0, aircraft1))
 }
 
 class AirspaceV1 internal constructor(
@@ -215,15 +215,18 @@ class AirspaceV1 internal constructor(
 
     constructor(state: AirspaceState) :
         this(state, SampleRightOfWayBehaviours(
-            delta_c = state.delta_c, Theta_h = state.Theta_h, delta_o = state.delta_o))
-    constructor(prepopulated: AircraftData = emptyMap()) :
-        this(AirspaceState(DELTA_O, DELTA_C, THETA_H, prepopulated.toMutableMap()),
+            delta_o = state.delta_o, delta_c = state.delta_c, Theta_h = state.Theta_h))
+    constructor(deltaO: Double, deltaC: Double, thetaH: Double,
+                opened: Boolean, prepopulated: AircraftData = emptyMap()) :
+        this(AirspaceState(deltaO, deltaC, thetaH, opened,
+            prepopulated.toMutableMap()),
             SampleRightOfWayBehaviours(
                 SampleQuadrantBehaviours(),
                 SampleOrientationBehaviours(),
                 SamplePositionBehaviours(),
                SampleCrossingBehaviours(),
-                SampleConvergenceBehaviours(), DELTA_C, THETA_H, DELTA_O)
+                SampleConvergenceBehaviours(),
+                DELTA_O, DELTA_C, THETA_H)
         )
 
 
@@ -247,8 +250,9 @@ class AirspaceV1Creator : AirspaceCreator {
 
     override fun create(state: AirspaceState) = AirspaceV1(state)
 
-    override fun create(prepopulated: AircraftData) = AirspaceV1(prepopulated)
-
+    override fun create(deltaC: Double, deltaO: Double, thetaH: Double,
+                        opened: Boolean, prepopulated: AircraftData) =
+        AirspaceV1(deltaC, deltaO, thetaH, opened, prepopulated)
 }
 
 // TODO Varying imoplementation say on vector functionalities?

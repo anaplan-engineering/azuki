@@ -9,7 +9,7 @@ enum class DirectionImpl { Same, Opposite }
 
 interface QuadrantBehaviours {
     fun quadrant(aircraft: Aircraft, position: Position): QuadrantImpl
-    fun quadrantConvergence(aircraft1: Aircraft, aircraft2: Aircraft): ConvergenceImpl
+    fun quadrantConvergence(aircraft0: Aircraft, aircraft1: Aircraft): ConvergenceImpl
 
     // Delphi/Ada idiom to index on arrays by enum types to avoid complicated if-then-else-chains
     companion object {
@@ -24,38 +24,38 @@ interface QuadrantBehaviours {
 
 interface OrientationBehaviours {
     fun track(aircraft: Aircraft) = atan(aircraft.velocity().x() / aircraft.velocity().y())
-    fun timeToClosestPointApproach(aircraft1: Aircraft, aircraft2: Aircraft): Double
-    fun horizontalMissDistance(aircraft1: Aircraft, aircraft2: Aircraft): Double
+    fun timeToClosestPointApproach(aircraft0: Aircraft, aircraft1: Aircraft): Double
+    fun horizontalMissDistance(aircraft0: Aircraft, aircraft1: Aircraft): Double
 
-    fun orientation(aircraft1: Aircraft, aircraft2: Aircraft): Double
-    fun parallel(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun direction(aircraft1: Aircraft, aircraft2: Aircraft): DirectionImpl
+    fun orientation(aircraft0: Aircraft, aircraft1: Aircraft): Double
+    fun parallel(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun direction(aircraft0: Aircraft, aircraft1: Aircraft): DirectionImpl
 }
 
 interface PositionBehaviours {
     fun toTheLeftOf(aircraft: Aircraft, position: Position): Boolean
     fun toTheRightOf(aircraft: Aircraft, position: Position): Boolean
-    fun leftToRight(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun rightToLeft(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
+    fun leftToRight(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun rightToLeft(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
 }
 
 interface CrossingBehaviours {
-    fun crossing(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun crossed(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun zeroCrossed(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun oneCrossed(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun bothCrossed(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
+    fun crossing(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun crossed(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun zeroCrossed(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun oneCrossed(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun bothCrossed(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
 }
 
 interface ConvergenceBehaviours {
-    fun converging(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun headon(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun convergingNotHeadon(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
+    fun converging(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun headon(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun convergingNotHeadon(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
 }
 
 interface RightOfWayBehaviours {
-    fun overtaking(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
-    fun hasRightOfWay(aircraft1: Aircraft, aircraft2: Aircraft): Boolean
+    fun overtaking(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun hasRightOfWay(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
 }
 
 operator fun <T> Array<Array<T>>.get(row: QuadrantImpl, col: QuadrantImpl): T = this[row.ordinal][col.ordinal]

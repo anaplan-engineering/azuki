@@ -12,6 +12,7 @@ class AirspaceManager(private val store: File) {
 
     operator fun get(name: String) = airspaces[name] ?: throw IllegalArgumentException("Unknown airspace $name")
 
+    // TODO LF: somewhat assymeytric the notion of open/close for airspace x these adapter apis normalise naming
     fun close(name: String) {
         require(airspaces.containsKey(name)) { "Airspace $name does not exist" }
         airspaces.remove(name)
@@ -59,5 +60,8 @@ interface AirspaceCreator {
     fun create(state: AirspaceState): Airspace
 
     // prepopulates data is non-mutable and useful for testing
-    fun create(prepopulated: AircraftData = emptyMap()) : Airspace
+    // TODO LF can't depend on `adapter-api` for these constants?
+    fun create(deltaO: Double /*=DELTA_O*/, deltaC: Double /*=DELTA_C*/,
+               thetaH: Double /*= THETA_H */, opened: Boolean = false,
+               prepopulated: AircraftData = emptyMap()) : Airspace
 }
