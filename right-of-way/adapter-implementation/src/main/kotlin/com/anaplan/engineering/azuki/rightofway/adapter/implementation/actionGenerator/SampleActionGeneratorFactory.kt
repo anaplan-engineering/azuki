@@ -22,7 +22,7 @@ class SampleActionGeneratorFactory : RightOfWayActionGeneratorFactory {
         listOf { af -> af.airspace.start(airspaceName) }
     }
 
-    override fun generateAircraft(airspaceName: String, numberOfAircraft: UInt) = SampleActionGenerator { env ->
+    override fun generateAirspaceWithAircraft(airspaceName: String, numberOfAircraft: UInt) = SampleActionGenerator { env ->
         env.withAirspace(airspaceName) {
             require(0U < numberOfAircraft) { "Number of moves must be strictly-positive (> 0)" }
 

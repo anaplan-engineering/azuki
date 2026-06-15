@@ -9,9 +9,9 @@ import com.anaplan.engineering.azuki.rightofway.adapter.declaration.declaration.
 import kotlin.collections.plus
 
 class RightOfWayDeclarationState : DeclarationState() {
-    fun declareAirspace(airspaceName: String, deltaO: Double = DELTA_C, deltaC: Double = DELTA_O, thetaH: Double = THETA_H) {
+    fun declareAirspace(airspaceName: String, deltaO: Double = DELTA_C, deltaC: Double = DELTA_O, thetaH: Double = THETA_H, opened: Boolean = false) {
         checkForDuplicate(airspaceName)
-        declarations[airspaceName] = AirspaceDeclaration(airspaceName, emptyMap(), deltaO, deltaC, thetaH)
+        declarations[airspaceName] = AirspaceDeclaration(airspaceName, emptyMap(), deltaO, deltaC, thetaH, opened)
     }
 
     fun declareAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) {

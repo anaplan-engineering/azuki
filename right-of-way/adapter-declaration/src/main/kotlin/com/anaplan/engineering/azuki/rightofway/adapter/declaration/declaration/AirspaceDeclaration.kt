@@ -9,5 +9,6 @@ data class AirspaceDeclaration(
     val delta_o: Double,
     val delta_c: Double,
     val Theta_h: Double,
+    val opened: Boolean,// = false,
     override val standalone: Boolean = true,
 ) : Declaration

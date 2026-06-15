@@ -12,13 +12,13 @@ class KazukiActionFactory : RightOfWayActionFactory {
 }
 
 object KazukiAirspaceActionFactory : AirspaceActionFactory {
-    override fun start(airspaceName: String) = StartAirspaceAction(airspaceName)
+    override fun start(airspaceName: String) = StartAirspaceAction(airspaceName, true)
     override fun addAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft): Action =
         CreateAircraftAction(airspaceName, aircraftName, aircraft)
 
     // Kazuki doesn't support file-related actions
     override fun save(airspaceName: String) = UnsupportedAction
-    override fun close(airspaceName: String) = UnsupportedAction
+    override fun close(airspaceName: String) = StartAirspaceAction(airspaceName, false)
     override fun load(airspaceName: String) = UnsupportedAction
 }
 

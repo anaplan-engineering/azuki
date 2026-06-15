@@ -7,6 +7,7 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.Crossing
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Direction
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Quadrant
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayCheckFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.api.toDirection
 import com.anaplan.engineering.azuki.rightofway.adapter.implementation.ExecutionEnvironment
 
 class SampleCheckFactory : RightOfWayCheckFactory {
@@ -57,7 +58,7 @@ object SampleAirspaceCheckFactory : AirspaceCheckFactory {
         HorizontalMissDistanceCheck(airspaceName, aircraft0, aircraft1, hmd)
 
     override fun hasOrientation(airspaceName: String, aircraft0: String, aircraft1: String, same: Boolean) =
-        DirectionCheck(airspaceName, aircraft0, aircraft1, if (same) Direction.Same else Direction.Opposite)
+        DirectionCheck(airspaceName, aircraft0, aircraft1, same.toDirection())
 
     override fun timeToClosestPointApproachIs(airspaceName: String, aircraft0: String, aircraft1: String, tcpa: Double) = // tcpa: NReal, NNZReal
         TimeClosestPointApproachCheck(airspaceName, aircraft0, aircraft1, tcpa)

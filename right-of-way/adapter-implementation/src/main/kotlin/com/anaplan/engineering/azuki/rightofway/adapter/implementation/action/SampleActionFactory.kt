@@ -11,7 +11,7 @@ class SampleActionFactory : RightOfWayActionFactory {
 }
 
 object SampleAirspaceActionFactory : AirspaceActionFactory {
-    override fun start(airspaceName: String) = StartAirspaceAction(airspaceName)
+    override fun start(airspaceName: String) = StartAirspaceAction(airspaceName, true)
     override fun save(airspaceName: String) = SaveAirspaceAction(airspaceName)
     override fun close(airspaceName: String) = CloseAirspaceAction(airspaceName)
     override fun load(airspaceName: String) = LoadAirspaceAction(airspaceName)

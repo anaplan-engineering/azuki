@@ -41,7 +41,7 @@ class ExecutionEnvironment {
 
     internal fun airspace(name: String) = get<Airspace>(name)
 
-    internal fun aircraft(airspaceName: String, aircraftName: String) = get<Aircraft>("${airspaceName}.${aircraftName}")
+    internal fun aircraft(airspaceName: String, aircraftName: String) = get<Aircraft>("${airspaceName}_${aircraftName}")
 
     internal fun hasAircraft(airspaceName: String, aircraftName: String) =
         variables.containsKey("${airspaceName}.${aircraftName}")
