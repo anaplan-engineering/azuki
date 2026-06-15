@@ -56,6 +56,8 @@ fun Crossing.toRightOfWayBehaviours() = when(this) {
     Crossing.BothCrossed -> RightOfWayBehaviours.BothCrossed
 }
 
+fun Boolean.toDirection() = if (this) Direction.Same else Direction.Opposite
+
 fun freshNames(from: Set<String> = emptySet(), prefix: String = "a", start: Int = from.size) : Sequence<String> =
     generateSequence(prefix + start) { index ->
         val suffix = index.substringAfterLast(prefix).toIntOrNull() ?: start

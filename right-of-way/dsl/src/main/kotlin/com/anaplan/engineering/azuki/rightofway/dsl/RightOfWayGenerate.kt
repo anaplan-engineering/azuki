@@ -8,10 +8,10 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionGene
 class RightOfWayGenerate(private val actionGeneratorFactory: RightOfWayActionGeneratorFactory) :
     Generate<RightOfWayActionGeneratorFactory> {
 
-    fun createAirspace(airspaceName: String) =
+    fun generateAirspace(airspaceName: String) =
         addGenerator { generateAirspace(airspaceName) }
-    fun createAircraft(aircraftName: String, numberOfAirCraft: UInt = MIN_AIRCRAFT) =
-        addGenerator { generateAircraft(aircraftName, numberOfAirCraft) }
+    fun generateAirspaceWithAircraft(aircraftName: String, numberOfAirCraft: UInt = MIN_AIRCRAFT) =
+        addGenerator { generateAirspaceWithAircraft(aircraftName, numberOfAirCraft) }
 
     private val generatorList = mutableListOf<ActionGenerator>()
 
