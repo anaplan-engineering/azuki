@@ -18,6 +18,7 @@ data class AirspaceState(
     val delta_o: Double,
     val delta_c: Double,
     val Theta_h: Double,
+    val open: Boolean,
     val aircrafts: Aircrafts = mutableMapOf()
 )
 
@@ -37,6 +38,7 @@ abstract class Airspace protected constructor(
     val delta_o by state::delta_o
     val delta_c by state::delta_c
     val Theta_h by state::Theta_h
+    val open by state::open
 
     val size by lazy { aircrafts.size }
     val aircraftIds by lazy { aircrafts.keys }

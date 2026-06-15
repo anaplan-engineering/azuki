@@ -14,8 +14,6 @@ import kotlin.math.abs
 import kotlin.math.atan
 import kotlin.math.sqrt
 
-const val DEFAULT_SQRT_ERROR: PNZReal = 0.000001;
-
 @PrimitiveInvariant(name = "Real", base = Double::class)
 fun isReal(r: Double) = !r.isNaN() && !r.isInfinite()
 
@@ -86,7 +84,8 @@ interface Airspace {
 //    fun noHeadOn() = functions.noHeadOn()
 
     @Invariant
-    fun safeAirspace() = functions.thm_safe_airspace(aircrafts)
+    fun safeAirspace() =
+        properties.open implies { functions.thm_safe_airspace(aircrafts) }
 
     @FunctionProvider(AirspaceProperties::class)
     val properties: AirspaceProperties
@@ -96,9 +95,10 @@ interface Airspace {
 }
 
 class AirspaceProperties(private val airspace: Airspace) {
-    val delta_o by property { 1.0 }
-    val delta_c by property { 2.0 }
-    val Theta_h by property { 150.0 }
+    val delta_o by property { 100.0 }  // DELTA_O
+    val delta_c by property { 1000.0 } // DELTA_C
+    val Theta_h by property { 80.0 }   // THETA_H //TODO LF: can't depend on `adapter-api` for these ?
+    val open by property { false }
     //TODO LF: should this have an `as_Set` or just `toSet()` would do?
     val allPositions by property { as_Set(airspace.aircrafts.map { it.position }) }
     val allVelocities by property { as_Set(airspace.aircrafts.map { it.velocity }) }

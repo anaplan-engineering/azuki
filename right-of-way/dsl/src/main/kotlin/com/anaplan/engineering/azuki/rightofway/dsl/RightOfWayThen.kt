@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.rightofway.com.anaplan.engineering.azuki.r
 import com.anaplan.engineering.azuki.core.dsl.Then
 import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Quadrant
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayCheckFactory
 
 class RightOfWayThen(private val checkFactory: RightOfWayCheckFactory): Then<RightOfWayCheckFactory> {
@@ -13,49 +14,57 @@ class RightOfWayThen(private val checkFactory: RightOfWayCheckFactory): Then<Rig
 
     fun everythingIsOkay() {
         checkList.add(checkFactory.systemValid())
+        checkFactory.systemValid()
     }
 
-//    fun playerHasMoved(gameName: String, playerName: String, times: Int) {
-//        checkList.add(checkFactory.player.moveCount(gameName, playerName, times))
-//    }
-//
-//    fun playerCanPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) {
-//        checkList.add(checkFactory.player.canPlaceToken(gameName, playerName, Position(position), expected = true))
-//    }
-//
-//    fun playerCannotPlaceToken(gameName: String, playerName: String, position: Pair<Int, Int>) {
-//        checkList.add(checkFactory.player.canPlaceToken(gameName, playerName, Position(position), expected = false))
-//    }
-//
-//    fun gameHasPlayOrder(gameName: String, vararg players: String) {
-//        checkList.add(checkFactory.game.hasPlayOrder(gameName, players.toList()))
-//    }
+    fun hasAircraft(airspaceName: String, aircraftName: String) =
+        checkFactory.airspace.hasAircraft(airspaceName, aircraftName)
 
-////    fun boardHasState(gameName: String, boardData: String) {
-////        checkList.add(checkFactory.game.hasState(gameName, RightOfWayBoardAscii.parse(boardData)))
-//    }
+    fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.hasRightOfWay(airspaceName, aircraft0, aircraft1)
 
-//    fun boardHasToken(gameName: String, playerName: String, position: Pair<Int, Int>) {
-//        checkList.add(checkFactory.game.hasToken(gameName, playerName, Position(position)))
-//    }
-//
-//    fun boardHasSpace(gameName: String, position: Pair<Int, Int>) {
-//        checkList.add(checkFactory.game.hasSpace(gameName, Position(position)))
-//    }
-//
-//    fun boardIsComplete(gameName: String) {
-//        checkList.add(checkFactory.game.isComplete(gameName))
-//    }
+    fun isConverging(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.isConverging(airspaceName, aircraft0, aircraft1)
 
-//    fun playerHasWon(gameName: String, playerName: String) {
-//        checkList.add(checkFactory.player.hasWon(gameName, playerName))
-//    }
-//
-//    fun playerHasLost(gameName: String, playerName: String) {
-//        checkList.add(checkFactory.player.hasLost(gameName, playerName))
-//    }
-//
-//    fun gameIsDraw(gameName: String) {
-//        checkList.add(checkFactory.game.isDraw(gameName))
-//    }
+    fun isOvertaking(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.isOvertaking(airspaceName, aircraft0, aircraft1)
+
+    fun isHeadOn(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.isHeadOn(airspaceName, aircraft0, aircraft1)
+
+    fun isNotHeadOn(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.isNotHeadOn(airspaceName, aircraft0, aircraft1)
+
+    fun isGoingToCross(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.isGoingToCross(airspaceName, aircraft0, aircraft1)
+
+    fun hasCrossed(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.hasCrossed(airspaceName, aircraft0, aircraft1)
+
+    fun hasZeroCrossed(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.hasZeroCrossed(airspaceName, aircraft0, aircraft1)
+
+    fun hasOneCrossed(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.hasOneCrossed(airspaceName, aircraft0, aircraft1)
+
+    fun hasBothCrossed(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.hasBothCrossed(airspaceName, aircraft0, aircraft1)
+
+    fun hasQuadrantConvergence(airspaceName: String, aircraft0: String, aircraft1: String) =
+        checkFactory.airspace.hasQuadrantConvergence(airspaceName, aircraft0, aircraft1)
+
+    fun horizontalMissDistanceIs(airspaceName: String, aircraft0: String, aircraft1: String, hmd: Double) =
+        checkFactory.airspace.horizontalMissDistanceIs(airspaceName, aircraft0, aircraft1, hmd)
+
+    fun hasOrientation(airspaceName: String, aircraft0: String, aircraft1: String, same: Boolean) =
+        checkFactory.airspace.hasOrientation(airspaceName, aircraft0, aircraft1, same)
+
+    fun timeToClosestPointApproachIs(airspaceName: String, aircraft0: String, aircraft1: String, tcpa: Double) =
+        checkFactory.airspace.timeToClosestPointApproachIs(airspaceName, aircraft0, aircraft1, tcpa)
+
+    fun onTrack(airspaceName: String, aircraftName: String, angle: Double) =
+        checkFactory.airspace.onTrack(airspaceName, aircraftName, angle)
+
+    fun onQuadrantRelativeTo(airspaceName: String, aircraft0: String, aircraft1: String, quadrant: Quadrant) =
+        checkFactory.airspace.onQuadrantRelativeTo(airspaceName, aircraft0, aircraft1, quadrant)
 }

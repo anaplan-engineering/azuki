@@ -42,7 +42,7 @@ include(
     'right-of-way:adapter-declaration',
     'right-of-way:adapter-implementation',
     'right-of-way:adapter-kazuki',
-//    'right-of-way:adapter-vdm',
+    'right-of-way:adapter-vdm',
     'right-of-way:dsl',
     'right-of-way:kauzki',
 //    'right-of-way:eacs',
