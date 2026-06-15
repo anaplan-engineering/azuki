@@ -1,12 +1,12 @@
-buildscript {
-    repositories {
-        mavenLocal() // <--- This is the one Gradle will actually use to find 4.8.0-SNAPSHOT
-        mavenCentral()
-    }
-//    dependencies {
-//        classpath project(':vdm-stub-generator')
+//buildscript {
+//    repositories {
+//        mavenLocal() // <--- This is the one Gradle will actually use to find 4.8.0-SNAPSHOT
+//        mavenCentral()
 //    }
-}
+////    dependencies {
+////        classpath project(':vdm-stub-generator')
+////    }
+//}
 
 plugins {
     id 'azuki.kotlin-conventions'
