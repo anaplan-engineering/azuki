@@ -1,0 +1,46 @@
+// Example oracle scenario for the tic-tac-toe system:
+oracleScenario {
+    // First, generate some play orders (randomly assigning either O or X to player one):
+    generate {
+        createPlayOrder("orderA")
+        createPlayOrder("orderB")
+        createPlayOrder("orderC")
+    }
+
+    // Then, use one of them in a game:
+    generate {
+        createNewGameFromExistingPlayOrder("gameA")
+    }
+
+    // Decide the number of moves we're going to add in the initial game setup,
+    // and moves we can add as commands later on.
+    val moveBudget = (0..9).random()
+    val declaredMoveCount = (0..moveBudget).random()
+    val commandMoveCount = moveBudget - declaredMoveCount
+
+    // Generate some moves to put in the initial declaration:
+    generate {
+        addMoves("gameA", declaredMoveCount)
+    }
+
+    // We add a 'whenever' block here to make the next set of moves generate as commands.
+    // Then, we can add some more moves:
+    whenever {}
+    generate {
+        addMoves("gameA", commandMoveCount)
+    }
+
+    verify {
+        // Check all the positions on the board (this should become a table assertion):
+        forAll({ getPositions("gameA") }) { pos ->
+            gameHasToken("gameA", pos.col to pos.row)
+        }
+
+        // Check whether each player can place tokens on each position on the board (nested quantification):
+        forAll({ getPlayOrder("gameA") }) { player ->
+            forAll({ getPositions("gameA") }) { pos ->
+                playerCanPlaceToken("gameA", player, pos.col to pos.row)
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-package com.anaplan.engineering.azuki.rightofway.com.anaplan.engineering.azuki.rightofway.dsl
+package com.anaplan.engineering.azuki.rightofway.dsl
 
 import com.anaplan.engineering.azuki.core.dsl.DslProvider
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionFactory
@@ -21,7 +21,8 @@ object RightOfWayDslProvider :
 
     override fun createQueries(queryFactory: RightOfWayQueryFactory) = RightOfWayQueries(queryFactory)
 
-    override fun createGenerate(actionGeneratorFactory: RightOfWayActionGeneratorFactory) = RightOfWayGenerate(actionGeneratorFactory)
+    override fun createGenerate(actionGeneratorFactory: RightOfWayActionGeneratorFactory) =
+        RightOfWayGenerate(actionGeneratorFactory)
 
     override fun createRegardlessOf(actionFactory: RightOfWayActionFactory) = RightOfWayRegardlessOf(actionFactory)
 

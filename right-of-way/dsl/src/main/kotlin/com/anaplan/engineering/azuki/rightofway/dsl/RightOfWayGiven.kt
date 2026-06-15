@@ -1,4 +1,4 @@
-package com.anaplan.engineering.azuki.rightofway.com.anaplan.engineering.azuki.rightofway.dsl
+package com.anaplan.engineering.azuki.rightofway.dsl
 
 import com.anaplan.engineering.azuki.core.dsl.Given
 import com.anaplan.engineering.azuki.core.system.Action

@@ -1,9 +1,8 @@
-package com.anaplan.engineering.azuki.rightofway.com.anaplan.engineering.azuki.rightofway.dsl
+package com.anaplan.engineering.azuki.rightofway.dsl
 
 import com.anaplan.engineering.azuki.core.dsl.When
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircraft
-import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionFactory
 
 class RightOfWayWhen(val actionFactory: RightOfWayActionFactory): When<RightOfWayActionFactory> {

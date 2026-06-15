@@ -1,4 +1,4 @@
-package com.anaplan.engineering.azuki.rightofway.com.anaplan.engineering.azuki.rightofway.dsl
+package com.anaplan.engineering.azuki.rightofway.dsl
 
 import com.anaplan.engineering.azuki.core.runner.RunnableScenario
 import com.anaplan.engineering.azuki.core.scenario.AbstractOracleScenario
@@ -48,15 +48,18 @@ interface RightOfWayQueryScenario : ScenarioWithQueries<RightOfWayActionFactory,
 
 open class RightOfWayVerifiableScenarioImpl :
     AbstractVerifiableScenario<RightOfWayActionFactory, RightOfWayCheckFactory, RightOfWayGiven, RightOfWayWhen, RightOfWayThen, RightOfWayRegardlessOf>(
-        RightOfWayDslProvider), RightOfWayVerifiableScenario
+        RightOfWayDslProvider
+    ), RightOfWayVerifiableScenario
 
 open class RightOfWayOracleScenarioImpl :
     AbstractOracleScenario<RightOfWayActionFactory, RightOfWayCheckFactory, RightOfWayQueryFactory, RightOfWayActionGeneratorFactory, RightOfWayGiven, RightOfWayWhen, RightOfWayThen, RightOfWayVerify, RightOfWayQueries, RightOfWayGenerate>(
-        RightOfWayDslProvider), RightOfWayOracleScenario
+        RightOfWayDslProvider
+    ), RightOfWayOracleScenario
 
 open class RightOfWayQueryScenarioImpl :
     AbstractQueryScenario<RightOfWayActionFactory, RightOfWayQueryFactory, RightOfWayGiven, RightOfWayWhen, RightOfWayQueries>(
-        RightOfWayDslProvider), RightOfWayQueryScenario
+        RightOfWayDslProvider
+    ), RightOfWayQueryScenario
 
 fun verifiableScenario(init: RightOfWayVerifiableScenario.() -> Unit): RightOfWayVerifiableScenario {
     val scenario = RightOfWayVerifiableScenarioImpl()

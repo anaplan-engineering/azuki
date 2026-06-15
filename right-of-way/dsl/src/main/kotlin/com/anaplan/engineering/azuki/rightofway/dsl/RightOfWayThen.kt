@@ -1,8 +1,7 @@
-package com.anaplan.engineering.azuki.rightofway.com.anaplan.engineering.azuki.rightofway.dsl
+package com.anaplan.engineering.azuki.rightofway.dsl
 
 import com.anaplan.engineering.azuki.core.dsl.Then
 import com.anaplan.engineering.azuki.core.system.Check
-import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Quadrant
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayCheckFactory
 
