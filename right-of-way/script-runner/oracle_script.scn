@@ -1,4 +1,5 @@
-// Example oracle scenario for the tic-tac-toe system:
+// Example oracle scenario for the right-of-way system:
+// TODO
 oracleScenario {
     // First, generate some play orders (randomly assigning either O or X to player one):
     generate {

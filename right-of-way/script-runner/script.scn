@@ -1,10 +1,14 @@
-// Example verifiable scenario for the tic-tac-toe system.
+// Example verifiable scenario for the right-of-way system.
 verifiableScenario {
     given {
-        thereIsANewGameWithPlayers("gameA", "X", "O")
+        thereIsANewAirspaceWithAircraft("UK", 5U)
     }
     then {
-        playerHasMoved("gameA", "X", times = 0)
-        playerHasMoved("gameA", "O", times = 0)
+        // Howw to access the created aircrafts name?
+        hasRightOfWay("UK", "a0", "a1")
+        hasRightOfWay("UK", "a1", "a2")
+        hasRightOfWay("UK", "a2", "a3")
+        hasRightOfWay("UK", "a3", "a4")
+        hasRightOfWay("UK", "a4", "a5")
     }
 }
