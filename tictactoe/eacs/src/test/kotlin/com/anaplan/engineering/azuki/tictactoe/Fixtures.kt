@@ -1,4 +1,4 @@
-package com.anaplan.engineering.azuki.tictactoe.eacs
+package com.anaplan.engineering.azuki.tictactoe
 
 const val orderA = "orderA"
 
