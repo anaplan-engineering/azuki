@@ -1,40 +1,39 @@
 package com.anaplan.engineering.azuki.rightofway.adapter.scriptgen
 
+import com.anaplan.engineering.azuki.rightofway.adapter.api.toJsonString
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationDeclarationBuilder
-import com.anaplan.engineering.azuki.rightofway.adapter.api.pretty
-import com.anaplan.engineering.azuki.rightofway.adapter.declaration.declaration.GameDeclaration
-import com.anaplan.engineering.azuki.rightofway.com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayGiven
+import com.anaplan.engineering.azuki.rightofway.adapter.declaration.declaration.AirspaceDeclaration
+import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayGiven
 
+class AirspaceScriptGenerationDeclarationBuilder(declaration: AirspaceDeclaration) :
+    ScriptGenerationDeclarationBuilder<RightOfWayGenerationEnvironment, AirspaceDeclaration>(declaration) {
 
-class AirspaceScriptGenerationDeclarationBuilder(declaration: GameDeclaration) :
-    ScriptGenerationDeclarationBuilder<RightOfWayGenerationEnvironment, GameDeclaration>(declaration) {
-    private val newGameOrder: kotlin.reflect.KFunction3<RightOfWayGiven, String, String, Unit> =
-        RightOfWayGiven::thereIsANewGame
-    private val gameOrder: kotlin.reflect.KFunction4<RightOfWayGiven, String, String, String, Unit> =
-        RightOfWayGiven::thereIsAGame
+    // Reflective reference to function from interface with one parameter and Unit result
+    private val newAirspace: kotlin.reflect.KFunction2<RightOfWayGiven, String, Unit> =
+        RightOfWayGiven::thereIsANewAirspace
+    private val airspace: kotlin.reflect.KFunction3<RightOfWayGiven, String, String, Unit> =
+        RightOfWayGiven::thereIsAnAirspace
 
     override fun getDeclarationScript(environment: RightOfWayGenerationEnvironment) =
-        if (declaration.moves.isEmpty()) {
+        if (declaration.aircrafts.isEmpty()) {
             RightOfWayScriptingHelper.scriptifyFunction(
-                newGameOrder,
-                declaration.name,
-                declaration.orderName,
+                newAirspace,
+                declaration.name
             )
         } else {
             RightOfWayScriptingHelper.scriptifyFunction(
-                gameOrder,
+                airspace,
                 declaration.name,
-                declaration.orderName,
                 // add a newline to avoid """ and board being on same line
-                "\n" + declaration.moves.pretty(3, 3),
+                "\n" + declaration.aircrafts.toJsonString(),
             )
         }
 
-    class Factory : RightOfWayScriptGenerationDeclarationBuilderFactory<GameDeclaration> {
+    class Factory : RightOfWayScriptGenerationDeclarationBuilderFactory<AirspaceDeclaration> {
 
-        override val declarationClass = GameDeclaration::class.java
+        override val declarationClass = AirspaceDeclaration::class.java
 
-        override fun create(declaration: GameDeclaration): RightOfWayScriptGenerationDeclarationBuilder<GameDeclaration> =
+        override fun create(declaration: AirspaceDeclaration): RightOfWayScriptGenerationDeclarationBuilder<AirspaceDeclaration> =
             AirspaceScriptGenerationDeclarationBuilder(declaration)
     }
 }

@@ -1,5 +1,8 @@
 package com.anaplan.engineering.azuki.rightofway.adapter.api
 
+import kotlin.collections.component1
+import kotlin.collections.component2
+
 data class Position(val x: Double, val y: Double) {
     //TODO Why doesn't inheritance works well with Data classes? equals/hash?
     //TODO should we really have the dubplication `data class Position` vs. `@Module interface Position`?
@@ -37,6 +40,15 @@ fun Pair<Pair<Double, Double>, Pair<Double, Double>>.toAircraft() =
     Aircraft(first.toPosition() to second.toVelocity())
 
 typealias Aircrafts = Map<String, Aircraft>
+
+// TODO LF: make data class serializable to have a cleaner JSON representation?
+fun Aircraft.toJsonString() = "[[${position.x}, ${position.y}], [${velocity.x}, ${velocity.y}]]"
+fun Aircrafts.toJsonString() =
+    entries.joinToString(
+        separator = ",\n",
+        prefix = "{\n",
+        postfix = "\n}"
+    ) { (key, value) -> "\"${key}\" : ${value.toJsonString()}" }
 
 const val DELTA_O = 100.0
 const val DELTA_C = 1000.0

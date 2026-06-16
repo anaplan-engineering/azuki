@@ -45,13 +45,12 @@ class RightOfWayGenerationEnvironment : ScriptGenerationEnvironment {
         override fun compose(environment: RightOfWayGenerationEnvironment) = if (isFullySpecified) {
             success(listOf(AirspaceScriptGenerationCheckFactory.hasState(airspaceName, airspace)))
         } else {
-            failure(IllegalStateException("board has not been fully specified"))
+            failure(IllegalStateException("Airspace has not been checked for safety"))
         }
 
-        private val isFullySpecified get() = tokens.size + spaces.size == Width * Height
+        private val isFullySpecified get() = airspace
 
-        fun hasAircraft(player: String, position: Position) = at(position) { tokens[position] = player }
-        fun hasSpace(aircraftName: String) = at(aircraftName) { spaces.add(position) }
+        fun hasAircraft(aircraftName: String, aircraft: Aircraft) = at(aircraftName) { airspace[aircraftName] = aircraft }
 
         private fun at(aircraftName: String, fn: AirspaceCheckState.() -> Unit) =
             if (aircraftName !in airspace.keys) {

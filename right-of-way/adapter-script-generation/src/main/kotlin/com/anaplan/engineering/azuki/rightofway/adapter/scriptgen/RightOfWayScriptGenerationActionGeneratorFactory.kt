@@ -1,20 +1,19 @@
 package com.anaplan.engineering.azuki.rightofway.adapter.scriptgen
 
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationActionGenerator
-import com.anaplan.engineering.azuki.rightofway.adapter.api.TicTacToeActionGeneratorFactory
-import com.anaplan.engineering.azuki.rightofway.dsl.TicTacToeGenerate
+import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionGeneratorFactory
+import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayGenerate
 import kotlin.reflect.KFunction
 
-object RightOfWayScriptGenerationActionGeneratorFactory : TicTacToeActionGeneratorFactory {
+object RightOfWayScriptGenerationActionGeneratorFactory : RightOfWayActionGeneratorFactory {
 
-    override fun generatePlayOrder(orderName: String) = dsl(TicTacToeGenerate::createPlayOrder, orderName)
+    override fun generateAirspace(airspaceName: String) =
+        dsl(RightOfWayGenerate::generateAirspace, airspaceName)
 
-    override fun generateGame(gameName: String) = dsl(TicTacToeGenerate::createNewGameFromExistingPlayOrder, gameName)
-
-    override fun generateMoves(gameName: String, numMoves: Int) =
-        dsl(TicTacToeGenerate::addMoves, gameName, numMoves)
+    override fun generateAirspaceWithAircraft(airspaceName: String, numberOfAircraft: UInt) =
+        dsl(RightOfWayGenerate::generateAirspaceWithAircraft, airspaceName, numberOfAircraft)
 
     private fun dsl(fn: KFunction<*>, vararg values: Any?) = ScriptGenerationActionGenerator {
-        TicTacToeScriptingHelper.scriptifyFunction(fn, *values)
+        RightOfWayScriptingHelper.scriptifyFunction(fn, *values)
     }
 }
