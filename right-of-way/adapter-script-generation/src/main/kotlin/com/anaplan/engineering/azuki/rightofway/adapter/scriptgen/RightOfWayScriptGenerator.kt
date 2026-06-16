@@ -9,6 +9,7 @@ import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayRunnableScenario
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 
+// TODO LF: not quite following these type references / indirections
 val RightOfWayScriptGeneration = ScriptGenerationService.new(RightOfWayScriptGenerationActionFactory,
     RightOfWayScriptGenerationCheckFactory,
     ::RightOfWayDeclarationState).withEnvironmentFactory(::RightOfWayGenerationEnvironment)
@@ -42,13 +43,14 @@ class RightOfWayGenerationEnvironment : ScriptGenerationEnvironment {
 
         private val airspace = mutableMapOf<String, Aircraft>()
 
+        //TODO LF: not quite following this
         override fun compose(environment: RightOfWayGenerationEnvironment) = if (isFullySpecified) {
-            success(listOf(AirspaceScriptGenerationCheckFactory.hasState(airspaceName, airspace)))
+            success(listOf(AirspaceScriptGenerationCheckFactory.hasAircraft(airspaceName, "???")))
         } else {
             failure(IllegalStateException("Airspace has not been checked for safety"))
         }
 
-        private val isFullySpecified get() = airspace
+        private val isFullySpecified get() = airspace.isNotEmpty()
 
         fun hasAircraft(aircraftName: String, aircraft: Aircraft) = at(aircraftName) { airspace[aircraftName] = aircraft }
 

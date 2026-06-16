@@ -28,5 +28,14 @@ class RightOfWayQueries(private val queryFactory: RightOfWayQueryFactory) : Quer
 
 class DerivedQueryBlock {
 
+    fun allAircraftsIn(airspaceName: String) =
+        derived { allAircraftsIn(airspaceName) }
+    fun airspaceHasAircraft(airspaceName: String, aircraftName: String) =
+        derived { airspaceHasAircraft(airspaceName, aircraftName) }
+    fun hasRightOfWay(airspaceName: String) =
+        derived { hasRightOfWay(airspaceName) }
+    fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) =
+        derived { hasRightOfWay(airspaceName, aircraft0, aircraft1) }
+
     private fun <T> derived(f: RightOfWayQueryFactory.() -> Query<T>) = f
 }

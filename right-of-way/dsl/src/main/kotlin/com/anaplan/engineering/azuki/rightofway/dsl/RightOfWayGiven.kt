@@ -2,6 +2,7 @@ package com.anaplan.engineering.azuki.rightofway.dsl
 
 import com.anaplan.engineering.azuki.core.dsl.Given
 import com.anaplan.engineering.azuki.core.system.Action
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircraft
 import com.anaplan.engineering.azuki.rightofway.adapter.api.MIN_AIRCRAFT
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionFactory
 import com.anaplan.engineering.azuki.rightofway.adapter.api.freshNames
@@ -17,15 +18,27 @@ class RightOfWayGiven(private val actionFactory: RightOfWayActionFactory): Given
 
     private val actionList = mutableListOf<Action>()
 
+
     fun thereIsANewAirspace(airspaceName: String) {
         actionList.add(actionFactory.airspace.start(airspaceName))
     }
+
+//    fun thereIsAnAircraft(aircraftName: String) {
+//        actionList.add(actionFactory.airspace.addAircraft(aircraftName))
+//    }
 
     fun thereIsAnAirspace(airspaceName: String, airspaceData: String) {
         thereIsANewAirspace(airspaceName)
         RightOfWayAirspaceJSON.parse(airspaceData).forEach { (name, aircraft) ->
             actionList.add(actionFactory.airspace.addAircraft(airspaceName, name, aircraft))
         }
+    }
+
+    fun thereIsAnAirspace(airspaceName: String, init: AircraftBlock.() -> Unit) {
+        thereIsANewAirspace(airspaceName)
+        val aircraftBlock = AircraftBlock(actionFactory, airspaceName)
+        aircraftBlock.init()
+        actionList.addAll(aircraftBlock.actions())
     }
 
     fun thereIsANewAirspaceWithAircraft(airspaceName: String, numberOfAircraft: UInt = MIN_AIRCRAFT) {
@@ -38,6 +51,17 @@ class RightOfWayGiven(private val actionFactory: RightOfWayActionFactory): Given
                 (aircraftName, aircraft) ->
                     actionList.add(actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft))
                 }
+    }
+
+    override fun actions(): List<Action> = actionList
+}
+
+class AircraftBlock(private val actionFactory: RightOfWayActionFactory, val airspaceName: String) : Given<RightOfWayActionFactory> {
+
+    private val actionList = mutableListOf<Action>()
+
+    fun thereIsAnAircraft(aircraftName: String, aircraft: Aircraft) {
+        actionList.add(actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft))
     }
 
     override fun actions(): List<Action> = actionList

@@ -36,6 +36,13 @@ data class Aircraft(val position: Position, val velocity: Velocity) {
     override fun toString(): String = "A($position, $velocity)"
 }
 
+fun position(pair: Pair<Double, Double>): Position = Position(pair)
+fun position(x: Double, y: Double): Position = Position(x, y)
+fun velocity(pair: Pair<Double, Double>) = Velocity(pair)
+fun velocity(x: Double, y: Double) = Velocity(x to y)
+fun aircraft(pair: Pair<Position, Velocity>) = Aircraft(pair)
+fun aircraft(p: Position, v: Velocity) = Aircraft(p, v)
+
 fun Pair<Pair<Double, Double>, Pair<Double, Double>>.toAircraft() =
     Aircraft(first.toPosition() to second.toVelocity())
 
@@ -77,8 +84,8 @@ fun freshNames(from: Set<String> = emptySet(), prefix: String = "a", start: Int 
     }
 
 // maps adapter-api type from implementation type
-fun freshPosition(positions: Set<Position>)  = Position(spiralPositionsSequence().first { it.toPosition() !in positions })
-fun freshVelocity(velocities: Set<Velocity>) = Velocity(spiralVelocitiesSequence().first { it.toVelocity() !in velocities })
+fun freshPosition(positions: Set<Position>)  = Position(spiralPositionsSequence().first { position(it) !in positions })
+fun freshVelocity(velocities: Set<Velocity>) = Velocity(spiralVelocitiesSequence().first { velocity(it) !in velocities })
 
 // Lazily creates fresh positions/velocities according to the airspace constants
 fun spiralPositionsSequence(delta_c: Double = DELTA_C) = spiralSequence(delta_c)
