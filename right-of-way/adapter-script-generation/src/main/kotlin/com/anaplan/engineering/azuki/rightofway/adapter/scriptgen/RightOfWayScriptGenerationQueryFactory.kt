@@ -8,13 +8,13 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircrafts
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationDerivedQuery
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationQuery
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationQueryWithDummy
-import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayQueryFactory
 import com.anaplan.engineering.azuki.rightofway.dsl.DerivedQueryBlock
 import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayQueries
 import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayVerify
-import kotlin.collections.emptyList
 import kotlin.reflect.KFunction
+import kotlin.reflect.KFunction2
+import kotlin.reflect.KFunction4
 
 /**
  * Root class for the three types of query factory (queries in query position, queries in verification position,
@@ -95,35 +95,36 @@ enum class QueryPosition {
     Query, Verify, Derived
 }
 
-//TODO LF: this looks way too complicated for the cast; but other alternatives I could find have failed
-fun <T : Function<*>> forceFnType(fn: T) = fn as KFunction<*>
-val hasRightOfWayAllQ = forceFnType<RightOfWayQueries.(String) -> Unit>(RightOfWayQueries::hasRightOfWay)
-val hasRightOfWaySpecificQ = forceFnType<RightOfWayQueries.(String, String, String) -> Unit>(RightOfWayQueries::hasRightOfWay)
-val hasRightOfWayAllV = forceFnType<RightOfWayVerify.(String) -> Unit>(RightOfWayVerify::hasRightOfWay)
-val hasRightOfWaySpecificV = forceFnType<RightOfWayVerify.(String, String, String) -> Unit>(RightOfWayVerify::hasRightOfWay)
-val hasRightOfWayAllD = forceFnType<DerivedQueryBlock.(String) -> RightOfWayQueryFactory.() -> Query<Set<Pair<String, String>>>>(DerivedQueryBlock::hasRightOfWay)
-val hasRightOfWaySpecificD = forceFnType<DerivedQueryBlock.(String, String, String) -> RightOfWayQueryFactory.() -> Query<Boolean>>(DerivedQueryBlock::hasRightOfWay)
-//    private val hasRightOfWayAll: (String) -> Unit = RightOfWayQueries::hasRightOfWay
-//    private val hasRightOfWayAll = { airspaceName: String -> RightOfWayQueries::hasRightOfWay(airspaceName) }
-//    private val hasRightOfWayAll: kotlin.reflect.KFunction2<RightOfWayQueries, String, Unit> = RightOfWayQueries::hasRightOfWay
-//((RightOfWayQueries::hasRightOfWay as (RightOfWayQueries, String) -> Unit)) as kotlin.reflect.KFunction2<RightOfWayQueries, String, Unit>),//KFunction1<String, Unit>,//(String) -> Unit,
+private typealias DerivedHasRightOfWayAll =
+    RightOfWayQueryFactory.() -> Query<Set<Pair<String, String>>>
+private typealias DerivedHasRightOfWaySpecific = RightOfWayQueryFactory.() -> Query<Boolean>
+
+private object HasRightOfWayScriptRefs {
+    val queryAll: KFunction2<RightOfWayQueries, String, Unit> = RightOfWayQueries::hasRightOfWay
+    val querySpecific: KFunction4<RightOfWayQueries, String, String, String, Unit> = RightOfWayQueries::hasRightOfWay
+    val verifyAll: KFunction2<RightOfWayVerify, String, Unit> = RightOfWayVerify::hasRightOfWay
+    val verifySpecific: KFunction4<RightOfWayVerify, String, String, String, Unit> = RightOfWayVerify::hasRightOfWay
+    val derivedAll: KFunction2<DerivedQueryBlock, String, DerivedHasRightOfWayAll> = DerivedQueryBlock::hasRightOfWay
+    val derivedSpecific: KFunction4<DerivedQueryBlock, String, String, String, DerivedHasRightOfWaySpecific> =
+        DerivedQueryBlock::hasRightOfWay
+}
 
 enum class QueryReference(
     val inQueryPosition: KFunction<*>, val inVerificationPosition: KFunction<*>, val inDerivedPosition: KFunction<*>?
 ) {
 
     AllAircraftsIn(RightOfWayQueries::allAircraftsIn,
-        RightOfWayVerify::airspaceHasAircraft,
+        RightOfWayVerify::allAircraftsIn,
         DerivedQueryBlock::allAircraftsIn),
     AirspaceHasAircraft(RightOfWayQueries::airspaceHasAircraft,
         RightOfWayVerify::airspaceHasAircraft,
         DerivedQueryBlock::airspaceHasAircraft),
-    HasRightOfWayAll(hasRightOfWayAllQ,
-        hasRightOfWayAllV,
-        hasRightOfWayAllD),
-    HasRightOfWaySpecific(hasRightOfWaySpecificQ,
-        hasRightOfWaySpecificV,
-        hasRightOfWaySpecificD);
+    HasRightOfWayAll(HasRightOfWayScriptRefs.queryAll,
+        HasRightOfWayScriptRefs.verifyAll,
+        HasRightOfWayScriptRefs.derivedAll),
+    HasRightOfWaySpecific(HasRightOfWayScriptRefs.querySpecific,
+        HasRightOfWayScriptRefs.verifySpecific,
+        HasRightOfWayScriptRefs.derivedSpecific);
 
     fun inPosition(position: QueryPosition) = when (position) {
         QueryPosition.Query -> inQueryPosition
