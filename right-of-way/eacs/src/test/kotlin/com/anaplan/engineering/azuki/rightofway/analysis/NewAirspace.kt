@@ -12,7 +12,6 @@ import com.anaplan.engineering.azuki.rightofway.position0
 import com.anaplan.engineering.azuki.rightofway.position1
 import com.anaplan.engineering.azuki.rightofway.velocity0
 import com.anaplan.engineering.azuki.rightofway.velocity1
-import com.sun.awt.SecurityWarning.setPosition
 
 class NewAirspace : RightOfWayRunnableScenario() {
 

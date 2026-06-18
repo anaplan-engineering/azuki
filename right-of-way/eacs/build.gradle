@@ -75,7 +75,7 @@ task sampleImplementationV1ClasspathJar(type: Jar) {
 ext {
     // default impls
     // No direct way to "force" VdmAnimator to pick the VDMJ for animation; it's there, but Overture is first in the list
-    setProperty("impl.includes", "VDM,Kazuki,SampleImpl")//VDM,Kazuki,SampleImpl
+    setProperty("impl.includes", "Kazuki,VDM,SampleImpl") //, "VDM") , "SampleImpl")//, "Kazuki,VDM,SampleImpl")
 }
 
 test {
