@@ -7,8 +7,9 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionFact
 
 class RightOfWayWhen(val actionFactory: RightOfWayActionFactory): When<RightOfWayActionFactory> {
 
-    fun placeAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) =
+    fun placeAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) {
         actionList.add(actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft))
+    }
 
     private val actionList = mutableListOf<Action>()
 

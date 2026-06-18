@@ -8,6 +8,7 @@ interface RightOfWayCheckFactory : CheckFactory {
 }
 
 interface AirspaceCheckFactory {
+    fun aircraftCount(airspaceName: String, expectedCount: ULong, expectedOpen: Boolean): Check
     fun hasAircraft(airspaceName: String, aircraftName: String): Check
     fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String): Check
 

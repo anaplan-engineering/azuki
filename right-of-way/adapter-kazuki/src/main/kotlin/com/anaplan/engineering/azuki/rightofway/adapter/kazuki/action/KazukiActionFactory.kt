@@ -18,9 +18,9 @@ object KazukiAirspaceActionFactory : AirspaceActionFactory {
     override fun addAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft): Action =
         CreateAircraftAction(airspaceName, aircraftName, aircraft)
 
-    // Kazuki doesn't support file-related actions
+    // Kazuki doesn't support these actions
     override fun save(airspaceName: String) = UnsupportedAction
-    override fun close(airspaceName: String) = StartAirspaceAction(airspaceName, false)
+    override fun unload(airspaceName: String) = UnsupportedAction
     override fun load(airspaceName: String) = UnsupportedAction
 }
 

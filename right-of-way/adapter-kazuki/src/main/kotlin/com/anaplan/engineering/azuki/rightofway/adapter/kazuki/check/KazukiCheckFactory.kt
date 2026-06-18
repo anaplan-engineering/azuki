@@ -17,6 +17,9 @@ class KazukiCheckFactory : RightOfWayCheckFactory {
 
 object KazukiAirspaceCheckFactory : AirspaceCheckFactory {
 
+    override fun aircraftCount(airspaceName: String, expectedCount: ULong, expectedOpen: Boolean) =
+        AircraftCountCheck(airspaceName, expectedCount, expectedOpen)
+
     override fun hasAircraft(airspaceName: String, aircraftName: String) =
         HasAircraftCheck(airspaceName, aircraftName)
 

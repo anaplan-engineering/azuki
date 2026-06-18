@@ -11,9 +11,10 @@ class SampleActionFactory : RightOfWayActionFactory {
 }
 
 object SampleAirspaceActionFactory : AirspaceActionFactory {
-    override fun start(airspaceName: String) = StartAirspaceAction(airspaceName, true)
+    override fun start(airspaceName: String, delta_o: Double, delta_c: Double, theta_h: Double, opened: Boolean) =
+        StartAirspaceAction(airspaceName, delta_o, delta_c, theta_h, opened)
     override fun save(airspaceName: String) = SaveAirspaceAction(airspaceName)
-    override fun close(airspaceName: String) = CloseAirspaceAction(airspaceName)
+    override fun unload(airspaceName: String) = UnloadAirspaceAction(airspaceName)
     override fun load(airspaceName: String) = LoadAirspaceAction(airspaceName)
     override fun addAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) =
         CreateAircraftAction(airspaceName, aircraftName, aircraft)

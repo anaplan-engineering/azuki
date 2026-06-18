@@ -11,8 +11,8 @@ class RightOfWayRegardlessOf(private val actionFactory: RightOfWayActionFactory)
         actionList.add(actionFactory.airspace.save(airspaceName))
     }
 
-    fun closeAirspace(airspaceName: String) {
-        actionList.add(actionFactory.airspace.close(airspaceName))
+    fun unloadAirspace(airspaceName: String) {
+        actionList.add(actionFactory.airspace.unload(airspaceName))
     }
 
     fun loadAirspace(airspaceName: String) {

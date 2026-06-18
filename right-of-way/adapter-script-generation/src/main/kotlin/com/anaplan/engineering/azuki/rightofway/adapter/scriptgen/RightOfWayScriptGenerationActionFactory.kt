@@ -22,14 +22,15 @@ fun interface RightOfWayScriptGenerationAction : ScriptGenerationAction<RightOfW
 
 object AirspaceScriptGenerationActionFactory : AirspaceActionFactory {
 
-    override fun start(airspaceName: String) = StartAirspaceDeclarableAction(airspaceName, true)
+    override fun start(airspaceName: String, delta_o: Double, delta_c: Double, theta_h: Double, opened: Boolean) =
+        StartAirspaceDeclarableAction(airspaceName, delta_o, delta_c, theta_h, opened)
 
     override fun save(airspaceName: String) = RightOfWayScriptGenerationAction {
         RightOfWayScriptingHelper.scriptifyFunction(RightOfWayRegardlessOf::saveAirspace, airspaceName)
     }
 
-    override fun close(airspaceName: String) = RightOfWayScriptGenerationAction {
-        RightOfWayScriptingHelper.scriptifyFunction(RightOfWayRegardlessOf::closeAirspace, airspaceName)
+    override fun unload(airspaceName: String) = RightOfWayScriptGenerationAction {
+        RightOfWayScriptingHelper.scriptifyFunction(RightOfWayRegardlessOf::unloadAirspace, airspaceName)
     }
 
     override fun load(airspaceName: String) = RightOfWayScriptGenerationAction {

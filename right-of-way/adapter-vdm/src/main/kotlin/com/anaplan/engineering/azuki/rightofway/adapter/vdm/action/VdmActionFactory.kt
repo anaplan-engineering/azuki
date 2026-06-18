@@ -10,10 +10,12 @@ class VdmActionFactory : RightOfWayActionFactory {
 }
 
 object VdmAirspaceActionFactory : AirspaceActionFactory {
-    override fun start(airspaceName: String) = StartAirspaceAction(airspaceName, true)
-    override fun save(airspaceName: String) = UnsupportedAction
-    override fun close(airspaceName: String) = StartAirspaceAction(airspaceName, false)
-    override fun load(airspaceName: String) = UnsupportedAction
+    override fun start(airspaceName: String, delta_o: Double, delta_c: Double, theta_h: Double, opened: Boolean) =
+        StartAirspaceAction(airspaceName, delta_o, delta_c, theta_h, opened)
     override fun addAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) =
         CreateAircraftAction(airspaceName, aircraftName, aircraft)
+
+    override fun save(airspaceName: String) = UnsupportedAction
+    override fun unload(airspaceName: String) = UnsupportedAction
+    override fun load(airspaceName: String) = UnsupportedAction
 }

@@ -11,10 +11,9 @@ class CreateAircraftAction(airspaceName: String, aircraftName: String, aircraft:
 
     override fun act(env: ExecutionEnvironment) {
         val airspace = env.airspace(airspaceName)
+        // TODO LF: Kazuki spec doesn't need aircraft names, but save it anyhow? If so, build has to do the same
+        //env.set("${airspaceName}_${aircraftName}", aircraft)
         // Transform the adapter-api type to the kazuki type
-        val aircraft = mk_Aircraft(aircraft.position.toKazuki(), aircraft.velocity.toKazuki())
-        // Kazuki spec doesn't need aircraft names, but save it anyhow
-        env.set("${airspaceName}.${airspaceName}", aircraft)
-        env.set(airspaceName, airspace.functions.addAircraft(aircraft))
+        env.set(airspaceName, airspace.functions.addAircraft(aircraft.toKazuki()))
     }
 }

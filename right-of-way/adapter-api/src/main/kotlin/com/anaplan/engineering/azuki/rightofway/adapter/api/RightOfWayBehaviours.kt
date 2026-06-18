@@ -8,8 +8,6 @@ object RightOfWayBehaviours {
     const val StartAirspace = 1
     const val NewAircraft = 2
     const val LoadAirspace = 3
-    const val SaveAirspace = 21
-    const val HasAircraft = 20
     const val RightOfWay = 4
     const val Convergence = 5
     const val Overtaking = 6
@@ -26,6 +24,9 @@ object RightOfWayBehaviours {
     const val OnQuadrant = 17
     const val ConvergeNotHeadon = 18
     const val ConvergeHeadon = 19
+    const val HasAircraft = 20
+    const val SaveAirspace = 21
+    const val AircraftCount = 22
 }
 
 // Each behaviour will have a corresponding factory, be that for an action or a check
