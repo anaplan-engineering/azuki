@@ -8,6 +8,7 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.Crossing
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Quadrant
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayCheckFactory
 import com.anaplan.engineering.azuki.rightofway.adapter.api.toDirection
+import com.anaplan.engineering.azuki.rightofway.adapter.vdm.RightOfWayModuleBuilder
 import com.anaplan.engineering.azuki.vdm.EmptySystemContext
 import com.anaplan.engineering.azuki.vdm.VdmCheck
 
@@ -75,6 +76,8 @@ object VdmAirspaceCheckFactory : AirspaceCheckFactory {
 }
 
 interface DefaultVdmCheck : VdmCheck<EmptySystemContext> {
+
+    override fun build(builder: RightOfWayModuleBuilder): RightOfWayModuleBuilder
 
     fun checkEquals(actual: String = "actual", expected: String = "expected", msg: String? = null) =
         """

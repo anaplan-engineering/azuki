@@ -3,7 +3,7 @@ package com.anaplan.engineering.azuki.rightofway.adapter.vdm.check
 import com.anaplan.engineering.azuki.core.system.ReifiedBehavior
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayBehaviours
 import com.anaplan.engineering.azuki.rightofway.adapter.vdm.RightOfWayRulesModule
-import com.anaplan.engineering.azuki.vdm.DefaultModuleBuilder
+import com.anaplan.engineering.azuki.rightofway.adapter.vdm.RightOfWayModuleBuilder
 import com.anaplan.engineering.azuki.vdm.toVdmName
 
 class HasAircraftCheck(private val airspaceName: String, private val aircraftName: String) :
@@ -11,7 +11,7 @@ class HasAircraftCheck(private val airspaceName: String, private val aircraftNam
 {
     override val behavior = RightOfWayBehaviours.HasAircraft
 
-    override fun build(builder: DefaultModuleBuilder): DefaultModuleBuilder {
+    override fun build(builder: RightOfWayModuleBuilder): RightOfWayModuleBuilder {
         // TODO: refactor this into abstract class?
         val airspaceGetter = builder.getters[airspaceName] ?: throw IllegalStateException("Missing getter for airspace $airspaceName")
         val aircraftGetter = builder.getters[toVdmName("${airspaceName}_${aircraftName}")] ?: throw IllegalStateException("Missing getter for aircraft ${airspaceName}_${aircraftName}")
@@ -21,11 +21,7 @@ class HasAircraftCheck(private val airspaceName: String, private val aircraftNam
         //  For kazuki, this was sorted via execution environment variables
         //  For VDM, this is injected via the AirspaceDeclarationBuilderFactory.declarations method
         return builder.extend(
-            requiredImports = setOf(
-                RightOfWayRulesModule.Airspace.import,
-                RightOfWayRulesModule.Aircraft.import,
-                RightOfWayRulesModule.has_aircraft.import
-            ),
+            requiredImports = setOf(RightOfWayRulesModule.has_aircraft.import),
             testSteps = listOf(
                 """
                 (

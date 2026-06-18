@@ -3,7 +3,7 @@ package com.anaplan.engineering.azuki.rightofway.adapter.vdm.declaration
 import com.anaplan.engineering.azuki.declaration.Declaration
 import com.anaplan.engineering.azuki.declaration.DeclarationBuilder
 import com.anaplan.engineering.azuki.declaration.FeDeclarationBuilderFactory
-import com.anaplan.engineering.azuki.vdm.DefaultModuleBuilder
+import com.anaplan.engineering.azuki.rightofway.adapter.vdm.RightOfWayModuleBuilder
 import com.anaplan.engineering.azuki.vdm.VdmDeclaration
 import com.anaplan.engineering.azuki.vdm.toVdmName
 import com.anaplan.engineering.vdmanimation.api.Import
@@ -12,13 +12,13 @@ interface VdmDeclarationBuilderFactory<D : Declaration> : FeDeclarationBuilderFa
 
 abstract class VdmDeclarationBuilder<D : Declaration>(declaration: D) : DeclarationBuilder<D>(declaration) {
 
-    open fun imports(builder: DefaultModuleBuilder): Set<Import> = emptySet()
+    open fun imports(builder: RightOfWayModuleBuilder): Set<Import> = emptySet()
 
-    open fun declarations(builder: DefaultModuleBuilder, container: Declaration? = null): List<VdmDeclaration> =
+    open fun declarations(builder: RightOfWayModuleBuilder, container: Declaration? = null): List<VdmDeclaration> =
         emptyList()
 
     // getters / setters inject Kotlin representation as VDM equivalent/accessible ones.
-    open fun build(builder: DefaultModuleBuilder) = builder.extend(
+    open fun build(builder: RightOfWayModuleBuilder) = builder.extend(
         requiredImports = imports(builder),
         topLevelDeclarations = declarations(builder),
         setters = mapOf(declaration.name to { v: String -> "${declaration.vdmName()} := $v" }),

@@ -31,7 +31,7 @@ class VdmSystemFactory :
         }
         return VdmSystem(
             systemDefinition.declarations.map(::toDeclarableAction),
-            systemDefinition.commands.map(toDefaultVdmAction),
+            systemDefinition.commands.map(toRightOfWayVdmAction),
             systemDefinition.checks.map(toDefaultVdmCheck),
         )
     }
@@ -43,7 +43,7 @@ class VdmSystemFactory :
 
 data class VdmSystem(
     private val declarableActions: List<DeclarableAction<RightOfWayDeclarationState>>,
-    private val buildActions: List<DefaultVdmAction>,
+    private val buildActions: List<RightOfWayVdmAction>,
     private val checks: List<DefaultVdmCheck>
 ) : VerifiableSystem<RightOfWayActionFactory, RightOfWayCheckFactory> {
 
@@ -52,8 +52,7 @@ data class VdmSystem(
         val moduleBuilder =
             checks.fold(
                 buildActions.fold(
-                    vdmDeclarationBuilders.fold(DefaultModuleBuilder(specification,
-                        EmptySystemContext)) { acc, c -> c.build(acc) }
+                    vdmDeclarationBuilders.fold(rightOfWayModuleBuilder(specification)) { acc, c -> c.build(acc) }
                 ) { acc, c -> c.build(acc) }
             ) { acc, c -> c.build(acc) }
         return moduleBuilder.build()
