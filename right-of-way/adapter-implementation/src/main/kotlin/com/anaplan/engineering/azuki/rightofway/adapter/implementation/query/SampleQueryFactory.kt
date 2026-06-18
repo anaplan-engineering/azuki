@@ -38,6 +38,13 @@ class SampleQueryFactory : RightOfWayQueryFactory {
             //println(this) //  RightOfWayCheckFactory.(): List<Check>
             emptyList<Check>() } })
 
+    override fun aircraftNamesIn(airspaceName: String) = query(
+        value = { env ->
+            env.withAirspace(airspaceName) { aircraftIds.toSet() }
+        },
+        checks = { _ -> { emptyList() } },
+    )
+
     override fun airspaceHasAircraft(airspaceName: String, aircraftName: String) = query(
         value = { env ->
             env.withAirspace(airspaceName) {

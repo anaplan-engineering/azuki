@@ -32,6 +32,8 @@ class RightOfWayVerify(private val queryFactory: RightOfWayQueryFactory) : Verif
         addQuery { hasRightOfWay(airspaceName, withRightOfWay, givingWay) }
     fun allAircraftsIn(airspaceName: String) =
         addQuery { allAircraftsIn(airspaceName) }
+    fun aircraftNamesIn(airspaceName: String) =
+        addQuery { aircraftNamesIn(airspaceName) }
     fun airspaceHasAircraft(airspaceName: String, aircraftName: String) =
         addQuery { airspaceHasAircraft(airspaceName, aircraftName) }
 

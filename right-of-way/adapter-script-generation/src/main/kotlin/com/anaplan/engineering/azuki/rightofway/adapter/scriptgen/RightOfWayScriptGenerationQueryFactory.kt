@@ -54,6 +54,8 @@ abstract class RightOfWayScriptGenerationQueryFactory(val queryPosition: QueryPo
 
     override fun allAircraftsIn(airspaceName: String) =
         query<Aircrafts>(QueryReference.AllAircraftsIn, airspaceName)
+    override fun aircraftNamesIn(airspaceName: String) =
+        query<Set<String>>(QueryReference.AircraftNamesIn, airspaceName)
     override fun airspaceHasAircraft(airspaceName: String, aircraftName: String) =
         query<Boolean>(QueryReference.AirspaceHasAircraft, airspaceName, aircraftName)
     override fun hasRightOfWay(airspaceName: String) =
@@ -75,6 +77,9 @@ object RightOfWayScriptGenerationVerificationQueryFactory : RightOfWayScriptGene
 
 // TODO LF: why isn't QueryPosition.Derived a val here?
 object RightOfWayScriptGenerationDerivedQueryFactory : AbstractRightOfWayScriptGenerationQueryFactory() {
+
+    override fun aircraftNamesIn(airspaceName: String) =
+        query<Set<String>, String>(QueryReference.AircraftNamesIn, "a0", airspaceName)
 
 //    override fun airspaceHasAircraft(airspaceName: String, aircraftName: String) =
 //        query<List<Boolean>, Boolean>(QueryReference.AirspaceHasAircraft, false, airspaceName, aircraftName)
@@ -116,6 +121,9 @@ enum class QueryReference(
     AllAircraftsIn(RightOfWayQueries::allAircraftsIn,
         RightOfWayVerify::allAircraftsIn,
         DerivedQueryBlock::allAircraftsIn),
+    AircraftNamesIn(RightOfWayQueries::aircraftNamesIn,
+        RightOfWayVerify::aircraftNamesIn,
+        DerivedQueryBlock::aircraftNamesIn),
     AirspaceHasAircraft(RightOfWayQueries::airspaceHasAircraft,
         RightOfWayVerify::airspaceHasAircraft,
         DerivedQueryBlock::airspaceHasAircraft),
