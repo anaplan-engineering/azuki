@@ -71,10 +71,11 @@ class VDMJAnimator : VdmAnimator {
         animationContext: AnimationContext
     ): Boolean {
         try {
-            // Already called upon lazy initialisation
-            //interpreter.init(null)
+            // TODO LF: remove as already called upon lazy initialisation already?
+            interpreter.init()
             interpreter.defaultName = module
-            val value = interpreter.execute("$operation()", null)
+            // VDMJ needs at least a global environment, which is created for just a string execute
+            val value = interpreter.execute("$operation()")
             return if (animationContext.expectFailure) {
                 false
             } else {
