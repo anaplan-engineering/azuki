@@ -1,10 +1,16 @@
 package com.anaplan.engineering.azuki.rightofway.dsl
 
 import com.anaplan.engineering.azuki.core.dsl.Given
+import com.anaplan.engineering.azuki.core.dsl.ScenarioDsl
 import com.anaplan.engineering.azuki.core.system.Action
+import com.anaplan.engineering.azuki.core.system.Query
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircraft
+import com.anaplan.engineering.azuki.rightofway.adapter.api.DELTA_C
+import com.anaplan.engineering.azuki.rightofway.adapter.api.DELTA_O
 import com.anaplan.engineering.azuki.rightofway.adapter.api.MIN_AIRCRAFT
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayActionFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayQueryFactory
+import com.anaplan.engineering.azuki.rightofway.adapter.api.THETA_H
 import com.anaplan.engineering.azuki.rightofway.adapter.api.freshNames
 import com.anaplan.engineering.azuki.rightofway.adapter.api.spiralPositionsSequence
 import com.anaplan.engineering.azuki.rightofway.adapter.api.spiralVelocitiesSequence
@@ -18,19 +24,23 @@ class RightOfWayGiven(private val actionFactory: RightOfWayActionFactory): Given
 
     private val actionList = mutableListOf<Action>()
 
-
-    fun thereIsANewAirspace(airspaceName: String) {
-        actionList.add(actionFactory.airspace.start(airspaceName))
+    // Use delegation with receiver to make definitions streamlined (i.e. remove need to have many list.add explicit calls
+    private fun addAction(via: RightOfWayActionFactory.() -> Action) {
+        actionList.add(actionFactory.via())
     }
 
-//    fun thereIsAnAircraft(aircraftName: String) {
-//        actionList.add(actionFactory.airspace.addAircraft(aircraftName))
-//    }
+    fun thereIsANewAirspace(airspaceName: String, delta_o: Double = DELTA_O,
+                            delta_c: Double = DELTA_C, theta_h: Double = THETA_H, opened: Boolean = true) {
+        require(airspaceName.isNotBlank()) { "Airspace name must not be blank" }
+        addAction { actionFactory.airspace.start(airspaceName, delta_o, delta_c, theta_h, opened) }
+    }
 
     fun thereIsAnAirspace(airspaceName: String, airspaceData: String) {
         thereIsANewAirspace(airspaceName)
-        RightOfWayAirspaceJSON.parse(airspaceData).forEach { (name, aircraft) ->
-            actionList.add(actionFactory.airspace.addAircraft(airspaceName, name, aircraft))
+        require(airspaceData.isNotBlank()) { "Airspace data must not be blank" }
+        RightOfWayAirspaceJSON.parse(airspaceData).forEach { (aircraftName, aircraft) ->
+            //actionList.add(actionFactory.airspace.addAircraft(airspaceName, name, aircraft))
+            addAction { actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft) }
         }
     }
 
@@ -49,13 +59,14 @@ class RightOfWayGiven(private val actionFactory: RightOfWayActionFactory): Given
             // zipped result is Sequence<String, Pair<Position, Velocity>>
             (name, zipped) -> name to zipped.toAircraft() }.take(numberOfAircraft.toInt()).forEach {
                 (aircraftName, aircraft) ->
-                    actionList.add(actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft))
+                    addAction { actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft) }
                 }
     }
 
     override fun actions(): List<Action> = actionList
 }
 
+@ScenarioDsl
 class AircraftBlock(private val actionFactory: RightOfWayActionFactory, val airspaceName: String) : Given<RightOfWayActionFactory> {
 
     private val actionList = mutableListOf<Action>()
