@@ -22,7 +22,7 @@ abstract class VdmDeclarationBuilder<D : Declaration>(declaration: D) : Declarat
         requiredImports = imports(builder),
         topLevelDeclarations = declarations(builder),
         setters = mapOf(declaration.name to { v: String -> "${declaration.vdmName()} := $v" }),
-        getters = mapOf(declaration.name to declaration.vdmName())
+        getters = mapOf(declaration.name to declaration.vdmName()) + nestedGetters(),
     )
 
     // getters that are used within the definition and which may be used by other objects within the definition

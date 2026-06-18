@@ -18,6 +18,12 @@ class AirspaceDeclarationBuilderFactory : VdmDeclarationBuilderFactory<AirspaceD
     private class AirspaceDeclarationBuilder(declaration: AirspaceDeclaration) :
         VdmDeclarationBuilder<AirspaceDeclaration>(declaration) {
 
+        override fun nestedGetters(): Map<String, String> =
+            declaration.aircrafts.keys.associate { name ->
+                val vdmName = toVdmName("${declaration.name}_$name")
+                vdmName to vdmName
+            }
+
         override fun declarations(builder: RightOfWayModuleBuilder, container: Declaration?): List<VdmDeclaration> =
             listOf(
                 VdmDeclaration(

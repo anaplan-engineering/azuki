@@ -456,7 +456,7 @@ functions
 
 functions
 
-    get_xs: set of RVector * nzreal -> set1 of real
+    get_xs: set of RVector * pnzreal -> set1 of real
     get_xs(v, xinc) ==
         if v = {} then
             { xinc }
@@ -469,7 +469,7 @@ functions
         and
         (v <> {} => card RESULT <= card v);
 
-    get_ys: set of RVector * nzreal -> set1 of real
+    get_ys: set of RVector * pnzreal -> set1 of real
     get_ys(v, yinc) ==
         if v = {} then
             { yinc }
@@ -483,7 +483,7 @@ functions
         -- velocities might be equal, so only up to original set
         (v <> {} => card RESULT <= card v);
 
-    generate_vectors: set of RVector * nat1 * nzreal * nzreal -> set1 of RVector
+    generate_vectors: set of RVector * nat1 * pnzreal * pnzreal -> set1 of RVector
     generate_vectors(v, amount, xinc, yinc) ==
         dunion
         {
@@ -507,51 +507,69 @@ functions
         --card RESULT >= amount
         ;
 
+    generate_positions: set of Position * nat1 * pnzreal * pnzreal -> set1 of Position
+    generate_positions(ps, amount, xinc, yinc) ==
+        { p | p in set generate_vectors(ps, amount, xinc, yinc) & is_Position(p) }
+    pre
+        pre_generate_vectors(ps, amount, xinc, yinc)
+    post
+        post_generate_vectors(ps, amount, xinc, yinc, RESULT);
+
+    generate_velocities: set of Velocity * nat1 * pnzreal * pnzreal -> set1 of Velocity
+    generate_velocities(vs, amount, xinc, yinc) ==
+        { v | v in set generate_vectors(vs, amount, xinc, yinc) & is_Velocity(v) }
+    pre
+        pre_generate_vectors(vs, amount, xinc, yinc)
+    post
+        post_generate_vectors(vs, amount, xinc, yinc, RESULT);
+
     -- generation is relative to the Position(x,y) coordinates, but it somewhat exponential given the original size * amount
     -- spurious?
     -- generate_safe_aircrafts(mk_Airspace({mk_Aircraft(mk_RVector(1.0, 1.0), mk_RVector(1.0, 1.0))}, 1.0, 1.0, 1.0), 1, -1.0, -5.0)
-    generate_aircrafts: Airspace * nat1 * nzreal * nzreal -> Aircrafts
+    generate_aircrafts: Airspace * nat1 * pnzreal * pnzreal -> Aircrafts
     generate_aircrafts(mk_Airspace(aircrafts, -, -, -, -), amount, xinc, yinc) ==
         let
           -- new unique positions
-          positions : set1 of Position = generate_vectors({ a.position | a in set aircrafts }, amount, xinc, yinc)
+          positions : set1 of Position = generate_positions({ a.position | a in set aircrafts }, amount, xinc, yinc)
         in
           -- new aircraft positions
+          -- TODO - speeds to be considered after
           { mk_Aircraft(p, mk_RVector(100,100)) | p in set positions }
     pre
-        pre_generate_vectors({ a.position | a in set aircrafts }, amount, xinc, yinc)
+        pre_generate_positions({ a.position | a in set aircrafts }, amount, xinc, yinc)
     post
+        post_generate_positions({ a.position | a in set aircrafts }, amount, xinc, yinc, { r.position | r in set RESULT })
+        and
         -- no conflicting positions with existing aircrafts
-        { a.position | a in set aircrafts } inter { a.position | a in set RESULT } = {}
-        -- or simply
-        and
-        aircrafts inter RESULT = {}
-        and
-        card RESULT >= amount;
+        { a.position | a in set aircrafts } inter { a.position | a in set RESULT } = {};
 
-    generate_safe_aircrafts: Airspace * nat1 * nzreal * nzreal -> Aircrafts
+    generate_safe_aircrafts: Airspace * nat1 * pnzreal * pnzreal -> Aircrafts
     generate_safe_aircrafts(asp, amount, xinc, yinc) ==
         let
-            aircrafts : Aircrafts = { a | a in set generate_aircrafts(asp, amount, xinc, yinc) },
+            aircraftsGen: Aircrafts = { a | a in set generate_aircrafts(asp, amount, xinc, yinc) },
             -- post condition of generate_aircrafts ensures that union is okay
-            aircrafts': Aircrafts = aircrafts union asp.aircrafts
+            aircraftsAll: Aircrafts = aircraftsGen union asp.aircrafts
         in
-            { a | a in set aircrafts' & thm_safe_airspace(aircrafts')(asp.delta_o, asp.delta_c, asp.Theta_h) }
+            { a | a in set aircraftsAll & thm_safe_airspace(aircraftsAll)(asp.delta_o, asp.delta_c, asp.Theta_h) }
     pre
         pre_generate_aircrafts(asp, amount, xinc, yinc)
     post
+        post_generate_aircrafts(asp, amount, xinc, yinc, RESULT \ asp.aircrafts)
+        and
         -- result must expand on current airspace
         asp.aircrafts psubset RESULT
         and
         -- expansion remains safe
         thm_safe_airspace(RESULT)(asp.delta_o, asp.delta_c, asp.Theta_h);
 
-    generate_safe_aircrafts_novel: Airspace * nat1 * nzreal * nzreal -> Aircrafts
-    generate_safe_aircrafts_novel(asp, amount, xinc, yinc) ==
+    generate_safe_aircrafts_new: Airspace * nat1 * pnzreal * pnzreal -> Aircrafts
+    generate_safe_aircrafts_new(asp, amount, xinc, yinc) ==
         generate_safe_aircrafts(asp, amount, xinc, yinc) \ asp.aircrafts
     pre
         pre_generate_safe_aircrafts(asp, amount, xinc, yinc)
     post
+        post_generate_safe_aircrafts(asp, amount, xinc, yinc, RESULT \ asp.aircrafts)
+        and
         -- result is novel
         asp.aircrafts inter RESULT = {}
         and
