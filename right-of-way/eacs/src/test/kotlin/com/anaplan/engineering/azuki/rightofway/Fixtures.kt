@@ -25,6 +25,14 @@ val convergingAirspace = """
     }
 """.trimIndent()
 
+/** a0 and a1 converging with track delta ~168.6° in [100°, 260°] — headon true. */
+val headOnAirspace = """
+    {
+        "a0": [[0.0, 0.0], [10.0, 1.0]],
+        "a1": [[10.0, 10.0], [-10.0, 1.0]]
+    }
+""".trimIndent()
+
 val position0 = Position(3.0, 3.0)
 val position1 = Position(30.0, 40.0)
 val velocity0 = Velocity(2.0, 1.0)

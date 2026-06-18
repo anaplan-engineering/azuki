@@ -4,6 +4,7 @@ import com.anaplan.engineering.azuki.core.runner.AnalysisScenario
 import com.anaplan.engineering.azuki.rightofway.a0
 import com.anaplan.engineering.azuki.rightofway.a0a1Airspace
 import com.anaplan.engineering.azuki.rightofway.convergingAirspace
+import com.anaplan.engineering.azuki.rightofway.headOnAirspace
 import com.anaplan.engineering.azuki.rightofway.a1
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Quadrant
 import com.anaplan.engineering.azuki.rightofway.airspaceUK
@@ -24,7 +25,7 @@ class RelativeGeometry : RightOfWayRunnableScenario() {
     @AnalysisScenario
     fun defaultPairConvergence() {
         given {
-            thereIsAnAirspace(airspaceUK, convergingAirspace, opened = false)
+            thereIsAnAirspace(airspaceUK, convergingAirspace)
         }
         then {
             isConverging(airspaceUK, a0, a1)
@@ -35,10 +36,9 @@ class RelativeGeometry : RightOfWayRunnableScenario() {
     @AnalysisScenario
     fun defaultPairHeadOn() {
         given {
-            thereIsAnAirspace(airspaceUK, a0a1Airspace)
+            thereIsAnAirspace(airspaceUK, headOnAirspace, opened = false)
         }
         then {
-            //needs varied aircraft positions to satisfy it
             isHeadOn(airspaceUK, a0, a1)
         }
     }

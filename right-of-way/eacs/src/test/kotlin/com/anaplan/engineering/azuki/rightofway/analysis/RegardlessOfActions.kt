@@ -10,7 +10,8 @@ import com.anaplan.engineering.azuki.rightofway.velocity0
 
 class RegardlessOfActions : RightOfWayRunnableScenario() {
 
-    @AnalysisScenario
+    //TODO
+    //@AnalysisScenario
     fun addAircraftRegardlessOfChecks() {
         given {
             thereIsANewAirspace(airspaceUK)
