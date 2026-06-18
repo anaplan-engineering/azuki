@@ -13,7 +13,7 @@ import com.anaplan.engineering.azuki.rightofway.velocity1
 
 class NewAirspace : RightOfWayRunnableScenario() {
 
-    //@AnalysisScenario
+    @AnalysisScenario
     fun emptyAirspace() {
         given {
             thereIsANewAirspace(airspaceUK)
@@ -36,7 +36,7 @@ class NewAirspace : RightOfWayRunnableScenario() {
         }
     }
 
-    //@AnalysisScenario
+    @AnalysisScenario
     fun airspaceAddAircraft() {
         given {
             thereIsANewAirspace(airspaceUK)

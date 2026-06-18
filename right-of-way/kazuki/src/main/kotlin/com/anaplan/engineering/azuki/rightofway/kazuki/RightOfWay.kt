@@ -62,7 +62,7 @@ interface Position : RVector {
 @Module
 interface Velocity : RVector {
     @Invariant
-    fun isPNZReal() = isPNZReal(x) && isPNZReal(y)
+    fun isNZReal() = isNZReal(x) && isNZReal(y)
 }
 
 @Module
@@ -620,14 +620,13 @@ class RightOfWay(private val airspace: Airspace) {
     )
 
     val addAircraft = function(
-        //TODO LF: should this be + {a} or as_Set(a)?
         command = { a: Aircraft -> airspace.transform(airspace.aircrafts + as_Set(setOf(a))) },
         pre = { a ->
             // positions are unique (and by implication aircrafts)
             a.position !in airspace.properties.allPositions
                 &&
                 // aircraft addition must keep airspace safe
-                thm_safe_airspace(airspace.aircrafts + {a})
+                thm_safe_airspace(airspace.aircrafts + as_Set(setOf(a)))
         },
         post = { a, space -> a in space.aircrafts }
     )
