@@ -12,6 +12,8 @@ import com.anaplan.engineering.azuki.rightofway.kazuki.Airspace_Module.mk_Airspa
 import com.anaplan.engineering.kazuki.core.as_Set
 import com.anaplan.engineering.kazuki.core.toNat
 
+internal fun aircraftVariableName(airspaceName: String, aircraftName: String) = "${airspaceName}_$aircraftName"
+
 class EnvironmentBuilder {
 
     private val declarations = LinkedHashMap<String, (ExecutionEnvironment) -> Any>()
@@ -21,6 +23,10 @@ class EnvironmentBuilder {
             throw IllegalArgumentException("$name declared more than once")
         }
         declarations[name] = declaration
+    }
+
+    fun declareAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) {
+        declare(aircraftVariableName(airspaceName, aircraftName)) { aircraft }
     }
 
     fun build(): ExecutionEnvironment {
@@ -42,10 +48,15 @@ class ExecutionEnvironment {
 
     internal fun airspace(name: String) = get<Airspace>(name)
 
-    internal fun aircraft(airspaceName: String, aircraftName: String) = get<Aircraft>("${airspaceName}_${aircraftName}")
+    internal fun aircraft(airspaceName: String, aircraftName: String) =
+        get<Aircraft>(aircraftVariableName(airspaceName, aircraftName))
 
     internal fun hasAircraft(airspaceName: String, aircraftName: String) =
-        variables.containsKey("${airspaceName}_${aircraftName}")
+        variables.containsKey(aircraftVariableName(airspaceName, aircraftName))
+
+    internal fun setAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) {
+        set(aircraftVariableName(airspaceName, aircraftName), aircraft)
+    }
 
     //TODO LF: remove? redundant...
     internal fun aircraftCount(airspaceName: String): ULong {

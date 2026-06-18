@@ -13,10 +13,10 @@ class AirspaceDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<Airspa
     private class AirspaceDeclarationBuilder(declaration: AirspaceDeclaration) :
         KazukiDeclarationBuilder<AirspaceDeclaration>(declaration) {
         override fun build(builder: EnvironmentBuilder) {
-            builder.declare(declaration.name) { env ->
-                //TODO here needs to add aircrafts by name to the environment if wants access via env!
-                declaration.toKazuki()
+            declaration.aircrafts.forEach { (aircraftName, aircraft) ->
+                builder.declareAircraft(declaration.name, aircraftName, aircraft)
             }
+            builder.declare(declaration.name) { declaration.toKazuki() }
         }
     }
 }
