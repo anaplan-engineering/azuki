@@ -17,11 +17,11 @@ val a0a1Airspace = """
     }
 """.trimIndent()
 
-/** a0 west-bound, a1 south-bound before a0 — QC true, HMD ~93.7 < delta_c (VDM HMD case 1). */
+/** QC true, HMD ~19.97 < delta_c; both tracks positive (safe open airspace). */
 val convergingAirspace = """
     {
-        "a0": [[0.0, 0.0], [-10.0, 5.0]],
-        "a1": [[0.0, 150.0], [2.0, -10.0]]
+        "a0": [[0.0, 0.0], [10.0, 3.0]],
+        "a1": [[40.0, 60.0], [-3.0, -8.0]]
     }
 """.trimIndent()
 
