@@ -24,6 +24,10 @@ fun interface RightOfWayScriptGenerationCheck : ScriptGenerationCheck<RightOfWay
 
 object AirspaceScriptGenerationCheckFactory : AirspaceCheckFactory {
 
+    override fun aircraftCount(airspaceName: String, expectedCount: ULong, expectedOpen: Boolean) = RightOfWayScriptGenerationCheck {
+        RightOfWayScriptingHelper.scriptifyFunction(RightOfWayThen::aircraftCount, airspaceName, expectedCount, expectedOpen)
+    }
+
     override fun hasAircraft(airspaceName: String, aircraftName: String) = RightOfWayScriptGenerationCheck {
         RightOfWayScriptingHelper.scriptifyFunction(RightOfWayThen::hasAircraft, airspaceName, aircraftName)
     }

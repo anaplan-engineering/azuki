@@ -5,11 +5,12 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Velocity
 import com.anaplan.engineering.azuki.rightofway.kazuki.Aircraft_Module
 import com.anaplan.engineering.azuki.rightofway.kazuki.Airspace
-import com.anaplan.engineering.azuki.rightofway.kazuki.Airspace_Module
 import com.anaplan.engineering.azuki.rightofway.kazuki.Position_Module
 import com.anaplan.engineering.azuki.rightofway.kazuki.Velocity_Module
-import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircrafts
+import com.anaplan.engineering.azuki.rightofway.adapter.declaration.declaration.AirspaceDeclaration
+import com.anaplan.engineering.azuki.rightofway.kazuki.Airspace_Module.mk_Airspace
 import com.anaplan.engineering.kazuki.core.as_Set
+import com.anaplan.engineering.kazuki.core.toNat
 
 class EnvironmentBuilder {
 
@@ -44,7 +45,13 @@ class ExecutionEnvironment {
     internal fun aircraft(airspaceName: String, aircraftName: String) = get<Aircraft>("${airspaceName}_${aircraftName}")
 
     internal fun hasAircraft(airspaceName: String, aircraftName: String) =
-        variables.containsKey("${airspaceName}.${aircraftName}")
+        variables.containsKey("${airspaceName}_${aircraftName}")
+
+    //TODO LF: remove? redundant...
+    internal fun aircraftCount(airspaceName: String): ULong {
+        require(variables.containsKey(airspaceName)) { "No such airspace $airspaceName" }
+        return variables.keys.filter { it.startsWith("${airspaceName}_") }.size.toNat()
+    }
 
     // because of the get method, this always returns non-null
     fun <T> withAirspace(name: String, op: Airspace.() -> T) = airspace(name).op()
@@ -56,7 +63,7 @@ class ExecutionEnvironment {
 fun Position.toKazuki(): com.anaplan.engineering.azuki.rightofway.kazuki.Position = Position_Module.mk_Position(x, y)
 fun Velocity.toKazuki(): com.anaplan.engineering.azuki.rightofway.kazuki.Velocity = Velocity_Module.mk_Velocity(x, y)
 fun Aircraft.toKazuki(): com.anaplan.engineering.azuki.rightofway.kazuki.Aircraft = Aircraft_Module.mk_Aircraft(position.toKazuki(), velocity.toKazuki())
-fun Aircrafts.toKazukiAirspace(): Airspace {
-    require(values.toSet().size == values.size) { "Duplicate aircraft position found in: $values" }
-    return Airspace_Module.mk_Airspace(as_Set(values.map { it.toKazuki() }.toSet()))
+fun AirspaceDeclaration.toKazuki(): Airspace {
+    require(aircrafts.values.toSet().size == aircrafts.values.size) { "Duplicate aircraft position found in: ${aircrafts.values}" }
+    return mk_Airspace(as_Set(aircrafts.values.map { it.toKazuki() }.toSet()), delta_o, delta_c, Theta_h, opened)
 }
