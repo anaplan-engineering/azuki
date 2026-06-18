@@ -470,9 +470,9 @@ class RightOfWay(private val airspace: Airspace) {
                     //TODO how to cast it to Angle?
                     val track_delta = abs(track(a0) - track(a1)) as Angle
                     converging(a0, a1)(delta_c) &&
-                        (180.0 + Theta_h < track_delta)
+                        ((180.0 + Theta_h < track_delta)
                         ||
-                        (track_delta < 180.0 - Theta_h)
+                        (track_delta < 180.0 - Theta_h))
                 }
             )
             inner
@@ -486,9 +486,9 @@ class RightOfWay(private val airspace: Airspace) {
                 command = { delta_c: PReal, Theta_h: Angle ->
                     val track_delta = abs(track(a0) - track(a1))
                     converging(a0, a1)(delta_c) &&
-                        (180.0 + Theta_h <= track_delta)
-                        ||
-                        (track_delta < 180.0 + Theta_h)
+                        (180.0 - Theta_h <= track_delta)
+                        &&
+                        (track_delta <= 180.0 + Theta_h)
                 }
             )
             inner
