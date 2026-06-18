@@ -3,13 +3,16 @@ package com.anaplan.engineering.azuki.rightofway.analysis
 import com.anaplan.engineering.azuki.core.runner.AnalysisScenario
 import com.anaplan.engineering.azuki.rightofway.adapter.api.aircraft
 import com.anaplan.engineering.azuki.rightofway.a0
+import com.anaplan.engineering.azuki.rightofway.a0a1Airspace
 import com.anaplan.engineering.azuki.rightofway.a1
+import com.anaplan.engineering.azuki.rightofway.adapter.api.DELTA_O
 import com.anaplan.engineering.azuki.rightofway.airspaceUK
 import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayRunnableScenario
 import com.anaplan.engineering.azuki.rightofway.position0
 import com.anaplan.engineering.azuki.rightofway.position1
 import com.anaplan.engineering.azuki.rightofway.velocity0
 import com.anaplan.engineering.azuki.rightofway.velocity1
+import com.sun.awt.SecurityWarning.setPosition
 
 class NewAirspace : RightOfWayRunnableScenario() {
 
@@ -50,4 +53,39 @@ class NewAirspace : RightOfWayRunnableScenario() {
         }
     }
 
+    @AnalysisScenario
+    fun airspaceDataClosedThenOpen() {
+        given {
+            // creates a new closed airspace with 5 aircraft. This will not be safe
+            thereIsAnAirspace(airspaceUK, a0a1Airspace, opened = false)
+        }
+        whenever {
+            setAirspace(airspaceUK, true)
+        }
+        then {
+            aircraftCount(airspaceUK,2U, true)
+        }
+    }
+
+    @AnalysisScenario
+    fun airspaceDataOpen() {
+        given {
+            // creates a new closed airspace with 5 aircraft. This will not be safe
+            thereIsAnAirspace(airspaceUK, a0a1Airspace, opened = true)
+        }
+        then {
+            aircraftCount(airspaceUK,2U, true)
+        }
+    }
+
+//    @AnalysisScenario
+//    fun airspaceSpiralPositionedAircraft() {
+//        given {
+//            // creates a new closed airspace with 5 aircraft. This will not be safe
+//            thereIsANewAirspaceWithAircraft(airspaceUK, numberOfAircraft = 5U)
+//        }
+//        then {
+//            aircraftCount(airspaceUK,5U, true)
+//        }
+//    }
 }

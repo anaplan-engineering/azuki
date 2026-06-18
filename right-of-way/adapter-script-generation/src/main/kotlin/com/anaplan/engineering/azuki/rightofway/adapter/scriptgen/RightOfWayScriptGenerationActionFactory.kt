@@ -37,6 +37,10 @@ object AirspaceScriptGenerationActionFactory : AirspaceActionFactory {
         RightOfWayScriptingHelper.scriptifyFunction(RightOfWayRegardlessOf::loadAirspace, airspaceName)
     }
 
+    override fun setAirspace(airspaceName: String, opened: Boolean) = RightOfWayScriptGenerationAction {
+        RightOfWayScriptingHelper.scriptifyFunction(RightOfWayWhen::setAirspace, airspaceName, opened)
+    }
+
     // addAircraft is complex as it can be used both in 'given' and 'when' positions
     // TODO LF: wasn't sure of difference here
 //    override fun addAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) = RightOfWayScriptGenerationAction {

@@ -19,7 +19,7 @@ data class AirspaceState(
     val delta_o: Double,
     val delta_c: Double,
     val Theta_h: Double,
-    val open: Boolean,
+    var open: Boolean,
     val aircrafts: Aircrafts = mutableMapOf()
 )
 
@@ -63,6 +63,10 @@ abstract class Airspace protected constructor(
     fun getAircraft(id: String) = aircrafts[id] ?: throw IllegalArgumentException("No such aircraft $id")
 
     fun hasAircraft(id: String) = aircrafts.containsKey(id)
+
+    fun setAirspace(opened: Boolean) {
+        state.open = opened
+    }
 
     fun addAircraft(id: String, position: Position, velocity: Velocity) {
         require(!aircrafts.containsKey(id)) { "Aircraft $id already exists" }

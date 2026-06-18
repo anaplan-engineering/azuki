@@ -11,6 +11,10 @@ class RightOfWayWhen(val actionFactory: RightOfWayActionFactory): When<RightOfWa
         actionList.add(actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft))
     }
 
+    fun setAirspace(airspaceName: String, opened: Boolean) {
+        actionList.add(actionFactory.airspace.setAirspace(airspaceName, opened))
+    }
+
     private val actionList = mutableListOf<Action>()
 
     override fun actions() = actionList

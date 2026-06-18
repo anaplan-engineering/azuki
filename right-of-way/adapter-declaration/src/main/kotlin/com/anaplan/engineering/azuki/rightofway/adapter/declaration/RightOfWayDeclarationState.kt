@@ -14,6 +14,12 @@ class RightOfWayDeclarationState : DeclarationState() {
         declarations[airspaceName] = AirspaceDeclaration(airspaceName, emptyMap(), deltaO, deltaC, thetaH, opened)
     }
 
+    fun setAirspace(airspaceName: String, opened: Boolean) {
+        checkExists(airspaceName)
+        val airspace = getDeclaration<AirspaceDeclaration>(airspaceName)
+        declarations[airspaceName] = airspace.copy(opened = opened)
+    }
+
     fun declareAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) {
         checkForDuplicateAircraft(airspaceName, aircraftName)
         val airspace = getDeclaration<AirspaceDeclaration>(airspaceName)

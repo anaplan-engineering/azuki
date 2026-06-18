@@ -18,4 +18,5 @@ object VdmAirspaceActionFactory : AirspaceActionFactory {
     override fun save(airspaceName: String) = UnsupportedAction
     override fun unload(airspaceName: String) = UnsupportedAction
     override fun load(airspaceName: String) = UnsupportedAction
+    override fun setAirspace(airspaceName: String, opened: Boolean) = SetAirspaceAction(airspaceName, opened)
 }

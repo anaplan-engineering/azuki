@@ -27,6 +27,7 @@ object RightOfWayBehaviours {
     const val HasAircraft = 20
     const val SaveAirspace = 21
     const val AircraftCount = 22
+    const val SetAirspace = 23
 }
 
 // Each behaviour will have a corresponding factory, be that for an action or a check
@@ -40,6 +41,10 @@ open class CreateAircraftBehaviour : ReifiedBehavior {
 
 open class LoadAirspaceBehaviour : ReifiedBehavior {
     override val behavior = RightOfWayBehaviours.LoadAirspace
+}
+
+open class SetAirspaceBehaviour : ReifiedBehavior {
+    override val behavior = RightOfWayBehaviours.SetAirspace
 }
 
 //open class MoveAircraftBehaviour : ReifiedBehavior {

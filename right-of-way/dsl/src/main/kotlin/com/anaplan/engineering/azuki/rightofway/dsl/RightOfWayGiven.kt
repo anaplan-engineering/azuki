@@ -35,8 +35,9 @@ class RightOfWayGiven(private val actionFactory: RightOfWayActionFactory): Given
         addAction { actionFactory.airspace.start(airspaceName, delta_o, delta_c, theta_h, opened) }
     }
 
-    fun thereIsAnAirspace(airspaceName: String, airspaceData: String) {
-        thereIsANewAirspace(airspaceName)
+    fun thereIsAnAirspace(airspaceName: String, airspaceData: String, delta_o: Double = DELTA_O,
+                          delta_c: Double = DELTA_C, theta_h: Double = THETA_H, opened: Boolean = true) {
+        thereIsANewAirspace(airspaceName, delta_o, delta_c, theta_h, opened)
         require(airspaceData.isNotBlank()) { "Airspace data must not be blank" }
         RightOfWayAirspaceJSON.parse(airspaceData).forEach { (aircraftName, aircraft) ->
             //actionList.add(actionFactory.airspace.addAircraft(airspaceName, name, aircraft))
@@ -44,24 +45,29 @@ class RightOfWayGiven(private val actionFactory: RightOfWayActionFactory): Given
         }
     }
 
-    fun thereIsAnAirspace(airspaceName: String, init: AircraftBlock.() -> Unit) {
-        thereIsANewAirspace(airspaceName)
+    fun thereIsAnAirspace(airspaceName: String, delta_o: Double = DELTA_O,
+                          delta_c: Double = DELTA_C, theta_h: Double = THETA_H, opened: Boolean = true,
+                          init: AircraftBlock.() -> Unit) {
+        thereIsANewAirspace(airspaceName, delta_o, delta_c, theta_h, opened)
         val aircraftBlock = AircraftBlock(actionFactory, airspaceName)
         aircraftBlock.init()
         actionList.addAll(aircraftBlock.actions())
     }
 
-    fun thereIsANewAirspaceWithAircraft(airspaceName: String, numberOfAircraft: UInt = MIN_AIRCRAFT) {
-        require(numberOfAircraft > 0U) { "Number of aircraft must be strictly-positive (> 0)"}
-        thereIsANewAirspace(airspaceName)
-        // get as many fresh aircraft information as requested and add them to airspace
-        freshNames().zip(spiralPositionsSequence().zip(spiralVelocitiesSequence())).map {
-            // zipped result is Sequence<String, Pair<Position, Velocity>>
-            (name, zipped) -> name to zipped.toAircraft() }.take(numberOfAircraft.toInt()).forEach {
-                (aircraftName, aircraft) ->
-                    addAction { actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft) }
-                }
-    }
+    //TODO needs better positioning spec
+//    fun thereIsANewAirspaceWithAircraft(airspaceName: String, delta_o: Double = DELTA_O,
+//                                        delta_c: Double = DELTA_C, theta_h: Double = THETA_H,
+//                                        opened: Boolean = false, numberOfAircraft: UInt = MIN_AIRCRAFT) {
+//        require(numberOfAircraft > 0U) { "Number of aircraft must be strictly-positive (> 0)"}
+//        thereIsANewAirspace(airspaceName, delta_o, delta_c, theta_h, opened)
+//        // get as many fresh aircraft information as requested and add them to airspace
+//        freshNames().zip(spiralPositionsSequence().zip(spiralVelocitiesSequence())).map {
+//            // zipped result is Sequence<String, Pair<Position, Velocity>>
+//            (name, zipped) -> name to zipped.toAircraft() }.take(numberOfAircraft.toInt()).forEach {
+//                (aircraftName, aircraft) ->
+//                    addAction { actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft) }
+//                }
+//    }
 
     override fun actions(): List<Action> = actionList
 }

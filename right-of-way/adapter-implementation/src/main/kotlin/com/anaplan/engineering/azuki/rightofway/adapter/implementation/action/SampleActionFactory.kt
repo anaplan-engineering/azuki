@@ -16,6 +16,7 @@ object SampleAirspaceActionFactory : AirspaceActionFactory {
     override fun save(airspaceName: String) = SaveAirspaceAction(airspaceName)
     override fun unload(airspaceName: String) = UnloadAirspaceAction(airspaceName)
     override fun load(airspaceName: String) = LoadAirspaceAction(airspaceName)
+    override fun setAirspace(airspaceName: String, opened: Boolean) = SetAirspaceAction(airspaceName, opened)
     override fun addAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft) =
         CreateAircraftAction(airspaceName, aircraftName, aircraft)
 }
