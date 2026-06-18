@@ -4,6 +4,7 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircraft
 import com.anaplan.engineering.azuki.script.generation.*
 import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Velocity
 import com.anaplan.engineering.azuki.rightofway.adapter.declaration.RightOfWayDeclarationState
 import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayRunnableScenario
 import kotlin.Result.Companion.failure
@@ -28,6 +29,16 @@ internal const val Height = 3
 val RightOfWayScriptingHelper = ScriptingHelper(mapOf(
     String::class to { v: Any? -> "\"\"\"${v.toString()}\"\"\"" },
     Position::class to { v: Any? -> (v as Position).let { "${it.x} to ${it.y}" } },
+    Velocity::class to { v: Any? -> (v as Velocity).let { "${it.x} to ${it.y}" } },
+    Aircraft::class to { v: Any? ->
+        val aircraft = v as Aircraft
+        val position = "${aircraft.position.x} to ${aircraft.position.y}"
+        val velocity = "${aircraft.velocity.x} to ${aircraft.velocity.y}"
+        "aircraft($position to $velocity)"
+    },
+    Double::class to { v: Any? -> v.toString() },
+    Boolean::class to { v: Any? -> v.toString() },
+    UInt::class to { v: Any? -> "${v}U" },
     Int::class to { v: Any? -> v.toString() },
     Long::class to { v: Any? -> v.toString() },
     IntRange::class to { v: Any? -> (v as IntRange).let { "(${it.first} .. ${it.last})" } },
@@ -68,5 +79,6 @@ object RightOfWayRunnableScenarioClassGenerator : RunnableScenarioClassGenerator
 // Default imports that should be added to any right-of-way script (generated or parsed).
 val rightOfWayStandardImports = arrayOf(
     "com.anaplan.engineering.azuki.rightofway.dsl.*",
-    "com.anaplan.engineering.azuki.rightofway.*"
+    "com.anaplan.engineering.azuki.rightofway.*",
+    "com.anaplan.engineering.azuki.rightofway.adapter.api.aircraft",
 )

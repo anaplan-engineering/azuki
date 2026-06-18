@@ -10,5 +10,7 @@ data class AirspaceDeclaration(
     val delta_c: Double,
     val Theta_h: Double,
     val opened: Boolean,// = false,
+    /** Original JSON airspace data when declared via `thereIsAnAirspace(name, airspaceData, …)`; null for block-style. */
+    val airspaceData: String? = null,
     override val standalone: Boolean = true,
 ) : Declaration
