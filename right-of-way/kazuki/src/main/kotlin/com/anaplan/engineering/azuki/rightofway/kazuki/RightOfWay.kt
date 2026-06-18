@@ -1,10 +1,10 @@
 package com.anaplan.engineering.azuki.rightofway.kazuki
 
-import com.anaplan.engineering.azuki.rightofway.kazuki.Airspace_Module.mk_Airspace
+import com.anaplan.engineering.azuki.rightofway.kazuki.Airspace_Module.transform
 import com.anaplan.engineering.azuki.rightofway.kazuki.Position_Module.as_Position
 import com.anaplan.engineering.azuki.rightofway.kazuki.Position_Module.is_Position
+import com.anaplan.engineering.azuki.rightofway.kazuki.RVector_Module.as_RVector
 import com.anaplan.engineering.azuki.rightofway.kazuki.RVector_Module.mk_RVector
-//import com.anaplan.engineering.azuki.rightofway.kazuki.RightOfWay.Companion.rightOfWay
 import com.anaplan.engineering.azuki.rightofway.kazuki.Velocity_Module.as_Velocity
 import com.anaplan.engineering.azuki.rightofway.kazuki.Velocity_Module.is_Velocity
 import com.anaplan.engineering.kazuki.core.*
@@ -12,6 +12,7 @@ import com.anaplan.engineering.kazuki.core.minus
 import com.anaplan.engineering.kazuki.core.plus
 import kotlin.math.abs
 import kotlin.math.atan
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 @PrimitiveInvariant(name = "Real", base = Double::class)
@@ -89,7 +90,7 @@ interface Airspace {
 
     @Invariant
     fun safeAirspace() =
-        properties.open implies { functions.thm_safe_airspace(aircrafts) }
+        opened implies { functions.thm_safe_airspace(aircrafts) }
 
     @FunctionProvider(AirspaceProperties::class)
     val properties: AirspaceProperties
@@ -99,11 +100,12 @@ interface Airspace {
 }
 
 class AirspaceProperties(private val airspace: Airspace) {
-    val delta_o by property { 100.0 }  // DELTA_O
-    val delta_c by property { 1000.0 } // DELTA_C
-    val Theta_h by property { 80.0 }   // THETA_H //TODO LF: can't depend on `adapter-api` for these ?
-    val open by property { false }
+//    val delta_o by property { 100.0 }  // DELTA_O
+//    val delta_c by property { 1000.0 } // DELTA_C
+//    val Theta_h by property { 80.0 }   // THETA_H //TODO LF: can't depend on `adapter-api` for these ?
+    //val open by property { false }
     //TODO LF: should this have an `as_Set` or just `toSet()` would do?
+    val aircraftCount by property { airspace.aircrafts.size.toNat() }
     val allPositions by property { as_Set(airspace.aircrafts.map { it.position }) }
     val allVelocities by property { as_Set(airspace.aircrafts.map { it.velocity }) }
 }
@@ -156,13 +158,12 @@ class RightOfWay(private val airspace: Airspace) {
         //TODO remove? no need for pre given the invariant of RVector?
         pre = { u, v -> u.isReal() && v.isReal() },
         post = { u, v, r ->
-            (isZeroVector(u) && isZeroVector(v) implies (r == 0.0))
+            (isZeroVector(u) || isZeroVector(v)) implies { r == 0.0 }
                 &&
-            (u == v && !isZeroVector(u) implies isNZReal(r))
+            (u == v && !isZeroVector(u)) implies { isNZReal(r) }
                 &&
             // (u . v)^2 <= (u . u) * (v . v)
-            (u.x*v.x + u.y*v.y) * (u.x*v.x + u.y*v.y) <=
-            (u.x*u.x + u.y*u.y) * (v.x*v.x + v.y*v.y)
+            ((u.x*v.x) + (u.y*v.y)).pow(2) <= ((u.x*u.x) + (u.y*u.y)) * ((v.x*v.x) + (v.y*v.y))
         }
     )
 
@@ -187,11 +188,8 @@ class RightOfWay(private val airspace: Airspace) {
     //TODO refactor the repetition below x keep closer to paper's definitions
     val Q1 = function(
         command = { a: Aircraft, p: Position ->
-            // refactor to avoid repetition
-            //val psub = subtractVectors(p, a.position) as Position
-            val psub = as_Position(subtractVectors(p, a.position))
-            val vrot = as_Velocity(rotate90(a.velocity))
-            dot_product(psub, vrot) > 0.0
+            val psub = as_RVector(subtractVectors(p, a.position))
+            dot_product(psub, rotate90(a.velocity)) > 0.0
                 &&
                 dot_product(psub, a.velocity) >= 0.0
         },
@@ -202,10 +200,8 @@ class RightOfWay(private val airspace: Airspace) {
 
     val Q2 = function(
         command = { a: Aircraft, p: Position ->
-            //TODO do we need the casting here? imposes the resulting subtraction etc carries the type
-            val psub = as_Position(subtractVectors(p, a.position))
-            val vrot = as_Velocity(rotate90(a.velocity))
-            dot_product(psub, vrot) <= 0.0
+            val psub = as_RVector(subtractVectors(p, a.position))
+            dot_product(psub, rotate90(a.velocity)) <= 0.0
                 &&
                 dot_product(psub, a.velocity) > 0.0
         }
@@ -213,9 +209,8 @@ class RightOfWay(private val airspace: Airspace) {
 
     val Q3 = function(
         command = { a: Aircraft, p: Position ->
-            val psub = as_Position(subtractVectors(p, a.position))
-            val vrot = as_Velocity(rotate90(a.velocity))
-            dot_product(psub, vrot) < 0.0
+            val psub = as_RVector(subtractVectors(p, a.position))
+            dot_product(psub, rotate90(a.velocity)) < 0.0
                 &&
                 dot_product(psub, a.velocity) <= 0.0
         },
@@ -226,9 +221,8 @@ class RightOfWay(private val airspace: Airspace) {
 
     val Q4 = function(
         command = { a: Aircraft, p: Position ->
-            val psub = as_Position(subtractVectors(p, a.position))
-            val vrot = as_Velocity(rotate90(a.velocity))
-            dot_product(psub, vrot) >= 0.0
+            val psub = as_RVector(subtractVectors(p, a.position))
+            dot_product(psub, rotate90(a.velocity)) >= 0.0
                 &&
                 dot_product(psub, a.velocity) < 0.0
         }
@@ -251,7 +245,8 @@ class RightOfWay(private val airspace: Airspace) {
             if (a0.velocity == a1.velocity)
                 0.0 // if 0, type gets captured as Number!!!!
             else {
-                val pDiff = as_Position(subtractVectors(a0.position, a1.position))
+                // position difference is not a position but an RVector
+                val pDiff = as_RVector(subtractVectors(a0.position, a1.position))
                 val vDiff = as_Velocity(subtractVectors(a0.velocity, a1.velocity))
                 // Because Velocity are different, then their difference is not zero
                 // TODO how to `cast` result to NZReal?
@@ -265,8 +260,6 @@ class RightOfWay(private val airspace: Airspace) {
             (a0.velocity != a1.velocity) implies {
                 val vDiff = subtractVectors(a0.velocity, a1.velocity)
                 val vDiffProd = dot_product(vDiff, vDiff)
-                is_Position(subtractVectors(a0.position, a1.position))
-                    &&
                 is_Velocity(vDiff)
                     &&
                     isNZReal(vDiffProd)
@@ -545,7 +538,7 @@ class RightOfWay(private val airspace: Airspace) {
             forall(airspace.aircrafts) {
                 a -> forall(airspace.aircrafts) {
                     b -> (a != b) implies {
-                        !headon(a, b)(airspace.properties.delta_c, airspace.properties.Theta_h)
+                        !headon(a, b)(airspace.delta_c, airspace.Theta_h)
                     }
                 }
             }
@@ -554,10 +547,10 @@ class RightOfWay(private val airspace: Airspace) {
 
     val thm1_determnistic_rw = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            right_of_way(a0, a1)(airspace.properties.delta_o,
-                airspace.properties.delta_c, airspace.properties.Theta_h) implies {
-                    !right_of_way(a1, a0)(airspace.properties.delta_o,
-                        airspace.properties.delta_c, airspace.properties.Theta_h)
+            right_of_way(a0, a1)(airspace.delta_o,
+                airspace.delta_c, airspace.Theta_h) implies {
+                    !right_of_way(a1, a0)(airspace.delta_o,
+                        airspace.delta_c, airspace.Theta_h)
             }
         }
     )
@@ -574,8 +567,8 @@ class RightOfWay(private val airspace: Airspace) {
 
     val thm3_overtaking_asymmetric = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            overtaking(a0, a1)(airspace.properties.delta_o) implies {
-                !overtaking(a1, a0)(airspace.properties.delta_o)
+            overtaking(a0, a1)(airspace.delta_o) implies {
+                !overtaking(a1, a0)(airspace.delta_o)
             }
         }
     )
@@ -592,9 +585,9 @@ class RightOfWay(private val airspace: Airspace) {
 
     val thm5_mutual_awareness = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            conv_not_headon(a0, a1)(airspace.properties.delta_o, airspace.properties.Theta_h) implies {
+            conv_not_headon(a0, a1)(airspace.delta_o, airspace.Theta_h) implies {
                 (zero_crossed(a1, a0) && to_the_right_of(a0, a1.position)) implies {
-                    right_of_way(a1, a0)(airspace.properties.delta_o,airspace.properties.delta_c, airspace.properties.Theta_h)
+                    right_of_way(a1, a0)(airspace.delta_o,airspace.delta_c, airspace.Theta_h)
                 }
             }
         }
@@ -628,7 +621,7 @@ class RightOfWay(private val airspace: Airspace) {
 
     val addAircraft = function(
         //TODO LF: should this be + {a} or as_Set(a)?
-        command = { a: Aircraft -> mk_Airspace(airspace.aircrafts + {a}) }, //as_Set(a)) },
+        command = { a: Aircraft -> airspace.transform(airspace.aircrafts + as_Set(setOf(a))) },
         pre = { a ->
             // positions are unique (and by implication aircrafts)
             a.position !in airspace.properties.allPositions

@@ -2,7 +2,7 @@ package com.anaplan.engineering.azuki.rightofway.adapter.kazuki.declaration
 
 import com.anaplan.engineering.azuki.rightofway.adapter.declaration.declaration.AirspaceDeclaration
 import com.anaplan.engineering.azuki.rightofway.adapter.kazuki.EnvironmentBuilder
-import com.anaplan.engineering.azuki.rightofway.adapter.kazuki.toKazukiAirspace
+import com.anaplan.engineering.azuki.rightofway.adapter.kazuki.toKazuki
 
 class AirspaceDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<AirspaceDeclaration> {
 
@@ -14,7 +14,8 @@ class AirspaceDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<Airspa
         KazukiDeclarationBuilder<AirspaceDeclaration>(declaration) {
         override fun build(builder: EnvironmentBuilder) {
             builder.declare(declaration.name) { env ->
-                declaration.aircrafts.toKazukiAirspace()
+                //TODO here needs to add aircrafts by name to the environment if wants access via env!
+                declaration.toKazuki()
             }
         }
     }
