@@ -58,8 +58,8 @@ abstract class RightOfWayScriptGenerationQueryFactory(val queryPosition: QueryPo
         query<Boolean>(QueryReference.AirspaceHasAircraft, airspaceName, aircraftName)
     override fun hasRightOfWay(airspaceName: String) =
         query<Set<Pair<String, String>>>(QueryReference.HasRightOfWayAll, airspaceName)
-    override fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) =
-        query<Boolean>(QueryReference.HasRightOfWaySpecific, airspaceName, aircraft0, aircraft1)
+    override fun hasRightOfWay(airspaceName: String, withRightOfWay: String, givingWay: String) =
+        query<Boolean>(QueryReference.HasRightOfWaySpecific, airspaceName, withRightOfWay, givingWay)
 
     private fun <T> query(reference: QueryReference, vararg args: Any?) = reference.inPosition(queryPosition)?.let {
         RightOfWayScriptGenerationQuery<T> {

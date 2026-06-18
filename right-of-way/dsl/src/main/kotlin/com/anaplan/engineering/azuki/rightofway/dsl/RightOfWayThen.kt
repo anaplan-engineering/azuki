@@ -28,8 +28,8 @@ class RightOfWayThen(private val checkFactory: RightOfWayCheckFactory): Then<Rig
     fun aircraftCount(airspaceName: String, expectedCount: ULong, expectedOpen: Boolean) =
         addCheck { checkFactory.airspace.aircraftCount(airspaceName, expectedCount, expectedOpen) }
 
-    fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) =
-        addCheck { checkFactory.airspace.hasRightOfWay(airspaceName, aircraft0, aircraft1) }
+    fun hasRightOfWay(airspaceName: String, withRightOfWay: String, givingWay: String) =
+        addCheck { checkFactory.airspace.hasRightOfWay(airspaceName, withRightOfWay, givingWay) }
 
     fun isConverging(airspaceName: String, aircraft0: String, aircraft1: String) =
         addCheck { checkFactory.airspace.isConverging(airspaceName, aircraft0, aircraft1) }

@@ -338,14 +338,14 @@ functions
     --     to avoid confusion we will have the inputs the way round like other functions and
     --     change the implementation itself to match.
     right_of_way: Aircraft * Aircraft -> preal * preal * Angle -> bool
-    right_of_way(a1, a0)(delta_o, delta_c, Theta_h) ==
-        overtaking(a0, a1)(delta_o)
+    right_of_way(withRightOfWay, givingWay)(delta_o, delta_c, Theta_h) ==
+        overtaking(givingWay, withRightOfWay)(delta_o)
         or
-        (conv_not_headon(a0, a1)(delta_c, Theta_h)
+        (conv_not_headon(givingWay, withRightOfWay)(delta_c, Theta_h)
          and
-         to_the_right_of(a0, a1.position)
+         to_the_right_of(givingWay, withRightOfWay.position)
          and
-         zero_crossed(a0, a1)
+         zero_crossed(givingWay, withRightOfWay)
         );
 
     -- space_independent_safety: Aircraft * Aircraft -> bool
@@ -581,16 +581,16 @@ values
     DELTA_O: preal = 100.0;
     THETA_H: Angle = 90.0;
 
-    P1: Position = mk_RVector(3,3);
-    V1: Velocity = mk_RVector(2,1);
-    P2: Position = mk_RVector(30,40);
-    V2: Velocity = mk_RVector(1,2);
+    P0: Position = mk_RVector(3,3);
+    V0: Velocity = mk_RVector(2,1);
+    P1: Position = mk_RVector(30,40);
+    V1: Velocity = mk_RVector(1,2);
+    A0: Aircraft = mk_Aircraft(P0, V0);
     A1: Aircraft = mk_Aircraft(P1, V1);
-    A2: Aircraft = mk_Aircraft(P2, V2);
-    AIRSPACE1 : Airspace = mk_Airspace({A1, A2}, DELTA_O, DELTA_C, THETA_H, true);
+    AIRSPACE1 : Airspace = mk_Airspace({A0, A1}, DELTA_O, DELTA_C, THETA_H, true);
 
-    ex1: bool = not right_of_way(A1,A2)(DELTA_O, DELTA_C, THETA_H);
-    ex2: bool = right_of_way(A2,A1)(DELTA_O, DELTA_C, THETA_H);
+    ex1: bool = not right_of_way(A0,A1)(DELTA_O, DELTA_C, THETA_H);
+    ex2: bool = right_of_way(A1,A0)(DELTA_O, DELTA_C, THETA_H);
 
     -- Keep the amounts low for the second interation otherwise gets quite big; 5 and 2 gives 51 aircrafts
     -- let as1 = generate_safe_aircrafts(AIRSPACE, 5, 100, 200) in

@@ -55,7 +55,7 @@ interface ConvergenceBehaviours {
 
 interface RightOfWayBehaviours {
     fun overtaking(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
-    fun hasRightOfWay(aircraft0: Aircraft, aircraft1: Aircraft): Boolean
+    fun hasRightOfWay(withRightOfWay: Aircraft, givingWay: Aircraft): Boolean
 }
 
 operator fun <T> Array<Array<T>>.get(row: QuadrantImpl, col: QuadrantImpl): T = this[row.ordinal][col.ordinal]

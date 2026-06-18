@@ -14,8 +14,8 @@ class RightOfWayQueries(private val queryFactory: RightOfWayQueryFactory) : Quer
         addQuery { airspaceHasAircraft(airspaceName, aircraftName) }
     fun hasRightOfWay(airspaceName: String) =
         addQuery { hasRightOfWay(airspaceName) }
-    fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) =
-        addQuery { hasRightOfWay(airspaceName, aircraft0, aircraft1) }
+    fun hasRightOfWay(airspaceName: String, withRightOfWay: String, givingWay: String) =
+        addQuery { hasRightOfWay(airspaceName, withRightOfWay, givingWay) }
 
     override fun queries() = ScenarioQueries(queriesList, derivedQueriesList)
 
@@ -35,8 +35,8 @@ class DerivedQueryBlock {
         derived { airspaceHasAircraft(airspaceName, aircraftName) }
     fun hasRightOfWay(airspaceName: String) =
         derived { hasRightOfWay(airspaceName) }
-    fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) =
-        derived { hasRightOfWay(airspaceName, aircraft0, aircraft1) }
+    fun hasRightOfWay(airspaceName: String, withRightOfWay: String, givingWay: String) =
+        derived { hasRightOfWay(airspaceName, withRightOfWay, givingWay) }
 
     private fun <T> derived(f: RightOfWayQueryFactory.() -> Query<T>) = f
 }

@@ -32,8 +32,8 @@ object AirspaceScriptGenerationCheckFactory : AirspaceCheckFactory {
         RightOfWayScriptingHelper.scriptifyFunction(RightOfWayThen::hasAircraft, airspaceName, aircraftName)
     }
 
-    override fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) = RightOfWayScriptGenerationCheck {
-        RightOfWayScriptingHelper.scriptifyFunction(RightOfWayThen::hasRightOfWay, airspaceName, aircraft0, aircraft1 )
+    override fun hasRightOfWay(airspaceName: String, withRightOfWay: String, givingWay: String) = RightOfWayScriptGenerationCheck {
+        RightOfWayScriptingHelper.scriptifyFunction(RightOfWayThen::hasRightOfWay, airspaceName, withRightOfWay, givingWay)
     }
 
     override fun isConverging(airspaceName: String, aircraft0: String, aircraft1: String) = RightOfWayScriptGenerationCheck {

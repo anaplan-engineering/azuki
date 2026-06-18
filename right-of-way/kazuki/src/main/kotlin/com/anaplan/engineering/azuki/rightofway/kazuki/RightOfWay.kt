@@ -513,20 +513,20 @@ class RightOfWay(private val airspace: Airspace) {
         }
     )
 
-    // Aircraft a1 has right of way over a0 (which must give way), when either
-    // a0 is overtaking a1, or a0 is converging (except head on) and a1 is to the
-    // right of a0 and their trajectories have not yet crossed
+    // Aircraft withRightOfWay has right of way over givingWay (which must give way), when either
+    // givingWay is overtaking withRightOfWay, or givingWay is converging (except head on) and
+    // withRightOfWay is to the right of givingWay and their trajectories have not yet crossed
     val right_of_way = function(
-        command = { a0: Aircraft, a1: Aircraft ->
+        command = { withRightOfWay: Aircraft, givingWay: Aircraft ->
             val inner = function(
                 command = { delta_o: Real, delta_c: PReal, Theta_h: Angle ->
-                    overtaking(a0, a1)(delta_o)
+                    overtaking(givingWay, withRightOfWay)(delta_o)
                         ||
-                       (conv_not_headon(a0, a1)(delta_c, Theta_h)
+                       (conv_not_headon(givingWay, withRightOfWay)(delta_c, Theta_h)
                         &&
-                        to_the_right_of(a0, a1.position)
+                        to_the_right_of(givingWay, withRightOfWay.position)
                         &&
-                        zero_crossed(a0, a1))
+                        zero_crossed(givingWay, withRightOfWay))
                 }
             )
             inner
@@ -547,9 +547,9 @@ class RightOfWay(private val airspace: Airspace) {
 
     val thm1_determnistic_rw = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            right_of_way(a0, a1)(airspace.delta_o,
+            right_of_way(a1, a0)(airspace.delta_o,
                 airspace.delta_c, airspace.Theta_h) implies {
-                    !right_of_way(a1, a0)(airspace.delta_o,
+                    !right_of_way(a0, a1)(airspace.delta_o,
                         airspace.delta_c, airspace.Theta_h)
             }
         }

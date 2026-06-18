@@ -186,12 +186,11 @@ class SampleRightOfWayBehaviours(
             quadrantBehaviours.quadrant(aircraft1, aircraft0.position()) in setOf(QuadrantImpl.Q3, QuadrantImpl.Q4) &&
             orientationBehaviours.horizontalMissDistance(aircraft0, aircraft1) < delta_o
 
-    override fun hasRightOfWay(aircraft0: Aircraft, aircraft1: Aircraft) =
-        overtaking(aircraft0, aircraft1) ||
-            //TODO needs initialiser for passing the constant airspace parameters; didn't want to have it as API parameters
-            (convergenceBehaviours.convergingNotHeadon(aircraft0, aircraft1) &&
-                positionBehaviours.toTheRightOf(aircraft0, aircraft1.position()) &&
-                crossingBehaviours.zeroCrossed(aircraft0, aircraft1))
+    override fun hasRightOfWay(withRightOfWay: Aircraft, givingWay: Aircraft) =
+        overtaking(givingWay, withRightOfWay) ||
+            (convergenceBehaviours.convergingNotHeadon(givingWay, withRightOfWay) &&
+                positionBehaviours.toTheRightOf(givingWay, withRightOfWay.position()) &&
+                crossingBehaviours.zeroCrossed(givingWay, withRightOfWay))
 }
 
 class AirspaceV1 internal constructor(

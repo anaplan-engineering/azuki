@@ -57,10 +57,10 @@ class SampleQueryFactory : RightOfWayQueryFactory {
             // return a map of Aircrafts with right of way
             env.withAirspace(airspaceName) {
                 // { (x, y) | x in set aircraftIds, y in set aircraftIds \ {x} & hasRightOfWay(x, y) }
-                aircraftIds.flatMap { x ->
-                    (aircraftIds - x).map { y -> x to y }
-                }.filter { (x, y) ->
-                    hasRightOfWay(getAircraft(x), getAircraft(y))
+                aircraftIds.flatMap { withRightOfWay ->
+                    (aircraftIds - withRightOfWay).map { givingWay -> withRightOfWay to givingWay }
+                }.filter { (withRightOfWay, givingWay) ->
+                    hasRightOfWay(getAircraft(withRightOfWay), getAircraft(givingWay))
                     //}.map { (x, y) -> getAircraft(x) to getAircraft(y) }.toMap()  // Map<Aircraft, Aircraft>
                     //}.associate { (x, y) -> getAircraft(x) to getAircraft(y) } // Map<Aircraft, Aircraft> faster
                     //.mapTo(HashSet()) { (x, y) -> getAircraft(x) to getAircraft(y) } // Set<Pair<Aircraft, Aircraft>>
@@ -78,23 +78,18 @@ class SampleQueryFactory : RightOfWayQueryFactory {
     )
 
     // given aircrafts have right of way in airspace
-    override fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String) = query(
+    override fun hasRightOfWay(airspaceName: String, withRightOfWay: String, givingWay: String) = query(
         value = { env ->
             env.withAirspace(airspaceName) {
-                hasAircraft(aircraft0) && hasAircraft(aircraft1)
-                    //&& hasRightOfWay(getAircraft(aircraft0), getAircraft(aircraft1))
+                hasAircraft(withRightOfWay) && hasAircraft(givingWay)
             }
         },
         checks = { result ->
             {
-                //TODO LF: not sure this is the intended behavior
-                // if the aircraft aren't in the airspace there is nothing to check; there is otherwise
-                // or should only be for when `hasRightOfWay`?
                 if (!result)
-                    /*return@query*/ emptyList()
+                    emptyList()
                 else
-                    // if aircraft exist, the query is about whether they have right of way
-                    listOf(airspace.hasRightOfWay(airspaceName, aircraft0, aircraft1))
+                    listOf(airspace.hasRightOfWay(airspaceName, withRightOfWay, givingWay))
             }
         }
     )

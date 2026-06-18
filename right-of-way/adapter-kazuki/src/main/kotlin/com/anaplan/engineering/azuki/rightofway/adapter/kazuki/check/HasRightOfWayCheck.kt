@@ -1,12 +1,23 @@
 
 package com.anaplan.engineering.azuki.rightofway.adapter.kazuki.check
 
+import com.anaplan.engineering.azuki.core.system.ReifiedBehavior
 import com.anaplan.engineering.azuki.rightofway.adapter.api.RightOfWayBehaviours
-import com.anaplan.engineering.azuki.rightofway.kazuki.Aircraft
-import com.anaplan.engineering.azuki.rightofway.kazuki.Airspace
+import com.anaplan.engineering.azuki.rightofway.adapter.kazuki.ExecutionEnvironment
+import com.anaplan.engineering.azuki.rightofway.adapter.kazuki.toKazuki
 
-class HasRightOfWayCheck(airspaceName: String, aircraft0: String, aircraft1: String,
-) : AbstractCheck(airspaceName, aircraft0, aircraft1, RightOfWayBehaviours.RightOfWay) {
-    override fun Airspace.booleanCheck(aircraft0: Aircraft, aircraft1: Aircraft) =
-        functions.right_of_way(aircraft0, aircraft1)(delta_o, delta_c, Theta_h)
+class HasRightOfWayCheck(
+    private val airspaceName: String,
+    private val withRightOfWay: String,
+    private val givingWay: String,
+) : ReifiedBehavior, KazukiCheck {
+
+    override val behavior = RightOfWayBehaviours.RightOfWay
+
+    override fun check(env: ExecutionEnvironment): Boolean =
+        env.withAirspace(airspaceName) {
+            val holder = env.aircraft(airspaceName, withRightOfWay).toKazuki()
+            val giver = env.aircraft(airspaceName, givingWay).toKazuki()
+            functions.right_of_way(holder, giver)(delta_o, delta_c, Theta_h)
+        }
 }

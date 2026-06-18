@@ -40,7 +40,6 @@ class RightOfWayGiven(private val actionFactory: RightOfWayActionFactory): Given
         thereIsANewAirspace(airspaceName, delta_o, delta_c, theta_h, opened)
         require(airspaceData.isNotBlank()) { "Airspace data must not be blank" }
         RightOfWayAirspaceJSON.parse(airspaceData).forEach { (aircraftName, aircraft) ->
-            //actionList.add(actionFactory.airspace.addAircraft(airspaceName, name, aircraft))
             addAction { actionFactory.airspace.addAircraft(airspaceName, aircraftName, aircraft) }
         }
     }

@@ -24,6 +24,6 @@ interface RightOfWayQueryFactory : QueryFactory {
     fun allAircraftsIn(airspaceName: String): Query<Aircrafts> = UnsupportedQuery()
     fun airspaceHasAircraft(airspaceName: String, aircraftName: String): Query<Boolean> = UnsupportedQuery()
     fun hasRightOfWay(airspaceName: String): Query<Set<Pair<String, String>>> = UnsupportedQuery()
-    fun hasRightOfWay(airspaceName: String, aircraft0: String, aircraft1: String): Query<Boolean> = UnsupportedQuery()
+    fun hasRightOfWay(airspaceName: String, withRightOfWay: String, givingWay: String): Query<Boolean> = UnsupportedQuery()
         //Query<Set<Pair<Aircraft, Aircraft>>> = UnsupportedQuery()
 }

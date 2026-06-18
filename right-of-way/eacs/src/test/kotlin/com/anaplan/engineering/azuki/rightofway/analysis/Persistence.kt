@@ -14,7 +14,7 @@ class Persistence : RightOfWayRunnableScenario() {
             thereIsAnAirspace(airspaceUK, a0a1Airspace)
         }
         then {
-            hasRightOfWay(airspaceUK, a0, a1)
+            hasRightOfWay(airspaceUK, a1, a0)
         }
         regardlessOf {
             saveAirspace(airspaceUK)
@@ -27,7 +27,7 @@ class Persistence : RightOfWayRunnableScenario() {
             thereIsAnAirspace(airspaceUK, a0a1Airspace)
         }
         then {
-            hasRightOfWay(airspaceUK, a0, a1)
+            hasRightOfWay(airspaceUK, a1, a0)
         }
         regardlessOf {
             saveAirspace(airspaceUK)
