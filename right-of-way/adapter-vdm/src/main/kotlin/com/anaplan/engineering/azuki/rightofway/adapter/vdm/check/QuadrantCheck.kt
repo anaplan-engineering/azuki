@@ -43,7 +43,7 @@ class QuadrantCheck(private val airspaceName: String, private val aircraft0: Str
                 dcl a0: ${RightOfWayRulesModule.Aircraft} := $aircraft0Getter;
                 dcl a1: ${RightOfWayRulesModule.Aircraft} := $aircraft1Getter;
                 dcl expected: bool := true;
-                ${checkEquals(actual = "${quadrantFcn()}(a0, a1)")}
+                ${checkEquals(actual = "${quadrantFcn()}(a0, a1.position)")}
             );
             """
             )

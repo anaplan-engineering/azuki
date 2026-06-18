@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.rightofway.analysis
 
+import com.anaplan.engineering.azuki.core.runner.AnalysisScenario
 import com.anaplan.engineering.azuki.core.runner.Issue
 import com.anaplan.engineering.azuki.core.runner.KnownBug
 import com.anaplan.engineering.azuki.core.runner.ToBeDone
@@ -51,7 +52,7 @@ class AircraftOrder(private val testCase: TestCase) : RightOfWayRunnableScenario
         )
     }
 
-//    @AnalysisScenario
+    //@AnalysisScenario
     fun equivalentAircraftOrder() {
         val testCase = this.testCase
         given {
@@ -59,20 +60,6 @@ class AircraftOrder(private val testCase: TestCase) : RightOfWayRunnableScenario
         }
         whenever {
             testCase.moves(this)
-        }
-        then {
-            hasAircraft(airspaceUK, a0)
-            hasAircraft(airspaceUK, a1)
-        }
-    }
-
-    fun foo() {
-        given {
-            thereIsAnAirspace(airspaceUK) {
-                // add to the DSL to build the aircraft
-                thereIsAnAircraft(a0, aircraft(position0 to velocity0))
-                thereIsAnAircraft(a1, aircraft(position1 to velocity1))
-            }
         }
         then {
             hasAircraft(airspaceUK, a0)

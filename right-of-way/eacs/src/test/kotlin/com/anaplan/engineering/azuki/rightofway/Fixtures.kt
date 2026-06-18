@@ -17,6 +17,14 @@ val a0a1Airspace = """
     }
 """.trimIndent()
 
+/** a0 west-bound, a1 south-bound before a0 — QC true, HMD ~93.7 < delta_c (VDM HMD case 1). */
+val convergingAirspace = """
+    {
+        "a0": [[0.0, 0.0], [-10.0, 5.0]],
+        "a1": [[0.0, 150.0], [2.0, -10.0]]
+    }
+""".trimIndent()
+
 val position0 = Position(3.0, 3.0)
 val position1 = Position(30.0, 40.0)
 val velocity0 = Velocity(2.0, 1.0)

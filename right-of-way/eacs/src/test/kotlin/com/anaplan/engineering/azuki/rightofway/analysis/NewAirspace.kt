@@ -69,11 +69,23 @@ class NewAirspace : RightOfWayRunnableScenario() {
     @AnalysisScenario
     fun airspaceDataOpen() {
         given {
-            // creates a new closed airspace with 5 aircraft. This will not be safe
             thereIsAnAirspace(airspaceUK, a0a1Airspace, opened = true)
         }
         then {
             aircraftCount(airspaceUK,2U, true)
+        }
+    }
+
+    @AnalysisScenario
+    fun closeAfterOpen() {
+        given {
+            thereIsAnAirspace(airspaceUK, a0a1Airspace)
+        }
+        whenever {
+            setAirspace(airspaceUK, false)
+        }
+        then {
+            aircraftCount(airspaceUK, 2U, false)
         }
     }
 
