@@ -9,7 +9,7 @@ class AirspaceScriptGenerationDeclarationBuilder(declaration: AirspaceDeclaratio
     ScriptGenerationDeclarationBuilder<RightOfWayGenerationEnvironment, AirspaceDeclaration>(declaration) {
 
     // Reflective reference to function from interface with one parameter and Unit result
-    private val newAirspace: kotlin.reflect.KFunction2<RightOfWayGiven, String, Unit> =
+    private val newAirspace: kotlin.reflect.KFunction6<RightOfWayGiven, String, Double, Double, Double, Boolean, Unit> =
         RightOfWayGiven::thereIsANewAirspace
     private val airspace: kotlin.reflect.KFunction3<RightOfWayGiven, String, String, Unit> =
         RightOfWayGiven::thereIsAnAirspace

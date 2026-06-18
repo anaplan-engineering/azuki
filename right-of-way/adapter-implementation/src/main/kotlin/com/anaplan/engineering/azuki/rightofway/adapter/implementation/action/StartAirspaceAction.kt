@@ -6,11 +6,11 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.THETA_H
 import com.anaplan.engineering.azuki.rightofway.adapter.declaration.action.StartAirspaceDeclarableAction
 import com.anaplan.engineering.azuki.rightofway.adapter.implementation.ExecutionEnvironment
 
-class StartAirspaceAction(airspaceName: String, opened: Boolean) : StartAirspaceDeclarableAction(airspaceName, opened), SampleAction {
+class StartAirspaceAction(airspaceName: String, delta_o: Double, delta_c: Double, theta_h: Double, opened: Boolean) :
+    StartAirspaceDeclarableAction(airspaceName, delta_o, delta_c, theta_h, opened), SampleAction {
 
     override fun act(env: ExecutionEnvironment) {
         env.airspaceManager.add(airspaceName,
-            env.airspaceManager.airspaceCreator.create(
-                deltaO = DELTA_O, deltaC = DELTA_C, thetaH = THETA_H, opened = opened))
+            env.airspaceManager.airspaceCreator.create(delta_o, delta_c, theta_h, opened))
     }
 }

@@ -76,6 +76,10 @@ interface Airspace {
     //TODO LF: this better be `asSet`? Kazuki set type?
     //         or perhaps have interface Aircrafts : Set<Aircraft> as a module?
     val aircrafts: Set<Aircraft>
+    val delta_o: PReal
+    val delta_c: PReal
+    val Theta_h: Angle
+    val opened: Boolean
 
     @Invariant
     fun uniquePositions() = properties.allPositions.size.toNat() == aircrafts.card

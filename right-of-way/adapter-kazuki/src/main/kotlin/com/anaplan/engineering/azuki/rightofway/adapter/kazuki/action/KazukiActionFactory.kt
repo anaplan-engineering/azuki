@@ -12,7 +12,9 @@ class KazukiActionFactory : RightOfWayActionFactory {
 }
 
 object KazukiAirspaceActionFactory : AirspaceActionFactory {
-    override fun start(airspaceName: String) = StartAirspaceAction(airspaceName, true)
+    override fun start(airspaceName: String, delta_o: Double, delta_c: Double, theta_h: Double, opened: Boolean) =
+        StartAirspaceAction(airspaceName, delta_o, delta_c, theta_h, opened)
+
     override fun addAircraft(airspaceName: String, aircraftName: String, aircraft: Aircraft): Action =
         CreateAircraftAction(airspaceName, aircraftName, aircraft)
 

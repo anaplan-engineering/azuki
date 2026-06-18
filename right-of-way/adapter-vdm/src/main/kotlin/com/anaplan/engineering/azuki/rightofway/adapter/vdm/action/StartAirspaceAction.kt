@@ -7,8 +7,8 @@ import com.anaplan.engineering.azuki.vdm.DefaultVdmAction
 import com.anaplan.engineering.azuki.vdm.EmptySystemContext
 import com.anaplan.engineering.azuki.vdm.ModuleBuilder
 
-class StartAirspaceAction(airspaceName: String, opened: Boolean) :
-    StartAirspaceDeclarableAction(airspaceName, opened), DefaultVdmAction {
+class StartAirspaceAction(airspaceName: String, delta_o: Double, delta_c: Double, theta_h: Double, opened: Boolean) :
+    StartAirspaceDeclarableAction(airspaceName, delta_o, delta_c, theta_h, opened), DefaultVdmAction {
 
     override fun build(builder: ModuleBuilder<EmptySystemContext>): ModuleBuilder<EmptySystemContext> {
         val airspaceGetter = builder.getters[airspaceName] ?: throw IllegalStateException("Missing getter for airspace $airspaceName")
@@ -25,7 +25,7 @@ class StartAirspaceAction(airspaceName: String, opened: Boolean) :
             testSteps = listOf("""
                 (
                     dcl airspace: ${RightOfWayRulesModule.Airspace} := $airspaceGetter;
-                    airspace := ${RightOfWayRulesModule.set_airspace}(airspace, $opened);
+                    airspace := ${RightOfWayRulesModule.set_airspace}(airspace, $delta_o, $delta_c, $theta_h, $opened);
                     ${airspaceSetter("airspace")};
                 );
             """)

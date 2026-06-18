@@ -16,11 +16,11 @@ import kotlin.sequences.forEach
 
 class SampleActionGeneratorFactory : RightOfWayActionGeneratorFactory {
 
-    override fun generateAirspace(airspaceName: String) = SampleActionGenerator { env ->
-        require(airspaceName !in env.airspaceManager.activeAirspaces) { "Airspace name $airspaceName already generated or declared" }
-
-        listOf { af -> af.airspace.start(airspaceName) }
-    }
+    override fun generateAirspace(airspaceName: String, delta_o: Double, delta_c: Double , theta_h: Double, opened: Boolean) =
+        SampleActionGenerator { env ->
+            require(airspaceName !in env.airspaceManager.activeAirspaces) { "Airspace name $airspaceName already generated or declared" }
+            listOf { af -> af.airspace.start(airspaceName, delta_o, delta_c, theta_h, opened) }
+        }
 
     override fun generateAirspaceWithAircraft(airspaceName: String, numberOfAircraft: UInt) = SampleActionGenerator { env ->
         env.withAirspace(airspaceName) {
