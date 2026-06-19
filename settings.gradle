@@ -39,8 +39,9 @@ include(
     "graphs:verification-runner",
     "mondex:dsl",
     "mondex:adapter-api",
+    "mondex:adapter-declaration",
+    "mondex:adapter-kazuki",
     "mondex:eacs",
-    "mondex:implementation",
     "mondex:kazuki",
 )
 includeBuild("build-conventions")
