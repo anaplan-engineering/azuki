@@ -6,10 +6,7 @@ import com.anaplan.engineering.azuki.rightofway.a1
 import com.anaplan.engineering.azuki.rightofway.airspaceUK
 import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayQueryScenarioImpl
 
-/**
- * Exercises the `query { }` DSL block. Requires a query-capable runner (e.g. oracle / script-runner),
- * not the standard [com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayRunnableScenario] EACS runner.
- */
+// TODO LF: instrumenting a query scenario
 class QueryAirspace : RightOfWayQueryScenarioImpl() {
 
     fun queryAllAircraftAndMembership() {

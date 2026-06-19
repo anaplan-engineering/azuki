@@ -9,6 +9,7 @@ import com.anaplan.engineering.azuki.rightofway.a1
 import com.anaplan.engineering.azuki.rightofway.adapter.api.Quadrant
 import com.anaplan.engineering.azuki.rightofway.airspaceUK
 import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayRunnableScenario
+import com.anaplan.engineering.azuki.rightofway.oneCrossedAirspace
 
 class RelativeGeometry : RightOfWayRunnableScenario() {
 
@@ -54,15 +55,41 @@ class RelativeGeometry : RightOfWayRunnableScenario() {
     }
 
     @AnalysisScenario
-    fun defaultPairCrossing() {
+    fun defaultPairGoingToCross() {
+        given {
+            thereIsAnAirspace(airspaceUK, convergingAirspace)
+        }
+        then {
+            isGoingToCross(airspaceUK, a0, a1)
+        }
+    }
+
+    @AnalysisScenario
+    fun defaultPairZeroCrossed() {
+        given {
+            thereIsAnAirspace(airspaceUK, convergingAirspace)
+        }
+        then {
+            hasZeroCrossed(airspaceUK, a0, a1)
+        }
+    }
+
+    @AnalysisScenario
+    fun defaultPairOneCrossed() {
+        given {
+            thereIsAnAirspace(airspaceUK, oneCrossedAirspace)
+        }
+        then {
+            hasOneCrossed(airspaceUK, a0, a1)
+        }
+    }
+
+    @AnalysisScenario
+    fun defaultPairCrossed() {
         given {
             thereIsAnAirspace(airspaceUK, a0a1Airspace)
         }
         then {
-            isGoingToCross(airspaceUK, a0, a1)
-            hasZeroCrossed(airspaceUK, a0, a1)
-            hasOneCrossed(airspaceUK, a0, a1)
-            hasBothCrossed(airspaceUK, a0, a1)
             hasCrossed(airspaceUK, a0, a1)
         }
     }

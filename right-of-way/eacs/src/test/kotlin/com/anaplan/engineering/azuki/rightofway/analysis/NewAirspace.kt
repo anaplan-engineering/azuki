@@ -21,7 +21,22 @@ class NewAirspace : RightOfWayRunnableScenario() {
             thereIsANewAirspace(airspaceUK)
         }
         then {
+            everythingIsOkay()
             aircraftCount(airspaceUK,0U, true)
+        }
+    }
+
+    @AnalysisScenario
+    fun rightOfWayFromJsonAirspace() {
+        given {
+            thereIsAnAirspace(airspaceUK, a0a1Airspace)
+        }
+        then {
+            everythingIsOkay()
+            aircraftCount(airspaceUK,2U, true)
+            hasAircraft(airspaceUK, a0)
+            hasAircraft(airspaceUK, a1)
+            hasRightOfWay(airspaceUK, a1, a0)
         }
     }
 

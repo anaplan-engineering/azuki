@@ -6,10 +6,7 @@ import com.anaplan.engineering.azuki.rightofway.a1
 import com.anaplan.engineering.azuki.rightofway.airspaceUK
 import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayOracleScenarioImpl
 
-/**
- * Exercises the `verify { }` DSL block including `forAll`. Requires an oracle-capable runner,
- * not the standard [com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayRunnableScenario] EACS runner.
- */
+// TODO LF: instrumenting a oracle scenario
 class VerifyAirspace : RightOfWayOracleScenarioImpl() {
 
     fun verifyAircraftAndRightOfWay() {

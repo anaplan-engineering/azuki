@@ -18,7 +18,7 @@ fun Pair<Double, Double>.y() = second
 data class AirspaceState(
     val delta_o: Double,
     val delta_c: Double,
-    val Theta_h: Double,
+    val theta_h: Double,
     var open: Boolean,
     val aircrafts: Aircrafts = mutableMapOf()
 )
@@ -38,7 +38,7 @@ abstract class Airspace protected constructor(
     private val aircrafts by state::aircrafts
     val delta_o by state::delta_o
     val delta_c by state::delta_c
-    val Theta_h by state::Theta_h
+    val theta_h by state::theta_h
     val open by state::open
 
     val size by lazy { aircrafts.size }

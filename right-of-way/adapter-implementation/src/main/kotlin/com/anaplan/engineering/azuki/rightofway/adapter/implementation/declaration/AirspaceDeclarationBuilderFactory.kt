@@ -23,7 +23,7 @@ class AirspaceDeclarationBuilderFactory : SampleDeclarationBuilderFactory<Airspa
             }.toMap()
             env.airspaceManager.add(declaration.name,
                 env.airspaceManager.airspaceCreator.create(
-                    declaration.delta_c, declaration.delta_o,
+                    declaration.delta_o, declaration.delta_c,
                     declaration.Theta_h, declaration.opened, prepopulated))
         }
     }

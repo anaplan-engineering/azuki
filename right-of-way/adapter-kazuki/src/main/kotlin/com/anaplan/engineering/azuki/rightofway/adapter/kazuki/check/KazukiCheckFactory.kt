@@ -11,6 +11,7 @@ class KazukiCheckFactory : RightOfWayCheckFactory {
 
     override fun systemValid() = object : KazukiCheck {
         override val behavior = unsupportedBehavior
+        //TODO LF: what would be a sensible system valid check here? No duplicate aircraft across airspace?
         override fun check(env: ExecutionEnvironment) = true
     }
 }
