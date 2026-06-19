@@ -1,0 +1,9 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":mondex:adapter-declaration")
+    compileOnly project(":mondex:kazuki")
+    implementation libs.slf4j.api
+}

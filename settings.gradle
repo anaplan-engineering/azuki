@@ -50,8 +50,9 @@ include(
     'examples:right-of-way:implementation-V1',
     "mondex:dsl",
     "mondex:adapter-api",
+    "mondex:adapter-declaration",
+    "mondex:adapter-kazuki",
     "mondex:eacs",
-    "mondex:implementation",
     "mondex:kazuki",
 )
 includeBuild("build-conventions")
