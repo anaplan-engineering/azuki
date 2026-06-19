@@ -17,21 +17,24 @@ val a0a1Airspace = """
     }
 """.trimIndent()
 
-/** QC true, HMD ~19.97 < delta_c; both tracks positive (safe open airspace). */
+/** Converging pair: QC true, HMD ~1.414, going_to_cross both ways, zero_crossed true. */
 val convergingAirspace = """
     {
-        "a0": [[0.0, 0.0], [10.0, 3.0]],
-        "a1": [[40.0, 60.0], [-3.0, -8.0]]
+        "a0": [[3.0, 9.0], [2.0, 1.0]],
+        "a1": [[5.0, 5.0], [1.0, 2.0]]
     }
 """.trimIndent()
 
-/** a0 and a1 converging with track delta ~168.6° in [100°, 260°] — headon true. */
+/** Same geometry as convergingAirspace but opposite a1 velocity: QC true, track delta 180°, headon true. */
 val headOnAirspace = """
     {
-        "a0": [[0.0, 0.0], [10.0, 1.0]],
-        "a1": [[10.0, 10.0], [-10.0, 1.0]]
+        "a0": [[3.0, 9.0], [2.0, 1.0]],
+        "a1": [[5.0, 5.0], [-2.0, -1.0]]
     }
 """.trimIndent()
+
+/** a0a1 pair: one_crossed true (a1 going to cross a0, a0 already crossed a1), crossed(a0,a1) true. */
+val oneCrossedAirspace = a0a1Airspace
 
 val position0 = Position(3.0, 3.0)
 val position1 = Position(30.0, 40.0)

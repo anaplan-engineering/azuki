@@ -12,6 +12,7 @@ import com.anaplan.engineering.kazuki.core.minus
 import com.anaplan.engineering.kazuki.core.plus
 import kotlin.math.abs
 import kotlin.math.atan
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -48,6 +49,7 @@ interface RVector {
     val x: Double
     val y: Double
 
+    @Invariant
     fun isReal() = isReal(x) && isReal(y)
 }
 
@@ -168,7 +170,7 @@ class RightOfWay(private val airspace: Airspace) {
     )
 
     val scalar_product = function(
-        command = { x: Double, u: RVector ->
+        command = { x: Real, u: RVector ->
             mk_RVector(x * u.x, x * u.y )
         }
     )
@@ -228,12 +230,47 @@ class RightOfWay(private val airspace: Airspace) {
         }
     )
 
+    private val trackRad = function(
+        command = { vx: Real, vy: Real ->
+            val theta = atan(vx / vy)
+             when {
+                vy > 0 -> theta
+                vx >= 0 -> theta + kotlin.math.PI
+                else -> theta - kotlin.math.PI
+            }
+        },
+        pre = { _, vy -> isNZReal(vy) },
+        post = { _, _, r -> isReal(r) }
+    )
+
+    private val trackDeg = function(
+        command = { vx: Real, vy: Real ->
+            //    var deg = Math.toDegrees(trackRad(vx, vy))
+            //    if (deg < 0) deg += 360.0
+            //    return deg
+            val rad = trackRad(vx, vy)
+            if (rad < 0.0)
+                (rad * 180.0 / kotlin.math.PI) + 360.0
+            else
+                (rad * 180.0 / kotlin.math.PI)
+        },
+        pre = { _, vy -> isNZReal(vy) },
+        post = { _, vy, r -> isAngle(r) }
+    )
+
+    private val trackDeltaMin = function(
+        command = { a0: Aircraft, a1: Aircraft ->
+            val raw = abs(track(a0) - track(a1))
+            min(raw, 360.0 - raw)
+        },
+        post = { _, _, r -> isReal(r) }
+    )
+
     // Aircraft track (i.e., angle between north and aircraft direction)
     val track = function(
         command = { a: Aircraft ->
-            // a.velocity.y is NZReal
-            //TODO: how to "cast" the result type to impose invariant?
-            atan(a.velocity.x / a.velocity.y) as Angle
+            //TODO LF: how to "cast" the result type to impose invariant?
+            trackDeg(a.velocity.x, a.velocity.y) as Angle
         },
         pre = { a -> isNZReal(a.velocity.y) },
         post = { _, r -> isAngle(r) }
@@ -356,9 +393,9 @@ class RightOfWay(private val airspace: Airspace) {
     // one aircraft (a0) has crossed trajectory of other (a1) but not other way round
     val one_crossed = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            (going_to_cross(a0, a1) && crossed(a0, a1))
+            (going_to_cross(a0, a1) && crossed(a1, a0))
                 ||
-               (going_to_cross(a1, a0) && crossed(a1, a0))
+               (going_to_cross(a1, a0) && crossed(a0, a1))
         }
     )
 
@@ -396,7 +433,7 @@ class RightOfWay(private val airspace: Airspace) {
 
     val isInQ1andWasInQ2 = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            (Q1(a0, a1.position) && Q1(a1, a0.position))
+            (Q1(a0, a1.position) && Q4(a1, a0.position))
                 ||
                 (opposite_orientation(a0, a1) && left_to_right(a0, a1));
         }
@@ -468,7 +505,7 @@ class RightOfWay(private val airspace: Airspace) {
             val inner = function(
                 command = { delta_c: PReal, Theta_h: Angle ->
                     //TODO how to cast it to Angle?
-                    val track_delta = abs(track(a0) - track(a1)) as Angle
+                    val track_delta = trackDeltaMin(a0, a1)
                     converging(a0, a1)(delta_c) &&
                         ((180.0 + Theta_h < track_delta)
                         ||
@@ -484,7 +521,7 @@ class RightOfWay(private val airspace: Airspace) {
         command = { a0: Aircraft, a1: Aircraft ->
             val inner = function(
                 command = { delta_c: PReal, Theta_h: Angle ->
-                    val track_delta = abs(track(a0) - track(a1))
+                    val track_delta = trackDeltaMin(a0, a1)
                     converging(a0, a1)(delta_c) &&
                         (180.0 - Theta_h <= track_delta)
                         &&
@@ -519,7 +556,7 @@ class RightOfWay(private val airspace: Airspace) {
     val right_of_way = function(
         command = { withRightOfWay: Aircraft, givingWay: Aircraft ->
             val inner = function(
-                command = { delta_o: Real, delta_c: PReal, Theta_h: Angle ->
+                command = { delta_o: PReal, delta_c: PReal, Theta_h: Angle ->
                     overtaking(givingWay, withRightOfWay)(delta_o)
                         ||
                        (conv_not_headon(givingWay, withRightOfWay)(delta_c, Theta_h)
@@ -557,7 +594,7 @@ class RightOfWay(private val airspace: Airspace) {
 
     val thm2_zero_crossed_only_one_to_right = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            zero_crossed(a0, a1) implies {
+            zero_crossed(a1, a0) implies {
                 (to_the_right_of(a0, a1.position) && !to_the_right_of(a1, a0.position))
                     ||
                     (to_the_right_of(a1, a0.position) && !to_the_right_of(a0, a1.position))
@@ -585,7 +622,7 @@ class RightOfWay(private val airspace: Airspace) {
 
     val thm5_mutual_awareness = function(
         command = { a0: Aircraft, a1: Aircraft ->
-            conv_not_headon(a0, a1)(airspace.delta_o, airspace.Theta_h) implies {
+            conv_not_headon(a0, a1)(airspace.delta_c, airspace.Theta_h) implies {
                 (zero_crossed(a1, a0) && to_the_right_of(a0, a1.position)) implies {
                     right_of_way(a1, a0)(airspace.delta_o,airspace.delta_c, airspace.Theta_h)
                 }
@@ -631,4 +668,3 @@ class RightOfWay(private val airspace: Airspace) {
         post = { a, space -> a in space.aircrafts }
     )
 }
-

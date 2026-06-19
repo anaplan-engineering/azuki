@@ -23,7 +23,7 @@ interface QuadrantBehaviours {
 }
 
 interface OrientationBehaviours {
-    fun track(aircraft: Aircraft) = atan(aircraft.velocity().x() / aircraft.velocity().y())
+    fun track(aircraft: Aircraft) = trackDeg(aircraft.velocity().x(), aircraft.velocity().y())
     fun timeToClosestPointApproach(aircraft0: Aircraft, aircraft1: Aircraft): Double
     fun horizontalMissDistance(aircraft0: Aircraft, aircraft1: Aircraft): Double
 
@@ -61,5 +61,25 @@ interface RightOfWayBehaviours {
 operator fun <T> Array<Array<T>>.get(row: QuadrantImpl, col: QuadrantImpl): T = this[row.ordinal][col.ordinal]
 operator fun <T> Array<Array<T>>.set(row: QuadrantImpl, col: QuadrantImpl, value: T) { this[row.ordinal][col.ordinal] = value }
 
+fun trackRad(vx: Double, vy: Double): Double {
+    require(vy != 0.0) { "Cannot compute track angle for zero velocity" }
+    val theta = kotlin.math.atan(vx / vy)
+    return when {
+        vy > 0 -> theta
+        vx >= 0 -> theta + kotlin.math.PI
+        else -> theta - kotlin.math.PI
+    }
+}
 
+fun trackDeg(vx: Double, vy: Double): Double {
+    require(vy != 0.0) { "Cannot compute track angle for zero velocity" }
+//    var deg = Math.toDegrees(trackRad(vx, vy))
+//    if (deg < 0) deg += 360.0
+//    return deg
+    val rad = trackRad(vx, vy)
+    return if (rad < 0.0)
+        (rad * 180.0 / kotlin.math.PI) + 360.0
+    else
+        (rad * 180.0 / kotlin.math.PI)
+}
 

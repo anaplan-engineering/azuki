@@ -62,6 +62,12 @@ const val DELTA_C = 1000.0
 const val THETA_H = 80.0
 const val MIN_AIRCRAFT = 5U
 
+/** Tolerance for geometric double comparisons in EACS checks (HMD, track, etc.). */
+const val GEOMETRY_EPSILON = 1e-8
+
+fun approxEqual(a: Double, b: Double, epsilon: Double = GEOMETRY_EPSILON): Boolean =
+    kotlin.math.abs(a - b) <= epsilon
+
 enum class Quadrant { FRONT_RIGHT, FRONT_LEFT, BACK_LEFT, BACK_RIGHT }
 enum class Crossing { Crossing, Crossed, ZeroCrossed, OneCrossed, BothCrossed }
 enum class Convergence { Convergence, Divergence, Overtake }

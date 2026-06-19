@@ -30,7 +30,7 @@ class TrackCheck(private val airspaceName: String, private val aircraft0: String
                 --dcl airspace: ${RightOfWayRulesModule.Airspace} := $airspaceGetter;
                 dcl a0: ${RightOfWayRulesModule.Aircraft} := $aircraft0Getter;
                 dcl expected: ${RightOfWayRulesModule.Angle} := ${angle};
-                ${checkEquals(actual = "${RightOfWayRulesModule.track}(a0)")}
+                ${checkApproxEquals(actual = "${RightOfWayRulesModule.track}(a0)")}
             );
             """
             )

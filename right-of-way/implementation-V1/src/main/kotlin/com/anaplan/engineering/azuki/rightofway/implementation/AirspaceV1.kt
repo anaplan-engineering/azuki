@@ -1,13 +1,15 @@
 package com.anaplan.engineering.azuki.rightofway.implementation
 
 import com.anaplan.engineering.azuki.rightofway.implementation.QuadrantBehaviours.Companion.CONVERGENCE_MATRICES
+import jdk.nashorn.internal.objects.NativeFunction.function
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.math.abs
+import kotlin.math.min
 
 const val DELTA_O = 100.0
-const val DELTA_C = 900.0
-const val THETA_H = 50.0
+const val DELTA_C = 1000.0
+const val THETA_H = 80.0
 
 class SampleQuadrantBehaviours : QuadrantBehaviours {
     private fun getQuadrant(aircraft: Aircraft, position: Position): Vector2 {
@@ -23,6 +25,7 @@ class SampleQuadrantBehaviours : QuadrantBehaviours {
             q.x <= 0.0 && q.y > 0.0 -> QuadrantImpl.Q2
             q.x < 0.0 && q.y <= 0.0 -> QuadrantImpl.Q3
             q.x >= 0.0 && q.y < 0.0 -> QuadrantImpl.Q4
+            // VDM and Kazuki don't throw an excethiption, but just return false
             else -> throw IllegalStateException("Invalid quadrant for vector $q")
         }
     }
@@ -49,10 +52,10 @@ class SamplePositionBehaviours : PositionBehaviours {
         relativePosition(aircraft, position) > 0.0
 
     override fun leftToRight(aircraft0: Aircraft, aircraft1: Aircraft) =
-        relativePosition(aircraft0, aircraft1.position()) < 0.0
+        (aircraft0.velocity().toVector() dot aircraft1.velocity().toVector().rotate90()) < 0.0
 
     override fun rightToLeft(aircraft0: Aircraft, aircraft1: Aircraft) =
-        relativePosition(aircraft0, aircraft1.position()) > 0.0
+        (aircraft0.velocity().toVector() dot aircraft1.velocity().toVector().rotate90()) > 0.0
 }
 
 class SampleOrientationBehaviours : OrientationBehaviours {
@@ -132,20 +135,25 @@ class SampleConvergenceBehaviours(
     var delta_c: Double = DELTA_C
     var Theta_h: Double = THETA_H
 
+    // can misclassify pairs whose bearings straddle 0°/360° — e.g. 10° vs 350° treated as ~head-on when they're almost parallel.
+    private fun trackDelta(aircraft0: Aircraft, aircraft1: Aircraft): Double {
+        val raw = abs(track(aircraft0) - track(aircraft1))
+        return min(raw, 360.0 - raw)
+    }
+
     override fun converging(aircraft0: Aircraft, aircraft1: Aircraft) =
         quadrantBehaviours.quadrantConvergence(aircraft0, aircraft1) == ConvergenceImpl.Convergence &&
             orientationBehaviours.horizontalMissDistance(aircraft0, aircraft1) < delta_c
 
     override fun headon(aircraft0: Aircraft, aircraft1: Aircraft) =
         converging(aircraft0, aircraft1) &&
-            abs(orientationBehaviours.track(aircraft0) - orientationBehaviours.track(aircraft1)) in
-            (180.0 - Theta_h)..(180.0 + Theta_h)
+            trackDelta(aircraft0, aircraft1) in (180.0 - Theta_h)..(180.0 + Theta_h)
 
-    override fun convergingNotHeadon(aircraft0: Aircraft, aircraft1: Aircraft) =
-        converging(aircraft0, aircraft1) &&
-            abs(orientationBehaviours.track(aircraft0) - orientationBehaviours.track(aircraft1)) <
-            (180.0 - Theta_h)
-
+    override fun convergingNotHeadon(aircraft0: Aircraft, aircraft1: Aircraft): Boolean {
+        val track_delta = trackDelta(aircraft0, aircraft1)
+        return converging(aircraft0, aircraft1) &&
+            (180.0 + Theta_h < track_delta || track_delta < (180.0 - Theta_h))
+    }
 }
 
 class SampleRightOfWayBehaviours(
@@ -157,7 +165,7 @@ class SampleRightOfWayBehaviours(
     private val convergenceBehaviours: ConvergenceBehaviours = SampleConvergenceBehaviours(),
     val delta_o: Double = DELTA_O,
     val delta_c: Double = DELTA_C,
-    val Theta_h: Double = THETA_H,
+    val theta_h: Double = THETA_H,
 ) : RightOfWayBehaviours,
     QuadrantBehaviours by quadrantBehaviours,
     OrientationBehaviours by orientationBehaviours,
@@ -172,12 +180,12 @@ class SampleRightOfWayBehaviours(
 
     init {
         require(delta_c > 0) { "delta_c must be positive, got $delta_c" }
-        require(Theta_h > 0) { "Theta_h must be positive, got $Theta_h" }
+        require(theta_h > 0) { "Theta_h must be positive, got $theta_h" }
         require(delta_o > 0) { "delta_o must be positive, got $delta_o" }
 
         //TODO this looks ugly :-(. Wasn't sure how to "pass through" fields in composite interfaces chaining
         (convergenceBehaviours as SampleConvergenceBehaviours).delta_c = delta_c
-        convergenceBehaviours.Theta_h = Theta_h
+        convergenceBehaviours.Theta_h = theta_h
     }
 
     override fun overtaking(aircraft0: Aircraft, aircraft1: Aircraft) =
@@ -214,34 +222,19 @@ class AirspaceV1 internal constructor(
 
     constructor(state: AirspaceState) :
         this(state, SampleRightOfWayBehaviours(
-            delta_o = state.delta_o, delta_c = state.delta_c, Theta_h = state.Theta_h))
+            delta_o = state.delta_o, delta_c = state.delta_c, theta_h = state.theta_h))
     constructor(deltaO: Double, deltaC: Double, thetaH: Double,
                 opened: Boolean, prepopulated: AircraftData = emptyMap()) :
-        this(AirspaceState(deltaO, deltaC, thetaH, opened,
-            prepopulated.toMutableMap()),
-            SampleRightOfWayBehaviours(
-//                SampleQuadrantBehaviours(),
-//                SampleOrientationBehaviours(),
-//                SamplePositionBehaviours(),
-//               SampleCrossingBehaviours(),
-//                SampleConvergenceBehaviours(),
-//                DELTA_O, DELTA_C, THETA_H
-                            )
-        )
+        this(AirspaceState(deltaO, deltaC, thetaH, opened, prepopulated.toMutableMap()))
 
 
     override val log: Logger = LoggerFactory.getLogger(AirspaceV1::class.java)
 
-    /*
-        val isInQ1andWasInQ2 = function(
-            command = { a0: Aircraft, a1: Aircraft ->
-                (Q1(a0, a1.position) && Q1(a1, a0.position))
-                    ||
-                    (opposite_orientation(a0, a1) && left_to_right(a0, a1));
-            }
-        )
-
-     */
+    private fun isInQ1andWasInQ2(aircraft0: Aircraft, aircraft1: Aircraft) =
+        (quadrant(aircraft0, aircraft1.position()) == QuadrantImpl.Q1 &&
+            quadrant(aircraft1, aircraft0.position()) == QuadrantImpl.Q4)
+            ||
+            direction(aircraft0, aircraft1) == DirectionImpl.Opposite
 }
 
 class AirspaceV1Creator : AirspaceCreator {
@@ -257,6 +250,11 @@ class AirspaceV1Creator : AirspaceCreator {
 fun Pair<Double, Double>.toVector(): Vector2 = Vector2(first, second)
 fun Vector2.toPair(): Pair<Double, Double> = Pair(x, y)
 
+/**
+ * 1. VDM and Kazuki use the same special-case dot_product (zero vector → 0; if either y is 0 use u.x*v.x; if either x is 0 use u.y*v.y; else full dot).
+ * 2. SampleImpl uses a plain Euclidean dot in Vector2.
+ * 3. Divergence could occur on axis-aligned / zero-component cases when computing quadrants (and therefore QC).
+ */
 data class Vector2(val x: Double, val y: Double) {
     // Plus Operator: v1 + v2
     operator fun plus(other: Vector2) = Vector2(x + other.x, y + other.y)

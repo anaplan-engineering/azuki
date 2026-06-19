@@ -85,6 +85,17 @@ interface DefaultVdmCheck : VdmCheck<EmptySystemContext> {
             then return false
             else skip;
         """
+
+    fun checkApproxEquals(
+        actual: String = "actual",
+        expected: String = "expected",
+        epsilon: Double = com.anaplan.engineering.azuki.rightofway.adapter.api.GEOMETRY_EPSILON,
+    ) =
+        """
+            if abs($actual - $expected) > $epsilon
+            then return false
+            else skip;
+        """
 }
 
 val toDefaultVdmCheck: (Check) -> DefaultVdmCheck = {
