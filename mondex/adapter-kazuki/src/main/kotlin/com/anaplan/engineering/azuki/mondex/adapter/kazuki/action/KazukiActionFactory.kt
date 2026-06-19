@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.mondex.adapter.kazuki.action
 
+import com.anaplan.engineering.azuki.mondex.adapter.api.Purse
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.core.system.ParallelAction
 import com.anaplan.engineering.azuki.core.system.UnsupportedAction
@@ -22,7 +23,7 @@ object KazukiPurseActionFactory : PurseActionFactory {
 }
 
 object KazukiWorldActionFactory : WorldActionFactory {
-    override fun create(authPurses: Map<String, Pair<ULong, ULong>>) = CreateWorldAction(authPurses)
+    override fun create(authPurses: Map<String, Purse>) = CreateWorldAction(authPurses)
 
     override fun transferOkay(transferDetails: TransferDetails) =
         TransferOkayAction(transferDetails)

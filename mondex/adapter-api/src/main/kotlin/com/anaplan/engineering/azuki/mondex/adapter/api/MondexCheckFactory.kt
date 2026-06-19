@@ -14,6 +14,6 @@ interface PurseCheckFactory {
 }
 
 interface WorldCheckFactory {
-    fun worldExists(authPurses: Map<String, Pair<ULong, ULong>>, result: Boolean): Check
+    fun worldExists(authPurses: Map<String, Purse>, result: Boolean): Check
 
 }

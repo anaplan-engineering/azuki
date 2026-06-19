@@ -16,7 +16,7 @@ class WorldDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<WorldDecl
 
         override fun build(builder: EnvironmentBuilder) {
             builder.declare(declaration.name) {
-                buildWorld(declaration.authPurses, declaration.operations)
+                buildWorld(declaration.authPurses)
             }
         }
     }

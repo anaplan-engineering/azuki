@@ -2,14 +2,8 @@ package com.anaplan.engineering.azuki.mondex.adapter.kazuki
 
 import com.anaplan.engineering.azuki.mondex.kazuki.World
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.mk_Purse
-import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails_Module.mk_TransferDetails
-import com.anaplan.engineering.azuki.mondex.kazuki.Transfer_Module.mk_Transfer
 import com.anaplan.engineering.azuki.mondex.kazuki.World_Module.mk_World
-import com.anaplan.engineering.azuki.mondex.kazuki.abstractNullInput
-import com.anaplan.engineering.azuki.mondex.adapter.declaration.declaration.WorldOperation
-import com.anaplan.engineering.azuki.mondex.kazuki.Purse
-import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails
-import com.anaplan.engineering.azuki.mondex.kazuki.World_Module.transform
+import com.anaplan.engineering.azuki.mondex.adapter.api.Purse
 import com.anaplan.engineering.kazuki.core.*
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -46,17 +40,16 @@ class ExecutionEnvironment {
 }
 
 fun buildWorld(
-    authPurses: Map<String, Pair<ULong, ULong>>,
-    operations: List<WorldOperation> = emptyList(),
+    authPurses: Map<String, Purse>,
 ): World {
     val world = mk_World(
         mapping(authPurses.entries) { (name, purse) ->
-            mk_(name, mk_Purse(purse.first, purse.second))
+            mk_(name, mk_Purse(purse.balance, purse.lost))
         },
     )
     return world
 }
 
-fun Map<String, Pair<ULong, ULong>>.toMapping() =
+fun Map<String, Purse>.toMapping() =
     mapping(this.entries) { (name, purse) ->
-        mk_(name, mk_Purse(purse.first, purse.second)) }
+        mk_(name, mk_Purse(purse.balance, purse.lost)) }
