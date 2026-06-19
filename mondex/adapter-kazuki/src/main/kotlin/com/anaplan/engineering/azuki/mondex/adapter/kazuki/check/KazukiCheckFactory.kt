@@ -1,13 +1,12 @@
 package com.anaplan.engineering.azuki.mondex.adapter.kazuki.check
 
 import com.anaplan.engineering.azuki.core.system.Check
-import com.anaplan.engineering.azuki.core.system.CheckFactory
 import com.anaplan.engineering.azuki.core.system.unsupportedBehavior
 import com.anaplan.engineering.azuki.mondex.adapter.api.MondexCheckFactory
+import com.anaplan.engineering.azuki.mondex.adapter.api.Purse
 import com.anaplan.engineering.azuki.mondex.adapter.api.PurseCheckFactory
 import com.anaplan.engineering.azuki.mondex.adapter.api.WorldCheckFactory
 import com.anaplan.engineering.azuki.mondex.adapter.kazuki.ExecutionEnvironment
-import com.anaplan.engineering.kazuki.core.Kazuki
 
 class KazukiCheckFactory : MondexCheckFactory {
     override val purse = KazukiPurseCheckFactory
@@ -28,7 +27,7 @@ object KazukiPurseCheckFactory : PurseCheckFactory {
 }
 
 object KazukiWorldCheckFactory : WorldCheckFactory {
-    override fun worldExists(authPurses: Map<String, Pair<ULong, ULong>>, result: Boolean) =
+    override fun worldExists(authPurses: Map<String, Purse>, result: Boolean) =
         WorldExistsCheck(authPurses, result)
 
 }

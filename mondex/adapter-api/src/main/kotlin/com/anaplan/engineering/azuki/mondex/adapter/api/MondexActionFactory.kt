@@ -15,7 +15,7 @@ interface PurseActionFactory {
 }
 
 interface WorldActionFactory {
-    fun create(authPurses: Map<String, Pair<ULong, ULong>>): Action
+    fun create(authPurses: Map<String, Purse>): Action
     fun transferOkay(transferDetails: TransferDetails): Action
     fun transferLost(transferDetails: TransferDetails): Action
     fun noTransfer(): Action

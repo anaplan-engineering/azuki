@@ -1,15 +1,14 @@
 package com.anaplan.engineering.azuki.mondex.adapter.declaration
 
 import com.anaplan.engineering.azuki.declaration.DeclarationState
-import com.anaplan.engineering.azuki.mondex.adapter.api.TransferDetails
+import com.anaplan.engineering.azuki.mondex.adapter.api.Purse
 import com.anaplan.engineering.azuki.mondex.adapter.declaration.declaration.WorldDeclaration
-import com.anaplan.engineering.azuki.mondex.adapter.declaration.declaration.WorldOperation
 
 class MondexDeclarationState : DeclarationState() {
 
-    fun declareWorld(worldName: String, authPurses: Map<String, Pair<ULong, ULong>>) {
+    fun declareWorld(worldName: String, authPurses: Map<String, Purse>) {
         checkForDuplicate(worldName)
-        declarations[worldName] = WorldDeclaration(worldName, authPurses, emptyList(), standalone = true)
+        declarations[worldName] = WorldDeclaration(worldName, authPurses, standalone = true)
     }
 
     companion object {

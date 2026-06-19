@@ -15,8 +15,9 @@ class MondexGiven(private val actionFactory: MondexActionFactory<*>) : Given<Mon
 
     override fun actions(): List<Action> = actionList
 
-    override fun thereIsAPurse(balance: ULong, lost: ULong) {
-        actionList.add(actionFactory.purse.create(balance, lost))
+    override fun thereIsAPurse(balance: Int, lost: Int) {
+        require(balance >= 0 && lost >= 0)
+        actionList.add(actionFactory.purse.create(balance.toULong(), lost.toULong()))
     }
 
     override fun thereIsAWorld(init: WorldBlock.() -> Unit) {

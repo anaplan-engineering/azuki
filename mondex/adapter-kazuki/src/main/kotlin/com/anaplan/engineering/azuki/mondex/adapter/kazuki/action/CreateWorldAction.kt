@@ -1,11 +1,12 @@
 package com.anaplan.engineering.azuki.mondex.adapter.kazuki.action
 
 import com.anaplan.engineering.azuki.mondex.adapter.declaration.action.CreateWorldDeclarableAction
+import com.anaplan.engineering.azuki.mondex.adapter.api.Purse
 import com.anaplan.engineering.azuki.mondex.adapter.kazuki.ExecutionEnvironment
 import com.anaplan.engineering.azuki.mondex.adapter.kazuki.buildWorld
 
 class CreateWorldAction(
-    authPurses: Map<String, Pair<ULong, ULong>>,
+    authPurses: Map<String, Purse>,
     worldName: String = DEFAULT_WORLD,
 ) : CreateWorldDeclarableAction(authPurses, worldName), KazukiAction {
 
