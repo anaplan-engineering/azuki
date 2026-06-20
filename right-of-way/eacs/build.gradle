@@ -38,9 +38,21 @@ configurations {
     sampleImplementationV1
 }
 
+ext {
+    setProperty("impl.includes", "VDM,Kazuki,SampleImpl")
+    setProperty("vdmEngine", "vdmj")//"overture"
+}
+
+def vdmEngine = findProperty('vdmEngine') ?: 'overture'
+def vdmAnimatorModule = vdmEngine == 'vdmj' ? 'vdm-animation-vdmj' : 'vdm-animation-overture'
+def vdmAnimatorModuleToExclude = vdmEngine == 'vdmj' ? 'vdm-animation-overture' : 'vdm-animation-vdmj'
+
 dependencies {
     api project(":right-of-way:dsl")
-    vdm project(":right-of-way:adapter-vdm")
+    vdm(project(":right-of-way:adapter-vdm")) {
+        exclude group: 'com.anaplan.engineering', module: vdmAnimatorModuleToExclude
+    }
+    vdm "com.anaplan.engineering:$vdmAnimatorModule"
     kazuki project(":right-of-way:adapter-kazuki")
     kazuki project(":right-of-way:kazuki")
     sampleImplementationV1 project(":right-of-way:adapter-implementation")
@@ -72,12 +84,6 @@ task sampleImplementationV1ClasspathJar(type: Jar) {
     }
 }
 
-ext {
-    // default impls
-    // No direct way to "force" VdmAnimator to pick the VDMJ for animation; it's there, but Overture is first in the list
-    setProperty("impl.includes", "Kazuki,SampleImpl,VDM") //, "VDM") , "SampleImpl")//, "Kazuki,VDM,SampleImpl")
-}
-
 test {
     dependsOn vdmClasspathJar
     dependsOn sampleImplementationV1ClasspathJar
@@ -93,6 +99,7 @@ test {
         "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(","),
         "com.anaplan.engineering.azuki.implementation.includes"     : findProperty("impl.includes"),
         "com.anaplan.engineering.azuki.implementation.excludes"     : findProperty("impl.excludes"),
+        "com.anaplan.engineering.vdmanimation.engine"               : findProperty("vdmEngine") ?: 'overture',
     ]
 }
 

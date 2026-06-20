@@ -19,6 +19,8 @@ import java.io.StringWriter
 
 class OvertureAnimator : VdmAnimator {
 
+    override val engine = VdmEngine.OVERTURE
+
     private val coverageGenerator = CoverageGenerator()
 
     override fun animate(animationTarget: AnimationTarget, animationContext: AnimationContext): AnimationResult {

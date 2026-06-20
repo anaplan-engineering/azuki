@@ -10,17 +10,7 @@ import com.fujitsu.vdmj.`in`.patterns.INIdentifierPattern
 import com.fujitsu.vdmj.lex.Dialect
 import com.fujitsu.vdmj.messages.ConsolePrintWriter
 import com.fujitsu.vdmj.runtime.ContextException
-//import org.overture.ast.definitions.ALocalDefinition
-//import org.overture.ast.definitions.ATypeDefinition
-//import org.overture.ast.definitions.AValueDefinition
-//import org.overture.ast.definitions.SFunctionDefinition
-//import org.overture.ast.patterns.AIdentifierPattern
-//import org.overture.interpreter.VDMSL
-//import org.overture.interpreter.runtime.ContextException
-//import org.overture.interpreter.runtime.ModuleInterpreter
-//import org.overture.interpreter.util.ExitStatus
 import com.fujitsu.vdmj.runtime.ModuleInterpreter
-import jdk.internal.org.jline.utils.Colors.s
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -29,6 +19,8 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 class VDMJAnimator : VdmAnimator {
+
+    override val engine = VdmEngine.VDMJ
 
     private val coverageGenerator = CoverageGenerator()
 
