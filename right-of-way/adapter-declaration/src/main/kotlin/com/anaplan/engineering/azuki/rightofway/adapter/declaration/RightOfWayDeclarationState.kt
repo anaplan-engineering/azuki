@@ -8,6 +8,7 @@ import com.anaplan.engineering.azuki.rightofway.adapter.api.DELTA_O
 import com.anaplan.engineering.azuki.rightofway.adapter.declaration.declaration.AirspaceDeclaration
 import kotlin.collections.plus
 
+// Action by action versus single go; atomicity; akin to state def in VDM (i.e. something outside the spec); initialisation
 class RightOfWayDeclarationState : DeclarationState() {
     fun declareAirspace(airspaceName: String, deltaO: Double = DELTA_O, deltaC: Double = DELTA_C, thetaH: Double = THETA_H, opened: Boolean = true) {
         checkForDuplicate(airspaceName)
