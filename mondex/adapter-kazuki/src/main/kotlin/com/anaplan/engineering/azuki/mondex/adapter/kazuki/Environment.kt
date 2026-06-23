@@ -50,6 +50,17 @@ fun buildWorld(
     return world
 }
 
+fun World.withPurse(
+    purseName: String,
+    purse: Purse,
+) : World {
+    val world = mk_World(
+        authPurses
+            * mk_Mapping(mk_(purseName,  mk_Purse(purse.balance, purse.lost)))
+    )
+    return world
+}
+
 fun Map<String, Purse>.toMapping() =
     mapping(this.entries) { (name, purse) ->
         mk_(name, mk_Purse(purse.balance, purse.lost)) }

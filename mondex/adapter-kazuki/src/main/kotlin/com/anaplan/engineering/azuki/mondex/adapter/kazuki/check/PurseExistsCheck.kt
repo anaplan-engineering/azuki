@@ -3,7 +3,6 @@ package com.anaplan.engineering.azuki.mondex.adapter.kazuki.check
 import com.anaplan.engineering.azuki.mondex.adapter.api.PurseExistsBehaviour
 import com.anaplan.engineering.azuki.mondex.adapter.declaration.MondexDeclarationState
 import com.anaplan.engineering.azuki.mondex.adapter.kazuki.ExecutionEnvironment
-import com.anaplan.engineering.azuki.mondex.kazuki.Purse
 
 class PurseExistsCheck(
     private val personName: String,

@@ -11,7 +11,7 @@ interface MondexActionFactory<out A: Action > : ActionFactory, ParallelActionFac
 }
 
 interface PurseActionFactory {
-    fun create(balance: ULong, lost: ULong): Action
+    fun create(purseName: String, purse: Purse): Action
 }
 
 interface WorldActionFactory {

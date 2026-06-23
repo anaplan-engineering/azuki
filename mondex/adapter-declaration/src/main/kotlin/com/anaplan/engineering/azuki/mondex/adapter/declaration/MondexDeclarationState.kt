@@ -11,6 +11,14 @@ class MondexDeclarationState : DeclarationState() {
         declarations[worldName] = WorldDeclaration(worldName, authPurses, standalone = true)
     }
 
+    fun declarePurse(purseName: String, purse: Purse) {
+        checkExists(DEFAULT_WORLD)
+        val world = getDeclaration<WorldDeclaration>(DEFAULT_WORLD)
+        declarations[DEFAULT_WORLD] = world.copy(
+            authPurses = world.authPurses + (purseName to purse)
+        )
+    }
+
     companion object {
         const val DEFAULT_WORLD = "world"
     }
