@@ -5,26 +5,16 @@ import com.anaplan.engineering.azuki.core.dsl.When
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.mondex.adapter.api.MondexActionFactory
 import com.anaplan.engineering.azuki.mondex.adapter.api.TransferDetails
-import com.anaplan.engineering.azuki.mondex.dsl.action.PurseActions
 import com.anaplan.engineering.azuki.mondex.dsl.action.WorldActions
 
 class MondexWhen(private val actionFactory: MondexActionFactory<*>) :
     When<MondexActionFactory<*>>,
     ParallelWhen<MondexActionFactory<*>, MondexWhen>,
-    WorldActions,
-    PurseActions {
+    WorldActions {
 
     private val actionList = mutableListOf<Action>()
 
     override fun actions() = actionList
-
-//    override fun createPurse(balance: ULong, lost: ULong) {
-//        actionList.add(actionFactory.purse.create(balance, lost))
-//    }
-//
-//    override fun createWorld(authPurses: Map<String, Pair<ULong, ULong>>) {
-//        actionList.add(actionFactory.world.create(authPurses))
-//    }
 
     override fun thereIsATransfer(fromPurse: String, toPurse: String, value: Int, succeed: Boolean) {
         when (succeed) {

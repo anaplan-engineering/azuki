@@ -3,7 +3,6 @@ package com.anaplan.engineering.azuki.mondex.adapter.kazuki.action
 import com.anaplan.engineering.azuki.mondex.adapter.api.Purse
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.core.system.ParallelAction
-import com.anaplan.engineering.azuki.core.system.UnsupportedAction
 import com.anaplan.engineering.azuki.mondex.adapter.api.MondexActionFactory
 import com.anaplan.engineering.azuki.mondex.adapter.api.PurseActionFactory
 import com.anaplan.engineering.azuki.mondex.adapter.api.TransferDetails
@@ -19,7 +18,7 @@ class KazukiActionFactory : MondexActionFactory<KazukiAction> {
 }
 
 object KazukiPurseActionFactory : PurseActionFactory {
-    override fun create(balance: ULong, lost: ULong) = UnsupportedAction
+    override fun create(purseName: String, purse: Purse) = CreatePurseAction(purseName, purse)
 }
 
 object KazukiWorldActionFactory : WorldActionFactory {
