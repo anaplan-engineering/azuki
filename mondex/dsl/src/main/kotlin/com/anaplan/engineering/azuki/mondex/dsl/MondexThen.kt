@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.mondex.dsl
 import com.anaplan.engineering.azuki.core.dsl.Then
 import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.mondex.adapter.api.MondexCheckFactory
+import com.anaplan.engineering.azuki.mondex.adapter.api.WorldLevel
 import com.anaplan.engineering.azuki.mondex.dsl.check.MondexChecks
 
 class MondexThen(private val checkFactory: MondexCheckFactory) : Then<MondexCheckFactory>,
@@ -28,10 +29,11 @@ class MondexThen(private val checkFactory: MondexCheckFactory) : Then<MondexChec
             purseCheckBlock.getBalance()!!, purseCheckBlock.getLost()!!, true))
     }
 
-    override fun worldExists(init: WorldCheckBlock.() -> Unit) {
-        val worldCheckBlock = WorldCheckBlock(checkFactory)
+    override fun worldExists(level: WorldLevel, init: WorldCheckBlock.() -> Unit) {
+        val worldCheckBlock = WorldCheckBlock(checkFactory, level)
         worldCheckBlock.init()
         checkList.addAll(worldCheckBlock.checks())
+        //LF: @QST will this needs adjusting, namely different worlds will create different purse kinds
         checkList.add(checkFactory.world.worldExists(worldCheckBlock.getAuthPurses(), true))
     }
 }

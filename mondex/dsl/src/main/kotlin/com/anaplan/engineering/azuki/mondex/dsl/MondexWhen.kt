@@ -16,6 +16,10 @@ class MondexWhen(private val actionFactory: MondexActionFactory<*>) :
 
     override fun actions() = actionList
 
+    //LF: here you will need a way to separate what kind of purse is it, and that transfer is from/to same kind
+    //    i.e. you can't transfer between abstract/concrete purses.
+    //
+    //LF: @QST again, why I was thinking about the separation of the DSLs rather than having the `UnsupportedCheck` solution
     override fun thereIsATransfer(fromPurse: String, toPurse: String, value: Int, succeed: Boolean) {
         when (succeed) {
             true -> actionList.add(actionFactory.world.transferOkay(
