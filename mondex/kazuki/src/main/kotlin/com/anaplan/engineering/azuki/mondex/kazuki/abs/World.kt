@@ -109,4 +109,29 @@ class WorldFunctions(world: World) {
         }
     )
 
+    private val totalBalance = function (
+        command = { authPurses: Mapping<Name, Purse> ->
+            authPurses.rng.fold(0uL) { acc, purse -> acc + purse.balance}
+        }
+    )
+
+    private val totalLost = function (
+        command = { authPurses: Mapping<Name, Purse> ->
+            authPurses.rng.fold(0uL) { acc, purse -> acc + purse.lost}
+        }
+    )
+
+    val noValueCreation = function (
+        command = { beforeWorldAuthPurses: Mapping<Name, Purse> ->
+            totalBalance(beforeWorldAuthPurses) >= totalBalance(world.authPurses)
+        }
+    )
+
+    val allValueAccounted = function (
+        command = { beforeWorldAuthPurses: Mapping<Name, Purse> ->
+            totalBalance(beforeWorldAuthPurses) + totalLost(beforeWorldAuthPurses) ==
+                totalBalance(world.authPurses) + totalLost(world.authPurses)
+        }
+    )
+
 }

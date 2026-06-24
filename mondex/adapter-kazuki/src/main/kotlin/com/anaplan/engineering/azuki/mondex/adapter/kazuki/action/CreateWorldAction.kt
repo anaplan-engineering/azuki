@@ -8,13 +8,16 @@ import com.anaplan.engineering.azuki.mondex.adapter.kazuki.buildWorld
 class CreateWorldAction(
     authPurses: Map<String, Purse>,
     worldName: String = DEFAULT_WORLD,
+    val beforeWorldName: String = BEFORE_WORLD
 ) : CreateWorldDeclarableAction(authPurses, worldName), KazukiAction {
 
     override fun act(env: ExecutionEnvironment) {
         env.set(worldName, buildWorld(authPurses))
+        env.set(beforeWorldName, buildWorld(authPurses))
     }
 
     companion object {
         private const val DEFAULT_WORLD = com.anaplan.engineering.azuki.mondex.adapter.declaration.MondexDeclarationState.DEFAULT_WORLD
+        private const val BEFORE_WORLD = com.anaplan.engineering.azuki.mondex.adapter.declaration.MondexDeclarationState.BEFORE_DEFAULT_WORLD
     }
 }
