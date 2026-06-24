@@ -34,4 +34,12 @@ class MondexThen(private val checkFactory: MondexCheckFactory) : Then<MondexChec
         checkList.addAll(worldCheckBlock.checks())
         checkList.add(checkFactory.world.worldExists(worldCheckBlock.getAuthPurses(), true))
     }
+
+    override fun noValueCreation() {
+        checkList.add(checkFactory.world.noValueCreation(true))
+    }
+
+    override fun allValueAccounted() {
+        checkList.add(checkFactory.world.allValueAccounted(true))
+    }
 }

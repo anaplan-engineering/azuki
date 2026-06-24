@@ -17,11 +17,8 @@ object MondexFunctionalElements {
 
 object MondexFunctions {
     @IsA(WorldFunction)
-    const val AbsTransfer = 4
+    const val Transfer = 4
 
     @IsA(WorldFunction)
-    const val AbsIgnore = 5
-
-    @IsA(WorldFunction)
-    const val AddPersonWithPurse = 6
+    const val Ignore = 5
 }
