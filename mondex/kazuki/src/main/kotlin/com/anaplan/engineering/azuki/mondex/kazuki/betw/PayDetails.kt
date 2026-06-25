@@ -27,3 +27,15 @@ sealed interface Clear
 //LF: Injective projection for Clear over a non-empty set of pay details
 class image(val pd1: Set1<PayDetails>): Clear
 
+sealed class Message {
+    data class StartFrom(val cpd: CounterPartyDetails) : Message()
+    data class StartTo(val cpd: CounterPartyDetails) : Message()
+    data object ReadExceptionLog : Message()
+    data class Req(val pd: PayDetails) : Message()
+    data class Val(val pd: PayDetails) : Message()
+    data class Ack(val pd: PayDetails) : Message()
+    data class ExceptionLogResult(val name: Name, val pd: PayDetails) : Message()
+    data class ExceptionLogClear(val name: Name, val clear: Clear) : Message()
+    data object Bottom : Message()
+}
+

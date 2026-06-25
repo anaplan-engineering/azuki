@@ -1,119 +1,152 @@
 package com.anaplan.engineering.azuki.mondex.kazuki.abs
 
+import com.anaplan.engineering.azuki.mondex.kazuki.Name
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails
-import com.anaplan.engineering.azuki.mondex.kazuki.World_Module.transform
+import com.anaplan.engineering.azuki.mondex.kazuki.World
+import com.anaplan.engineering.azuki.mondex.kazuki.abs.AbPurse_Module.transform
+import com.anaplan.engineering.azuki.mondex.kazuki.abs.AbWorld_Module.transform
 import com.anaplan.engineering.kazuki.core.*
 
-//LF: where did AIn went? you will need it. Keep the Mondex types naming conventions as much as possible for clarity.
-sealed interface AIN
-object aNullIn: AIN
-class transfer(val transferDetails: TransferDetails): AIN
-
-sealed interface AOut
-object aNullOut: AOut
-
 @Module
-interface AbWorld {
-    val authPurses: Mapping<Name, Purse>
+interface AbWorld : World {
 
-    @FunctionProvider(WorldFunctions::class)
-    val functions: WorldFunctions
+    @FunctionProvider(AbWorldFunctions::class)
+    val functions: AbWorldFunctions
+
+    @FunctionProvider(AbWorldProperties::class)
+    val properties: AbWorldProperties
 }
 
-class WorldFunctions(abWorld: AbWorld) {
-    val abstractOperation = function (
-        command = { a: AbstractInput -> abWorld }
-    )
+// Z (inferred) properties of the schemas
+class AbWorldProperties(abWorld: AbWorld) {
 
-    val abstractIgnore = function (
-        command = { a: AbstractInput ->
-            abstractOperation(a)
-        },
-        pre = { a ->
-            abstractOperation.pre(a)
-        },
-        post = { _, result: AbWorld ->
-            result.authPurses == abWorld.authPurses
+    // abAuthPurses is a projection/filtering (or castin) over the underlying purses
+
+    //LF QST: for refinement, maybe allow a map here with both purses within and just filter?
+    // relates to Z's AbWorld.abAuthPurses
+    @Suppress("UNCHECKED_CAST")
+    val abAuthPurses: Mapping<Name, AbPurse> = abWorld.purses as Mapping<Name, AbPurse>
+    //LF QST: how to project this from Kazuki? If it was Map, would be as this
+    //val abAuthPurse: Mapping<Name, AbPurse> = abWorld.purses.filterValues { it is AbPurse }.mapValues { it.value as AbPurse }
+}
+
+// * Z pres are implicit. Get them from ZEVES-PRG126 Table 8.1 p.86
+// * Provider contains before state; expects opertions to return after state and AOut
+// * Keep pres/post explicit for matching with the Z
+class AbWorldFunctions(abWorld: AbWorld) {
+
+    // Signature for all operations as: AbWorld.() -> VFunction1<AIn, Tuple2<AbWorld, aNullOut>>
+    val abOp = function (
+        command = { _: AIn ->
+            mk_(abWorld, aNullOut) },
+        pre = { _ -> true },
+        post = { _, result ->
+            val (_, abang) = result
+            abang == aNullOut
         }
     )
 
-    val abstractWorldSecureOperation = function (
-        command = { a: AbstractInput, transferDetails: TransferDetails ->
-            abstractOperation(a)
+    val abIgnore = function (
+        command = { a: AIn ->
+            abOp(a)
         },
-        pre = { a, transferDetails ->
-            abstractOperation.pre(a)
-                && a is Transfer
-                && a.transferDetails == transferDetails
-        },
-        post = { _, transferDetails, result ->
-            result.authPurses.domSubtract(mk_Set(transferDetails.from, transferDetails.to)) ==
-                abWorld.authPurses.domSubtract(mk_Set(transferDetails.from, transferDetails.to))
+        // Explicitly call all related pres, given Z's implicit pres
+        // This is important to ensure the function captures the intended Z
+        pre = { a -> abOp.pre(a) },
+        post = { a, result ->
+            val (dash, abang) = result
+            abOp.post(a, result) &&
+            dash.properties.abAuthPurses == abWorld.properties.abAuthPurses
         }
     )
 
-    val abstractTransferOkayTD = function (
-        command = { a: AbstractInput, transferDetails: TransferDetails ->
-            abWorld.transform(
-                authPurses = abWorld.authPurses * mk_Mapping(
-                    mk_(transferDetails.from, abWorld.authPurses[transferDetails.from].transform(balance = abWorld.authPurses[transferDetails.from].balance - transferDetails.value)),
-                    mk_(transferDetails.to, abWorld.authPurses[transferDetails.to].transform(balance = abWorld.authPurses[transferDetails.to].balance + transferDetails.value))
-                )
-            )
+    val abWorldSecureOp = function (
+        command = { a: AIn, td: TransferDetails ->
+            abOp(a)
         },
-        pre = { a, transferDetails ->
-            abstractWorldSecureOperation.pre(a, transferDetails)
-                && purseIsAuthentic(transferDetails.from)
-                && purseIsAuthentic(transferDetails.to)
-                && sourceHasSufficientFunds(transferDetails)
-                && transferDetails.from != transferDetails.to
+        pre = { a, td ->
+            abOp.pre(a)
+                //LF QST Not sure this is right; discuss with AP
+                //&& a is Transfer
+                //&& a.td == td
+                // This is encoding the inverse of transfer
+                transfer(td) == a
         },
-        post = { a, transferDetails, result: AbWorld ->
-            abstractWorldSecureOperation.post(a, transferDetails, result)
-                && result.authPurses[transferDetails.from].balance == abWorld.authPurses[transferDetails.from].balance - transferDetails.value
-                && result.authPurses[transferDetails.from].lost == abWorld.authPurses[transferDetails.from].lost
-                && result.authPurses[transferDetails.to].balance == abWorld.authPurses[transferDetails.to].balance + transferDetails.value
-                && result.authPurses[transferDetails.to].lost == abWorld.authPurses[transferDetails.to].lost
+        post = { a, td, result ->
+            val (dash, abang) = result
+            abOp.post(a, result) &&
+            dash.properties.abAuthPurses.domSubtract(mk_Set(td.from, td.to)) ==
+                abWorld.properties.abAuthPurses.domSubtract(mk_Set(td.from, td.to))
         }
     )
 
-    val abstractTransferLostTD = function (
-        command = { a: AbstractInput, transferDetails: TransferDetails ->
-            abWorld.transform(
-                authPurses = abWorld.authPurses * mk_(
-                    transferDetails.from, abWorld.authPurses[transferDetails.from].transform(balance = abWorld.authPurses[transferDetails.from].balance - transferDetails.value, lost = abWorld.authPurses[transferDetails.from].lost + transferDetails.value)
-                )
-            )
+    val abTransferOkayTD = function (
+        command = { a: AIn, td: TransferDetails ->
+            val (dash, abang) = abWorldSecureOp(a, td)
+            mk_(dash.transform(
+                purses = abWorld.properties.abAuthPurses * mk_Mapping(
+                    mk_(td.from, abWorld.properties.abAuthPurses[td.from].transform(balance = abWorld.properties.abAuthPurses[td.from].balance - td.value)),
+                    mk_(td.to, abWorld.properties.abAuthPurses[td.to].transform(balance = abWorld.properties.abAuthPurses[td.to].balance + td.value))
+                )), abang)
         },
-        pre = { a, transferDetails ->
-            abstractWorldSecureOperation.pre(a, transferDetails)
-                && purseIsAuthentic(transferDetails.from)
-                && purseIsAuthentic(transferDetails.to)
-                && sourceHasSufficientFunds(transferDetails)
-                && transferDetails.from != transferDetails.to
+        pre = { a, td ->
+            abWorldSecureOp.pre(a, td)
+                && authentic(td.from)
+                && authentic(td.to)
+                && sourceHasSufficientFunds(td)
+                && td.from != td.to
         },
-        post = { a, transferDetails, result: AbWorld ->
-            abstractWorldSecureOperation.post(a, transferDetails, result)
-                && result.authPurses[transferDetails.from].balance == abWorld.authPurses[transferDetails.from].balance - transferDetails.value
-                && result.authPurses[transferDetails.from].lost == abWorld.authPurses[transferDetails.from].lost + transferDetails.value
-                && result.authPurses[transferDetails.to] == abWorld.authPurses[transferDetails.to]
+        post = { a, td, result ->
+            val (dash, abang) = result
+            abWorldSecureOp.post(a, td, result)
+                && dash.properties.abAuthPurses[td.from].balance == abWorld.properties.abAuthPurses[td.from].balance - td.value
+                && dash.properties.abAuthPurses[td.from].lost == abWorld.properties.abAuthPurses[td.from].lost
+                && dash.properties.abAuthPurses[td.to].balance == abWorld.properties.abAuthPurses[td.to].balance + td.value
+                && dash.properties.abAuthPurses[td.to].lost == abWorld.properties.abAuthPurses[td.to].lost
         }
     )
 
-    private val purseIsAuthentic = function (
+    val abTransferLostTD = function (
+        command = { a: AIn, td: TransferDetails ->
+            val (dash, abang) = abWorldSecureOp(a, td)
+            mk_(abWorld.transform(
+                purses = abWorld.properties.abAuthPurses * mk_(
+                    td.from, abWorld.properties.abAuthPurses[td.from].transform(
+                        balance = abWorld.properties.abAuthPurses[td.from].balance - td.value,
+                        lost = abWorld.properties.abAuthPurses[td.from].lost + td.value))),
+                    abang)
+        },
+        pre = { a, td ->
+            abWorldSecureOp.pre(a, td)
+                && authentic(td.from)
+                && authentic(td.to)
+                && sourceHasSufficientFunds(td)
+                && td.from != td.to
+        },
+        post = { a, td, result ->
+            val (dash, abang) = result
+            abWorldSecureOp.post(a, td, result)
+                && dash.properties.abAuthPurses[td.from].balance == abWorld.properties.abAuthPurses[td.from].balance - td.value
+                && dash.properties.abAuthPurses[td.from].lost == abWorld.properties.abAuthPurses[td.from].lost + td.value
+                && dash.properties.abAuthPurses[td.to] == abWorld.properties.abAuthPurses[td.to]
+        }
+    )
+
+    private val authentic = function (
         command = { name: Name ->
-            name in abWorld.authPurses.dom
+            name in abWorld.properties.abAuthPurses.dom
         }
     )
 
     private val sourceHasSufficientFunds = function (
-        command = { transferDetails: TransferDetails ->
-            transferDetails.value <= abWorld.authPurses[transferDetails.from].balance
+        command = { td: TransferDetails ->
+            td.value <= abWorld.properties.abAuthPurses[td.from].balance
         }
     )
 
+    // This will work on both AbPurse and ConPurse, given they share balance field
     private val totalBalance = function (
         command = { authPurses: Mapping<Name, Purse> ->
             authPurses.rng.fold(0uL) { acc, purse -> acc + purse.balance}
@@ -121,22 +154,47 @@ class WorldFunctions(abWorld: AbWorld) {
     )
 
     private val totalLost = function (
-        command = { authPurses: Mapping<Name, Purse> ->
+        command = { authPurses: Mapping<Name, AbPurse> ->
             authPurses.rng.fold(0uL) { acc, purse -> acc + purse.lost}
         }
     )
 
+    //LF QST: how to encode this? Expecting an input value is not quite right. And the expression is a post condition!
+    // Z return here technically is an AbWorld
+    // Here there is no "input" purse to the schema; see why needed, but would need to be dash?
+//    val noValueCreation = function (
+//        command = { dash: Mapping<Name, AbPurse> ->
+//            totalBalance(abWorld.properties.abAuthPurses) <= totalBalance(dash)
+//        }
+//    )
+//
+//    val allValueAccounted = function (
+//        command = { dash: Mapping<Name, AbPurse> ->
+//            totalBalance(dash) + totalLost(dash) ==
+//                totalBalance(abWorld.properties.abAuthPurses) + totalLost(abWorld.properties.abAuthPurses)
+//        }
+//    )
+
     val noValueCreation = function (
-        command = { beforeWorldAuthPurses: Mapping<Name, Purse> ->
-            totalBalance(beforeWorldAuthPurses) >= totalBalance(abWorld.authPurses)
+        command = { ->
+            //TODO something has to happen to the AbWorld, but shouldnt' a boolean property check, that's the post!
+            //     namely, in previous commands you "choose" an implementation, here you can't "test" for a given one?
+            abWorld
+        },
+        pre = { -> true },
+        post = { dash -> totalBalance(abWorld.properties.abAuthPurses) <= totalBalance(dash.properties.abAuthPurses)
         }
     )
 
     val allValueAccounted = function (
-        command = { beforeWorldAuthPurses: Mapping<Name, Purse> ->
-            totalBalance(beforeWorldAuthPurses) + totalLost(beforeWorldAuthPurses) ==
-                totalBalance(abWorld.authPurses) + totalLost(abWorld.authPurses)
+        command = { ->
+            abWorld
+        },
+        post = { dash ->
+            totalBalance(dash.properties.abAuthPurses) + totalLost(dash.properties.abAuthPurses) ==
+                totalBalance(abWorld.properties.abAuthPurses) + totalLost(abWorld.properties.abAuthPurses)
         }
     )
+
 
 }
