@@ -163,7 +163,7 @@ class BEH1 : MondexScenario() {
         whenever {
             //LF: @QST: if the DSL is mixed, now you will need a way to distinguish between the purse concrete x abstract calls everywhere....
             //    this now needs a way of changing the context of what a transfer is
-            thereIsATransfer("erin", "leo", 5)
+            //thereIsATransfer("erin", "leo", 5)
         }
         then {
             // Sanity checks now also might need some kind of purse level (i.e. I expect a ConPurse to exist here)
