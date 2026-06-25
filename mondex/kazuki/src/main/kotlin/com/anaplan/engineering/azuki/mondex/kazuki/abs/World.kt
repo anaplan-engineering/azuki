@@ -6,6 +6,11 @@ import com.anaplan.engineering.kazuki.core.*
 
 typealias Name = String
 
+//LF: where did AIn went? you will need it. Keep the Mondex types naming conventions as much as possible for clarity.
+sealed interface AIN
+object aNullIn: AIN
+class transfer(val transferDetails: TransferDetails): AIN
+
 sealed interface AOut
 object aNullOut: AOut
 

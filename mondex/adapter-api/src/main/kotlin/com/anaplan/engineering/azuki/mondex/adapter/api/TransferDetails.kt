@@ -1,8 +1,8 @@
 package com.anaplan.engineering.azuki.mondex.adapter.api
 
 data class TransferDetails(
-    val fromPurse: String,
-    val toPurse: String,
+    val fromPurse: Name,
+    val toPurse: Name,
     val value: ULong
 )
 

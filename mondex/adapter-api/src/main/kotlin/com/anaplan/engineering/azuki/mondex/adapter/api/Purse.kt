@@ -12,21 +12,21 @@ sealed interface Purse {
 }
 
 data class AbPurse(
-    val balance: ULong,
+    override val balance: ULong,
     val lost: ULong,
 ) : Purse
 
 data class ConPurse(
-    val balance: ULong,
+    override val balance: ULong,
     val exLog: Set<PayDetails>,
     //LF: ConWorld invariant says the name matches the mapping the purse is in
-    val name: String,
+    val name: Name,
     val nextSeqNo: ULong,
-    //LF: ConPurse invariant says the name must be in from or to! This represents the "last" payment done by this purse
-    //    to bootstrap (first purse), you might need to have here something that might be null, given you can't have a
-    //    payment to your self :-(
-    val pdAuth: PayDetails,
-    val status: Status
+    //LF: ConPurse invariant says the name must be in from or to. This represents the "last" payment done by this purse
+    //    To bootstrap (first purse), you might need to have here something that might be null, given you can't have a
+    //    payment to yourself. Or allow only when status = eaFrom?
+    val pdAuth: PayDetails?,
+    val status: Status = Status.eaFrom
 ) : Purse
 
 enum class Status { eaFrom, eaTo, epr, epv, epa }
