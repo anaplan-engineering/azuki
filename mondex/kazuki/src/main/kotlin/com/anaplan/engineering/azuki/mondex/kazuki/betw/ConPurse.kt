@@ -4,6 +4,9 @@ import com.anaplan.engineering.azuki.mondex.kazuki.Name
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.transform
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.CounterPartyDetails_Module.mk_CounterPartyDetails
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.mk_PayDetails
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.transform
 import com.anaplan.engineering.kazuki.core.FunctionProvider
 import com.anaplan.engineering.kazuki.core.Invariant
 import com.anaplan.engineering.kazuki.core.Module
@@ -15,8 +18,11 @@ import com.anaplan.engineering.kazuki.core.implies
 import com.anaplan.engineering.kazuki.core.mk_
 import com.anaplan.engineering.kazuki.core.mk_Set
 import com.anaplan.engineering.kazuki.core.nat
+import org.w3c.dom.css.Counter
 
 enum class Status { eaFrom, eaTo, epr, epv, epa }
+
+const val MAX_NAT: nat = 10000UL
 
 @Module
 interface ConPurse : Purse {
@@ -149,6 +155,95 @@ class ConPurseFunctions(old: ConPurse) {
             xiConPurseAbort(old, dash) &&
                 dash.nextSeqNo >= old.nextSeqNo &&
                 mr == Message.Bottom
+        }
+    )
+
+    val validStartFrom = function(
+        command = { m: Message, cpd: CounterPartyDetails ->
+            old
+        },
+        pre = { m, cpd ->
+            m == Message.StartFrom(cpd) &&
+                cpd.name != old.name &&
+                cpd.value <= old.balance
+        },
+    )
+
+    // Xi ConPurse \ (nextSeqNo, pdAuth, status): everywhere equal but listed items
+    private val xiConPurseStart = function(
+        command = { before: ConPurse, after: ConPurse ->
+            before.exLog == after.exLog &&
+            before.name == after.name //&&
+            //before.nextSeqNo == after.nextSeqNo &&
+            //before.pdAuth == after.pdAuth &&
+            //before.status == after.status
+        }
+    )
+
+    val startFromPurseEaFromOkay = function(
+        command = { m: Message, cpd: CounterPartyDetails ->
+            val dash = validStartFrom(m, cpd)
+            mk_(old.transform(
+                        nextSeqNo = old.nextSeqNo + 1UL,
+                        status = Status.epr,
+                        pdAuth = mk_PayDetails(
+                            from = old.name,
+                            to = cpd.name,
+                            value = cpd.value,
+                            fromSeqNo = old.nextSeqNo,
+                            toSeqNo = cpd.nextSeqNo,
+                        )
+                ),
+                Message.Bottom
+            )
+        },
+        // Z ConPurse is finite. CounterPartyDetails (and PayDetails) have `value: nat` that creates infinitely
+        // many possible payments, which would not satisfy the finiteness of ConPurse Mapping type in Z (\ffun),
+        //
+        // In the Z/Eves proof, this required a underdefined upper bound, namely some `MAX\_NAT: nat`, which is
+        // left unspecified, but exists, and sequence numbers must not go beyond it. This appears in the pre below.
+        // This is one of the errors in the mondex proof discovered during the Z/Eves proof. We need a similar concept
+        pre = { m, cpd ->
+            old.pdAuth != null &&
+                validStartFrom.pre(m, cpd) &&
+                old.status == Status.eaFrom &&
+                old.nextSeqNo < MAX_NAT
+        },
+        post = { m, cpd, result ->
+            val (dash, mr) = result
+            xiConPurseStart(old, dash) &&
+            dash.nextSeqNo > old.nextSeqNo &&
+            dash.status == Status.epr &&
+            dash.pdAuth!!.from == old.name &&
+            dash.pdAuth!!.to == cpd.name &&
+            dash.pdAuth!!.value == cpd.value &&
+            dash.pdAuth!!.fromSeqNo == old.nextSeqNo &&
+            dash.pdAuth!!.toSeqNo == cpd.nextSeqNo &&
+            mr == Message.Bottom
+        }
+    )
+
+    // In Z, startFromPurseOkay \defs abortPurseOkay \semi (startFromPurseEaFromOkay \hide (cpd))
+    //    * Hiding has higher precedence than composition, so the precondition here establishes the existence of a cpd
+    //    * The way "aborting" works is that aborts run, but if nothing is to be logged, then aborting failed (i.e. no abort)
+    //    * abort them must establish the pre of startFromPurseEaFromOkay, which can then execute; further pres are needed
+    //      for hiding of cpd
+    val startFromPurseOkay = function(
+        command = { m: Message ->
+            // Abort's message result is ignored
+            val (dash, _) = abortPurseOkay(m)
+            // startFromPurseEaFromOkay works on the resulting state of abort with cpd hidden
+            mk_(dash.functions.startFromPurseEaFromOkay(m, cpd), Message.Bottom)
+        },
+        pre = { m ->
+            abortPurseOkay.pre(m)
+        },
+        post = { m, result ->
+            val middle = abortPurseOkay(m) //            abortPurseOkay.post(m, abortResult) &&
+            val (dash, mr) = result
+            // exists result_0 & abortPurseOkay.post(m, result_0) && startFromPurseEaFromOkay.post(m, cpd, result)
+            // exists cpd & startFromPurseEaFromOkay(m, cpd) ! How to create one?
+            startFromPurseEaFromOkay.post(m, cpd, middle)
         }
     )
 
