@@ -1,10 +1,10 @@
-package com.anaplan.engineering.azuki.mondex.kazuki
+package com.anaplan.engineering.azuki.mondex.kazuki.abs
 
+import com.anaplan.engineering.azuki.mondex.kazuki.Purse
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.transform
+import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails
 import com.anaplan.engineering.azuki.mondex.kazuki.World_Module.transform
 import com.anaplan.engineering.kazuki.core.*
-
-typealias Name = String
 
 //LF: where did AIn went? you will need it. Keep the Mondex types naming conventions as much as possible for clarity.
 sealed interface AIN
@@ -15,16 +15,16 @@ sealed interface AOut
 object aNullOut: AOut
 
 @Module
-interface World {
+interface AbWorld {
     val authPurses: Mapping<Name, Purse>
 
     @FunctionProvider(WorldFunctions::class)
     val functions: WorldFunctions
 }
 
-class WorldFunctions(world: World) {
+class WorldFunctions(abWorld: AbWorld) {
     val abstractOperation = function (
-        command = { a: AbstractInput -> world }
+        command = { a: AbstractInput -> abWorld }
     )
 
     val abstractIgnore = function (
@@ -34,8 +34,8 @@ class WorldFunctions(world: World) {
         pre = { a ->
             abstractOperation.pre(a)
         },
-        post = { _, result: World ->
-            result.authPurses == world.authPurses
+        post = { _, result: AbWorld ->
+            result.authPurses == abWorld.authPurses
         }
     )
 
@@ -50,16 +50,16 @@ class WorldFunctions(world: World) {
         },
         post = { _, transferDetails, result ->
             result.authPurses.domSubtract(mk_Set(transferDetails.from, transferDetails.to)) ==
-                world.authPurses.domSubtract(mk_Set(transferDetails.from, transferDetails.to))
+                abWorld.authPurses.domSubtract(mk_Set(transferDetails.from, transferDetails.to))
         }
     )
 
     val abstractTransferOkayTD = function (
         command = { a: AbstractInput, transferDetails: TransferDetails ->
-            world.transform(
-                authPurses = world.authPurses * mk_Mapping(
-                    mk_(transferDetails.from, world.authPurses[transferDetails.from].transform(balance = world.authPurses[transferDetails.from].balance - transferDetails.value)),
-                    mk_(transferDetails.to, world.authPurses[transferDetails.to].transform(balance = world.authPurses[transferDetails.to].balance + transferDetails.value))
+            abWorld.transform(
+                authPurses = abWorld.authPurses * mk_Mapping(
+                    mk_(transferDetails.from, abWorld.authPurses[transferDetails.from].transform(balance = abWorld.authPurses[transferDetails.from].balance - transferDetails.value)),
+                    mk_(transferDetails.to, abWorld.authPurses[transferDetails.to].transform(balance = abWorld.authPurses[transferDetails.to].balance + transferDetails.value))
                 )
             )
         },
@@ -70,20 +70,20 @@ class WorldFunctions(world: World) {
                 && sourceHasSufficientFunds(transferDetails)
                 && transferDetails.from != transferDetails.to
         },
-        post = { a, transferDetails, result: World ->
+        post = { a, transferDetails, result: AbWorld ->
             abstractWorldSecureOperation.post(a, transferDetails, result)
-                && result.authPurses[transferDetails.from].balance == world.authPurses[transferDetails.from].balance - transferDetails.value
-                && result.authPurses[transferDetails.from].lost == world.authPurses[transferDetails.from].lost
-                && result.authPurses[transferDetails.to].balance == world.authPurses[transferDetails.to].balance + transferDetails.value
-                && result.authPurses[transferDetails.to].lost == world.authPurses[transferDetails.to].lost
+                && result.authPurses[transferDetails.from].balance == abWorld.authPurses[transferDetails.from].balance - transferDetails.value
+                && result.authPurses[transferDetails.from].lost == abWorld.authPurses[transferDetails.from].lost
+                && result.authPurses[transferDetails.to].balance == abWorld.authPurses[transferDetails.to].balance + transferDetails.value
+                && result.authPurses[transferDetails.to].lost == abWorld.authPurses[transferDetails.to].lost
         }
     )
 
     val abstractTransferLostTD = function (
         command = { a: AbstractInput, transferDetails: TransferDetails ->
-            world.transform(
-                authPurses = world.authPurses * mk_(
-                    transferDetails.from, world.authPurses[transferDetails.from].transform(balance = world.authPurses[transferDetails.from].balance - transferDetails.value, lost = world.authPurses[transferDetails.from].lost + transferDetails.value)
+            abWorld.transform(
+                authPurses = abWorld.authPurses * mk_(
+                    transferDetails.from, abWorld.authPurses[transferDetails.from].transform(balance = abWorld.authPurses[transferDetails.from].balance - transferDetails.value, lost = abWorld.authPurses[transferDetails.from].lost + transferDetails.value)
                 )
             )
         },
@@ -94,23 +94,23 @@ class WorldFunctions(world: World) {
                 && sourceHasSufficientFunds(transferDetails)
                 && transferDetails.from != transferDetails.to
         },
-        post = { a, transferDetails, result: World ->
+        post = { a, transferDetails, result: AbWorld ->
             abstractWorldSecureOperation.post(a, transferDetails, result)
-                && result.authPurses[transferDetails.from].balance == world.authPurses[transferDetails.from].balance - transferDetails.value
-                && result.authPurses[transferDetails.from].lost == world.authPurses[transferDetails.from].lost + transferDetails.value
-                && result.authPurses[transferDetails.to] == world.authPurses[transferDetails.to]
+                && result.authPurses[transferDetails.from].balance == abWorld.authPurses[transferDetails.from].balance - transferDetails.value
+                && result.authPurses[transferDetails.from].lost == abWorld.authPurses[transferDetails.from].lost + transferDetails.value
+                && result.authPurses[transferDetails.to] == abWorld.authPurses[transferDetails.to]
         }
     )
 
     private val purseIsAuthentic = function (
         command = { name: Name ->
-            name in world.authPurses.dom
+            name in abWorld.authPurses.dom
         }
     )
 
     private val sourceHasSufficientFunds = function (
         command = { transferDetails: TransferDetails ->
-            transferDetails.value <= world.authPurses[transferDetails.from].balance
+            transferDetails.value <= abWorld.authPurses[transferDetails.from].balance
         }
     )
 
@@ -128,14 +128,14 @@ class WorldFunctions(world: World) {
 
     val noValueCreation = function (
         command = { beforeWorldAuthPurses: Mapping<Name, Purse> ->
-            totalBalance(beforeWorldAuthPurses) >= totalBalance(world.authPurses)
+            totalBalance(beforeWorldAuthPurses) >= totalBalance(abWorld.authPurses)
         }
     )
 
     val allValueAccounted = function (
         command = { beforeWorldAuthPurses: Mapping<Name, Purse> ->
             totalBalance(beforeWorldAuthPurses) + totalLost(beforeWorldAuthPurses) ==
-                totalBalance(world.authPurses) + totalLost(world.authPurses)
+                totalBalance(abWorld.authPurses) + totalLost(abWorld.authPurses)
         }
     )
 

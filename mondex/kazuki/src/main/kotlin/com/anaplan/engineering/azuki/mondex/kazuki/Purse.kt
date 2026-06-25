@@ -5,5 +5,4 @@ import com.anaplan.engineering.kazuki.core.*
 @Module
 interface Purse {
     val balance: nat
-    val lost: nat
 }

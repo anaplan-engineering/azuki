@@ -175,6 +175,7 @@ fun tuplesWithSum(dims: Int, sum: Int): Sequence<List<Int>> = sequence {
         }
     }
 }
+
 fun allPayDetailsFair(
     fromNames: Sequence<Name> = allSimpleNames(),
     toNames: Sequence<Name> = allSimpleNames(),

@@ -1,5 +1,6 @@
-package com.anaplan.engineering.azuki.mondex.kazuki
+package com.anaplan.engineering.azuki.mondex.kazuki.abs
 
+import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails
 import com.anaplan.engineering.kazuki.core.*
 
 sealed interface AbstractInput
