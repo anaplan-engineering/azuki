@@ -2,7 +2,6 @@ package com.anaplan.engineering.azuki.mondex.kazuki.abs
 
 import com.anaplan.engineering.azuki.mondex.kazuki.Name
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse
-import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails
 import com.anaplan.engineering.azuki.mondex.kazuki.World
 import com.anaplan.engineering.azuki.mondex.kazuki.abs.AbPurse_Module.transform
@@ -27,7 +26,7 @@ class AbWorldProperties(abWorld: AbWorld) {
     //LF QST: for refinement, maybe allow a map here with both purses within and just filter?
     // relates to Z's AbWorld.abAuthPurses
     @Suppress("UNCHECKED_CAST")
-    val abAuthPurses: Mapping<Name, AbPurse> = abWorld.purses as Mapping<Name, AbPurse>
+    val abAuthPurse: Mapping<Name, AbPurse> = abWorld.purses as Mapping<Name, AbPurse>
     //LF QST: how to project this from Kazuki? If it was Map, would be as this
     //val abAuthPurse: Mapping<Name, AbPurse> = abWorld.purses.filterValues { it is AbPurse }.mapValues { it.value as AbPurse }
 }
@@ -58,7 +57,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
         post = { a, result ->
             val (dash, abang) = result
             abOp.post(a, result) &&
-            dash.properties.abAuthPurses == abWorld.properties.abAuthPurses
+            dash.properties.abAuthPurse == abWorld.properties.abAuthPurse
         }
     )
 
@@ -77,8 +76,8 @@ class AbWorldFunctions(abWorld: AbWorld) {
         post = { a, td, result ->
             val (dash, abang) = result
             abOp.post(a, result) &&
-            dash.properties.abAuthPurses.domSubtract(mk_Set(td.from, td.to)) ==
-                abWorld.properties.abAuthPurses.domSubtract(mk_Set(td.from, td.to))
+            dash.properties.abAuthPurse.domSubtract(mk_Set(td.from, td.to)) ==
+                abWorld.properties.abAuthPurse.domSubtract(mk_Set(td.from, td.to))
         }
     )
 
@@ -86,9 +85,9 @@ class AbWorldFunctions(abWorld: AbWorld) {
         command = { a: AIn, td: TransferDetails ->
             val (dash, abang) = abWorldSecureOp(a, td)
             mk_(dash.transform(
-                purses = abWorld.properties.abAuthPurses * mk_Mapping(
-                    mk_(td.from, abWorld.properties.abAuthPurses[td.from].transform(balance = abWorld.properties.abAuthPurses[td.from].balance - td.value)),
-                    mk_(td.to, abWorld.properties.abAuthPurses[td.to].transform(balance = abWorld.properties.abAuthPurses[td.to].balance + td.value))
+                purses = abWorld.properties.abAuthPurse * mk_Mapping(
+                    mk_(td.from, abWorld.properties.abAuthPurse[td.from].transform(balance = abWorld.properties.abAuthPurse[td.from].balance - td.value)),
+                    mk_(td.to, abWorld.properties.abAuthPurse[td.to].transform(balance = abWorld.properties.abAuthPurse[td.to].balance + td.value))
                 )), abang)
         },
         pre = { a, td ->
@@ -101,10 +100,10 @@ class AbWorldFunctions(abWorld: AbWorld) {
         post = { a, td, result ->
             val (dash, abang) = result
             abWorldSecureOp.post(a, td, result)
-                && dash.properties.abAuthPurses[td.from].balance == abWorld.properties.abAuthPurses[td.from].balance - td.value
-                && dash.properties.abAuthPurses[td.from].lost == abWorld.properties.abAuthPurses[td.from].lost
-                && dash.properties.abAuthPurses[td.to].balance == abWorld.properties.abAuthPurses[td.to].balance + td.value
-                && dash.properties.abAuthPurses[td.to].lost == abWorld.properties.abAuthPurses[td.to].lost
+                && dash.properties.abAuthPurse[td.from].balance == abWorld.properties.abAuthPurse[td.from].balance - td.value
+                && dash.properties.abAuthPurse[td.from].lost == abWorld.properties.abAuthPurse[td.from].lost
+                && dash.properties.abAuthPurse[td.to].balance == abWorld.properties.abAuthPurse[td.to].balance + td.value
+                && dash.properties.abAuthPurse[td.to].lost == abWorld.properties.abAuthPurse[td.to].lost
         }
     )
 
@@ -112,10 +111,10 @@ class AbWorldFunctions(abWorld: AbWorld) {
         command = { a: AIn, td: TransferDetails ->
             val (dash, abang) = abWorldSecureOp(a, td)
             mk_(abWorld.transform(
-                purses = abWorld.properties.abAuthPurses * mk_(
-                    td.from, abWorld.properties.abAuthPurses[td.from].transform(
-                        balance = abWorld.properties.abAuthPurses[td.from].balance - td.value,
-                        lost = abWorld.properties.abAuthPurses[td.from].lost + td.value))),
+                purses = abWorld.properties.abAuthPurse * mk_(
+                    td.from, abWorld.properties.abAuthPurse[td.from].transform(
+                        balance = abWorld.properties.abAuthPurse[td.from].balance - td.value,
+                        lost = abWorld.properties.abAuthPurse[td.from].lost + td.value))),
                     abang)
         },
         pre = { a, td ->
@@ -128,21 +127,21 @@ class AbWorldFunctions(abWorld: AbWorld) {
         post = { a, td, result ->
             val (dash, abang) = result
             abWorldSecureOp.post(a, td, result)
-                && dash.properties.abAuthPurses[td.from].balance == abWorld.properties.abAuthPurses[td.from].balance - td.value
-                && dash.properties.abAuthPurses[td.from].lost == abWorld.properties.abAuthPurses[td.from].lost + td.value
-                && dash.properties.abAuthPurses[td.to] == abWorld.properties.abAuthPurses[td.to]
+                && dash.properties.abAuthPurse[td.from].balance == abWorld.properties.abAuthPurse[td.from].balance - td.value
+                && dash.properties.abAuthPurse[td.from].lost == abWorld.properties.abAuthPurse[td.from].lost + td.value
+                && dash.properties.abAuthPurse[td.to] == abWorld.properties.abAuthPurse[td.to]
         }
     )
 
     private val authentic = function (
         command = { name: Name ->
-            name in abWorld.properties.abAuthPurses.dom
+            name in abWorld.properties.abAuthPurse.dom
         }
     )
 
     private val sourceHasSufficientFunds = function (
         command = { td: TransferDetails ->
-            td.value <= abWorld.properties.abAuthPurses[td.from].balance
+            td.value <= abWorld.properties.abAuthPurse[td.from].balance
         }
     )
 
@@ -182,7 +181,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
             abWorld
         },
         pre = { -> true },
-        post = { dash -> totalBalance(abWorld.properties.abAuthPurses) <= totalBalance(dash.properties.abAuthPurses)
+        post = { dash -> totalBalance(abWorld.properties.abAuthPurse) <= totalBalance(dash.properties.abAuthPurse)
         }
     )
 
@@ -191,8 +190,8 @@ class AbWorldFunctions(abWorld: AbWorld) {
             abWorld
         },
         post = { dash ->
-            totalBalance(dash.properties.abAuthPurses) + totalLost(dash.properties.abAuthPurses) ==
-                totalBalance(abWorld.properties.abAuthPurses) + totalLost(abWorld.properties.abAuthPurses)
+            totalBalance(dash.properties.abAuthPurse) + totalLost(dash.properties.abAuthPurse) ==
+                totalBalance(abWorld.properties.abAuthPurse) + totalLost(abWorld.properties.abAuthPurse)
         }
     )
 

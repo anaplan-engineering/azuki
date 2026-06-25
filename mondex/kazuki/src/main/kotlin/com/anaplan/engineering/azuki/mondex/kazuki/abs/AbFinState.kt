@@ -13,7 +13,7 @@ interface AbstractFinState {
     val globalWorld: GlobalWorld
 
     @Invariant
-    fun worldsMatch() = abWorld.properties.abAuthPurses == globalWorld.properties.gAuthPurses
+    fun worldsMatch() = abWorld.properties.abAuthPurse == globalWorld.properties.gAuthPurses
 }
 
 @Module

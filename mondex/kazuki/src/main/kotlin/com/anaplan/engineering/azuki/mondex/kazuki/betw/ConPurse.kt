@@ -232,6 +232,10 @@ class ConPurseFunctions(old: ConPurse) {
         command = { m: Message ->
             // Abort's message result is ignored
             val (dash, _) = abortPurseOkay(m)
+            val cpd = mk_CounterPartyDetails(
+                name = TODO(),
+                value = TODO(),
+                nextSeqNo = TODO())
             // startFromPurseEaFromOkay works on the resulting state of abort with cpd hidden
             mk_(dash.functions.startFromPurseEaFromOkay(m, cpd), Message.Bottom)
         },
@@ -243,9 +247,12 @@ class ConPurseFunctions(old: ConPurse) {
             val (dash, mr) = result
             // exists result_0 & abortPurseOkay.post(m, result_0) && startFromPurseEaFromOkay.post(m, cpd, result)
             // exists cpd & startFromPurseEaFromOkay(m, cpd) ! How to create one?
+            val cpd = mk_CounterPartyDetails(
+                name = TODO(),
+                value = TODO(),
+                nextSeqNo = TODO())
             startFromPurseEaFromOkay.post(m, cpd, middle)
         }
     )
-
 }
 
