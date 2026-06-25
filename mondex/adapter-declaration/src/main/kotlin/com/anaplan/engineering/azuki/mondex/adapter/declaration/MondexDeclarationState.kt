@@ -21,5 +21,6 @@ class MondexDeclarationState : DeclarationState() {
 
     companion object {
         const val DEFAULT_WORLD = "world"
+        const val BEFORE_DEFAULT_WORLD = "beforeWorld"
     }
 }
