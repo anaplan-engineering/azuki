@@ -71,19 +71,6 @@ interface ConPurse : Purse {
 // * This provider contains the before state, and would expect the
 class ConPurseFunctions(old: ConPurse) {
 
-//    val increasePurseOkayAsZ = function(
-//        command = { dash: ConPurse, _: Message ->
-//            //dash.nextSeqNo = old.nextSeqNo + 1U
-//            Message.Bottom
-//        },
-//        // Keep the explicit `true` to document none is needed, explicitly
-//        pre = { _, _ -> true },
-//        // This would entail providing an after state for checking
-//        post = { dash, _, mr: Message ->
-//            dash.nextSeqNo >= old.nextSeqNo &&
-//            mr == Message.Bottom }
-//    )
-
     // Xi schemas with hidding need to be implemented either like an extra post check
     // or with some more sophisticated notion of alphabet via reflection to know what's hideen / can change.
     // Keeping it simple
@@ -180,6 +167,7 @@ class ConPurseFunctions(old: ConPurse) {
         }
     )
 
+    //LF @QST should this be a @Module (given the cpd), or just have it with input?
     val startFromPurseEaFromOkay = function(
         command = { m: Message, cpd: CounterPartyDetails ->
             val dash = validStartFrom(m, cpd)

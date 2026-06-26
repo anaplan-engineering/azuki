@@ -6,6 +6,7 @@ import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails
 import com.anaplan.engineering.azuki.mondex.kazuki.World
 import com.anaplan.engineering.azuki.mondex.kazuki.abs.AbPurse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.abs.AbWorld_Module.transform
+import com.anaplan.engineering.azuki.mondex.kazuki.property
 import com.anaplan.engineering.kazuki.core.*
 
 @Module
@@ -21,15 +22,9 @@ interface AbWorld : World {
 // Z (inferred) properties of the schemas
 class AbWorldProperties(abWorld: AbWorld) {
 
-    // abAuthPurses is a projection/filtering (or castin) over the underlying purses
-
     //LF @QST for refinement, maybe allow a map here with both purses within and just filter?
-    // relates to Z's AbWorld.abAuthPurses
     @Suppress("UNCHECKED_CAST")
-    //TODO by property { ... }
-    val abAuthPurse: Mapping<Name, AbPurse> = abWorld.purses as Mapping<Name, AbPurse>
-    //LF @QST how to project this from Kazuki? If it was Map, would be as this
-//    val abAuthPurse: Mapping<Name, AbPurse> = abWorld.purses.filterValues { it is AbPurse }.mapValues { it.value as AbPurse }
+    val abAuthPurse by property(pre = { -> forall(abWorld.purses.rng) { it -> it is AbPurse } }) { abWorld.purses as Mapping<Name, AbPurse> }
 }
 
 // * Z pres are implicit. Get them from ZEVES-PRG126 Table 8.1 p.86
@@ -41,6 +36,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
     val abOp = function (
         command = { _: AIn ->
             mk_(abWorld, aNullOut) },
+        // Keep explicit here as in ZEVES-PRG126 Table 8.1 p.86
         pre = { _ -> true },
         post = { _, result ->
             val (_, abang) = result
@@ -68,11 +64,11 @@ class AbWorldFunctions(abWorld: AbWorld) {
         },
         pre = { a, td ->
             abOp.pre(a)
-                //LF @QST Not sure this is right; discuss with AP
-                //&& a is Transfer
+                //LF @QST Not sure this is right; discuss with AP; we want the encoding of the inverse of transfer
+                //&&a is Transfer
                 //&& a.td == td
-                // This is encoding the inverse of transfer
-                transfer(td) == a
+                && a is transfer
+                && transfer(td) == a
         },
         post = { a, td, result ->
             val (dash, abang) = result
@@ -159,26 +155,10 @@ class AbWorldFunctions(abWorld: AbWorld) {
         }
     )
 
-    //LF @QST how to encode this? Expecting an input value is not quite right. And the expression is a post condition!
-    // Z return here technically is an AbWorld
-    // Here there is no "input" purse to the schema; see why needed, but would need to be dash?
-//    val noValueCreation = function (
-//        command = { dash: Mapping<Name, AbPurse> ->
-//            totalBalance(abWorld.properties.abAuthPurses) <= totalBalance(dash)
-//        }
-//    )
-//
-//    val allValueAccounted = function (
-//        command = { dash: Mapping<Name, AbPurse> ->
-//            totalBalance(dash) + totalLost(dash) ==
-//                totalBalance(abWorld.properties.abAuthPurses) + totalLost(abWorld.properties.abAuthPurses)
-//        }
-//    )
-
     val noValueCreation = function (
         command = { ->
-            //TODO something has to happen to the AbWorld, but shouldnt' a boolean property check, that's the post!
-            //     namely, in previous commands you "choose" an implementation, here you can't "test" for a given one?
+            //LF @QST something has to happen to the AbWorld, but shouldnt' a boolean property check, that's the post!
+            //        namely, in previous commands you "choose" an implementation, here you can't "test" for a given one?
             abWorld
         },
         pre = { -> true },
@@ -195,6 +175,4 @@ class AbWorldFunctions(abWorld: AbWorld) {
                 totalBalance(abWorld.properties.abAuthPurse) + totalLost(abWorld.properties.abAuthPurse)
         }
     )
-
-
 }
