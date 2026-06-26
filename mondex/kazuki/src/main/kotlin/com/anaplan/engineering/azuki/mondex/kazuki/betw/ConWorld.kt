@@ -141,6 +141,7 @@ class BetweenWorldFunctions(old: BetweenWorld) {
 
     val abort = function(
         command = { name: Name ->
+            TODO("Choose which path to take: ignore or abort")
             mk_(old, Message.Bottom)
         },
         pre = { name ->
@@ -169,6 +170,15 @@ class BetweenWorldFunctions(old: BetweenWorld) {
                 Message.Bottom, mk_(dash.properties.conAuthPurse[name], mbang))
             setOf(ignoreOkay, abortOkay).any { it } &&
             mbang == Message.Bottom
+        }
+    )
+
+    val startFrom = function(
+        command = { name: Name ->
+            mk_(old, Message.Bottom)
+        },
+        pre = { name ->
+            true
         }
     )
 }

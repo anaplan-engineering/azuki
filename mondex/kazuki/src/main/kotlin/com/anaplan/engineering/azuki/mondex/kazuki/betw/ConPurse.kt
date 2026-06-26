@@ -79,7 +79,8 @@ class ConPurseFunctions(old: ConPurse) {
     private val xiConPurseIncrease = function(
         command = { before: ConPurse, after: ConPurse ->
             //TODO go with reflection over all declared fields of ConPurse but nextSeqNo and state equality; doing manually
-            before.exLog == after.exLog &&
+            before.balance == after.balance &&
+                before.exLog == after.exLog &&
                 before.name == after.name &&
                 //before.nextSeqNo == after.nextSeqNo &&
                 before.pdAuth == after.pdAuth &&
@@ -104,7 +105,8 @@ class ConPurseFunctions(old: ConPurse) {
     // Xi ConPurse \ (nextSeqNo, exLog, pdAuth, status): everywhere equal but listed items; AKA only name equal
     private val xiConPurseAbort = function(
         command = { before: ConPurse, after: ConPurse ->
-            //before.exLog == after.exLog &&
+            before.balance == after.balance &&
+                //before.exLog == after.exLog &&
                 before.name == after.name //&&
                 //before.nextSeqNo == after.nextSeqNo &&
                 //before.pdAuth == after.pdAuth &&
@@ -128,6 +130,7 @@ class ConPurseFunctions(old: ConPurse) {
         command = { mquery: Message ->
             val dash = logIfNecessary()
             mk_(dash.transform(
+                // The Z allows for no update at all as well; choosing to update
                     nextSeqNo = old.nextSeqNo + 1U,
                     status = Status.eaFrom,
                 // Notice the Z doesn't say anything about what the result m! should be! Simply choosing one
@@ -136,12 +139,16 @@ class ConPurseFunctions(old: ConPurse) {
         // Z implicit pre! See ZEVES-PRG126 Table 8.2 p.86
         // Technically speaking for this operation in isolation, this is not needed
         // But for how it is used, in sequential composition with others, then it is!
-        pre = { _ -> old.name in setOf(old.pdAuth!!.from, old.pdAuth!!.to) },
+        pre = { _ ->
+            logIfNecessary.pre() &&
+            old.name in setOf(old.pdAuth!!.from, old.pdAuth!!.to)
+        },
         post = { mquery: Message, result ->
             val (dash, mr) = result
             xiConPurseAbort(old, dash) &&
                 dash.nextSeqNo >= old.nextSeqNo &&
-                mr == Message.Bottom
+                mr == Message.Bottom &&
+                logIfNecessary.post(dash)
         }
     )
 
@@ -159,11 +166,12 @@ class ConPurseFunctions(old: ConPurse) {
     // Xi ConPurse \ (nextSeqNo, pdAuth, status): everywhere equal but listed items
     private val xiConPurseStart = function(
         command = { before: ConPurse, after: ConPurse ->
-            before.exLog == after.exLog &&
-            before.name == after.name //&&
-            //before.nextSeqNo == after.nextSeqNo &&
-            //before.pdAuth == after.pdAuth &&
-            //before.status == after.status
+            before.balance == after.balance &&
+                before.exLog == after.exLog &&
+                before.name == after.name //&&
+                //before.nextSeqNo == after.nextSeqNo &&
+                //before.pdAuth == after.pdAuth &&
+                //before.status == after.status
         }
     )
 
@@ -231,16 +239,21 @@ class ConPurseFunctions(old: ConPurse) {
             abortPurseOkay.pre(m)
         },
         post = { m, result ->
-            val middle = abortPurseOkay(m) //            abortPurseOkay.post(m, abortResult) &&
+            // abortPurseOkay \semi (startFromPurseEaFromOkay \hide (cpd))
+            // = [Z]
+            // exists ConPurse_0 & abortPurseOkay[ConPurse_0/ConPurse'] and
+            //   (exists cpd: CounterPartyDetails & startFromPurseEaFromOkay[ConPurse_0/ConPurse])
+            // = [in KSpec]
+            // middle = old.abordPurseOkay(m) and (exists cpd & middle.startFromPurseEaFromOkay(m, cpd, dash)
+            val (middle, mm) = abortPurseOkay(m)
             val (dash, mr) = result
-            // exists result_0 & abortPurseOkay.post(m, result_0) && startFromPurseEaFromOkay.post(m, cpd, result)
-            // exists cpd & startFromPurseEaFromOkay(m, cpd) ! How to create one?
             val cpd = mk_CounterPartyDetails(
                 name = TODO(),
                 value = TODO(),
                 nextSeqNo = TODO())
-            startFromPurseEaFromOkay.post(m, cpd, middle)
+            // check abort post from start to middle; check startFrom post from middle to dash
+            abortPurseOkay.post(m, mk_(middle, mm)) &&
+                middle.functions.startFromPurseEaFromOkay.post(m, cpd, dash)
         }
     )
 }
-
