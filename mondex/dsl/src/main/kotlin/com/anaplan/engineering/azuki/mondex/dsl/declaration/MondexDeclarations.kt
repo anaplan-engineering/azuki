@@ -4,9 +4,9 @@ import com.anaplan.engineering.azuki.mondex.adapter.api.PayDetails
 import com.anaplan.engineering.azuki.mondex.adapter.api.Status
 
 interface PurseDeclarations {
-    //LF: if AbPurse has ULong, why Int here?
+    //LF @EK if AbPurse has ULong, why Int here?
     fun thereIsAPurse(purseName: String, balance: Int, lost: Int)
-    //LF: concrete purses need a way of creating them. Could have `thereIsAnAbstractPurse` / `thereIsAConcretePurse` if clearerer
+    //LF @EK concrete purses need a way of creating them. Could have `thereIsAnAbstractPurse` / `thereIsAConcretePurse` if clearerer
     fun thereIsAPurse(purseName: String, balance: ULong, exLog: Set<PayDetails>, //name: String,
                       nextSeqNo: ULong,
                       pdAuth: PayDetails,

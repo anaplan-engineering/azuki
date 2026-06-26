@@ -27,7 +27,7 @@ class WorldCheckBlock(
             }
         }
 
-    //LF: same problem here. Might call it person with purse, but needs different 'world views'
+    //LF @EK same problem here. Might call it person with purse, but needs different 'world views'
     //    will need a ConPurse version
     fun personWithPurse(personName: String, balance: Int, lost: Int) {
         require(balance >= 0 && lost >= 0) { "Balance and lost must be greater than or equal to 0" }

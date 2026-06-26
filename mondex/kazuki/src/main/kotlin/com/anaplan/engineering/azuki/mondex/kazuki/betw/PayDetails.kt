@@ -24,7 +24,7 @@ interface CounterPartyDetails {
 }
 
 sealed interface Clear
-//LF: Injective projection for Clear over a non-empty set of pay details
+//LF @QST Injective projection for Clear over a non-empty set of pay details
 class image(val pd1: Set1<PayDetails>): Clear
 
 sealed class Message {

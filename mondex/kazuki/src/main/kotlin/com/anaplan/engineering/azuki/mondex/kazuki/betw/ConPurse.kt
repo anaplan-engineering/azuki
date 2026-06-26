@@ -30,7 +30,7 @@ interface ConPurse : Purse {
     val name: Name
     val nextSeqNo: nat
 
-    //LF: ConPurse invariant says the name must be in from or to. This represents the "last" payment done by this purse
+    //LF @QST ConPurse invariant says the name must be in from or to. This represents the "last" payment done by this purse
     //    To bootstrap (first purse), you might need to have here something that might be null, given you can't have a
     //    payment to yourself. Or allow only when status = eaFrom?
     val pdAuth: PayDetails?

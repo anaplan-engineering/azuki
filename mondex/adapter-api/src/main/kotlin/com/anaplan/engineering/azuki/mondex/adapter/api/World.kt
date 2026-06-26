@@ -5,7 +5,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 
 sealed class World (
-    //LF QST: maybe have this here?
+    //LF @EK maybe have this here?
     // protected val name: Name,
     protected val purses: Map<String, Purse>
 )
@@ -14,7 +14,7 @@ class AbWorld(
     // narrow the type
     purses: Map<Name, AbPurse> = HashMap<Name, AbPurse>()
 ) : World(purses) {
-    //LF QST: for refinement, maybe allow a map here with both purses within and just filter?
+    //LF @QST for refinement, maybe allow a map here with both purses within and just filter?
     // relates to Z's AbWorld.abAuthPurses
     @Suppress("UNCHECKED_CAST")
     val abAuthPurses: Map<Name, AbPurse> = purses as Map<Name, AbPurse>
@@ -23,7 +23,7 @@ class AbWorld(
 
 interface CounterPartyDetails
 sealed interface Clear
-//LF: Injective projection for Clear over a non-empty set of pay details
+//LF @QST Injective projection for Clear over a non-empty set of pay details
 class image(val pd1: Set/*Set1*/<PayDetails>): Clear
 
 sealed class Message {
@@ -38,7 +38,7 @@ sealed class Message {
     data object Bottom : Message()
 }
 
-//LF QST: which one of these two are better? Got second version and found the first on
+//LF @QST which one of these two are better? Got second version and found the first on
 //    https://github.com/MarcinMoskala/KotlinDiscreteMathToolkit/blob/master/src/main/java/com/marcinmoskala/math/PowersetExt.kt
 fun <T> Collection<T>.powerset(): Set<Set<T>> = powerset(this, setOf(setOf()))
 
@@ -47,7 +47,7 @@ private tailrec fun <T> powerset(left: Collection<T>, acc: Set<Set<T>>): Set<Set
     else ->powerset(left.drop(1), acc + acc.map { it + left.first() })
 }
 
-//LF QST: faster because of no drop(1) + and working with lists is faster than sets?
+//LF @QST faster because of no drop(1) + and working with lists is faster than sets?
 fun <T> Collection<T>.powerset2(): Set<Set<T>> =
     (this as? List<T> ?: toList()).fold(listOf(emptyList<T>())) { acc, e ->
         acc.flatMap { subset -> listOf(subset, subset + e) }
@@ -100,7 +100,7 @@ class BetweenWorld(
     archive: LogBook
 ) : AuxWorld(purses, ether, archive)
 
-//LF QST Type-bound comprehension is not executable in VDM; needs sequence?
+//LF @QST Type-bound comprehension is not executable in VDM; needs sequence?
 //   Z says all PayDetails possible, not just those in conAuthPurse
 //     { pd | pd : PayDetail & pd.td.from in set dom conAuthPurse }
 

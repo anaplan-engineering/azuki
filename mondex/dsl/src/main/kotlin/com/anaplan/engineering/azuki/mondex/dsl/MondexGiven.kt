@@ -18,13 +18,13 @@ class MondexGiven(private val actionFactory: MondexActionFactory<*>) : Given<Mon
 
     override fun actions(): List<Action> = actionList
 
-    //LF: which purse is there? Abstract x Concrete etc?
+    //LF @EK which purse is there? Abstract x Concrete etc?
     //    That's why I was saying if we go with the A/B/C worlds as different implementations, we will need some way
     //    of saying which implementation we are "declaring" in the DSL, if the DSL is shared between them.
     override fun thereIsAPurse(purseName: String, balance: Int, lost: Int) {
-        //LF: if ULong, this is redundant
+        //LF @EK if ULong, this is redundant
         require(balance >= 0 && lost >= 0)
-        //LF: if you are sharing the DSLs how will deal with parameter difference between purses?
+        //LF @EK if you are sharing the DSLs how will deal with parameter difference between purses?
         //    //ConPurse(balance.toULong(), lost.toULong())???? NEed another one for it or something like a when below
         actionList.add(actionFactory.purse.create(purseName, AbPurse(balance.toULong(), lost.toULong())))
     }

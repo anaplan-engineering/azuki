@@ -30,7 +30,7 @@ interface ConWorld : World {
 @Module
 interface AuxWorld : ConWorld {
     // AuxWorld extra fields are properties of constructed ones
-    //LF QST: can I do this here? want to extend the world's properties
+    //LF @QST can I do this here? want to extend the world's properties
     @FunctionProvider(AuxWorldProperties::class)
     override val properties: AuxWorldProperties
 }
@@ -46,7 +46,7 @@ interface BetweenWorld : AuxWorld {
 open class ConWorldProperties(conWorld: ConWorld) {
 
     @Suppress("UNCHECKED_CAST")
-    //LF QST: how to project this from Kazuki? If it was Map, would be as this
+    //LF @QST how to project this from Kazuki? If it was Map, would be as this
     val conAuthPurse: InjectiveMapping<Name, ConPurse> = as_InjectiveMapping((conWorld.purses as Mapping<Name, ConPurse>))
     //val conAuthPurse: InjectiveMapping<Name, AbPurse> = conWorld.purses.filterValues { it is ConPurse }.mapValues { it.value as ConPurse }
 }

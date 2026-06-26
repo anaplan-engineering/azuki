@@ -7,9 +7,8 @@ data class TransferDetails(
 )
 
 data class PayDetails(
-    //LF: @QST: not sure whether to include this as a field or through inheritance; data class inheritance issues
+    //LF @QST not sure whether to include this as a field or through inheritance; data class inheritance issues
     val td: TransferDetails,
     val fromSeqNo: ULong,
     val toSeqNo: ULong,
-    //LF: invariant insists that td.fromPurse != td.toPurse
 )

@@ -33,7 +33,7 @@ class MondexThen(private val checkFactory: MondexCheckFactory) : Then<MondexChec
         val worldCheckBlock = WorldCheckBlock(checkFactory, level)
         worldCheckBlock.init()
         checkList.addAll(worldCheckBlock.checks())
-        //LF: @QST will this needs adjusting, namely different worlds will create different purse kinds
+        //LF @EK this will need adjusting, namely different worlds will create different purse kinds
         checkList.add(checkFactory.world.worldExists(worldCheckBlock.getAuthPurses(), true))
     }
 

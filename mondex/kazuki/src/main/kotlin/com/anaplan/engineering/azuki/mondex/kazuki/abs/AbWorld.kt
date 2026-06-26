@@ -23,12 +23,13 @@ class AbWorldProperties(abWorld: AbWorld) {
 
     // abAuthPurses is a projection/filtering (or castin) over the underlying purses
 
-    //LF QST: for refinement, maybe allow a map here with both purses within and just filter?
+    //LF @QST for refinement, maybe allow a map here with both purses within and just filter?
     // relates to Z's AbWorld.abAuthPurses
     @Suppress("UNCHECKED_CAST")
+    //TODO by property { ... }
     val abAuthPurse: Mapping<Name, AbPurse> = abWorld.purses as Mapping<Name, AbPurse>
-    //LF QST: how to project this from Kazuki? If it was Map, would be as this
-    //val abAuthPurse: Mapping<Name, AbPurse> = abWorld.purses.filterValues { it is AbPurse }.mapValues { it.value as AbPurse }
+    //LF @QST how to project this from Kazuki? If it was Map, would be as this
+//    val abAuthPurse: Mapping<Name, AbPurse> = abWorld.purses.filterValues { it is AbPurse }.mapValues { it.value as AbPurse }
 }
 
 // * Z pres are implicit. Get them from ZEVES-PRG126 Table 8.1 p.86
@@ -67,7 +68,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
         },
         pre = { a, td ->
             abOp.pre(a)
-                //LF QST Not sure this is right; discuss with AP
+                //LF @QST Not sure this is right; discuss with AP
                 //&& a is Transfer
                 //&& a.td == td
                 // This is encoding the inverse of transfer
@@ -158,7 +159,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
         }
     )
 
-    //LF QST: how to encode this? Expecting an input value is not quite right. And the expression is a post condition!
+    //LF @QST how to encode this? Expecting an input value is not quite right. And the expression is a post condition!
     // Z return here technically is an AbWorld
     // Here there is no "input" purse to the schema; see why needed, but would need to be dash?
 //    val noValueCreation = function (
