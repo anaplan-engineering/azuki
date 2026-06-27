@@ -2,6 +2,10 @@ package com.anaplan.engineering.azuki.mondex.kazuki.betw
 
 import com.anaplan.engineering.azuki.mondex.kazuki.Name
 import com.anaplan.engineering.azuki.mondex.kazuki.World
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.mk_ConPurse
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.transform
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.mk_PayDetails
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.isSubsetOf
 import com.anaplan.engineering.azuki.mondex.kazuki.is_InjectiveMapping
 import com.anaplan.engineering.azuki.mondex.kazuki.powerset
@@ -36,6 +40,13 @@ interface AuxWorld : ConWorld {
     //LF @QST can I do this here? want to extend the world's properties
     @FunctionProvider(AuxWorldProperties::class)
     override val properties: AuxWorldProperties
+
+    //LF @QST should this (redundant check) be an invariant or another function?
+    //@Invariant
+    //fun noNewConstraints(): Boolean = {
+        // PRG126 5.2.1 p.43 . not sure how (or if possible) to encode this
+    //    val newVariables = exists(....)
+    //}
 }
 
 @Module
@@ -103,7 +114,7 @@ class AuxWorldProperties(auxWorld: AuxWorld) : ConWorldProperties(auxWorld) {
     val fromInEpa : Sequence<PayDetails> by property { TODO() }
 }
 
-class BetweenWorldFunctions(old: BetweenWorld) {
+class BetweenWorldFunctions(private val old: BetweenWorld) {
 
     fun xiBetweenWorld(before: BetweenWorld, after: BetweenWorld) =
         before.purses == after.purses &&
@@ -152,33 +163,107 @@ class BetweenWorldFunctions(old: BetweenWorld) {
             //        That is, all preconditions must be valid, and the command has the choice
             //        to decide which path to take, so all true in this case
             val ignorePre = ignore.pre(name)
-            val abortOkay = Message.Bottom in old.ether &&
+            val abortPre = Message.Bottom in old.ether &&
                 // In Z the \Theta ConPurse is mapped via phiBOp to the named conAuthPurse, so "fixing" it here too
                 old.properties.conAuthPurse[name].functions.abortPurseOkay.pre(Message.Bottom) &&
                 phiBOp.pre(Message.Bottom, name, old.properties.conAuthPurse[name])
-            setOf(ignorePre, abortOkay).all { it } //== setOf(true)
+            setOf(ignorePre, abortPre).all { it } //== setOf(true)
         },
+        //LF @QST these checks will be repeated.
+        //        * their complexity is exposing the mechanics of promotion
+        //        * promotion injects local updates into a (phiBop) constrained after state
+        //        * e.g., local state=email; global state=mail server; promotion=inject sent email in server's state
+        //        * ZEVES-PRG126 explicitly named the promotion disjunctions, PRG126 keeps them unnamed; below is like PRG126 (no name either)
+        //          e.g. StartFromOkay = (\exists \Delta ConPurse & PhiBop \land StartFromPurseOkay)
         post = { name, result ->
             val (dash, mbang) = result
+            // Initial message for Abort doesn't matter. Can be any
+            val initialMsg = Message.Bottom
             //LF @QST similar issue, even though both pres must be acceptable to begin with only
             //        one post will be true in some cases, given the implementation choice.
             //        so which one to check here?
             //
             //        Will check all, then have at least one true rather than all
-            val ignoreOkay = ignore.post(name, result)
-            val abortOkay = old.properties.conAuthPurse[name].functions.abortPurseOkay.post(
-                Message.Bottom, mk_(dash.properties.conAuthPurse[name], mbang))
-            setOf(ignoreOkay, abortOkay).any { it } &&
+            val ignorePost = ignore.post(name, result)
+            val (adash, abang) = old.properties.conAuthPurse[name].functions.abortPurseOkay(initialMsg)
+            val abortAfterSt = mk_(dash.properties.conAuthPurse[name], mbang)
+            val phiBopAfterSt = mk_(dash, abortAfterSt._1, abortAfterSt._2)
+            val abortPost =
+                // AbortPurseOkay operates on ConPurse:
+                // * ConPurse' from result of abort (adash) compared with command's equivalent (abortAfterSt._1)
+                // * Effect (resulting mk_(adash,abang)) is used in phiBop
+                // * This injects resulting ConPurse' (adash) into the BetweenWorld' (dash).
+                // * Check against the command's resulting BetweenWorld' after promotion (dash).
+                // * Resulting message should be mbang, which should also be abang (they match).
+                old.properties.conAuthPurse[name].functions.abortPurseOkay.post(
+                    initialMsg, abortAfterSt) &&
+                    //LF @QST how can InteliJ know this is going to be the case (it isn't necessarily)?
+                    //        Perhaps command is yet to be resolved?
+                    abang == mbang &&
+                // PhiBop operates on BetweenWorld and a ConPurse:
+                // * ConPurse' from result of abort for promotion (adash)
+                // * BetweenWorld' from result of this function's command (dash)
+                // * Rest of after state comes from the ConPurse' in between world for given name
+                old.functions.phiBOp.post(initialMsg, name, adash, phiBopAfterSt)
+            setOf(ignorePost, abortPost).any { it } &&
             mbang == Message.Bottom
         }
     )
 
+    internal fun conjureUpConPurse(name: Name): ConPurse {
+        val namedPurse = old.properties.conAuthPurse[name]
+        val conjuredCPD = namedPurse.functions.conjuredUpCPD()
+        require(namedPurse.pdAuth != null) { "PDAuth must be non-null for ConPurse" }
+        // This is a simplification/choice: the Z allows for a whole space of options from a new purse with these specific transforms
+        return namedPurse.transform(
+            nextSeqNo = namedPurse.nextSeqNo + 1U,
+            pdAuth = namedPurse.pdAuth!!.transform(
+                from = name, to = conjuredCPD.name, value = conjuredCPD.value,
+                fromSeqNo = namedPurse.nextSeqNo, //TODO: or is this the transformed one... neeed to brush off the Z!
+                toSeqNo = conjuredCPD.nextSeqNo,
+            ),
+            status = Status.epr
+        )
+    }
+
     val startFrom = function(
         command = { name: Name ->
+            TODO("Choice for ignore, abort, or startFromPurseOkay, which is only in ZEVES-PRG (see comment above)")
             mk_(old, Message.Bottom)
         },
+        // ZEVES-PRG126 Table 8.3, p.87
         pre = { name ->
-            true
+            // to avoid mixture of short circuiting x mistaken checks on vals depending on pdAuth!! Improve?
+            if (old.properties.conAuthPurse[name].pdAuth == null)
+                false
+            else {
+                //(old.properties.conAuthPurse[name].pdAuth != null) implies {
+                // There will be some repeated checking here, hard to separate them apart easily without introducing mistakes?
+                val abortPre = old.functions.abort.pre(name)
+                val startMsg = Message.StartFrom(old.properties.conAuthPurse[name].functions.conjuredUpCPD())
+                val purseName = old.properties.conAuthPurse[name].name
+                val startFromOkayPre =
+                    phiBOp.pre(startMsg, name, old.properties.conAuthPurse[name]) &&
+                        old.properties.conAuthPurse[name].functions.startFromPurseOkay.pre(startMsg) &&
+                        Message.Bottom in old.ether &&
+                        ((purseName in old.properties.conAuthPurse.dom) implies { purseName != name }) &&
+                        old.functions.conjureUpConPurse(purseName) !in old.properties.conAuthPurse.rng
+                startFromOkayPre
+            }
+        },
+        post = { name, result ->
+            val (dash, mbang) = result
+            // Ignore \/ Abort is part of Abort, so can just reuse here to simplify promotion postconditions
+            // On the other hand, because inner operations are total, the overall post will just be true
+            //
+            // This was another of the Mondex's manual proofs mistakes: getting away from proving by always taking
+            // the ignore/abort paths! See ZEVES-PRG126 Chapter 8, which is most involved part of the exercise.
+            val abortPost = old.functions.abort.post(name, result)
+            val startFromPost =
+                old.properties.conAuthPurse[name].functions.startFromPurseOkay.post(
+                    Message.StartFrom(old.properties.conAuthPurse[name].functions.conjuredUpCPD()),
+                    mk_(dash.properties.conAuthPurse[name], mbang))
+            setOf(abortPost, startFromPost).any { it }
         }
     )
 }

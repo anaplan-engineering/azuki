@@ -2,15 +2,12 @@ package com.anaplan.engineering.azuki.mondex.kazuki.betw
 
 import com.anaplan.engineering.azuki.mondex.kazuki.Name
 import com.anaplan.engineering.azuki.mondex.kazuki.Purse
-import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.CounterPartyDetails_Module.mk_CounterPartyDetails
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.mk_PayDetails
-import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.transform
 import com.anaplan.engineering.kazuki.core.FunctionProvider
 import com.anaplan.engineering.kazuki.core.Invariant
 import com.anaplan.engineering.kazuki.core.Module
-import com.anaplan.engineering.kazuki.core.Tuple2
 import com.anaplan.engineering.kazuki.core.as_Set
 import com.anaplan.engineering.kazuki.core.forall
 import com.anaplan.engineering.kazuki.core.function
@@ -18,7 +15,6 @@ import com.anaplan.engineering.kazuki.core.implies
 import com.anaplan.engineering.kazuki.core.mk_
 import com.anaplan.engineering.kazuki.core.mk_Set
 import com.anaplan.engineering.kazuki.core.nat
-import org.w3c.dom.css.Counter
 
 enum class Status { eaFrom, eaTo, epr, epv, epa }
 
@@ -69,7 +65,7 @@ interface ConPurse : Purse {
 
 // * Z pres are implicit. Get them from ZEVES-PRG126 Table 8.2 p.86
 // * This provider contains the before state, and would expect the
-class ConPurseFunctions(old: ConPurse) {
+class ConPurseFunctions(private val old: ConPurse) {
 
     // Xi schemas with hidding need to be implemented either like an extra post check
     // or with some more sophisticated notion of alphabet via reflection to know what's hideen / can change.
@@ -157,6 +153,7 @@ class ConPurseFunctions(old: ConPurse) {
             old
         },
         pre = { m, cpd ->
+            m is Message.StartFrom &&
             m == Message.StartFrom(cpd) &&
                 cpd.name != old.name &&
                 cpd.value <= old.balance
@@ -219,6 +216,14 @@ class ConPurseFunctions(old: ConPurse) {
         }
     )
 
+    //LF @QST need a mechanism to creating a different name and smaller or equal balance; can the `private val old` work?
+    internal fun conjuredUpCPD() =
+        mk_CounterPartyDetails(
+            name = old.name + "cpd",
+            value = old.balance - 1U,
+            nextSeqNo = old.nextSeqNo,
+        )
+
     // In Z, startFromPurseOkay \defs abortPurseOkay \semi (startFromPurseEaFromOkay \hide (cpd))
     //    * Hiding has higher precedence than composition, so the precondition here establishes the existence of a cpd
     //    * The way "aborting" works is that aborts run, but if nothing is to be logged, then aborting failed (i.e. no abort)
@@ -228,15 +233,12 @@ class ConPurseFunctions(old: ConPurse) {
         command = { m: Message ->
             // Abort's message result is ignored
             val (dash, _) = abortPurseOkay(m)
-            val cpd = mk_CounterPartyDetails(
-                name = TODO(),
-                value = TODO(),
-                nextSeqNo = TODO())
             // startFromPurseEaFromOkay works on the resulting state of abort with cpd hidden
-            mk_(dash.functions.startFromPurseEaFromOkay(m, cpd), Message.Bottom)
+            dash.functions.startFromPurseEaFromOkay(m, conjuredUpCPD())
         },
         pre = { m ->
-            abortPurseOkay.pre(m)
+            abortPurseOkay.pre(m) &&
+                startFromPurseEaFromOkay.pre(m, conjuredUpCPD())
         },
         post = { m, result ->
             // abortPurseOkay \semi (startFromPurseEaFromOkay \hide (cpd))
@@ -247,13 +249,9 @@ class ConPurseFunctions(old: ConPurse) {
             // middle = old.abordPurseOkay(m) and (exists cpd & middle.startFromPurseEaFromOkay(m, cpd, dash)
             val (middle, mm) = abortPurseOkay(m)
             val (dash, mr) = result
-            val cpd = mk_CounterPartyDetails(
-                name = TODO(),
-                value = TODO(),
-                nextSeqNo = TODO())
             // check abort post from start to middle; check startFrom post from middle to dash
             abortPurseOkay.post(m, mk_(middle, mm)) &&
-                middle.functions.startFromPurseEaFromOkay.post(m, cpd, dash)
+                middle.functions.startFromPurseEaFromOkay.post(m, conjuredUpCPD(), result)
         }
     )
 }
