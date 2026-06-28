@@ -65,10 +65,9 @@ class AbWorldFunctions(abWorld: AbWorld) {
         pre = { a, td ->
             abOp.pre(a)
                 //LF @QST Not sure this is right; discuss with AP; we want the encoding of the inverse of transfer
-                //&&a is Transfer
-                //&& a.td == td
-                && a is transfer
-                && transfer(td) == a
+                &&a is transfer
+                && a.transferDetails == td
+                //&& transfer(td) == a
         },
         post = { a, td, result ->
             val (dash, abang) = result

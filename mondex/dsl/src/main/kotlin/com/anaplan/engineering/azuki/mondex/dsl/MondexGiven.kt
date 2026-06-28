@@ -2,13 +2,9 @@ package com.anaplan.engineering.azuki.mondex.dsl
 
 import com.anaplan.engineering.azuki.core.dsl.Given
 import com.anaplan.engineering.azuki.core.system.Action
-import com.anaplan.engineering.azuki.mondex.adapter.api.AbPurse
-import com.anaplan.engineering.azuki.mondex.adapter.api.ConPurse
 import com.anaplan.engineering.azuki.mondex.adapter.api.MondexActionFactory
 import com.anaplan.engineering.azuki.mondex.adapter.api.PayDetails
-import com.anaplan.engineering.azuki.mondex.adapter.api.Purse
 import com.anaplan.engineering.azuki.mondex.adapter.api.Status
-import com.anaplan.engineering.azuki.mondex.adapter.api.WorldLevel
 import com.anaplan.engineering.azuki.mondex.dsl.declaration.PurseDeclarations
 
 class MondexGiven(private val actionFactory: MondexActionFactory<*>) : Given<MondexActionFactory<*>>,
