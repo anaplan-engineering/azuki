@@ -13,8 +13,12 @@ interface PurseCheckFactory {
     fun purseExists(personName: String, balance: ULong, lost: ULong, result: Boolean): Check
 }
 
+enum class WorldLevel {
+    ABSTRACT, BETWEEN, CONCRETE
+}
+
 interface WorldCheckFactory {
     fun worldExists(authPurses: Map<String, Purse>, result: Boolean): Check
-    fun noValueCreation(result: Boolean): Check
-    fun allValueAccounted(result: Boolean): Check
+    fun worldExists(level: WorldLevel, authPurses: Map<String, Purse>, result: Boolean): Check
 }
+

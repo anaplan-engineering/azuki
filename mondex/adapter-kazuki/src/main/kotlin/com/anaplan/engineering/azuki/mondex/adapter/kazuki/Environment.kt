@@ -64,3 +64,8 @@ fun World.withPurse(
 fun Map<String, Purse>.toMapping() =
     mapping(this.entries) { (name, purse) ->
         mk_(name, mk_Purse(purse.balance, purse.lost)) }
+
+//fun Purse.toKazukiPurse(): KazukiPurse = when (this) {
+//    is AbPurse -> mk_Purse(balance, lost)
+//    is ConPurse -> mk_Purse(balance, 0uL) // or whatever the Con→Ab projection is
+//}
