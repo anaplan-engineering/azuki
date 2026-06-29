@@ -1,0 +1,277 @@
+package com.anaplan.engineering.azuki.mondex.kazuki.betw
+
+import com.anaplan.engineering.azuki.mondex.kazuki.Name
+import com.anaplan.engineering.azuki.mondex.kazuki.World
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.mk_ConPurse
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.transform
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.mk_PayDetails
+import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.transform
+import com.anaplan.engineering.azuki.mondex.kazuki.isSubsetOf
+import com.anaplan.engineering.azuki.mondex.kazuki.is_InjectiveMapping
+import com.anaplan.engineering.azuki.mondex.kazuki.powerset
+import com.anaplan.engineering.azuki.mondex.kazuki.property
+import com.anaplan.engineering.kazuki.core.*
+
+// we need powerset though: careful with the Z peculiarity about sets as types
+typealias LogBook = Relation<Name, PayDetails>
+
+@Module
+interface ConWorld : World {
+    val ether: Set<Message>
+    val archive: LogBook
+
+    @Invariant
+    fun nameInjective() =
+        forall(properties.conAuthPurse.dom) { n -> properties.conAuthPurse[n].name == n }
+
+    @Invariant
+    fun logDetailsForKnownPurses() =
+        forall(archive) { nld -> nld._1 in properties.conAuthPurse.dom }
+
+    @FunctionProvider(ConWorldProperties::class)
+    val properties: ConWorldProperties
+
+    //LF @EK ConWorld doesn't have functions, given it is operated by BetweenWorld
+}
+
+@Module
+interface AuxWorld : ConWorld {
+    // AuxWorld extra fields are properties of constructed ones
+    //LF @QST can I do this here? want to extend the world's properties
+    @FunctionProvider(AuxWorldProperties::class)
+    override val properties: AuxWorldProperties
+
+    //LF @QST should this (redundant check) be an invariant or another function?
+    //@Invariant
+    //fun noNewConstraints(): Boolean = {
+        // PRG126 5.2.1 p.43 . not sure how (or if possible) to encode this
+    //    val newVariables = exists(....)
+    //}
+}
+
+@Module
+interface BetweenWorld : AuxWorld {
+    @FunctionProvider(BetweenWorldFunctions::class)
+    val functions: BetweenWorldFunctions
+}
+
+// Z (inferred) properties of the schemas
+open class ConWorldProperties(private val conWorld: ConWorld) {
+
+    @Suppress("UNCHECKED_CAST")
+    //LF @QST how to project this from Kazuki? If it was Map, would be as this
+    val conAuthPurse by
+        property(
+            pre = { ->
+                // only contain ConPurses
+                forall(conWorld.purses.rng) { it -> it is ConPurse } &&
+                // purses are injective on ConWorld
+                is_InjectiveMapping(conWorld.purses)
+            }
+        )
+        { as_InjectiveMapping((conWorld.purses as Mapping<Name, ConPurse>)) }
+}
+
+class AuxWorldProperties(auxWorld: AuxWorld) : ConWorldProperties(auxWorld) {
+
+    // allLogs = archive + { (n, pd) | n in conAuthPurse.keys & pd in conAuthPurse[n].exLog }
+    val allLogs by property {
+        auxWorld.archive + as_Relation(auxWorld.properties.conAuthPurse.flatMap { (n, purse) -> purse.exLog.map { pd -> mk_(n, pd) } })
+    }
+
+    // Z has a set of all possible pay details where `pd.from` is known, not just those in the map!
+    // so it can't simply be { pd | pd.from in conAuthPurse.keys }
+    // authenticFrom = { pd | pd : PayDetails & pd.from in conAuthPurse.keys }
+    //
+    // For now this is a Sequence<PayDetails> (i.e. not a Kazuki type)
+    val authenticFrom by property {
+        allPayDetails(fromNames = auxWorld.properties.conAuthPurse.dom.asSequence())
+    }
+
+    val authenticTo by property {
+        allPayDetails(toNames = auxWorld.properties.conAuthPurse.dom.asSequence())
+    }
+
+    val fromLogged by property(
+        //LF @EK this narrows the sequence but wouldn't make it finite
+        post = { r -> r.isSubsetOf { pd -> mk_(pd.from, pd) in auxWorld.properties.allLogs } }
+    ) {
+        auxWorld.properties.authenticFrom.filter { pd -> mk_(pd.from, pd) in auxWorld.properties.allLogs }
+    }
+
+    val toLogged by property {
+        auxWorld.properties.authenticTo.filter { pd -> mk_(pd.to, pd) in auxWorld.properties.allLogs }
+    }
+
+    val toInEpv by property {
+        auxWorld.properties.authenticTo.filter { pd ->
+            auxWorld.properties.conAuthPurse[pd.to].status == Status.epv &&
+            (auxWorld.properties.conAuthPurse[pd.to].pdAuth == pd) }
+    }
+
+    val toInEpayee: Sequence<PayDetails> by property { TODO() }
+    val fromInEpr : Sequence<PayDetails> by property { TODO() }
+    val fromInEpa : Sequence<PayDetails> by property { TODO() }
+}
+
+class BetweenWorldFunctions(private val old: BetweenWorld) {
+
+    fun xiBetweenWorld(before: BetweenWorld, after: BetweenWorld) =
+        before.purses == after.purses &&
+        before.ether == after.ether &&
+        before.archive == after.archive
+
+    val ignore = function(
+        command = { name: Name -> mk_(old, Message.Bottom) },
+        pre = { name -> true },
+        post = { _, result ->
+            val (dash, mbang) = result
+            xiBetweenWorld(old, dash)
+            mbang == Message.Bottom
+        }
+    )
+
+    val phiBOp = function(
+        command = { m: Message, name: Name, c: ConPurse ->
+            mk_(old, c, m)
+        },
+        // ZEVES-PRG126 Table 8.3, p.87
+        pre = { m, name, c ->
+            m in old.ether &&
+                name in old.properties.conAuthPurse.dom &&
+                c == old.properties.conAuthPurse[name]
+        },
+        post = { m, name, c, result ->
+            val (dash, cdash, mbang) = result
+            //LF @EK assuming the * here is map overriding for a singleton maplet?
+            dash.properties.conAuthPurse == old.properties.conAuthPurse * mk_(name, cdash) &&
+            dash.archive == old.archive &&
+            dash.ether == old.ether + { mbang }
+        }
+    )
+
+    val abort = function(
+        command = { name: Name ->
+            TODO("Choose which path to take: ignore or abort")
+            mk_(old, Message.Bottom)
+        },
+        pre = { name ->
+            //LF @QST how to encode here the "or ignore.pre", which is just true?
+            //        short circuiting will "kill" the check chain. Perhaps the VDM trick:
+            //        change: "P and Q and R" to: "{P, Q, R} = {true}"?
+            //
+            //        That is, all preconditions must be valid, and the command has the choice
+            //        to decide which path to take, so all true in this case
+            val ignorePre = ignore.pre(name)
+            val abortPre = Message.Bottom in old.ether &&
+                // In Z the \Theta ConPurse is mapped via phiBOp to the named conAuthPurse, so "fixing" it here too
+                old.properties.conAuthPurse[name].functions.abortPurseOkay.pre(Message.Bottom) &&
+                phiBOp.pre(Message.Bottom, name, old.properties.conAuthPurse[name])
+            setOf(ignorePre, abortPre).all { it } //== setOf(true)
+        },
+        //LF @QST these checks will be repeated.
+        //        * their complexity is exposing the mechanics of promotion
+        //        * promotion injects local updates into a (phiBop) constrained after state
+        //        * e.g., local state=email; global state=mail server; promotion=inject sent email in server's state
+        //        * ZEVES-PRG126 explicitly named the promotion disjunctions, PRG126 keeps them unnamed; below is like PRG126 (no name either)
+        //          e.g. StartFromOkay = (\exists \Delta ConPurse & PhiBop \land StartFromPurseOkay)
+        post = { name, result ->
+            val (dash, mbang) = result
+            // Initial message for Abort doesn't matter. Can be any
+            val initialMsg = Message.Bottom
+            //LF @QST similar issue, even though both pres must be acceptable to begin with only
+            //        one post will be true in some cases, given the implementation choice.
+            //        so which one to check here?
+            //
+            //        Will check all, then have at least one true rather than all
+            val ignorePost = ignore.post(name, result)
+            val (adash, abang) = old.properties.conAuthPurse[name].functions.abortPurseOkay(initialMsg)
+            val abortAfterSt = mk_(dash.properties.conAuthPurse[name], mbang)
+            val phiBopAfterSt = mk_(dash, abortAfterSt._1, abortAfterSt._2)
+            val abortPost =
+                // AbortPurseOkay operates on ConPurse:
+                // * ConPurse' from result of abort (adash) compared with command's equivalent (abortAfterSt._1)
+                // * Effect (resulting mk_(adash,abang)) is used in phiBop
+                // * This injects resulting ConPurse' (adash) into the BetweenWorld' (dash).
+                // * Check against the command's resulting BetweenWorld' after promotion (dash).
+                // * Resulting message should be mbang, which should also be abang (they match).
+                old.properties.conAuthPurse[name].functions.abortPurseOkay.post(
+                    initialMsg, abortAfterSt) &&
+                    //LF @QST how can InteliJ know this is going to be the case (it isn't necessarily)?
+                    //        Perhaps command is yet to be resolved?
+                    abang == mbang &&
+                // PhiBop operates on BetweenWorld and a ConPurse:
+                // * ConPurse' from result of abort for promotion (adash)
+                // * BetweenWorld' from result of this function's command (dash)
+                // * Rest of after state comes from the ConPurse' in between world for given name
+                old.functions.phiBOp.post(initialMsg, name, adash, phiBopAfterSt)
+            setOf(ignorePost, abortPost).any { it } &&
+            mbang == Message.Bottom
+        }
+    )
+
+    internal fun conjureUpConPurse(name: Name): ConPurse {
+        val namedPurse = old.properties.conAuthPurse[name]
+        val conjuredCPD = namedPurse.functions.conjuredUpCPD()
+        require(namedPurse.pdAuth != null) { "PDAuth must be non-null for ConPurse" }
+        // This is a simplification/choice: the Z allows for a whole space of options from a new purse with these specific transforms
+        return namedPurse.transform(
+            nextSeqNo = namedPurse.nextSeqNo + 1U,
+            pdAuth = namedPurse.pdAuth!!.transform(
+                from = name, to = conjuredCPD.name, value = conjuredCPD.value,
+                fromSeqNo = namedPurse.nextSeqNo, //TODO: or is this the transformed one... neeed to brush off the Z!
+                toSeqNo = conjuredCPD.nextSeqNo,
+            ),
+            status = Status.epr
+        )
+    }
+
+    val startFrom = function(
+        command = { name: Name ->
+            TODO("Choice for ignore, abort, or startFromPurseOkay, which is only in ZEVES-PRG (see comment above)")
+            mk_(old, Message.Bottom)
+        },
+        // ZEVES-PRG126 Table 8.3, p.87
+        pre = { name ->
+            // to avoid mixture of short circuiting x mistaken checks on vals depending on pdAuth!! Improve?
+            if (old.properties.conAuthPurse[name].pdAuth == null)
+                false
+            else {
+                //(old.properties.conAuthPurse[name].pdAuth != null) implies {
+                // There will be some repeated checking here, hard to separate them apart easily without introducing mistakes?
+                val abortPre = old.functions.abort.pre(name)
+                val startMsg = Message.StartFrom(old.properties.conAuthPurse[name].functions.conjuredUpCPD())
+                val purseName = old.properties.conAuthPurse[name].name
+                val startFromOkayPre =
+                    phiBOp.pre(startMsg, name, old.properties.conAuthPurse[name]) &&
+                        old.properties.conAuthPurse[name].functions.startFromPurseOkay.pre(startMsg) &&
+                        Message.Bottom in old.ether &&
+                        ((purseName in old.properties.conAuthPurse.dom) implies { purseName != name }) &&
+                        old.functions.conjureUpConPurse(purseName) !in old.properties.conAuthPurse.rng
+                startFromOkayPre
+            }
+        },
+        post = { name, result ->
+            val (dash, mbang) = result
+            // Ignore \/ Abort is part of Abort, so can just reuse here to simplify promotion postconditions
+            // On the other hand, because inner operations are total, the overall post will just be true
+            //
+            // This was another of the Mondex's manual proofs mistakes: getting away from proving by always taking
+            // the ignore/abort paths! See ZEVES-PRG126 Chapter 8, which is most involved part of the exercise.
+            val abortPost = old.functions.abort.post(name, result)
+            val startFromPost =
+                old.properties.conAuthPurse[name].functions.startFromPurseOkay.post(
+                    Message.StartFrom(old.properties.conAuthPurse[name].functions.conjuredUpCPD()),
+                    mk_(dash.properties.conAuthPurse[name], mbang))
+            setOf(abortPost, startFromPost).any { it }
+        }
+    )
+}
+
+
+//LF @QST is this the best/right way here? Or better to have powerset in Kazuki for KSet/Relation?
+fun logbook(pds: Set<PayDetails>): Set<LogBook> =
+    (pds.flatMap { pd -> listOf(mk_(pd.from, pd), mk_(pd.to, pd)) }.toSet())
+        .powerset()
+        .map(::as_Relation)
+        .toSet()

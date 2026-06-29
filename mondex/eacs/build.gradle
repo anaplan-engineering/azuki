@@ -1,0 +1,39 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+configurations {
+    kazuki
+}
+
+dependencies {
+    api project(":mondex:dsl")
+    kazuki project(":mondex:adapter-kazuki")
+    kazuki project(":mondex:kazuki")
+    testRuntimeOnly libs.slf4j.impl
+}
+
+task kazukiClasspathJar(type: Jar) {
+    dependsOn configurations.kazuki
+    archiveBaseName = 'Kazuki'
+    manifest {
+        attributes("Class-Path": configurations.kazuki.collect { it.absolutePath }.join(' '))
+    }
+}
+
+ext {
+    setProperty("impl.includes", "Kazuki")
+}
+
+test {
+    dependsOn kazukiClasspathJar
+
+    def instanceJars = [
+        kazukiClasspathJar.archiveFile.get().asFile.absolutePath,
+    ]
+    systemProperties = [
+        "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(","),
+        "com.anaplan.engineering.azuki.implementation.includes"     : findProperty("impl.includes"),
+        "com.anaplan.engineering.azuki.implementation.excludes"     : findProperty("impl.excludes"),
+    ]
+}
