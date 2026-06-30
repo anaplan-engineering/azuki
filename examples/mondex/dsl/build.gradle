@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     api project(":azuki-core")
-    api project(":mondex:adapter-api")
+    api project(":examples:mondex:adapter-api")
 
     implementation libs.kotlin.test
 }

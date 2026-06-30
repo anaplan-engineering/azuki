@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-    api project(":mondex:adapter-api")
+    api project(":examples:mondex:adapter-api")
     api project(":azuki-declaration")
 }

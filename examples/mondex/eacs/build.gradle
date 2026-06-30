@@ -7,9 +7,9 @@ configurations {
 }
 
 dependencies {
-    api project(":mondex:dsl")
-    kazuki project(":mondex:adapter-kazuki")
-    kazuki project(":mondex:kazuki")
+    api project(":examples:mondex:dsl")
+    kazuki project(":examples:mondex:adapter-kazuki")
+    kazuki project(":examples:mondex:kazuki")
     testRuntimeOnly libs.slf4j.impl
 }
 
