@@ -36,12 +36,4 @@ class MondexThen(private val checkFactory: MondexCheckFactory) : Then<MondexChec
         //LF @EK this will need adjusting, namely different worlds will create different purse kinds
         checkList.add(checkFactory.world.worldExists(worldCheckBlock.getAuthPurses(), true))
     }
-
-    override fun noValueCreation() {
-        checkList.add(checkFactory.world.noValueCreation(true))
-    }
-
-    override fun allValueAccounted() {
-        checkList.add(checkFactory.world.allValueAccounted(true))
-    }
 }

@@ -1,7 +1,6 @@
 package com.anaplan.engineering.azuki.mondex.kazuki.betw
 
 import com.anaplan.engineering.azuki.mondex.kazuki.Name
-import com.anaplan.engineering.azuki.mondex.kazuki.Purse
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.CounterPartyDetails_Module.mk_CounterPartyDetails
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.mk_PayDetails
@@ -16,12 +15,14 @@ import com.anaplan.engineering.kazuki.core.mk_
 import com.anaplan.engineering.kazuki.core.mk_Set
 import com.anaplan.engineering.kazuki.core.nat
 
+//LF Perhaps reuse from adapter-api?
 enum class Status { eaFrom, eaTo, epr, epv, epa }
 
 const val MAX_NAT: nat = 10000UL
 
 @Module
-interface ConPurse : Purse {
+interface ConPurse {
+    val balance: nat
     val exLog: Set<PayDetails>
     val name: Name
     val nextSeqNo: nat

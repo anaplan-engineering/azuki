@@ -10,7 +10,7 @@ class PurseExistsCheck(
 ) : PurseExistsBehaviour(), KazukiCheck {
 
     override fun check(env: ExecutionEnvironment): Boolean {
-        val exists = personName in env.world(MondexDeclarationState.DEFAULT_WORLD).authPurses.dom
+        val exists = personName in env.world(MondexDeclarationState.DEFAULT_WORLD).abAuthPurse.dom
         return exists == expected
     }
 }
@@ -23,9 +23,9 @@ class PurseExistsWithValuesCheck(
 ) : PurseExistsBehaviour(), KazukiCheck {
 
     override fun check(env: ExecutionEnvironment): Boolean {
-        val exists = personName in env.world(MondexDeclarationState.DEFAULT_WORLD).authPurses.dom
-            && env.world(MondexDeclarationState.DEFAULT_WORLD).authPurses[personName].balance == balance
-            && env.world(MondexDeclarationState.DEFAULT_WORLD).authPurses[personName].lost == lost
+        val exists = personName in env.world(MondexDeclarationState.DEFAULT_WORLD).abAuthPurse.dom
+            && env.world(MondexDeclarationState.DEFAULT_WORLD).abAuthPurse[personName].balance == balance
+            && env.world(MondexDeclarationState.DEFAULT_WORLD).abAuthPurse[personName].lost == lost
         return exists == expected
     }
 }

@@ -12,8 +12,10 @@ class AllValueAccountedCheck(
         val beforeWorld = env.world(MondexDeclarationState.BEFORE_DEFAULT_WORLD)
         val world = env.world(MondexDeclarationState.DEFAULT_WORLD)
 
-        val allValueAccounted = world.functions.allValueAccounted(beforeWorld.authPurses)
-
-        return allValueAccounted == expected
+        //LF @EK this is not quite right. The check is against a before and after state.
+//        val allValueAccounted = world.functions.allValueAccounted(beforeWorld.abAuthPurse)
+//
+//        return allValueAccounted == expected
+        return false
     }
 }

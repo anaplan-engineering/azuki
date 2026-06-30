@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.mondex.adapter.api.TransferBehaviour
 import com.anaplan.engineering.azuki.mondex.adapter.api.TransferDetails
 import com.anaplan.engineering.azuki.mondex.adapter.kazuki.ExecutionEnvironment
 import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails_Module.mk_TransferDetails
-import com.anaplan.engineering.azuki.mondex.kazuki.Transfer_Module.mk_Transfer
+import com.anaplan.engineering.azuki.mondex.kazuki.abs.transfer
 
 class TransferOkayAction(
     val transferDetails: TransferDetails,
@@ -13,8 +13,7 @@ class TransferOkayAction(
 
     override fun act(env: ExecutionEnvironment) {
         val td = mk_TransferDetails(transferDetails.fromPurse, transferDetails.toPurse, transferDetails.value)
-        val input = mk_Transfer(td)
-        env.set(worldName, env.world(worldName).functions.abstractTransferOkayTD(input, td))
+        env.set(worldName, env.world(worldName).functions.abTransferOkayTD(transfer(td), td))
     }
 
     companion object {

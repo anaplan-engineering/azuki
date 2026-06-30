@@ -9,3 +9,8 @@ sealed class World (
     // protected val name: Name,
     protected val purses: Map<String, Purse>
 )
+
+data class AbWorld(val abPurses: Map<String, AbPurse>) : World(abPurses)
+
+//LF @EK missing ether and archieve
+data class ConWorld(val conPurses: Map<String, ConPurse>) : World(conPurses)

@@ -22,7 +22,7 @@ data class ConPurse(
     val name: Name,
     val nextSeqNo: ULong,
     val pdAuth: PayDetails?,
-    val status: Status = Status.eaFrom
+    val status: Status
 ) : Purse
 
 enum class Status { eaFrom, eaTo, epr, epv, epa }

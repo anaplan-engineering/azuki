@@ -1,7 +1,6 @@
 package com.anaplan.engineering.azuki.mondex.kazuki.betw
 
 import com.anaplan.engineering.azuki.mondex.kazuki.Name
-import com.anaplan.engineering.azuki.mondex.kazuki.World
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.mk_ConPurse
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.mk_PayDetails
@@ -16,22 +15,18 @@ import com.anaplan.engineering.kazuki.core.*
 typealias LogBook = Relation<Name, PayDetails>
 
 @Module
-interface ConWorld : World {
+interface ConWorld {
+    val conAuthPurse: InjectiveMapping<Name, ConPurse>
     val ether: Set<Message>
     val archive: LogBook
 
     @Invariant
     fun nameInjective() =
-        forall(properties.conAuthPurse.dom) { n -> properties.conAuthPurse[n].name == n }
+        forall(conAuthPurse.dom) { n -> conAuthPurse[n].name == n }
 
     @Invariant
     fun logDetailsForKnownPurses() =
-        forall(archive) { nld -> nld._1 in properties.conAuthPurse.dom }
-
-    @FunctionProvider(ConWorldProperties::class)
-    val properties: ConWorldProperties
-
-    //LF @EK ConWorld doesn't have functions, given it is operated by BetweenWorld
+        forall(archive) { nld -> nld._1 in conAuthPurse.dom }
 }
 
 @Module
@@ -39,7 +34,7 @@ interface AuxWorld : ConWorld {
     // AuxWorld extra fields are properties of constructed ones
     //LF @QST can I do this here? want to extend the world's properties
     @FunctionProvider(AuxWorldProperties::class)
-    override val properties: AuxWorldProperties
+    val properties: AuxWorldProperties
 
     //LF @QST should this (redundant check) be an invariant or another function?
     //@Invariant
@@ -55,28 +50,11 @@ interface BetweenWorld : AuxWorld {
     val functions: BetweenWorldFunctions
 }
 
-// Z (inferred) properties of the schemas
-open class ConWorldProperties(private val conWorld: ConWorld) {
-
-    @Suppress("UNCHECKED_CAST")
-    //LF @QST how to project this from Kazuki? If it was Map, would be as this
-    val conAuthPurse by
-        property(
-            pre = { ->
-                // only contain ConPurses
-                forall(conWorld.purses.rng) { it -> it is ConPurse } &&
-                // purses are injective on ConWorld
-                is_InjectiveMapping(conWorld.purses)
-            }
-        )
-        { as_InjectiveMapping((conWorld.purses as Mapping<Name, ConPurse>)) }
-}
-
-class AuxWorldProperties(auxWorld: AuxWorld) : ConWorldProperties(auxWorld) {
+class AuxWorldProperties(private val auxWorld: AuxWorld) {
 
     // allLogs = archive + { (n, pd) | n in conAuthPurse.keys & pd in conAuthPurse[n].exLog }
     val allLogs by property {
-        auxWorld.archive + as_Relation(auxWorld.properties.conAuthPurse.flatMap { (n, purse) -> purse.exLog.map { pd -> mk_(n, pd) } })
+        auxWorld.archive + as_Relation(auxWorld.conAuthPurse.flatMap { (n, purse) -> purse.exLog.map { pd -> mk_(n, pd) } })
     }
 
     // Z has a set of all possible pay details where `pd.from` is known, not just those in the map!
@@ -85,11 +63,11 @@ class AuxWorldProperties(auxWorld: AuxWorld) : ConWorldProperties(auxWorld) {
     //
     // For now this is a Sequence<PayDetails> (i.e. not a Kazuki type)
     val authenticFrom by property {
-        allPayDetails(fromNames = auxWorld.properties.conAuthPurse.dom.asSequence())
+        allPayDetails(fromNames = auxWorld.conAuthPurse.dom.asSequence())
     }
 
     val authenticTo by property {
-        allPayDetails(toNames = auxWorld.properties.conAuthPurse.dom.asSequence())
+        allPayDetails(toNames = auxWorld.conAuthPurse.dom.asSequence())
     }
 
     val fromLogged by property(
@@ -105,8 +83,8 @@ class AuxWorldProperties(auxWorld: AuxWorld) : ConWorldProperties(auxWorld) {
 
     val toInEpv by property {
         auxWorld.properties.authenticTo.filter { pd ->
-            auxWorld.properties.conAuthPurse[pd.to].status == Status.epv &&
-            (auxWorld.properties.conAuthPurse[pd.to].pdAuth == pd) }
+            auxWorld.conAuthPurse[pd.to].status == Status.epv &&
+            (auxWorld.conAuthPurse[pd.to].pdAuth == pd) }
     }
 
     val toInEpayee: Sequence<PayDetails> by property { TODO() }
@@ -117,7 +95,7 @@ class AuxWorldProperties(auxWorld: AuxWorld) : ConWorldProperties(auxWorld) {
 class BetweenWorldFunctions(private val old: BetweenWorld) {
 
     fun xiBetweenWorld(before: BetweenWorld, after: BetweenWorld) =
-        before.purses == after.purses &&
+        before.conAuthPurse == after.conAuthPurse &&
         before.ether == after.ether &&
         before.archive == after.archive
 
@@ -138,13 +116,13 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
         // ZEVES-PRG126 Table 8.3, p.87
         pre = { m, name, c ->
             m in old.ether &&
-                name in old.properties.conAuthPurse.dom &&
-                c == old.properties.conAuthPurse[name]
+                name in old.conAuthPurse.dom &&
+                c == old.conAuthPurse[name]
         },
         post = { m, name, c, result ->
             val (dash, cdash, mbang) = result
             //LF @EK assuming the * here is map overriding for a singleton maplet?
-            dash.properties.conAuthPurse == old.properties.conAuthPurse * mk_(name, cdash) &&
+            dash.conAuthPurse == old.conAuthPurse * mk_(name, cdash) &&
             dash.archive == old.archive &&
             dash.ether == old.ether + { mbang }
         }
@@ -165,8 +143,8 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             val ignorePre = ignore.pre(name)
             val abortPre = Message.Bottom in old.ether &&
                 // In Z the \Theta ConPurse is mapped via phiBOp to the named conAuthPurse, so "fixing" it here too
-                old.properties.conAuthPurse[name].functions.abortPurseOkay.pre(Message.Bottom) &&
-                phiBOp.pre(Message.Bottom, name, old.properties.conAuthPurse[name])
+                old.conAuthPurse[name].functions.abortPurseOkay.pre(Message.Bottom) &&
+                phiBOp.pre(Message.Bottom, name, old.conAuthPurse[name])
             setOf(ignorePre, abortPre).all { it } //== setOf(true)
         },
         //LF @QST these checks will be repeated.
@@ -185,8 +163,8 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             //
             //        Will check all, then have at least one true rather than all
             val ignorePost = ignore.post(name, result)
-            val (adash, abang) = old.properties.conAuthPurse[name].functions.abortPurseOkay(initialMsg)
-            val abortAfterSt = mk_(dash.properties.conAuthPurse[name], mbang)
+            val (adash, abang) = old.conAuthPurse[name].functions.abortPurseOkay(initialMsg)
+            val abortAfterSt = mk_(dash.conAuthPurse[name], mbang)
             val phiBopAfterSt = mk_(dash, abortAfterSt._1, abortAfterSt._2)
             val abortPost =
                 // AbortPurseOkay operates on ConPurse:
@@ -195,7 +173,7 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
                 // * This injects resulting ConPurse' (adash) into the BetweenWorld' (dash).
                 // * Check against the command's resulting BetweenWorld' after promotion (dash).
                 // * Resulting message should be mbang, which should also be abang (they match).
-                old.properties.conAuthPurse[name].functions.abortPurseOkay.post(
+                old.conAuthPurse[name].functions.abortPurseOkay.post(
                     initialMsg, abortAfterSt) &&
                     //LF @QST how can InteliJ know this is going to be the case (it isn't necessarily)?
                     //        Perhaps command is yet to be resolved?
@@ -211,7 +189,7 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
     )
 
     internal fun conjureUpConPurse(name: Name): ConPurse {
-        val namedPurse = old.properties.conAuthPurse[name]
+        val namedPurse = old.conAuthPurse[name]
         val conjuredCPD = namedPurse.functions.conjuredUpCPD()
         require(namedPurse.pdAuth != null) { "PDAuth must be non-null for ConPurse" }
         // This is a simplification/choice: the Z allows for a whole space of options from a new purse with these specific transforms
@@ -234,20 +212,20 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
         // ZEVES-PRG126 Table 8.3, p.87
         pre = { name ->
             // to avoid mixture of short circuiting x mistaken checks on vals depending on pdAuth!! Improve?
-            if (old.properties.conAuthPurse[name].pdAuth == null)
+            if (old.conAuthPurse[name].pdAuth == null)
                 false
             else {
-                //(old.properties.conAuthPurse[name].pdAuth != null) implies {
+                //(old.conAuthPurse[name].pdAuth != null) implies {
                 // There will be some repeated checking here, hard to separate them apart easily without introducing mistakes?
                 val abortPre = old.functions.abort.pre(name)
-                val startMsg = Message.StartFrom(old.properties.conAuthPurse[name].functions.conjuredUpCPD())
-                val purseName = old.properties.conAuthPurse[name].name
+                val startMsg = Message.StartFrom(old.conAuthPurse[name].functions.conjuredUpCPD())
+                val purseName = old.conAuthPurse[name].name
                 val startFromOkayPre =
-                    phiBOp.pre(startMsg, name, old.properties.conAuthPurse[name]) &&
-                        old.properties.conAuthPurse[name].functions.startFromPurseOkay.pre(startMsg) &&
+                    phiBOp.pre(startMsg, name, old.conAuthPurse[name]) &&
+                        old.conAuthPurse[name].functions.startFromPurseOkay.pre(startMsg) &&
                         Message.Bottom in old.ether &&
-                        ((purseName in old.properties.conAuthPurse.dom) implies { purseName != name }) &&
-                        old.functions.conjureUpConPurse(purseName) !in old.properties.conAuthPurse.rng
+                        ((purseName in old.conAuthPurse.dom) implies { purseName != name }) &&
+                        old.functions.conjureUpConPurse(purseName) !in old.conAuthPurse.rng
                 startFromOkayPre
             }
         },
@@ -260,9 +238,9 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             // the ignore/abort paths! See ZEVES-PRG126 Chapter 8, which is most involved part of the exercise.
             val abortPost = old.functions.abort.post(name, result)
             val startFromPost =
-                old.properties.conAuthPurse[name].functions.startFromPurseOkay.post(
-                    Message.StartFrom(old.properties.conAuthPurse[name].functions.conjuredUpCPD()),
-                    mk_(dash.properties.conAuthPurse[name], mbang))
+                old.conAuthPurse[name].functions.startFromPurseOkay.post(
+                    Message.StartFrom(old.conAuthPurse[name].functions.conjuredUpCPD()),
+                    mk_(dash.conAuthPurse[name], mbang))
             setOf(abortPost, startFromPost).any { it }
         }
     )
