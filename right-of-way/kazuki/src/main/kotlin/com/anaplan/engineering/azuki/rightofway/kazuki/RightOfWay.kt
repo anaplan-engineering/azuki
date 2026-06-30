@@ -1,20 +1,12 @@
 package com.anaplan.engineering.azuki.rightofway.kazuki
 
 import com.anaplan.engineering.azuki.rightofway.kazuki.Airspace_Module.transform
-import com.anaplan.engineering.azuki.rightofway.kazuki.Position_Module.as_Position
-import com.anaplan.engineering.azuki.rightofway.kazuki.Position_Module.is_Position
 import com.anaplan.engineering.azuki.rightofway.kazuki.RVector_Module.as_RVector
 import com.anaplan.engineering.azuki.rightofway.kazuki.RVector_Module.mk_RVector
 import com.anaplan.engineering.azuki.rightofway.kazuki.Velocity_Module.as_Velocity
 import com.anaplan.engineering.azuki.rightofway.kazuki.Velocity_Module.is_Velocity
 import com.anaplan.engineering.kazuki.core.*
-import com.anaplan.engineering.kazuki.core.minus
-import com.anaplan.engineering.kazuki.core.plus
-import kotlin.math.abs
-import kotlin.math.atan
-import kotlin.math.min
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
 @PrimitiveInvariant(name = "Real", base = Double::class)
 fun isReal(r: Double) = !r.isNaN() && !r.isInfinite()
@@ -146,7 +138,7 @@ class RightOfWay(private val airspace: Airspace) {
 
     val dot_product = function(
         command = { u: RVector, v: RVector ->
-            if (isZeroVector(u) || isZeroVector(v))  0.0
+            if (isZeroVector(u) || isZeroVector(v)) 0.0
             else if (u.y == 0.0 || v.y == 0.0) u.x * v.x
             else if (u.x == 0.0 || v.x == 0.0) u.y * v.y
             else u.x * v.x + u.y * v.y
@@ -154,16 +146,16 @@ class RightOfWay(private val airspace: Airspace) {
         post = { u, v, r ->
             (isZeroVector(u) || isZeroVector(v)) implies { r == 0.0 }
                 &&
-            (u == v && !isZeroVector(u)) implies { isNZReal(r) }
+                (u == v && !isZeroVector(u)) implies { isNZReal(r) }
                 &&
-            // (u . v)^2 <= (u . u) * (v . v)
-            ((u.x*v.x) + (u.y*v.y)).pow(2) <= ((u.x*u.x) + (u.y*u.y)) * ((v.x*v.x) + (v.y*v.y))
+                // (u . v)^2 <= (u . u) * (v . v)
+                ((u.x * v.x) + (u.y * v.y)).pow(2) <= ((u.x * u.x) + (u.y * u.y)) * ((v.x * v.x) + (v.y * v.y))
         }
     )
 
     val scalar_product = function(
         command = { x: Real, u: RVector ->
-            mk_RVector(x * u.x, x * u.y )
+            mk_RVector(x * u.x, x * u.y)
         }
     )
 
@@ -225,7 +217,7 @@ class RightOfWay(private val airspace: Airspace) {
     private val trackRad = function(
         command = { vx: Real, vy: Real ->
             val theta = atan(vx / vy)
-             when {
+            when {
                 vy > 0 -> theta
                 vx >= 0 -> theta + kotlin.math.PI
                 else -> theta - kotlin.math.PI
@@ -280,7 +272,7 @@ class RightOfWay(private val airspace: Airspace) {
                 // Because Velocity are different, then their difference is not zero
                 // TODO how to `cast` result to NZReal?
                 val vDiffProd = dot_product(vDiff, vDiff) as NZReal
-                (- ( dot_product(pDiff, vDiff) / vDiffProd)) as Double // why isn't result double? as Double
+                (-(dot_product(pDiff, vDiff) / vDiffProd)) as Double // why isn't result double? as Double
             }
         },
         // example where internal typing constraints matter
@@ -387,7 +379,7 @@ class RightOfWay(private val airspace: Airspace) {
         command = { a0: Aircraft, a1: Aircraft ->
             (going_to_cross(a0, a1) && crossed(a1, a0))
                 ||
-               (going_to_cross(a1, a0) && crossed(a0, a1))
+                (going_to_cross(a1, a0) && crossed(a0, a1))
         }
     )
 
@@ -427,7 +419,7 @@ class RightOfWay(private val airspace: Airspace) {
         command = { a0: Aircraft, a1: Aircraft ->
             (Q1(a0, a1.position) && Q4(a1, a0.position))
                 ||
-                (opposite_orientation(a0, a1) && left_to_right(a0, a1));
+                (opposite_orientation(a0, a1) && left_to_right(a0, a1))
         }
     )
 
@@ -500,8 +492,8 @@ class RightOfWay(private val airspace: Airspace) {
                     val track_delta = trackDeltaMin(a0, a1)
                     converging(a0, a1)(delta_c) &&
                         ((180.0 + Theta_h < track_delta)
-                        ||
-                        (track_delta < 180.0 - Theta_h))
+                            ||
+                            (track_delta < 180.0 - Theta_h))
                 }
             )
             inner
@@ -551,11 +543,11 @@ class RightOfWay(private val airspace: Airspace) {
                 command = { delta_o: PReal, delta_c: PReal, Theta_h: Angle ->
                     overtaking(givingWay, withRightOfWay)(delta_o)
                         ||
-                       (conv_not_headon(givingWay, withRightOfWay)(delta_c, Theta_h)
-                        &&
-                        to_the_right_of(givingWay, withRightOfWay.position)
-                        &&
-                        zero_crossed(givingWay, withRightOfWay))
+                        (conv_not_headon(givingWay, withRightOfWay)(delta_c, Theta_h)
+                            &&
+                            to_the_right_of(givingWay, withRightOfWay.position)
+                            &&
+                            zero_crossed(givingWay, withRightOfWay))
                 }
             )
             inner
@@ -563,10 +555,11 @@ class RightOfWay(private val airspace: Airspace) {
     )
 
     val noHeadOn = function(
-        command = { -> true
-            forall(airspace.aircrafts) {
-                a -> forall(airspace.aircrafts) {
-                    b -> (a != b) implies {
+        command = { ->
+            true
+            forall(airspace.aircrafts) { a ->
+                forall(airspace.aircrafts) { b ->
+                    (a != b) implies {
                         !headon(a, b)(airspace.delta_c, airspace.Theta_h)
                     }
                 }
@@ -578,8 +571,8 @@ class RightOfWay(private val airspace: Airspace) {
         command = { a0: Aircraft, a1: Aircraft ->
             right_of_way(a1, a0)(airspace.delta_o,
                 airspace.delta_c, airspace.Theta_h) implies {
-                    !right_of_way(a0, a1)(airspace.delta_o,
-                        airspace.delta_c, airspace.Theta_h)
+                !right_of_way(a0, a1)(airspace.delta_o,
+                    airspace.delta_c, airspace.Theta_h)
             }
         }
     )
@@ -616,7 +609,7 @@ class RightOfWay(private val airspace: Airspace) {
         command = { a0: Aircraft, a1: Aircraft ->
             conv_not_headon(a0, a1)(airspace.delta_c, airspace.Theta_h) implies {
                 (zero_crossed(a1, a0) && to_the_right_of(a0, a1.position)) implies {
-                    right_of_way(a1, a0)(airspace.delta_o,airspace.delta_c, airspace.Theta_h)
+                    right_of_way(a1, a0)(airspace.delta_o, airspace.delta_c, airspace.Theta_h)
                 }
             }
         }
