@@ -297,17 +297,17 @@ class ConPurseFunctions(private val old: ConPurse) {
     val startToPurseOkay = function(
         command = { m: Message ->
             val (dash, _) = abortPurseOkay(m)
-            mk_(dash.functions.startToPurseEaFromOkay(m, conjuredUpCPD()), Message.Bottom)
+            mk_(dash.functions.startToPurseEaFromOkay(m, arbitraryCPD()), Message.Bottom)
         },
         pre = { m ->
             abortPurseOkay.pre(m) &&
-                startToPurseEaFromOkay.pre(m, conjuredUpCPD())
+                startToPurseEaFromOkay.pre(m, arbitraryCPD())
         },
         post = { m, result ->
             val (middle, mm) = abortPurseOkay(m)
             val (dash, mr) = result
             abortPurseOkay.post(m, mk_(middle, mm)) &&
-                middle.functions.startToPurseEaFromOkay.post(m, conjuredUpCPD(), dash)
+                middle.functions.startToPurseEaFromOkay.post(m, arbitraryCPD(), dash)
 
         }
     )
