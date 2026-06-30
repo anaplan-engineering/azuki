@@ -22,8 +22,6 @@ dependencies {
     implementation "dk.au.ece.vdmj:stdlib:$vdmjVersion"
     implementation "dk.au.ece.vdmj:quickcheck:$vdmjVersion"
     implementation "dk.au.ece.vdmj:vdmjunit:$vdmjVersion"
-//    implementation group: 'org.overturetool.core', name: 'interpreter', version: '3.0.2'
-//    implementation group: 'org.overturetool.core.annotations', name: 'provided', version: '3.0.2'
     implementation libs.slf4j.api
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     testImplementation group: 'org.mockito.kotlin', name: 'mockito-kotlin', version: '3.2.0'

@@ -1,14 +1,3 @@
-// Attempt gradle update to use VDMJ 4.8.0-SNAPSHOT locally
-//buildscript {
-//    repositories {
-//        mavenLocal() // <--- This is the one Gradle will actually use to find 4.8.0-SNAPSHOT
-//        mavenCentral()
-//    }
-////    dependencies {
-////        classpath project(':vdm-stub-generator')
-////    }
-//}
-
 plugins {
     id 'azuki.kotlin-conventions'
     id "com.anaplan.engineering.vdm-stub-generator"
@@ -17,15 +6,6 @@ plugins {
 configurations {
     vdm
 }
-
-//// In the root settings.gradle
-//pluginManagement {
-//    repositories {
-//        mavenLocal()
-//        gradlePluginPortal()
-//        mavenCentral()
-//    }
-//}
 
 dependencies {
     api project(":right-of-way:adapter-declaration")

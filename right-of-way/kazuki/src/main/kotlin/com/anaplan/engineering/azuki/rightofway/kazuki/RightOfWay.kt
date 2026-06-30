@@ -102,14 +102,8 @@ interface Airspace {
 }
 
 class AirspaceProperties(private val airspace: Airspace) {
-//    val delta_o by property { 100.0 }  // DELTA_O
-//    val delta_c by property { 1000.0 } // DELTA_C
-//    val Theta_h by property { 80.0 }   // THETA_H //TODO LF: can't depend on `adapter-api` for these ?
-    //val open by property { false }
-    //TODO LF: should this have an `as_Set` or just `toSet()` would do?
     val aircraftCount by property { airspace.aircrafts.size.toNat() }
-    val allPositions by property { as_Set(airspace.aircrafts.map { it.position }) }
-    val allVelocities by property { as_Set(airspace.aircrafts.map { it.velocity }) }
+    val allPositions by property { set(airspace.aircrafts) { it.position } }
 }
 
 /**
@@ -157,8 +151,6 @@ class RightOfWay(private val airspace: Airspace) {
             else if (u.x == 0.0 || v.x == 0.0) u.y * v.y
             else u.x * v.x + u.y * v.y
         },
-        //TODO remove? no need for pre given the invariant of RVector?
-        pre = { u, v -> u.isReal() && v.isReal() },
         post = { u, v, r ->
             (isZeroVector(u) || isZeroVector(v)) implies { r == 0.0 }
                 &&

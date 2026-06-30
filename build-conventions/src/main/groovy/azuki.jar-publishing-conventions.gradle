@@ -46,6 +46,15 @@ publishing {
                         organizationUrl = "http://www.anaplan.com"
                         roles = ['engineer']
                     }
+                    developer {
+                        id = 'leouk'
+                        name = 'Leo Freitas'
+                        email = 'leo.freitas@anaplan.com'
+                        url = "https://github.com/leouk"
+                        organization = "Anaplan Ltd"
+                        organizationUrl = "http://www.anaplan.com"
+                        roles = ['principal engineer']
+                    }
                 }
             }
         }

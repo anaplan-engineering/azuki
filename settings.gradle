@@ -37,7 +37,6 @@ include(
     "graphs:tests",
     "graphs:script-runner",
     "graphs:verification-runner",
-    'right-of-way',
     'right-of-way:adapter-api',
     'right-of-way:adapter-declaration',
     'right-of-way:adapter-script-generation',

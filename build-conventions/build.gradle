@@ -3,7 +3,6 @@ plugins {
 }
 
 repositories {
-    mavenLocal() // to get the kazuki-core version with Double
     gradlePluginPortal()
 }
 
