@@ -1,0 +1,10 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":examples:tictactoe:dsl")
+    api project(":examples:tictactoe:adapter-declaration")
+    api project(":azuki-script-generation")
+    implementation libs.slf4j.api
+}

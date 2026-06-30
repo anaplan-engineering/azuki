@@ -1,9 +1,0 @@
-plugins {
-    id 'azuki.kotlin-conventions'
-}
-
-dependencies {
-    api project(":right-of-way:adapter-declaration")
-    compileOnly project(":right-of-way:kazuki")
-    implementation libs.slf4j.api
-}

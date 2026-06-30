@@ -1,0 +1,9 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    implementation project(":examples:graphs:adapter-declaration")
+    implementation "org.jgrapht:jgrapht-core:1.5.2"
+    implementation libs.slf4j.api
+}

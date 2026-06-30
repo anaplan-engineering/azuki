@@ -1,9 +1,0 @@
-plugins {
-    id 'azuki.kotlin-conventions'
-}
-
-dependencies {
-    api project(":tictactoe:adapter-declaration")
-    compileOnly project(":tictactoe:kazuki")
-    implementation libs.slf4j.api
-}

@@ -1,0 +1,8 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":examples:right-of-way:adapter-api")
+    api project(":azuki-declaration")
+}

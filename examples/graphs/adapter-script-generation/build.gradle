@@ -1,0 +1,10 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":examples:graphs:dsl")
+    api project(":examples:graphs:adapter-declaration")
+    implementation project(":azuki-script-generation")
+    implementation libs.slf4j.api
+}
