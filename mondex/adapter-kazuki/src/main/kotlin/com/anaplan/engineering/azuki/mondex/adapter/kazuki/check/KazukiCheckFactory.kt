@@ -6,6 +6,7 @@ import com.anaplan.engineering.azuki.mondex.adapter.api.MondexCheckFactory
 import com.anaplan.engineering.azuki.mondex.adapter.api.Purse
 import com.anaplan.engineering.azuki.mondex.adapter.api.PurseCheckFactory
 import com.anaplan.engineering.azuki.mondex.adapter.api.WorldCheckFactory
+import com.anaplan.engineering.azuki.mondex.adapter.api.WorldLevel
 import com.anaplan.engineering.azuki.mondex.adapter.kazuki.ExecutionEnvironment
 
 class KazukiCheckFactory : MondexCheckFactory {
@@ -30,9 +31,18 @@ object KazukiWorldCheckFactory : WorldCheckFactory {
     override fun worldExists(authPurses: Map<String, Purse>, result: Boolean) =
         WorldExistsCheck(authPurses, result)
 
-    override fun noValueCreation(result: Boolean) = NoValueCreationCheck(result)
+    override fun worldExists(
+        level: WorldLevel,
+        authPurses: Map<String, Purse>,
+        result: Boolean
+    ): Check {
+        TODO("Not yet implemented")
+    }
 
-    override fun allValueAccounted(result: Boolean) = AllValueAccountedCheck(result)
+    //LF @EK TODO
+//    override fun noValueCreation(result: Boolean) = NoValueCreationCheck(result)
+//
+//    override fun allValueAccounted(result: Boolean) = AllValueAccountedCheck(result)
 }
 
 interface KazukiCheck : Check {
