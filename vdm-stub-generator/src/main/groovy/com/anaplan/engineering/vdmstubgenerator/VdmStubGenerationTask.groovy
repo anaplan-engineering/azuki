@@ -49,6 +49,9 @@ abstract class VdmStubGenerationTask extends DefaultTask {
         }
 
         def specification = new Specification(files: vdmFiles)
+        // synch gradle with system to avoid mismatch - can't have both run-times loaded at the same time
+        def vdmEngine = project.findProperty('vdmEngine') ?: 'overture'
+        System.setProperty(VdmAnimatorKt.VDM_ENGINE_PROPERTY, vdmEngine.toString())
         def structure = VdmAnimatorKt.getStructure(specification)
 
         def stubDirectory = getStubDirectory().getOrElse(new File(project.projectDir, "build/generated-sources"))

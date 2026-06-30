@@ -2,9 +2,13 @@ package com.anaplan.engineering.azuki.tictactoe.eacs
 
 import com.anaplan.engineering.azuki.core.runner.Eac
 import com.anaplan.engineering.azuki.core.system.BEH
+import com.anaplan.engineering.azuki.tictactoe.O
+import com.anaplan.engineering.azuki.tictactoe.X
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeBehaviours
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeFunctionalElements
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeScenario
+import com.anaplan.engineering.azuki.tictactoe.gameA
+import com.anaplan.engineering.azuki.tictactoe.orderA
 
 @BEH(TicTacToeBehaviours.PlaceToken, TicTacToeFunctionalElements.Game, """
     Place a token
@@ -14,7 +18,8 @@ class BEH3 : TicTacToeScenario() {
     @Eac("A player cannot place a token over an existing token")
     fun immutableState() {
         given {
-            thereIsAGame(gameA, """
+            thereIsAGame(
+                gameA, """
                 . | . | .
                 . | X | .
                 . | . | .
@@ -42,7 +47,8 @@ class BEH3 : TicTacToeScenario() {
     fun turns() {
         given {
             thereIsAPlayOrder(orderA, O, X)
-            thereIsAGame(gameA, orderA, """
+            thereIsAGame(
+                gameA, orderA, """
                 . | . | .
                 . | . | .
                 . | . | .
@@ -53,7 +59,8 @@ class BEH3 : TicTacToeScenario() {
             placeToken(gameA, X, 1 to 1)
         }
         then {
-            boardHasState(gameA, """
+            boardHasState(
+                gameA, """
                 X | . | .
                 . | O | .
                 . | . | .
@@ -64,7 +71,8 @@ class BEH3 : TicTacToeScenario() {
     @Eac("A player cannot move out of turn")
     fun outOfTurn() {
         given {
-            thereIsAGame(gameA, """
+            thereIsAGame(
+                gameA, """
                 . | . | X
                 . | . | .
                 . | . | .

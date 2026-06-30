@@ -1,0 +1,84 @@
+package com.anaplan.engineering.azuki.rightofway.adapter.scriptgen
+
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Aircraft
+import com.anaplan.engineering.azuki.script.generation.*
+import com.anaplan.engineering.azuki.script.generation.ScriptGenerationService
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Position
+import com.anaplan.engineering.azuki.rightofway.adapter.api.Velocity
+import com.anaplan.engineering.azuki.rightofway.adapter.declaration.RightOfWayDeclarationState
+import com.anaplan.engineering.azuki.rightofway.dsl.RightOfWayRunnableScenario
+import kotlin.Result.Companion.failure
+import kotlin.Result.Companion.success
+
+// TODO LF: not quite following these type references / indirections
+val RightOfWayScriptGeneration = ScriptGenerationService.new(RightOfWayScriptGenerationActionFactory,
+    RightOfWayScriptGenerationCheckFactory,
+    ::RightOfWayDeclarationState).withEnvironmentFactory(::RightOfWayGenerationEnvironment)
+    .withActionGeneratorFactory(RightOfWayScriptGenerationActionGeneratorFactory)
+    .withQueryFactory(RightOfWayScriptGenerationQueryQueryFactory)
+    .withVerifyFactory(RightOfWayScriptGenerationVerificationQueryFactory)
+    .build()
+
+// None of the declaration builders for RightOfWay use the environment:
+typealias RightOfWayScriptGenerationDeclarationBuilder<D> = ScriptGenerationDeclarationBuilder<RightOfWayGenerationEnvironment, D>
+typealias RightOfWayScriptGenerationDeclarationBuilderFactory<D> = ScriptGenerationDeclarationBuilderFactory<RightOfWayGenerationEnvironment, D>
+
+internal const val Width = 3
+internal const val Height = 3
+
+val RightOfWayScriptingHelper = ScriptingHelper(mapOf(
+    String::class to { v: Any? -> "\"\"\"${v.toString()}\"\"\"" },
+    Position::class to { v: Any? -> (v as Position).let { "${it.x} to ${it.y}" } },
+    Velocity::class to { v: Any? -> (v as Velocity).let { "${it.x} to ${it.y}" } },
+    Aircraft::class to { v: Any? ->
+        val aircraft = v as Aircraft
+        val position = "${aircraft.position.x} to ${aircraft.position.y}"
+        val velocity = "${aircraft.velocity.x} to ${aircraft.velocity.y}"
+        "aircraft($position to $velocity)"
+    },
+    Double::class to { v: Any? -> v.toString() },
+    Boolean::class to { v: Any? -> v.toString() },
+    UInt::class to { v: Any? -> "${v}U" },
+    Int::class to { v: Any? -> v.toString() },
+    Long::class to { v: Any? -> v.toString() },
+    IntRange::class to { v: Any? -> (v as IntRange).let { "(${it.first} .. ${it.last})" } },
+))
+
+class RightOfWayGenerationEnvironment : ScriptGenerationEnvironment {
+
+    // We want to collapse individual airspace-has-aircraft checks into a single airspace-has-state check,
+    // but only if the entire airspace is covered by them.
+    val airspaceCheckStates = CheckComposerMap(::AirspaceCheckState)
+
+    class AirspaceCheckState(private val airspaceName: String) : CheckComposer<RightOfWayGenerationEnvironment> {
+
+        private val airspace = mutableMapOf<String, Aircraft>()
+
+        //TODO LF: not quite following this
+        override fun compose(environment: RightOfWayGenerationEnvironment) = if (isFullySpecified) {
+            success(listOf(AirspaceScriptGenerationCheckFactory.hasAircraft(airspaceName, "???")))
+        } else {
+            failure(IllegalStateException("Airspace has not been checked for safety"))
+        }
+
+        private val isFullySpecified get() = airspace.isNotEmpty()
+
+        fun hasAircraft(aircraftName: String, aircraft: Aircraft) = at(aircraftName) { airspace[aircraftName] = aircraft }
+
+        private fun at(aircraftName: String, fn: AirspaceCheckState.() -> Unit) =
+            if (aircraftName !in airspace.keys) {
+                failure(IllegalStateException("Aircraft $aircraftName is not in airspace"))
+            } else success(apply(fn))
+    }
+}
+
+object RightOfWayRunnableScenarioClassGenerator : RunnableScenarioClassGenerator<RightOfWayRunnableScenario>(
+    rightOfWayStandardImports.toList(),
+    RightOfWayRunnableScenario::class)
+
+// Default imports that should be added to any right-of-way script (generated or parsed).
+val rightOfWayStandardImports = arrayOf(
+    "com.anaplan.engineering.azuki.rightofway.dsl.*",
+    "com.anaplan.engineering.azuki.rightofway.*",
+    "com.anaplan.engineering.azuki.rightofway.adapter.api.aircraft",
+)

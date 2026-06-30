@@ -8,4 +8,4 @@ out/
 *.swp
 *.hprof
 .kotlin
-
+.cursor/

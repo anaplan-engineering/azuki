@@ -1,0 +1,12 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    //TODO LF: :azuki-core redundant given `api project` dependencies are transitive and `adapter-api` imports it?
+    //api project(":azuki-core")
+    api project(":right-of-way:adapter-api")
+    implementation libs.jackson.module
+    implementation libs.kotlin.test
+}
+

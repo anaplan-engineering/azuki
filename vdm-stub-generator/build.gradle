@@ -6,10 +6,18 @@ plugins {
     id 'com.gradle.plugin-publish' version '1.2.0'
 }
 
+// default VDM engine as 'overture' (instead of 'vdmj')
+def vdmEngine = findProperty('vdmEngine') ?: 'overture'
+
 dependencies {
     implementation gradleApi()
     implementation "com.anaplan.engineering:vdm-animation-api:$version"
-    runtimeOnly "com.anaplan.engineering:vdm-animation-overture:$version"
+    // can't have both run-times loaded at the same time (i.e. it causes conflict for the second loaded one in native libraries)
+    if (vdmEngine == 'vdmj') {
+        runtimeOnly "com.anaplan.engineering:vdm-animation-vdmj:$version"
+    } else {
+        runtimeOnly "com.anaplan.engineering:vdm-animation-overture:$version"
+    }
 }
 
 gradlePlugin {

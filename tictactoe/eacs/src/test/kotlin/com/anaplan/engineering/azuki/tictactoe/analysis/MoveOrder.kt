@@ -6,9 +6,9 @@ import com.anaplan.engineering.azuki.core.runner.KnownBug
 import com.anaplan.engineering.azuki.core.runner.ToBeDone
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeScenario
 import com.anaplan.engineering.azuki.tictactoe.dsl.TicTacToeWhen
-import com.anaplan.engineering.azuki.tictactoe.eacs.O
-import com.anaplan.engineering.azuki.tictactoe.eacs.X
-import com.anaplan.engineering.azuki.tictactoe.eacs.gameA
+import com.anaplan.engineering.azuki.tictactoe.O
+import com.anaplan.engineering.azuki.tictactoe.X
+import com.anaplan.engineering.azuki.tictactoe.gameA
 import org.junit.runners.Parameterized
 
 class MoveOrder(private val testCase: TestCase) : TicTacToeScenario() {

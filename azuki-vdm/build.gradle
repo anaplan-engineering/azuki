@@ -3,11 +3,23 @@ plugins {
     id 'azuki.jar-publishing-conventions'
 }
 
+repositories {
+    mavenCentral()
+}
+
+def vdmEngine = findProperty('vdmEngine') ?: 'overture'
+
 dependencies {
     api project(":azuki-core")
     api "com.anaplan.engineering:vdm-animation-api:$version"
     implementation libs.jackson.module
-    runtimeOnly "com.anaplan.engineering:vdm-animation-overture:$version"
+    // Both SPI registrations exist in the codebase; build selects which interpreter is on the classpath.
+    // Overture and VDMJ native MATH modules must not coexist — only one backend is linked at runtime.
+    if (vdmEngine == 'vdmj') {
+        runtimeOnly "com.anaplan.engineering:vdm-animation-vdmj:$version"
+    } else {
+        runtimeOnly "com.anaplan.engineering:vdm-animation-overture:$version"
+    }
 }
 
 publishing {

@@ -1,0 +1,40 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'azuki.jar-publishing-conventions'
+}
+
+ext {
+    // Maven m2 doesn't yet have 4.8.0 on maven central
+    // https://repo.maven.apache.org/maven2/dk/au/ece/vdmj/vdmj/
+    vdmjVersion = '4.7.0' //'4.8.0-SNAPSHOT'
+}
+
+repositories {
+    mavenLocal() // to get the kazuki-core version with Double
+    mavenCentral()
+}
+
+dependencies {
+    api project(":vdm-animation-api")
+    implementation "dk.au.ece.vdmj:vdmj:$vdmjVersion"
+    implementation "dk.au.ece.vdmj:annotations:$vdmjVersion"
+    implementation "dk.au.ece.vdmj:annotations2:$vdmjVersion"
+    implementation "dk.au.ece.vdmj:stdlib:$vdmjVersion"
+    implementation "dk.au.ece.vdmj:quickcheck:$vdmjVersion"
+    implementation "dk.au.ece.vdmj:vdmjunit:$vdmjVersion"
+    implementation libs.slf4j.api
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'org.mockito.kotlin', name: 'mockito-kotlin', version: '3.2.0'
+    testImplementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'VDMJ VDM animator'
+                description = 'A programmatic wrapper enabling in-process animation of VDM specifications with VDMJ'
+            }
+        }
+    }
+}

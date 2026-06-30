@@ -1,0 +1,728 @@
+--@doc Leo Freitas, Copyright 2023
+--     Model of "right of way" rules for aircraft
+--     follows the ideas in https://link.springer.com/chapter/10.1007/978-3-031-20872-0_4
+module RightOfWayRules
+imports from MATH
+    values
+        pi renamed pi;
+    functions
+        atan renamed atan;
+        sqrt renamed math_sqrt;
+exports all
+definitions
+
+types
+    --@doc non-zero real
+    nzreal = real
+    inv r == r <> 0;
+
+    --@doc positive real
+    preal = real
+    inv r == r >= 0;
+
+    --@doc negative real
+    nreal = real
+    inv r == r <= 0;
+
+    --@doc positive non-zero (>0) real
+    pnzreal = preal
+    inv r == is_nzreal(r);
+
+    --@doc positive non-zero/one (>0, <>1) real
+    pnzonereal = pnzreal
+    inv r == r <> 1;
+
+    --@doc negative non-zero (<0) real
+    nnzreal = nreal
+    inv r == is_nzreal(r);
+
+    RVector :: x: real y: real;
+
+    Position = RVector
+    inv mk_RVector(x,y) == is_preal(x) and is_preal(y); --:: x: preal y: preal;
+
+    --@doc plane velocity
+    Velocity = RVector
+    inv mk_RVector(x,y) == is_nzreal(x) and is_nzreal(y);--:: x: nzreal y: nzreal;
+
+    Aircraft ::
+        position: Position
+        velocity: Velocity;
+
+    Angle = preal
+    inv a == a <= 360;
+
+    Precision = nat
+    inv p == p mod 10 = 0;
+
+    Convergence = <Convergent> | <Divergent> | <Overtaking>;
+
+    Aircrafts = set of Aircraft
+    inv aircrafts == card { a.position | a in set aircrafts } = card aircrafts;
+
+functions
+
+    magnitude: RVector -> preal
+    magnitude(mk_RVector(x, y)) == math_sqrt((x**2) + (y**2)); --sqrt'(x**2 + y**2);
+
+    sum: RVector * RVector -> RVector
+    sum(mk_RVector(x1, y1), mk_RVector(x2, y2)) == mk_RVector(x1+x2, y1+y2);
+
+    minus: RVector -> RVector
+    minus(mk_RVector(x, y)) == mk_RVector(-x, -y);
+
+    sub: RVector * RVector -> RVector
+    sub(x, y) == sum(x, minus(y));
+
+    rotate90: RVector -> RVector
+    rotate90(mk_RVector(vx, vy)) == mk_RVector(vy, -vx);
+
+    isZero: RVector -> bool
+    isZero(mk_RVector(vx, vy)) == vx = 0 and vy = 0;
+
+    hasZero: RVector -> bool
+    hasZero(mk_RVector(vx, vy)) == vx = 0 or vy = 0;
+
+    dot_product: RVector * RVector -> real
+    dot_product(u, v) ==
+        if isZero(u) or isZero(v) then 0
+        else if u.y = 0 or v.y = 0 then u.x * v.x
+        else if u.x = 0 or v.x = 0 then u.y * v.y
+        else u.x * v.x + u.y * v.y
+    --pre <> nan and <> infinity
+    post
+        (isZero(u) or isZero(v) => RESULT = 0)
+        and
+        (u = v and not isZero(u) => is_nzreal(RESULT))
+        and
+        -- (u . v)**2 <= (u . u) * (v . v)
+        ((u.x*v.x) + (u.y*v.y))**2 <= (u.x*u.x + u.y*u.y) * (v.x*v.x + v.y*v.y)
+        --true;
+        ;
+
+    scalar_product: real * RVector -> RVector
+    scalar_product(v, mk_RVector(x,y)) == mk_RVector(v*x, v*y);
+
+    --@doc Aircraft quadrants (Q1..Q4) on the flight (2D) plane
+    Q1: Aircraft * Position -> bool
+    Q1(a, p) ==
+        let psub: RVector = sub(p, a.position) in
+            dot_product(psub, rotate90(a.velocity)) > 0.0
+            and
+            dot_product(psub, a.velocity) >= 0.0
+    post
+        (RESULT => to_the_right_of(a, p));
+
+    Q2: Aircraft * Position -> bool
+    Q2(a, p) ==
+        let psub: RVector = sub(p, a.position) in
+            dot_product(psub, rotate90(a.velocity)) <= 0.0
+            and
+            dot_product(psub, a.velocity) > 0.0;
+
+    Q3: Aircraft * Position -> bool
+    Q3(a, p) ==
+        let psub: RVector = sub(p, a.position) in
+            dot_product(psub, rotate90(a.velocity)) < 0.0
+            and
+            dot_product(psub, a.velocity) <= 0.0
+    post
+        (RESULT => to_the_left_of(a, p));
+
+    Q4: Aircraft * Position -> bool
+    Q4(a, p) ==
+        let psub: RVector = sub(p, a.position) in
+            dot_product(psub, rotate90(a.velocity)) >= 0.0
+            and
+            dot_product(psub, a.velocity) < 0.0;
+
+    atan2: nzreal * nzreal -> real
+    atan2(y, x) ==
+        if x > 0 then
+            atan(y / x)
+        else if x < 0 and y >= 0 then
+            atan(y / x) + pi
+        else if x < 0 and y <= 0 then
+            atan(y / x) - pi
+        else if y > 0 then
+            pi / 2
+        else if y < 0 then
+            -pi / 2
+        else
+            0   -- undefined at (0,0)
+        ;
+
+    -- bearing from north, radians, range (-pi, pi]
+    track_rad: real * nzreal -> real
+    track_rad(vx, vy) ==
+        let theta = atan(vx / vy) in
+            if vy > 0 then
+                theta
+            elseif vx >= 0 then
+                theta + pi
+            else
+                theta - pi;
+
+    -- if Angle is degrees in [0, 360):
+    track_deg: real * nzreal -> Angle
+    track_deg(vx, vy) ==
+        let rad = track_rad(vx, vy) in
+        if rad < 0 then
+            (rad * 180 / pi) + 360
+        else
+            rad * 180 / pi;
+
+    --@doc Aircrafrt track (i.e. angle between north and aircraft directon)
+    --@doc fix of track in radians x degrees mistake
+    track: Aircraft -> Angle
+    track(mk_Aircraft(-, mk_RVector(v0x, v0y))) ==
+        track_deg(v0x, v0y); -- atan(v0x / v0y);
+
+    --@doc Time to Closest Point of Approach
+    tCPA: Aircraft * Aircraft -> real
+    tCPA(a0, a1) ==
+        if a0.velocity = a1.velocity then
+            0
+        else
+            let
+              sub_v1v2: Velocity = sub(a0.velocity, a1.velocity),
+              vDiffProd: nzreal = dot_product(sub_v1v2, sub_v1v2)
+             in
+                - (dot_product(sub(a0.position, a1.position), sub_v1v2) / vDiffProd)
+    post
+        true--a0.velocity <> a1.velocity <=> is_nnzreal(RESULT)
+        ;
+
+    --@doc Horizontal Miss Distance is the distance at the Closest Point of Approach
+    --     when their position and velocity vectors are projected in time. Assumes delta_c ~< 1000 nautical miles
+    --
+    -- case 1(HMD > delta_c): a0 travelling west, a1 travelling south BEFORE a0 HMD
+    --                                                     |
+    --                                                    \/
+    --                                                    a1 [a1 travelling south before]
+    -- a0 ->----------------HMD--------------------------->  [a0 travelling west ]
+    --
+    -- case 2(HMD <= delta_c): a0 travelling west, a1 travelling south AFTER a0 HMD
+    --                                                     |
+    --                                                    \/
+    -- a0 ->----------------HMD--------------------------->
+    --                                                    a1 [a1 after a0]    HMD: Aircraft * Aircraft -> real
+    HMD:Aircraft * Aircraft -> real
+    HMD(a0, a1) ==
+        magnitude(
+            sum(
+                sub(a0.position, a1.position),
+                scalar_product(
+                    tCPA(a0, a1),
+                    sub(a0.velocity, a1.velocity)
+                )
+            )
+        );
+
+    --@doc aircraft relative position (i.e., p is to the left of a's position)
+    to_the_left_of: Aircraft * Position -> bool
+    to_the_left_of(a, p) ==
+        dot_product(sub(p, a.position), rotate90(a.velocity)) < 0.0;
+
+    --@doc aircraft relative position (i.e., p is to the right of a's position)
+    to_the_right_of: Aircraft * Position -> bool
+    to_the_right_of(a, p) ==
+        dot_product(sub(p, a.position), rotate90(a.velocity)) > 0.0;
+
+    --@doc aircraft relative motion (i.e., a1 is moving left to right relative to a0)
+    left_to_right: Aircraft * Aircraft -> bool
+    left_to_right(a0, a1) ==
+        dot_product(a0.velocity, rotate90(a1.velocity)) < 0.0;
+
+    --@doc aircraft relative motion (i.e., a1 is moving right to left relative to a0)
+    right_to_left: Aircraft * Aircraft -> bool
+    right_to_left(a0, a1) ==
+        dot_product(a0.velocity, rotate90(a1.velocity)) > 0.0;
+
+    --@doc Check trajectories will cross in future (i.e., a1 is going to cross a0's trajectory)
+    going_to_cross: Aircraft * Aircraft -> bool
+    going_to_cross(a0, a1) ==
+        (to_the_left_of(a0, a1.position) and left_to_right(a0, a1))
+        or
+        (to_the_right_of(a0, a1.position) and right_to_left(a0, a1));
+
+    --@doc Check trajectories have already crossed (i.e. a1 has crossed a0's trajectory)
+    crossed: Aircraft * Aircraft -> bool
+    crossed(a0, a1) ==
+        (to_the_left_of(a0, a1.position) and right_to_left(a0, a1))
+        or
+        (to_the_right_of(a0, a1.position) and left_to_right(a0, a1));
+
+    --@doc Check trajectories are going to cross but have not yet crossed
+    zero_crossed: Aircraft * Aircraft -> bool
+    zero_crossed(a0, a1) ==
+        going_to_cross(a0, a1) and
+        going_to_cross(a1, a0);
+
+    --@doc One aircraft (a0) has crossed trajectory of other (a1) but not other way round
+    one_crossed: Aircraft * Aircraft -> bool
+    one_crossed(a0, a1) ==
+        (going_to_cross(a0, a1) and crossed(a1, a0))
+        or
+        (going_to_cross(a1, a0) and crossed(a0, a1));
+
+    --@doc both aircraft crossed each other's trajectories
+    both_crossed: Aircraft * Aircraft -> bool
+    both_crossed(a0, a1) ==
+        crossed(a0, a1) and crossed(a1, a0);
+
+    --@doc
+    parallel: Aircraft * Aircraft -> bool
+    parallel(a0, a1) ==
+        dot_product(a0.velocity, rotate90(a1.velocity)) = 0.0;
+
+    same_orientation: Aircraft * Aircraft -> bool
+    same_orientation(a0, a1) ==
+        dot_product(a0.velocity, a1.velocity) > 0.0;
+
+    opposite_orientation: Aircraft * Aircraft -> bool
+    opposite_orientation(a0, a1) ==
+        dot_product(a0.velocity, a1.velocity) < 0.0;
+
+    --@doc a1 is in a0's Q1 and a1 was in a0's Q2
+    IS_in_Q1_and_was_in_Q2: Aircraft * Aircraft -> bool
+    IS_in_Q1_and_was_in_Q2(a0, a1) ==
+        (Q1(a0, a1.position) and Q4(a1, a0.position))
+        or
+        (opposite_orientation(a0, a1) and left_to_right(a0, a1));
+
+    --@doc aircraft quadrant convergence
+    QC: Aircraft * Aircraft -> bool
+    QC(a0, a1) ==
+        (Q1(a0, a1.position) and Q1(a1, a0.position))
+        or
+        (Q1(a0, a1.position) and Q2(a1, a0.position))
+        or
+        (Q2(a0, a1.position) and Q1(a1, a0.position))
+        or
+        (Q2(a0, a1.position) and Q2(a1, a0.position));
+
+    QD: Aircraft * Aircraft -> bool
+    QD(a0, a1) ==
+        (Q3(a0, a1.position) and Q3(a1, a0.position))
+        or
+        (Q3(a0, a1.position) and Q4(a1, a0.position))
+        or
+        (Q4(a0, a1.position) and Q3(a1, a0.position))
+        or
+        (Q4(a0, a1.position) and Q4(a1, a0.position));
+
+    QO: Aircraft * Aircraft -> bool
+    QO(a0, a1) ==
+        (Q1(a0, a1.position) and Q3(a1, a0.position))
+        or
+        (Q1(a0, a1.position) and Q4(a1, a0.position))
+        or
+        (Q2(a0, a1.position) and Q3(a1, a0.position))
+        or
+        (Q2(a0, a1.position) and Q4(a1, a0.position))
+        or
+        (Q3(a0, a1.position) and Q1(a1, a0.position))
+        or
+        (Q3(a0, a1.position) and Q2(a1, a0.position))
+        or
+        (Q4(a0, a1.position) and Q1(a1, a0.position))
+        or
+        (Q4(a0, a1.position) and Q2(a1, a0.position));
+
+    --@doc Convergence relative to qudrant convergence and horizontal miss distance up to a delta_c >= 0 threshold
+    converging: Aircraft * Aircraft -> preal -> bool
+    converging(a0, a1)(delta_c) ==
+        QC(a0, a1) and (HMD(a0, a1) < delta_c);
+
+    --@doc Convergence not head on bar the Theta_h angular threshold (i.e. not head on if their tracks are not within Theta_h of 180 degrees apart)
+    conv_not_headon: Aircraft * Aircraft -> preal * Angle -> bool
+    conv_not_headon(a0, a1)(delta_c, Theta_h) ==
+        converging(a0, a1)(delta_c)
+        and
+        (
+        let track_delta: Angle/*or nat? */ =
+                abs (track(a0) - track(a1))
+        in
+             (180 + Theta_h < track_delta)
+             or
+             (track_delta < 180 - Theta_h)
+        );
+
+    headon: Aircraft * Aircraft -> preal * Angle -> bool
+    headon(a0, a1)(delta_c, Theta_h) ==
+        converging(a0, a1)(delta_c)
+        and
+        (
+        let track_delta: Angle =
+                abs (track(a0) - track(a1))
+        in
+             --@Printf("a0=%1$s, a1=%2$s, track delta=%3$s", a0, a1, track_delta)
+             (180 - Theta_h <= track_delta)
+             and
+             (track_delta <= 180 + Theta_h)
+        );
+
+    --@doc Aircraft a0 is overtaking a1 when a1 is in a0's Q1 or Q2 and a0 is in a1's Q3 or Q4 and
+    --     their horizontal miss distance is less than delta_o >= 0
+    overtaking: Aircraft * Aircraft -> preal -> bool
+    overtaking(a0, a1)(delta_o) ==
+        (Q1(a0, a1.position) or Q2(a0, a1.position))
+        and
+        (Q3(a1, a0.position) or Q4(a1, a0.position))
+        and
+        (HMD(a0, a1) < delta_o);
+
+    --@doc Aircraft a1 has right of way over a0 (which must give way), when either
+    --     a0 is overtaking a1, or a0 is converging (except head on) and a1 is to the
+    --     right of a0 and thier trajectivies have not yet crossed
+    --
+    --     note the input parameters (confusingly) are the other way around from other functions!
+    --     to avoid confusion we will have the inputs the way round like other functions and
+    --     change the implementation itself to match.
+    right_of_way: Aircraft * Aircraft -> preal * preal * Angle -> bool
+    right_of_way(withRightOfWay, givingWay)(delta_o, delta_c, Theta_h) ==
+        overtaking(givingWay, withRightOfWay)(delta_o)
+        or
+        (conv_not_headon(givingWay, withRightOfWay)(delta_c, Theta_h)
+         and
+         to_the_right_of(givingWay, withRightOfWay.position)
+         and
+         zero_crossed(givingWay, withRightOfWay)
+        );
+
+    -- space_independent_safety: Aircraft * Aircraft -> bool
+    -- space_independent_safety(a0, a1) ==
+    --     theorem2(a0, a1) and theorem4(a0, a1) and theorem6(a0, a1);
+
+    -- overall_safety: Aircraft * Aircraft -> real * preal * Angle -> bool
+    -- overall_safety(a0, a1)(delta_o, delta_c, Theta_h) ==
+    --     space_independent_safety(a0, a1)
+    --     and
+    --     theorem1(a0, a1)(delta_o, delta_c, Theta_h)
+    --     and
+    --     theorem3(a0, a1)(delta_o)
+    --     and
+    --     theorem5(a0, a1)(delta_o, delta_c, Theta_h);
+
+    --@doc Safety 1: no two aircraft can share right of way
+    --@Theorem(t1, exists a0, a1: Aircraft, dO, dC, dH: preal & theorem1(a0, a1)(dO, dC, dH))
+    thm1_deterministic_right_of_way: Aircraft * Aircraft -> preal * preal * Angle -> bool
+    thm1_deterministic_right_of_way(a0, a1)(delta_o, delta_c, Theta_h) ==
+        right_of_way(a1, a0)(delta_o, delta_c, Theta_h)
+        =>
+        not right_of_way(a0, a1)(delta_o, delta_c, Theta_h);
+
+    --@doc Safety 1a: if two aircraft have not crossed trajectories, then only one is to right of the other
+    thm2_zero_crossed_only_one_to_right: Aircraft * Aircraft -> bool
+    thm2_zero_crossed_only_one_to_right(a0, a1) ==
+        zero_crossed(a1, a0)
+        =>
+        ((to_the_right_of(a0, a1.position)
+          and
+          not to_the_right_of(a1, a0.position)
+         )
+         or
+         (to_the_right_of(a1, a0.position)
+          and
+          not to_the_right_of(a0, a1.position)
+         )
+        );
+
+    --@doc Overtaking is assymetric
+    thm3_overtaking_asymmetric: Aircraft * Aircraft -> preal -> bool
+    thm3_overtaking_asymmetric(a0, a1)(delta_o) ==
+        overtaking(a0, a1)(delta_o) => not overtaking(a1, a0)(delta_o);
+
+    --@doc No right-of-way after crossing
+    thm4_no_right_of_way_after_crossing: Aircraft * Aircraft -> bool
+    thm4_no_right_of_way_after_crossing(a0, a1) ==
+        one_crossed(a0, a1)
+        =>
+        ((to_the_right_of(a0, a1.position)
+          and
+          to_the_right_of(a1, a0.position)
+         )
+         or
+         (to_the_left_of(a0, a1.position)
+          and
+          to_the_left_of(a1, a0.position)
+         )
+        );
+
+    --@doc Aircraft awareness
+    thm5_mutual_awareness: Aircraft * Aircraft -> preal * preal * Angle -> bool
+    thm5_mutual_awareness(a0, a1)(delta_o, delta_c, Theta_h) ==
+        conv_not_headon(a0, a1)(delta_c, Theta_h)
+        =>
+        ((zero_crossed(a1, a0) and to_the_right_of(a0, a1.position))
+         =>
+         right_of_way(a1, a0)(delta_o, delta_c, Theta_h)
+        );
+
+    --@doc Had right of way
+    thm6_had_right_of_way: Aircraft * Aircraft -> bool
+    thm6_had_right_of_way(a0, a1) ==
+        Q1(a0, a1.position) and Q1(a1, a0.position) and not parallel(a0, a1)
+        =>
+        (IS_in_Q1_and_was_in_Q2(a0, a1) or IS_in_Q1_and_was_in_Q2(a1, a0));
+
+    thm_safe_airspace: set of Aircraft -> preal * preal * Angle -> bool
+    thm_safe_airspace(aircrafts)(delta_o, delta_c, Theta_h) ==
+        forall a0 in set aircrafts & forall a1 in set aircrafts \ {a0} &
+            thm1_deterministic_right_of_way(a0, a1)(delta_o, delta_c, Theta_h) and
+            thm2_zero_crossed_only_one_to_right(a0, a1) and
+            thm3_overtaking_asymmetric(a0, a1)(delta_o) and
+            thm4_no_right_of_way_after_crossing(a0, a1) and
+            thm5_mutual_awareness(a0, a1)(delta_o, delta_c, Theta_h) and
+            thm6_had_right_of_way(a0, a1);
+
+    add_aircraft: Airspace * Aircraft -> Airspace
+    add_aircraft(asp, a) == mu (asp, aircrafts |-> asp.aircrafts union {a})
+    pre
+        not a.position in set { ap.position | ap in set asp.aircrafts }
+        and
+        thm_safe_airspace(asp.aircrafts union {a})(asp.delta_o, asp.delta_c, asp.Theta_h)
+    post
+        a in set RESULT.aircrafts;
+
+    set_airspace: Airspace * bool -> Airspace
+    set_airspace(mk_Airspace(aircrafts, delta_o, delta_c, theta_h, -), value) ==
+        mk_Airspace(aircrafts, delta_o, delta_c, theta_h, value)
+    pre
+        --@OnFail("Cannot open airspace with unsafe aircrafts")
+        (value => thm_safe_airspace(aircrafts)(delta_o, delta_c, theta_h));
+
+    -- other models use strings for aircraft presence; here will be unique position
+    has_aircraft: Airspace * Aircraft -> bool
+    has_aircraft(asp, a) == a in set asp.aircrafts;
+
+types
+    AircraftFn = Aircraft * Aircraft -> preal * preal * Angle -> bool;
+
+    Airspace ::
+        aircrafts: Aircrafts
+        delta_o: preal
+        delta_c: preal
+        Theta_h: Angle
+        open: bool
+    inv mk_Airspace(aircrafts, delta_o, delta_c, Theta_h, open) ==
+        -- unique positions
+        card { a.position | a in set aircrafts } = card aircrafts
+        and
+        -- safe airspace
+        (open => thm_safe_airspace(aircrafts)(delta_o, delta_c, Theta_h));
+
+    String = seq1 of char;
+
+functions
+
+    get_xs: set of RVector * pnzreal -> set1 of real
+    get_xs(v, xinc) ==
+        if v = {} then
+            { xinc }
+        else
+            { x + xinc | x in set { r.x | r in set v } }
+    pre
+        forall r in set v & r.x + xinc <> 0
+    post
+        (v = {} => card RESULT = 1)
+        and
+        (v <> {} => card RESULT <= card v);
+
+    get_ys: set of RVector * pnzreal -> set1 of real
+    get_ys(v, yinc) ==
+        if v = {} then
+            { yinc }
+        else
+            { y + yinc | y in set { r.y | r in set v } }
+    pre
+        forall r in set v & r.y + yinc <> 0
+    post
+        (v = {} => card RESULT = 1)
+        and
+        -- velocities might be equal, so only up to original set
+        (v <> {} => card RESULT <= card v);
+
+    generate_vectors: set of RVector * nat1 * pnzreal * pnzreal -> set1 of RVector
+    generate_vectors(v, amount, xinc, yinc) ==
+        dunion
+        {
+            { mk_RVector(x*i, y*i) | x in set get_xs(v, xinc), y in set get_ys(v, yinc)
+            -- &
+            --   x+xinc <> 0 and y+yinc <> 0
+            }
+        |
+            i in set { 1,...,amount }
+        }
+        \ v
+    pre
+        pre_get_xs(v, xinc) and pre_get_ys(v, yinc)
+    post
+        v inter RESULT = {}
+        --and
+        -- not true when repeated element in individual set results, depending on the input inc
+        -- print generate_vectors({mk_RVector(1.0, 1.0), mk_RVector(3.0, 1.0)}, 2, -5.0, -1.0)
+        -- dunion {{mk_RVector(-4, 0), mk_RVector(-2, 0)}, {mk_RVector(-8, 0), mk_RVector(-4, 0)}}
+        --card RESULT >= (card v * amount)
+        --card RESULT >= amount
+        ;
+
+    generate_positions: set of Position * nat1 * pnzreal * pnzreal -> set1 of Position
+    generate_positions(ps, amount, xinc, yinc) ==
+        { p | p in set generate_vectors(ps, amount, xinc, yinc) & is_Position(p) }
+    pre
+        pre_generate_vectors(ps, amount, xinc, yinc)
+    post
+        post_generate_vectors(ps, amount, xinc, yinc, RESULT);
+
+    generate_velocities: set of Velocity * nat1 * pnzreal * pnzreal -> set1 of Velocity
+    generate_velocities(vs, amount, xinc, yinc) ==
+        { v | v in set generate_vectors(vs, amount, xinc, yinc) & is_Velocity(v) }
+    pre
+        pre_generate_vectors(vs, amount, xinc, yinc)
+    post
+        post_generate_vectors(vs, amount, xinc, yinc, RESULT);
+
+    -- generation is relative to the Position(x,y) coordinates, but it somewhat exponential given the original size * amount
+    -- spurious?
+    -- generate_safe_aircrafts(mk_Airspace({mk_Aircraft(mk_RVector(1.0, 1.0), mk_RVector(1.0, 1.0))}, 1.0, 1.0, 1.0), 1, -1.0, -5.0)
+    generate_aircrafts: Airspace * nat1 * pnzreal * pnzreal -> Aircrafts
+    generate_aircrafts(mk_Airspace(aircrafts, -, -, -, -), amount, xinc, yinc) ==
+        let
+          -- new unique positions
+          positions : set1 of Position = generate_positions({ a.position | a in set aircrafts }, amount, xinc, yinc)
+        in
+          -- new aircraft positions
+          -- TODO - speeds to be considered after
+          { mk_Aircraft(p, mk_RVector(100,100)) | p in set positions }
+    pre
+        pre_generate_positions({ a.position | a in set aircrafts }, amount, xinc, yinc)
+    post
+        post_generate_positions({ a.position | a in set aircrafts }, amount, xinc, yinc, { r.position | r in set RESULT })
+        and
+        -- no conflicting positions with existing aircrafts
+        { a.position | a in set aircrafts } inter { a.position | a in set RESULT } = {};
+
+    generate_aircrafts_with: Airspace * nat1 * pnzreal * pnzreal * AircraftFn -> set of (Aircraft * Aircraft)
+    generate_aircrafts_with(asp, amount, xinc, yinc, test) ==
+        let
+            aircraftsGen: Aircrafts = { a | a in set generate_aircrafts(asp, amount, xinc, yinc) },
+            aircraftsAll: Aircrafts = aircraftsGen union asp.aircrafts
+        in
+            dunion
+            { { mk_(a0, a1) | a0 in set aircraftsAll, a1 in set aircraftsAll &
+                    a0 <> a1 and test(a0, a1)(asp.delta_o, asp.delta_c, asp.Theta_h) } }
+    pre
+        pre_generate_aircrafts(asp, amount, xinc, yinc)
+    post
+        (RESULT <> {} => post_generate_aircrafts(asp, amount, xinc, yinc, ({ a.#1 | a in set RESULT } union { a.#2 | a in set RESULT }) \ asp.aircrafts))
+        and
+        -- all resulting pairs satisfy test
+        (forall mk_(a0, a1) in set RESULT & test(a0, a1)(asp.delta_o, asp.delta_c, asp.Theta_h));
+
+    generate_safe_aircrafts: Airspace * nat1 * pnzreal * pnzreal -> Aircrafts
+    generate_safe_aircrafts(asp, amount, xinc, yinc) ==
+        let
+            aircraftsGen: Aircrafts = { a | a in set generate_aircrafts(asp, amount, xinc, yinc) },
+            -- post condition of generate_aircrafts ensures that union is okay
+            aircraftsAll: Aircrafts = aircraftsGen union asp.aircrafts
+        in
+            { a | a in set aircraftsAll & thm_safe_airspace(aircraftsAll)(asp.delta_o, asp.delta_c, asp.Theta_h) }
+    pre
+        pre_generate_aircrafts(asp, amount, xinc, yinc)
+    post
+        post_generate_aircrafts(asp, amount, xinc, yinc, RESULT \ asp.aircrafts)
+        and
+        -- result must expand on current airspace
+        asp.aircrafts psubset RESULT
+        and
+        -- expansion remains safe
+        thm_safe_airspace(RESULT)(asp.delta_o, asp.delta_c, asp.Theta_h);
+
+    generate_safe_aircrafts_new: Airspace * nat1 * pnzreal * pnzreal -> Aircrafts
+    generate_safe_aircrafts_new(asp, amount, xinc, yinc) ==
+        generate_safe_aircrafts(asp, amount, xinc, yinc) \ asp.aircrafts
+    pre
+        pre_generate_safe_aircrafts(asp, amount, xinc, yinc)
+    post
+        post_generate_safe_aircrafts(asp, amount, xinc, yinc, RESULT \ asp.aircrafts)
+        and
+        -- result is novel
+        asp.aircrafts inter RESULT = {}
+        and
+        -- any result aircraft is safe to add
+        thm_safe_airspace(asp.aircrafts union RESULT)(asp.delta_o, asp.delta_c, asp.Theta_h);
+
+values
+    CONVERGING_TEST: AircraftFn = (lambda a0: Aircraft, a1: Aircraft &
+        (lambda -: preal, delta_c: preal, -: Angle & converging(a0, a1)(delta_c)));
+    HEAD_ON_TEST: AircraftFn = (lambda a0: Aircraft, a1: Aircraft &
+        (lambda -: preal, delta_c: preal, Theta_h: Angle & headon(a0, a1)(delta_c, Theta_h)));
+
+    MIN_POS: real = -10.0;
+    MAX_POS: real = 10.0;
+    DELTA_C: preal = 1000.0;
+    DELTA_O: preal = 100.0;
+    THETA_H: Angle = 80.0;
+
+    P0: Position = mk_RVector(3,3);
+    V0: Velocity = mk_RVector(2,1);
+    P1: Position = mk_RVector(30,40);
+    V1: Velocity = mk_RVector(1,2);
+    A0: Aircraft = mk_Aircraft(P0, V0);
+    A1: Aircraft = mk_Aircraft(P1, V1);
+    AIRSPACE1 : Airspace = mk_Airspace({A0, A1}, DELTA_O, DELTA_C, THETA_H, true);
+
+    ex1: bool = not right_of_way(A0,A1)(DELTA_O, DELTA_C, THETA_H);
+    ex2: bool = right_of_way(A1,A0)(DELTA_O, DELTA_C, THETA_H);
+
+    -- Keep the amounts low for the second interation otherwise gets quite big; 5 and 2 gives 51 aircrafts
+    -- let as1 = generate_safe_aircrafts(AIRSPACE, 5, 100, 200) in
+    --    generate_safe_aircrafts(mu (AIRSPACE, aircrafts |-> as1), 2, 300, 200)
+    AIRSPACE0  : Airspace = mk_Airspace({}, DELTA_O, DELTA_C, THETA_H, true);
+    -- 51 crafts
+    AIRSPACE_UK: Airspace = mu (AIRSPACE0, aircrafts |-> generate_safe_aircrafts(AIRSPACE0, 5, 100, 200));
+    -- 120 to be filtered
+    --BIGGER_AIRSPACE_UK: Airspace = mu (AIRSPACE_UK, aircrafts |-> generate_safe_aircrafts(AIRSPACE_UK, 2, 300, 200));
+
+state S of
+    aspaces: map String to Airspace
+  inv mk_S(aspaces) == forall k in set dom aspaces & aspaces(k).delta_c >= 0.0
+  init s == s = mk_S({ "UK_AS" |-> AIRSPACE0 })
+end
+
+operations
+
+    OpenAirspace(airspaceName: String) ==
+    (
+        aspaces := aspaces ++ { airspaceName |-> set_airspace(aspaces(airspaceName), true) }
+    )
+    pre
+        airspaceName in set dom aspaces
+        and
+        pre_set_airspace(aspaces(airspaceName), true);
+
+    CloseAirspace(airspaceName: String) ==
+    (
+        aspaces := aspaces ++ { airspaceName |-> set_airspace(aspaces(airspaceName), false) }
+    )
+    pre
+        airspaceName in set dom aspaces
+        -- and
+        -- pre_set_airspace(aspaces(airspaceName), false)
+        ;
+
+    AddAircraft(airspaceName: String, a: Aircraft) ==
+    (
+        aspaces := aspaces ++ { airspaceName |-> add_aircraft(aspaces(airspaceName), a) }
+    )
+    ext wr aspaces
+    pre
+        airspaceName in set dom aspaces
+        and
+        pre_add_aircraft(aspaces(airspaceName), a)
+    post
+        post_add_aircraft(aspaces~(airspaceName), a, aspaces(airspaceName));
+
+end RightOfWayRules

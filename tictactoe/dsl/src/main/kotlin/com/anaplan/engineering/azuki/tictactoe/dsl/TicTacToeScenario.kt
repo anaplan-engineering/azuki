@@ -20,7 +20,19 @@ import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeCheckFactory
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.TicTacToeQueryFactory
 
 open class TicTacToeScenario :
-    RunnableScenario<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory, TicTacToeGiven, TicTacToeWhen, TicTacToeThen, TicTacToeVerify, TicTacToeQueries, TicTacToeGenerate, TicTacToeRegardlessOf, NoSystemDefaults>(
+    RunnableScenario<
+        TicTacToeActionFactory,
+        TicTacToeCheckFactory,
+        TicTacToeQueryFactory,
+        TicTacToeActionGeneratorFactory,
+        TicTacToeGiven,
+        TicTacToeWhen,
+        TicTacToeThen,
+        TicTacToeVerify,
+        TicTacToeQueries,
+        TicTacToeGenerate,
+        TicTacToeRegardlessOf,
+        NoSystemDefaults>(
         TicTacToeDslProvider)
 
 interface TicTacToeBuildableScenario : BuildableScenario<TicTacToeActionFactory> {
@@ -29,20 +41,21 @@ interface TicTacToeBuildableScenario : BuildableScenario<TicTacToeActionFactory>
     fun whenever(whenFunction: TicTacToeWhen.() -> Unit)
 }
 
-open class TicTacToeRunnableScenario : RunnableScenario<
-    TicTacToeActionFactory,
-    TicTacToeCheckFactory,
-    TicTacToeQueryFactory,
-    TicTacToeActionGeneratorFactory,
-    TicTacToeGiven,
-    TicTacToeWhen,
-    TicTacToeThen,
-    TicTacToeVerify,
-    TicTacToeQueries,
-    TicTacToeGenerate,
-    TicTacToeRegardlessOf,
-    NoSystemDefaults,
-    >(TicTacToeDslProvider)
+open class TicTacToeRunnableScenario :
+    RunnableScenario<
+        TicTacToeActionFactory,
+        TicTacToeCheckFactory,
+        TicTacToeQueryFactory,
+        TicTacToeActionGeneratorFactory,
+        TicTacToeGiven,
+        TicTacToeWhen,
+        TicTacToeThen,
+        TicTacToeVerify,
+        TicTacToeQueries,
+        TicTacToeGenerate,
+        TicTacToeRegardlessOf,
+        NoSystemDefaults>(
+        TicTacToeDslProvider)
 
 interface TicTacToeVerifiableScenario : VerifiableScenario<TicTacToeActionFactory, TicTacToeCheckFactory>,
     TicTacToeBuildableScenario {

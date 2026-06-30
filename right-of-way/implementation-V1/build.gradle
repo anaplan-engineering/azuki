@@ -1,0 +1,13 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    implementation project(":right-of-way:implementation")
+    implementation libs.kotlin.test
+    implementation libs.kotlinx.serialization.json
+    implementation libs.jackson.module
+    implementation libs.slf4j.api
+    testRuntimeOnly libs.slf4j.impl
+
+}
