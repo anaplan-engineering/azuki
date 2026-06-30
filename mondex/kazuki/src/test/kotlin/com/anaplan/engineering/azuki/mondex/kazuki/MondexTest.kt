@@ -1,8 +1,6 @@
 package com.anaplan.engineering.azuki.mondex.kazuki
 
-import com.anaplan.engineering.azuki.mondex.kazuki.Purse_Module.mk_Purse
 import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails_Module.mk_TransferDetails
-import com.anaplan.engineering.azuki.mondex.kazuki.World_Module.mk_World
 import com.anaplan.engineering.azuki.mondex.kazuki.abs.AbPurse_Module.mk_AbPurse
 import com.anaplan.engineering.azuki.mondex.kazuki.abs.AbWorld_Module.mk_AbWorld
 import com.anaplan.engineering.azuki.mondex.kazuki.abs.aNullIn
@@ -26,13 +24,13 @@ class MondexTest {
 
         val (world2, _) = world.functions.abTransferOkayTD(ain, transferDetails)
 
-        assertEquals(world2.properties.abAuthPurse["person1"].balance, 0UL)
-        assertEquals(world2.properties.abAuthPurse["person2"].balance, 4UL)
+        assertEquals(world2.abAuthPurse["person1"].balance, 0UL)
+        assertEquals(world2.abAuthPurse["person2"].balance, 4UL)
 
         val (world3, _) = world.functions.abTransferLostTD(ain,transferDetails)
 
-        assertEquals(world3.properties.abAuthPurse["person1"].balance, 0UL)
-        assertEquals(world3.properties.abAuthPurse["person1"].lost, 3UL)
+        assertEquals(world3.abAuthPurse["person1"].balance, 0UL)
+        assertEquals(world3.abAuthPurse["person1"].lost, 3UL)
 
         // For Ignore, the initial message doesn't matter
         val (world4, _) = world.functions.abIgnore(aNullIn)
