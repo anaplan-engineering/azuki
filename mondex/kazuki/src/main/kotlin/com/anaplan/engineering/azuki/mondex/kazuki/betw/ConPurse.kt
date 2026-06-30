@@ -86,12 +86,12 @@ class ConPurseFunctions(private val old: ConPurse) {
     )
 
     val increasePurseOkay = function(
-        command = { mquery: Message ->
+        command = { _: Message ->
             mk_(old.transform(nextSeqNo = old.nextSeqNo + 1U), Message.Bottom)
         },
         // Keep the explicit `true` to document none is needed, explicitly
         pre = { _ -> true },
-        post = { mquery: Message, result ->
+        post = { _: Message, result ->
             val (dash, mr) = result
             xiConPurseIncrease(old, dash) &&
             dash.nextSeqNo >= old.nextSeqNo &&
@@ -124,7 +124,7 @@ class ConPurseFunctions(private val old: ConPurse) {
     )
 
     val abortPurseOkay = function(
-        command = { mquery: Message ->
+        command = { _: Message ->
             val dash = logIfNecessary()
             mk_(dash.transform(
                 // The Z allows for no update at all as well; choosing to update
@@ -173,7 +173,6 @@ class ConPurseFunctions(private val old: ConPurse) {
         }
     )
 
-    //LF @QST should this be a @Module (given the cpd), or just have it with input?
     val startFromPurseEaFromOkay = function(
         command = { m: Message, cpd: CounterPartyDetails ->
             val dash = validStartFrom(m, cpd)
@@ -218,7 +217,7 @@ class ConPurseFunctions(private val old: ConPurse) {
     )
 
     //LF @QST need a mechanism to creating a different name and smaller or equal balance; can the `private val old` work?
-    internal fun conjuredUpCPD() =
+    internal fun arbitraryCPD() =
         mk_CounterPartyDetails(
             name = old.name + "cpd",
             value = old.balance - 1U,
@@ -235,11 +234,11 @@ class ConPurseFunctions(private val old: ConPurse) {
             // Abort's message result is ignored
             val (dash, _) = abortPurseOkay(m)
             // startFromPurseEaFromOkay works on the resulting state of abort with cpd hidden
-            dash.functions.startFromPurseEaFromOkay(m, conjuredUpCPD())
+            dash.functions.startFromPurseEaFromOkay(m, arbitraryCPD())
         },
         pre = { m ->
             abortPurseOkay.pre(m) &&
-                startFromPurseEaFromOkay.pre(m, conjuredUpCPD())
+                startFromPurseEaFromOkay.pre(m, arbitraryCPD())
         },
         post = { m, result ->
             // abortPurseOkay \semi (startFromPurseEaFromOkay \hide (cpd))
@@ -252,7 +251,7 @@ class ConPurseFunctions(private val old: ConPurse) {
             val (dash, mr) = result
             // check abort post from start to middle; check startFrom post from middle to dash
             abortPurseOkay.post(m, mk_(middle, mm)) &&
-                middle.functions.startFromPurseEaFromOkay.post(m, conjuredUpCPD(), result)
+                middle.functions.startFromPurseEaFromOkay.post(m, arbitraryCPD(), result)
         }
     )
 }

@@ -1,14 +1,10 @@
 package com.anaplan.engineering.azuki.mondex.kazuki.betw
 
 import com.anaplan.engineering.azuki.mondex.kazuki.Name
-import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.mk_ConPurse
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.ConPurse_Module.transform
-import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.mk_PayDetails
 import com.anaplan.engineering.azuki.mondex.kazuki.betw.PayDetails_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.isSubsetOf
-import com.anaplan.engineering.azuki.mondex.kazuki.is_InjectiveMapping
 import com.anaplan.engineering.azuki.mondex.kazuki.powerset
-import com.anaplan.engineering.azuki.mondex.kazuki.property
 import com.anaplan.engineering.kazuki.core.*
 
 // we need powerset though: careful with the Z peculiarity about sets as types
@@ -39,7 +35,7 @@ interface AuxWorld : ConWorld {
     //LF @QST should this (redundant check) be an invariant or another function?
     //@Invariant
     //fun noNewConstraints(): Boolean = {
-        // PRG126 5.2.1 p.43 . not sure how (or if possible) to encode this
+    // PRG126 5.2.1 p.43 . not sure how (or if possible) to encode this
     //    val newVariables = exists(....)
     //}
 }
@@ -54,7 +50,12 @@ class AuxWorldProperties(private val auxWorld: AuxWorld) {
 
     // allLogs = archive + { (n, pd) | n in conAuthPurse.keys & pd in conAuthPurse[n].exLog }
     val allLogs by property {
-        auxWorld.archive + as_Relation(auxWorld.conAuthPurse.flatMap { (n, purse) -> purse.exLog.map { pd -> mk_(n, pd) } })
+        auxWorld.archive + as_Relation(auxWorld.conAuthPurse.flatMap { (n, purse) ->
+            purse.exLog.map { pd ->
+                mk_(n,
+                    pd)
+            }
+        })
     }
 
     // Z has a set of all possible pay details where `pd.from` is known, not just those in the map!
@@ -84,20 +85,21 @@ class AuxWorldProperties(private val auxWorld: AuxWorld) {
     val toInEpv by property {
         auxWorld.properties.authenticTo.filter { pd ->
             auxWorld.conAuthPurse[pd.to].status == Status.epv &&
-            (auxWorld.conAuthPurse[pd.to].pdAuth == pd) }
+                (auxWorld.conAuthPurse[pd.to].pdAuth == pd)
+        }
     }
 
     val toInEpayee: Sequence<PayDetails> by property { TODO() }
-    val fromInEpr : Sequence<PayDetails> by property { TODO() }
-    val fromInEpa : Sequence<PayDetails> by property { TODO() }
+    val fromInEpr: Sequence<PayDetails> by property { TODO() }
+    val fromInEpa: Sequence<PayDetails> by property { TODO() }
 }
 
 class BetweenWorldFunctions(private val old: BetweenWorld) {
 
     fun xiBetweenWorld(before: BetweenWorld, after: BetweenWorld) =
         before.conAuthPurse == after.conAuthPurse &&
-        before.ether == after.ether &&
-        before.archive == after.archive
+            before.ether == after.ether &&
+            before.archive == after.archive
 
     val ignore = function(
         command = { name: Name -> mk_(old, Message.Bottom) },
@@ -123,8 +125,8 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             val (dash, cdash, mbang) = result
             //LF @EK assuming the * here is map overriding for a singleton maplet?
             dash.conAuthPurse == old.conAuthPurse * mk_(name, cdash) &&
-            dash.archive == old.archive &&
-            dash.ether == old.ether + { mbang }
+                dash.archive == old.archive &&
+                dash.ether == old.ether + { mbang }
         }
     )
 
@@ -167,38 +169,38 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             val abortAfterSt = mk_(dash.conAuthPurse[name], mbang)
             val phiBopAfterSt = mk_(dash, abortAfterSt._1, abortAfterSt._2)
             val abortPost =
-                // AbortPurseOkay operates on ConPurse:
-                // * ConPurse' from result of abort (adash) compared with command's equivalent (abortAfterSt._1)
-                // * Effect (resulting mk_(adash,abang)) is used in phiBop
-                // * This injects resulting ConPurse' (adash) into the BetweenWorld' (dash).
-                // * Check against the command's resulting BetweenWorld' after promotion (dash).
+            // AbortPurseOkay operates on ConPurse:
+            // * ConPurse' from result of abort (adash) compared with command's equivalent (abortAfterSt._1)
+            // * Effect (resulting mk_(adash,abang)) is used in phiBop
+            // * This injects resulting ConPurse' (adash) into the BetweenWorld' (dash).
+            // * Check against the command's resulting BetweenWorld' after promotion (dash).
                 // * Resulting message should be mbang, which should also be abang (they match).
                 old.conAuthPurse[name].functions.abortPurseOkay.post(
                     initialMsg, abortAfterSt) &&
                     //LF @QST how can InteliJ know this is going to be the case (it isn't necessarily)?
                     //        Perhaps command is yet to be resolved?
                     abang == mbang &&
-                // PhiBop operates on BetweenWorld and a ConPurse:
-                // * ConPurse' from result of abort for promotion (adash)
-                // * BetweenWorld' from result of this function's command (dash)
-                // * Rest of after state comes from the ConPurse' in between world for given name
-                old.functions.phiBOp.post(initialMsg, name, adash, phiBopAfterSt)
+                    // PhiBop operates on BetweenWorld and a ConPurse:
+                    // * ConPurse' from result of abort for promotion (adash)
+                    // * BetweenWorld' from result of this function's command (dash)
+                    // * Rest of after state comes from the ConPurse' in between world for given name
+                    old.functions.phiBOp.post(initialMsg, name, adash, phiBopAfterSt)
             setOf(ignorePost, abortPost).any { it } &&
-            mbang == Message.Bottom
+                mbang == Message.Bottom
         }
     )
 
-    internal fun conjureUpConPurse(name: Name): ConPurse {
+    internal fun arbitraryUpConPurse(name: Name): ConPurse {
         val namedPurse = old.conAuthPurse[name]
-        val conjuredCPD = namedPurse.functions.conjuredUpCPD()
+        val arbitraryCPD = namedPurse.functions.arbitraryCPD()
         require(namedPurse.pdAuth != null) { "PDAuth must be non-null for ConPurse" }
         // This is a simplification/choice: the Z allows for a whole space of options from a new purse with these specific transforms
         return namedPurse.transform(
             nextSeqNo = namedPurse.nextSeqNo + 1U,
             pdAuth = namedPurse.pdAuth!!.transform(
-                from = name, to = conjuredCPD.name, value = conjuredCPD.value,
+                from = name, to = arbitraryCPD.name, value = arbitraryCPD.value,
                 fromSeqNo = namedPurse.nextSeqNo, //TODO: or is this the transformed one... neeed to brush off the Z!
-                toSeqNo = conjuredCPD.nextSeqNo,
+                toSeqNo = arbitraryCPD.nextSeqNo,
             ),
             status = Status.epr
         )
@@ -218,14 +220,14 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
                 //(old.conAuthPurse[name].pdAuth != null) implies {
                 // There will be some repeated checking here, hard to separate them apart easily without introducing mistakes?
                 val abortPre = old.functions.abort.pre(name)
-                val startMsg = Message.StartFrom(old.conAuthPurse[name].functions.conjuredUpCPD())
+                val startMsg = Message.StartFrom(old.conAuthPurse[name].functions.arbitraryCPD())
                 val purseName = old.conAuthPurse[name].name
                 val startFromOkayPre =
                     phiBOp.pre(startMsg, name, old.conAuthPurse[name]) &&
                         old.conAuthPurse[name].functions.startFromPurseOkay.pre(startMsg) &&
                         Message.Bottom in old.ether &&
                         ((purseName in old.conAuthPurse.dom) implies { purseName != name }) &&
-                        old.functions.conjureUpConPurse(purseName) !in old.conAuthPurse.rng
+                        old.functions.arbitraryUpConPurse(purseName) !in old.conAuthPurse.rng
                 startFromOkayPre
             }
         },
@@ -239,7 +241,7 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             val abortPost = old.functions.abort.post(name, result)
             val startFromPost =
                 old.conAuthPurse[name].functions.startFromPurseOkay.post(
-                    Message.StartFrom(old.conAuthPurse[name].functions.conjuredUpCPD()),
+                    Message.StartFrom(old.conAuthPurse[name].functions.arbitraryCPD()),
                     mk_(dash.conAuthPurse[name], mbang))
             setOf(abortPost, startFromPost).any { it }
         }

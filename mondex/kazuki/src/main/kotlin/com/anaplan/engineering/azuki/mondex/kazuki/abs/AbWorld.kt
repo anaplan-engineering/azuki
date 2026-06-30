@@ -4,7 +4,6 @@ import com.anaplan.engineering.azuki.mondex.kazuki.Name
 import com.anaplan.engineering.azuki.mondex.kazuki.TransferDetails
 import com.anaplan.engineering.azuki.mondex.kazuki.abs.AbPurse_Module.transform
 import com.anaplan.engineering.azuki.mondex.kazuki.abs.AbWorld_Module.transform
-import com.anaplan.engineering.azuki.mondex.kazuki.property
 import com.anaplan.engineering.kazuki.core.*
 
 @Module
@@ -22,10 +21,11 @@ interface AbWorld {
 class AbWorldFunctions(abWorld: AbWorld) {
 
     // Signature for all operations as: AbWorld.() -> VFunction1<AIn, Tuple2<AbWorld, aNullOut>>
-    val abOp = function (
+    val abOp = function(
         command = { _: AIn ->
             //LF @EK this could be "any world" not just keeping it the same
-            mk_(abWorld, aNullOut) },
+            mk_(abWorld, aNullOut)
+        },
         // Keep explicit here as in ZEVES-PRG126 Table 8.1 p.86
         pre = { _ -> true },
         post = { _, result ->
@@ -34,7 +34,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
         }
     )
 
-    val abIgnore = function (
+    val abIgnore = function(
         command = { a: AIn ->
             abOp(a)
         },
@@ -44,14 +44,14 @@ class AbWorldFunctions(abWorld: AbWorld) {
         post = { a, result ->
             val (dash, abang) = result
             abOp.post(a, result) &&
-            dash.abAuthPurse == abWorld.abAuthPurse
+                dash.abAuthPurse == abWorld.abAuthPurse
         }
     )
 
     //LF @QST Example of degenarate hiding (hides everything), the xiAbPurseTransfer is innocuous; ignoring it
     //val abPurseTransfer = function ()
 
-    val abWorldSecureOp = function (
+    val abWorldSecureOp = function(
         command = { a: AIn, td: TransferDetails ->
             abOp(a)
         },
@@ -64,19 +64,21 @@ class AbWorldFunctions(abWorld: AbWorld) {
         post = { a, td, result ->
             val (dash, _) = result
             abOp.post(a, result) &&
-            dash.abAuthPurse.domSubtract(mk_Set(td.from, td.to)) ==
+                dash.abAuthPurse.domSubtract(mk_Set(td.from, td.to)) ==
                 abWorld.abAuthPurse.domSubtract(mk_Set(td.from, td.to))
         }
     )
 
-    val abTransferOkayTD = function (
+    val abTransferOkayTD = function(
         command = { a: AIn, td: TransferDetails ->
             val (dash, abang) = abWorldSecureOp(a, td)
             mk_(dash.transform(
                 // Corresponds to the Z \mu \Delta AbPurse operation
                 abAuthPurse = abWorld.abAuthPurse * mk_Mapping(
-                    mk_(td.from, abWorld.abAuthPurse[td.from].transform(balance = abWorld.abAuthPurse[td.from].balance - td.value)),
-                    mk_(td.to, abWorld.abAuthPurse[td.to].transform(balance = abWorld.abAuthPurse[td.to].balance + td.value))
+                    mk_(td.from,
+                        abWorld.abAuthPurse[td.from].transform(balance = abWorld.abAuthPurse[td.from].balance - td.value)),
+                    mk_(td.to,
+                        abWorld.abAuthPurse[td.to].transform(balance = abWorld.abAuthPurse[td.to].balance + td.value))
                 )), abang)
         },
         pre = { a, td ->
@@ -96,7 +98,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
         }
     )
 
-    val abTransferLostTD = function (
+    val abTransferLostTD = function(
         command = { a: AIn, td: TransferDetails ->
             val (dash, abang) = abWorldSecureOp(a, td)
             mk_(abWorld.transform(
@@ -104,7 +106,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
                     td.from, abWorld.abAuthPurse[td.from].transform(
                         balance = abWorld.abAuthPurse[td.from].balance - td.value,
                         lost = abWorld.abAuthPurse[td.from].lost + td.value))),
-                    abang)
+                abang)
         },
         pre = { a, td ->
             abWorldSecureOp.pre(a, td)
@@ -122,41 +124,42 @@ class AbWorldFunctions(abWorld: AbWorld) {
         }
     )
 
-    private val authentic = function (
+    private val authentic = function(
         command = { name: Name ->
             name in abWorld.abAuthPurse.dom
         }
     )
 
-    private val sourceHasSufficientFunds = function (
+    private val sourceHasSufficientFunds = function(
         command = { td: TransferDetails ->
             td.value <= abWorld.abAuthPurse[td.from].balance
         }
     )
 
-    private val totalBalance = function (
+    private val totalBalance = function(
         command = { authPurse: Mapping<Name, AbPurse> ->
-            authPurse.rng.fold(0uL) { acc, purse -> acc + purse.balance}
+            authPurse.rng.fold(0uL) { acc, purse -> acc + purse.balance }
         }
     )
 
-    private val totalLost = function (
+    private val totalLost = function(
         command = { authPurse: Mapping<Name, AbPurse> ->
-            authPurse.rng.fold(0uL) { acc, purse -> acc + purse.lost}
+            authPurse.rng.fold(0uL) { acc, purse -> acc + purse.lost }
         }
     )
 
-    val noValueCreation = function (
+    val noValueCreation = function(
         command = { after: AbWorld ->
             //LF @QST something has to happen to the AbWorld, but shouldnt' a boolean property check, that's the post!
             //        namely, in previous commands you "choose" an implementation, here you can't "test" for a given one?
             after
         },
-        post = { _, result: AbWorld -> totalBalance(abWorld.abAuthPurse) <= totalBalance(result.abAuthPurse)
+        post = { _, result: AbWorld ->
+            totalBalance(abWorld.abAuthPurse) <= totalBalance(result.abAuthPurse)
         }
     )
 
-    val allValueAccounted = function (
+    val allValueAccounted = function(
         command = { after: AbWorld ->
             after
         },
