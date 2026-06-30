@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.mondex.adapter.kazuki.declaration
 
+import com.anaplan.engineering.azuki.mondex.adapter.api.AbPurse
 import com.anaplan.engineering.azuki.mondex.adapter.declaration.MondexDeclarationState
 import com.anaplan.engineering.azuki.mondex.adapter.declaration.declaration.WorldDeclaration
 import com.anaplan.engineering.azuki.mondex.adapter.kazuki.EnvironmentBuilder
@@ -17,10 +18,11 @@ class WorldDeclarationBuilderFactory : KazukiDeclarationBuilderFactory<WorldDecl
 
         override fun build(builder: EnvironmentBuilder) {
             builder.declare(declaration.name) {
-                buildWorld(declaration.authPurses)
+                //LF TODO for both kinds of worlds/purses
+                buildWorld(declaration.authPurses as Map<String, AbPurse>)
             }
             builder.declare(MondexDeclarationState.BEFORE_DEFAULT_WORLD) {
-                buildWorld(declaration.authPurses)
+                buildWorld(declaration.authPurses as Map<String, AbPurse>)
             }
         }
     }

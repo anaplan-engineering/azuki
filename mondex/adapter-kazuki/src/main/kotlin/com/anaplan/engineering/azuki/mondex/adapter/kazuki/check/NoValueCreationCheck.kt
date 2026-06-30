@@ -12,8 +12,10 @@ class NoValueCreationCheck(
         val beforeWorld = env.world(MondexDeclarationState.BEFORE_DEFAULT_WORLD)
         val world = env.world(MondexDeclarationState.DEFAULT_WORLD)
 
-        val noCreation = world.functions.noValueCreation(beforeWorld.authPurses)
-
-        return noCreation == expected
+        //LF @EK this is not quite right. The check is against a before and after state.
+//        val noCreation = world.functions.noValueCreation(beforeWorld.authPurses)
+//
+//        return noCreation == expected
+        return false
     }
 }
