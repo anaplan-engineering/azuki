@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.0.21"
-kazuki = "0.3.0-alpha.1"
+kazuki = "0.4.0-alpha.4"
 # 1.5.0+ are based on Kotlin 2.1, and would require the script parser to be pinned to the 2.1 version
 ktlint = "1.4.1"
 log4j = "2.17.0"

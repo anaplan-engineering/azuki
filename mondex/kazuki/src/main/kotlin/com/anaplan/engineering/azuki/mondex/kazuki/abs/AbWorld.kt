@@ -24,6 +24,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
     // Signature for all operations as: AbWorld.() -> VFunction1<AIn, Tuple2<AbWorld, aNullOut>>
     val abOp = function (
         command = { _: AIn ->
+            //LF @EK this could be "any world" not just keeping it the same
             mk_(abWorld, aNullOut) },
         // Keep explicit here as in ZEVES-PRG126 Table 8.1 p.86
         pre = { _ -> true },
@@ -47,6 +48,9 @@ class AbWorldFunctions(abWorld: AbWorld) {
         }
     )
 
+    //LF @QST Example of degenarate hiding (hides everything), the xiAbPurseTransfer is innocuous; ignoring it
+    //val abPurseTransfer = function ()
+
     val abWorldSecureOp = function (
         command = { a: AIn, td: TransferDetails ->
             abOp(a)
@@ -56,10 +60,9 @@ class AbWorldFunctions(abWorld: AbWorld) {
                 //LF @QST Not sure this is right; discuss with AP; we want the encoding of the inverse of transfer
                 && a is transfer
                 && a.transferDetails == td
-                //&& transfer(td) == a
         },
         post = { a, td, result ->
-            val (dash, abang) = result
+            val (dash, _) = result
             abOp.post(a, result) &&
             dash.abAuthPurse.domSubtract(mk_Set(td.from, td.to)) ==
                 abWorld.abAuthPurse.domSubtract(mk_Set(td.from, td.to))
@@ -70,6 +73,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
         command = { a: AIn, td: TransferDetails ->
             val (dash, abang) = abWorldSecureOp(a, td)
             mk_(dash.transform(
+                // Corresponds to the Z \mu \Delta AbPurse operation
                 abAuthPurse = abWorld.abAuthPurse * mk_Mapping(
                     mk_(td.from, abWorld.abAuthPurse[td.from].transform(balance = abWorld.abAuthPurse[td.from].balance - td.value)),
                     mk_(td.to, abWorld.abAuthPurse[td.to].transform(balance = abWorld.abAuthPurse[td.to].balance + td.value))
@@ -83,7 +87,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
                 && td.from != td.to
         },
         post = { a, td, result ->
-            val (dash, abang) = result
+            val (dash, _) = result
             abWorldSecureOp.post(a, td, result)
                 && dash.abAuthPurse[td.from].balance == abWorld.abAuthPurse[td.from].balance - td.value
                 && dash.abAuthPurse[td.from].lost == abWorld.abAuthPurse[td.from].lost
@@ -110,7 +114,7 @@ class AbWorldFunctions(abWorld: AbWorld) {
                 && td.from != td.to
         },
         post = { a, td, result ->
-            val (dash, abang) = result
+            val (dash, _) = result
             abWorldSecureOp.post(a, td, result)
                 && dash.abAuthPurse[td.from].balance == abWorld.abAuthPurse[td.from].balance - td.value
                 && dash.abAuthPurse[td.from].lost == abWorld.abAuthPurse[td.from].lost + td.value
@@ -130,7 +134,6 @@ class AbWorldFunctions(abWorld: AbWorld) {
         }
     )
 
-    // This will work on both AbPurse and ConPurse, given they share balance field
     private val totalBalance = function (
         command = { authPurse: Mapping<Name, AbPurse> ->
             authPurse.rng.fold(0uL) { acc, purse -> acc + purse.balance}
@@ -144,22 +147,21 @@ class AbWorldFunctions(abWorld: AbWorld) {
     )
 
     val noValueCreation = function (
-        command = { ->
+        command = { after: AbWorld ->
             //LF @QST something has to happen to the AbWorld, but shouldnt' a boolean property check, that's the post!
             //        namely, in previous commands you "choose" an implementation, here you can't "test" for a given one?
-            abWorld
+            after
         },
-        pre = { -> true },
-        post = { dash -> totalBalance(abWorld.abAuthPurse) <= totalBalance(dash.abAuthPurse)
+        post = { _, result: AbWorld -> totalBalance(abWorld.abAuthPurse) <= totalBalance(result.abAuthPurse)
         }
     )
 
     val allValueAccounted = function (
-        command = { ->
-            abWorld
+        command = { after: AbWorld ->
+            after
         },
-        post = { dash ->
-            totalBalance(dash.abAuthPurse) + totalLost(dash.abAuthPurse) ==
+        post = { _, result ->
+            totalBalance(result.abAuthPurse) + totalLost(result.abAuthPurse) ==
                 totalBalance(abWorld.abAuthPurse) + totalLost(abWorld.abAuthPurse)
         }
     )
