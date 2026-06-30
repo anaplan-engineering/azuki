@@ -46,6 +46,15 @@ publishing {
                         organizationUrl = "http://www.anaplan.com"
                         roles = ['engineer']
                     }
+                    developer {
+                        id = 'erin-kingston'
+                        name = 'Erin Kingston'
+                        email = 'erin.kingston@anaplan.com'
+                        url = "https://github.com/erin-kingston"
+                        organization = "Anaplan Ltd"
+                        organizationUrl = "http://www.anaplan.com"
+                        roles = ['engineer intern']
+                    }
                 }
             }
         }
