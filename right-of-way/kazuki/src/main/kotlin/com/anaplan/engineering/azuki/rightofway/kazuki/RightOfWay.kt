@@ -271,12 +271,12 @@ class RightOfWay(private val airspace: Airspace) {
                 val vDiff = as_Velocity(subtractVectors(a0.velocity, a1.velocity))
                 // Because Velocity are different, then their difference is not zero
                 // TODO how to `cast` result to NZReal?
-                val vDiffProd = dot_product(vDiff, vDiff) as NZReal
-                (-(dot_product(pDiff, vDiff) / vDiffProd)) as Double // why isn't result double? as Double
+                val vDiffProd = dot_product(vDiff, vDiff)
+                require(vDiffProd != 0.0) { "Velocity difference must be positive" }
+                (-(dot_product(pDiff, vDiff) / vDiffProd))
             }
         },
         // example where internal typing constraints matter
-        // TODO this could be simplified with invariants (or is already)?
         pre = { a0, a1 ->
             (a0.velocity != a1.velocity) implies {
                 val vDiff = subtractVectors(a0.velocity, a1.velocity)
@@ -286,7 +286,6 @@ class RightOfWay(private val airspace: Airspace) {
                     isNZReal(vDiffProd)
             }
         },
-        //post = { a0, a1, r -> (a0.velocity != a1.velocity) iff isNNZReal(r) }
     )
 
     // Horizontal Miss Distance (HMD) is the distance at the Closest Point of Approach
