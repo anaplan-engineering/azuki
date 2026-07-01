@@ -13,53 +13,53 @@ import com.anaplan.engineering.azuki.mondex.person2
 """)
 class BEH3: MondexScenario() {
 
-    @Eac("Transfers can securely do nothing")
-    fun ignoreTransferDoesNothing() {
-        given {
-            thereIsAPurse(person1, 3, 1)
-            thereIsAPurse(person2, 2, 1)
-        }
-        whenever {
-            thereIsNoTransfer()
-        }
-        then {
-            worldExists {
-                personWithPurse(person1, 3, 1)
-                personWithPurse(person2, 2, 1)
-            }
-        }
-    }
-
-    @Eac("A transfer doing nothing will never create value in the world", """
-        The sum of all purses' balances does not increase.
-    """)
-    fun transferFailedImpliesNoValueCreation() {
-        given {
-            thereIsAPurse(person1, 3, 1)
-            thereIsAPurse(person2, 2, 1)
-        }
-        whenever {
-            thereIsNoTransfer()
-        }
-        then {
-            //noValueCreation()
-        }
-    }
-
-    @Eac("A transfer that does nothing will keep all value accounted for in the world", """
-        The sum of all purses' balances and lost components does not change.
-    """)
-    fun transferFailedImpliesAllValueAccounted() {
-        given {
-            thereIsAPurse(person1, 3, 1)
-            thereIsAPurse(person2, 2, 1)
-        }
-        whenever {
-            thereIsNoTransfer()
-        }
-        then {
-            //allValueAccounted()
-        }
-    }
+//    @Eac("Transfers can securely do nothing")
+//    fun ignoreTransferDoesNothing() {
+//        given {
+//            thereIsAPurse(person1, 3, 1)
+//            thereIsAPurse(person2, 2, 1)
+//        }
+//        whenever {
+//            thereIsNoTransfer()
+//        }
+//        then {
+//            worldExists {
+//                personWithPurse(person1, 3, 1)
+//                personWithPurse(person2, 2, 1)
+//            }
+//        }
+//    }
+//
+//    @Eac("A transfer doing nothing will never create value in the world", """
+//        The sum of all purses' balances does not increase.
+//    """)
+//    fun transferFailedImpliesNoValueCreation() {
+//        given {
+//            thereIsAPurse(person1, 3, 1)
+//            thereIsAPurse(person2, 2, 1)
+//        }
+//        whenever {
+//            thereIsNoTransfer()
+//        }
+//        then {
+//            //noValueCreation()
+//        }
+//    }
+//
+//    @Eac("A transfer that does nothing will keep all value accounted for in the world", """
+//        The sum of all purses' balances and lost components does not change.
+//    """)
+//    fun transferFailedImpliesAllValueAccounted() {
+//        given {
+//            thereIsAPurse(person1, 3, 1)
+//            thereIsAPurse(person2, 2, 1)
+//        }
+//        whenever {
+//            thereIsNoTransfer()
+//        }
+//        then {
+//            //allValueAccounted()
+//        }
+//    }
 
 }

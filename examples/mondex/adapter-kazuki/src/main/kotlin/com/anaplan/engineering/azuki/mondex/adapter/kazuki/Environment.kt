@@ -65,7 +65,7 @@ fun Status.toKazuki() = when (this) {
 }
 fun Set<PayDetails>.toKazuki() = map { it.toKazuki() }.toSet()
 fun PayDetails.toKazuki() =
-    mk_PayDetails(td.fromPurse, td.toPurse, td.value, fromSeqNo, toSeqNo)
+    mk_PayDetails(td.from, td.to, td.value, fromSeqNo, toSeqNo)
 
 // This needs to cater for both types of purse
 // This should be the adapter's purse input, not Kazuki's, then  create corresponding

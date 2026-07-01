@@ -12,7 +12,7 @@ class TransferLostAction(
 ) : TransferBehaviour(), KazukiAction {
 
     override fun act(env: ExecutionEnvironment) {
-        val td = mk_TransferDetails(transferDetails.fromPurse, transferDetails.toPurse, transferDetails.value)
+        val td = mk_TransferDetails(transferDetails.from, transferDetails.to, transferDetails.value)
         env.set(worldName, env.world(worldName).functions.abTransferLostTD(transfer(td), td))
     }
 

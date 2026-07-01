@@ -7,36 +7,31 @@ import com.anaplan.engineering.azuki.mondex.adapter.api.ConPurse
 import com.anaplan.engineering.azuki.mondex.adapter.api.MondexActionFactory
 import com.anaplan.engineering.azuki.mondex.adapter.api.PayDetails
 import com.anaplan.engineering.azuki.mondex.adapter.api.Status
-import com.anaplan.engineering.azuki.mondex.dsl.declaration.PurseDeclarations
+import com.anaplan.engineering.azuki.mondex.dsl.block.AbWorldBlock
+import com.anaplan.engineering.azuki.mondex.dsl.block.ConWorldBlock
+import com.anaplan.engineering.azuki.mondex.dsl.declaration.ModexDeclarations
+import org.slf4j.LoggerFactory
 
 class MondexGiven(private val actionFactory: MondexActionFactory<*>) : Given<MondexActionFactory<*>>,
-    PurseDeclarations{
+    ModexDeclarations {
 
-    private val actionList = mutableListOf<Action>(actionFactory.world.create(HashMap()))
+    companion object {
+        private val Log = LoggerFactory.getLogger(MondexGiven::class.java)
+    }
+
+    private val actionList = mutableListOf<Action>()
 
     override fun actions(): List<Action> = actionList
 
-    //LF @EK which purse is there? Abstract x Concrete etc?
-    //    That's why I was saying if we go with the A/B/C worlds as different implementations, we will need some way
-    //    of saying which implementation we are "declaring" in the DSL, if the DSL is shared between them.
-    override fun thereIsAPurse(purseName: String, balance: Int, lost: Int) {
-        //LF @EK if ULong, this is redundant
-        require(balance >= 0 && lost >= 0)
-        //LF @EK if you are sharing the DSLs how will deal with parameter difference between purses?
-        //    //ConPurse(balance.toULong(), lost.toULong())???? NEed another one for it or something like a when below
-        actionList.add(actionFactory.purse.create(purseName, AbPurse(balance.toULong(), lost.toULong())))
+    override fun thereIsAnAbstractWorld(name: String, init: AbWorldBlock.() -> Unit) {
+        val block = AbWorldBlock(actionFactory)
+        block.init()
+        actionList.add(actionFactory.world.createAbWorld(name, block.abPurses))
     }
 
-    override fun thereIsAPurse(
-        purseName: String,
-        balance: ULong,
-        exLog: Set<PayDetails>,
-        nextSeqNo: ULong,
-        pdAuth: PayDetails,
-        status: Status
-    ) {
-        actionList.add(actionFactory.purse.create(purseName,
-            ConPurse(balance, exLog, purseName, nextSeqNo, pdAuth, status)))
+    override fun thereIsAConcreteWorld(name: String, init: ConWorldBlock.() -> Unit) {
+        val block = ConWorldBlock(actionFactory)
+        block.init()
+        actionList.add(actionFactory.world.createConWorld(name, block.conPurses))
     }
-
 }
