@@ -65,28 +65,27 @@ class BEH1 : MondexScenario() {
             }
         }
         whenever {
+            noTransfer()
             makeAbTransfer {
                 from = person1
                 to = person2
                 value = 5UL
             }
-            makeAbTransferAlt(
-                TransferDetails(
-                    from = person1,
-                    to = person2,
-                    value = 5UL
-                )
-            )
+//            makeAbTransferAlt(
+//                TransferDetails(
+//                    from = person1,
+//                    to = person2,
+//                    value = 5UL
+//                )
+//            )
             loseAbTransfer {
                 from = person2
                 to = person1
                 value = 3UL
             }
-//            failAbTransfer {
-//                from = person1
-//                to = person2
-//                value = 5UL
-//            }
+        }
+        then {
+
         }
     }
 
