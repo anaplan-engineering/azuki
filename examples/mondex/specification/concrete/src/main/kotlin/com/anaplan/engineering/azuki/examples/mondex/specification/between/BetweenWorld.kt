@@ -172,4 +172,224 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             setOf(abortPost, startFromPost).any { it }
         }
     )
+
+    val startTo = function(
+        command = { name: Name ->
+            TODO("Choice for ignore, abort, or startToPurseOkay")
+            mk_(old, Message.Req(old.conAuthPurse[name].pdAuth!!))
+        },
+        pre = { name ->
+            if (old.conAuthPurse[name].pdAuth == null) {
+                false
+            }
+            else {
+                val startMsg = Message.StartTo(old.conAuthPurse[name].functions.arbitraryCPD())
+                val purseName = old.conAuthPurse[name].name
+                val startToOkayPre =
+                    phiBOp.pre(startMsg, name, old.conAuthPurse[name]) &&
+                        old.conAuthPurse[name].functions.startToPurseEaFromOkay.pre(startMsg,
+                            old.conAuthPurse[name].functions.arbitraryCPD()) &&
+                        !allPayDetails().filter { pd -> pd.to == name }
+                            .any { pd -> pd.toSeqNo >= old.conAuthPurse[name].nextSeqNo } &&
+                        (purseName in old.conAuthPurse.dom) implies { purseName != name }
+
+                startToOkayPre
+            }
+        },
+        post = { name, result ->
+            // @QST LF This will presumably change when we have disjunction? startTo will produce different messages
+            // depending on what happens.
+            val (dash, mbang) = result
+            val abortPost = old.functions.abort.post(name, mk_(dash, Message.Bottom))
+            val startToPost =
+                old.conAuthPurse[name].functions.startToPurseOkay.post(
+                    Message.StartTo(old.conAuthPurse[name].functions.arbitraryCPD()),
+                    mk_(dash.conAuthPurse[name], mbang))
+            setOf(abortPost, startToPost).any { it }
+        }
+    )
+
+    // req already used for the message so extended names to include op
+
+    val reqOp = function(
+        command = { name: Name ->
+            TODO("Choice for ignore or reqPurseOkay")
+            // This takes the path of reqPurseOkay at the moment as it's the most complicated
+            mk_(old, Message.Val(old.conAuthPurse[name].pdAuth!!))
+        },
+        pre = { name ->
+            val purse = old.conAuthPurse[name]
+            if (old.conAuthPurse[name].pdAuth == null) {
+                false
+            }
+            else {
+                val reqOkayPre = phiBOp.pre(Message.Req(old.conAuthPurse[name].pdAuth!!), purse.name, purse) &&
+                    purse.functions.reqPurseOkay.pre(Message.Req(purse.pdAuth!!)) &&
+                    (Message.Val(purse.pdAuth!!) !in old.ether) implies {
+                        purse.pdAuth!!.to in old.conAuthPurse.dom &&
+                            purse.pdAuth!!.from in old.conAuthPurse.dom &&
+                            (purse.pdAuth!!.to != name) implies {
+                                purse.pdAuth!!.toSeqNo < old.conAuthPurse[purse.pdAuth!!.to].nextSeqNo
+                        } &&
+                            (purse.pdAuth!!.from != name) implies {
+                                purse.pdAuth!!.fromSeqNo < old.conAuthPurse[purse.pdAuth!!.from].nextSeqNo
+                        } &&
+                            old.properties.fromInEpr.all { pdIn -> pdIn != purse.pdAuth!!} &&
+                            (mk_(purse.pdAuth!!.from, purse.pdAuth!!) !in old.archive) implies {
+                                purse.pdAuth!! in old.conAuthPurse[purse.pdAuth!!.from].exLog
+                        }
+
+                } &&
+                    allPayDetails().filter { xEPR ->
+                        xEPR.from in old.conAuthPurse.dom &&
+                        old.conAuthPurse[xEPR.from].status == Status.epr &&
+                        old.conAuthPurse[xEPR.from].pdAuth == xEPR
+                    }.any { xEPR -> xEPR.from != name } &&
+                    allPayDetails().filter { pd ->
+                        pd.from in old.conAuthPurse.dom
+                    }.any { pd -> pd != purse.pdAuth!! } &&
+                    purse.transform(
+                        balance = purse.balance - purse.pdAuth!!.value,
+                        name = purse.pdAuth!!.from,
+                        status = Status.epa
+                    ) !in old.conAuthPurse.rng
+
+                reqOkayPre
+            }
+        },
+        post = { name, result ->
+            val (dash, mbang) = result
+            // Will reinstate once we have disjunction
+            //val ignorePost = old.functions.ignore.post(name, result)
+            val reqOkayPost = old.conAuthPurse[name].functions.reqPurseOkay.post(
+                Message.Req(old.conAuthPurse[name].pdAuth!!),
+                mk_(dash.conAuthPurse[name], mbang)
+            )
+
+            reqOkayPost
+        }
+    )
+
+    val valOp = function(
+        command = { name: Name ->
+            TODO("Choice for ignore of valPurseOkay. Here just valPurseOkay route completed.")
+            mk_(old, Message.Ack(old.conAuthPurse[name].pdAuth!!))
+        },
+        pre = { name ->
+            val purse = old.conAuthPurse[name]
+            if (old.conAuthPurse[name].pdAuth == null) {
+                false
+            }
+            else {
+                val valOkayPre = old.functions.phiBOp.pre(Message.Val(old.conAuthPurse[name].pdAuth!!), purse.name, purse) &&
+                    purse.functions.valPurseOkay.pre(Message.Val(purse.pdAuth!!)) &&
+                    allPayDetails().filter { xEPV ->
+                        xEPV.to in old.conAuthPurse.dom &&
+                            old.conAuthPurse[xEPV.to].status == Status.epv &&
+                            old.conAuthPurse[xEPV.to].pdAuth == xEPV
+                    }.all { xEPV -> xEPV.to != name } &&
+                    allPayDetails().filter { pd -> pd.to in old.conAuthPurse.dom }.any { pd -> pd != purse.pdAuth!! } &&
+                    purse.transform(
+                        balance = purse.balance + purse.pdAuth!!.value,
+                        status = Status.eaTo
+                    ) !in old.conAuthPurse.rng
+
+                valOkayPre
+            }
+        },
+        post = { name, result ->
+            val (dash, mbang) = result
+            // needs more when we have disjunction
+            val valOkayPost = old.conAuthPurse[name].functions.valPurseOkay.post(
+                Message.Val(old.conAuthPurse[name].pdAuth!!),
+                mk_(dash.conAuthPurse[name], mbang)
+            )
+
+            valOkayPost
+        }
+    )
+
+    val ackOp = function(
+        command = { name: Name ->
+            TODO("Choice between ignore and ackPurseOkay")
+            mk_(old, Message.Bottom)
+        },
+        pre = { name ->
+            val purse = old.conAuthPurse[name]
+            if (purse.pdAuth == null) {
+                false
+            }
+            else {
+                val ackOkayPre = old.functions.phiBOp.pre(Message.Bottom, name, purse) &&
+                    purse.functions.ackPurseOkay.pre(Message.Ack(purse.pdAuth!!)) &&
+                    allPayDetails().filter { xEPA ->
+                        xEPA.from in old.conAuthPurse.dom &&
+                            old.conAuthPurse[xEPA.from].status == Status.epa &&
+                            old.conAuthPurse[xEPA.from].pdAuth == xEPA
+                    }.all { xEPA -> xEPA.from != name} &&
+                    purse.transform(status = Status.eaTo) !in old.conAuthPurse.rng
+
+                ackOkayPre
+            }
+        },
+        post = { name, result ->
+            val (dash, mbang) = result
+            val ackOkayPost = old.conAuthPurse[name].functions.ackPurseOkay.post(
+                Message.Ack(old.conAuthPurse[name].pdAuth!!),
+                mk_(dash.conAuthPurse[name], mbang)
+            )
+
+            ackOkayPost
+        }
+    )
+
+    val readExceptionLog = function(
+        command = { name: Name ->
+            TODO("Choice between ignore and readExceptionLogPurseOkay")
+            mk_(old, Message.Bottom)
+        },
+        pre = { name ->
+            val readExceptionLogOkayPre = old.functions.phiBOp.pre(Message.Bottom, name, old.conAuthPurse[name]) &&
+                old.conAuthPurse[name].functions.readExceptionLogPurseEaFromOkay.pre(Message.ReadExceptionLog) &&
+                Message.Bottom in old.ether
+
+            readExceptionLogOkayPre
+        },
+        post = { name, result ->
+            val (dash, mbang) = result
+            val readExceptionLogOkayPost = old.conAuthPurse[name].functions.readExceptionLogPurseOkay.post(
+                Message.Bottom,
+                mk_(dash.conAuthPurse[name], mbang)
+            )
+
+            readExceptionLogOkayPost
+        }
+    )
+
+    val clearExceptionLog = function(
+        command = { name: Name ->
+            TODO("Choice between ignore and clearExceptionLogPurseOkay")
+            mk_(old, Message.Bottom)
+        },
+        pre = { name ->
+            val purse = old.conAuthPurse[name]
+            val clearExceptionLogOkayPre = old.functions.phiBOp.pre(Message.Bottom, name, purse) &&
+                purse.functions.clearExceptionLogPurseEaFromOkay.pre(Message.ExceptionLogClear(purse.name, image(as_Set1(purse.exLog)))) &&
+                allPayDetails().all { pd -> pd !in old.conAuthPurse[name].exLog } &&
+                purse.transform(exLog = emptySet()) !in old.conAuthPurse.rng
+
+            clearExceptionLogOkayPre
+        },
+        post = { name, result ->
+            val (dash, mbang) = result
+            val clearExceptionLogOkayPost = old.conAuthPurse[name].functions.clearExceptionLogPurseOkay.post(
+                Message.Bottom,
+                mk_(dash.conAuthPurse[name], mbang)
+            )
+
+            clearExceptionLogOkayPost
+        }
+    )
+
+
 }
