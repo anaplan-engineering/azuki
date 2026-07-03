@@ -304,7 +304,7 @@ class ConPurseFunctions(private val old: ConPurse) {
     val startToPurseOkay = function(
         command = { m: Message ->
             val (dash, _) = abortPurseOkay(m)
-            mk_(dash.functions.startToPurseEaFromOkay(m, arbitraryCPD()), Message.Bottom)
+            dash.functions.startToPurseEaFromOkay(m, arbitraryCPD())
         },
         pre = { m ->
             abortPurseOkay.pre(m) &&
@@ -314,7 +314,7 @@ class ConPurseFunctions(private val old: ConPurse) {
             val (middle, mm) = abortPurseOkay(m)
             val (dash, mr) = result
             abortPurseOkay.post(m, mk_(middle, mm)) &&
-                middle.functions.startToPurseEaFromOkay.post(m, arbitraryCPD(), dash)
+                middle.functions.startToPurseEaFromOkay.post(m, arbitraryCPD(), result)
 
         }
     )
