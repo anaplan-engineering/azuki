@@ -1,16 +1,11 @@
 package com.anaplan.engineering.azuki.examples.mondex.specification.between
 
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.AuxWorld_Module.transform
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.PayDetails_Module.transform
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConPurse
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConPurse_Module.transform
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.Status
-import com.anaplan.engineering.kazuki.core.FunctionProvider
-import com.anaplan.engineering.kazuki.core.Module
-import com.anaplan.engineering.kazuki.core.function
-import com.anaplan.engineering.kazuki.core.implies
-import com.anaplan.engineering.kazuki.core.mk_
-import com.anaplan.engineering.kazuki.core.plus
-import com.anaplan.engineering.kazuki.core.times
+import com.anaplan.engineering.kazuki.core.*
 
 @Module
 interface BetweenWorld : AuxWorld {
@@ -34,6 +29,22 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             val (dash, mbang) = result
             xiBetweenWorld(old, dash)
             mbang == Message.Bottom
+        }
+    )
+
+    val increase = function(
+        command = { name: Name, m: Message -> mk_(old, m)},
+        pre = { name, m ->
+            val increaseOkayPre = old.functions.phiBOp.pre(m, name, old.conAuthPurse[name]) &&
+                Message.Bottom in old.ether
+
+            increaseOkayPre
+        },
+        post = { name, m, result ->
+            val (dash, mbang) = result
+            val increaseOkayPost = old.conAuthPurse[name].functions.increasePurseOkay.pre(m)
+
+            increaseOkayPost
         }
     )
 
@@ -381,6 +392,54 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             )
 
             clearExceptionLogOkayPost
+        }
+    )
+
+    val authoriseExLogClearOkay = function(
+        command = { name: Name, m: Message ->
+            val pds = mk_Set1<PayDetails>() // TODO(Fix pds)
+            mk_(old.transform(
+                ether = old.ether.plus(Message.ExceptionLogClear(name, image(pds))),
+            ), m)
+        },
+        pre = { name, m -> true },
+        post = { name, m, result ->
+            val (dash, mbang) = result
+            old.conAuthPurse[name] == dash.conAuthPurse[name] &&
+                dash.ether == old.ether.plus(mbang) &&
+                old.archive == dash.archive &&
+                TODO("The there exists segment - LF?")
+        }
+    )
+
+    val authoriseExLogClear = function(
+        command = { name: Name, m: Message ->
+            mk_(old, m)
+        },
+        pre = { name, m -> true },
+        post = { name, m, result ->
+            val authoriseExLogClearOkay = old.functions.authoriseExLogClearOkay.post(name, m, result)
+
+            authoriseExLogClearOkay
+        }
+    )
+
+    val archive = function(
+        command = { _: Name, _: Message ->
+            // copies some exception log information from messages in the ether to the archive
+            // @QST LF do we want some random number copied? At this point will move 0.
+            mk_(old, Message.Bottom)
+        },
+        pre = { _, _ ->
+            true
+        },
+        post = { name, _, result ->
+            val (dash, mbang) = result
+            old.conAuthPurse[name] == dash.conAuthPurse[name] &&
+                old.ether == dash.ether &&
+                mbang == Message.Bottom &&
+                old.archive.subset(dash.archive) &&
+                dash.archive.all { log -> log in old.archive || Message.ExceptionLogResult(log._1, log._2) in old.ether}
         }
     )
 
