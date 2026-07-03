@@ -1,0 +1,54 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+configurations {
+    abstractSpec
+    concreteSpec
+}
+
+dependencies {
+    api project(":examples:mondex:adaption:intra-dsl")
+    abstractSpec project(":examples:mondex:adaption:intra-abstract")
+    abstractSpec project(":examples:mondex:specification:abstract")
+
+    concreteSpec project(":examples:mondex:adaption:intra-concrete")
+    concreteSpec project(":examples:mondex:specification:concrete")
+
+    testRuntimeOnly libs.slf4j.impl
+}
+
+task abstractClasspathJar(type: Jar) {
+    dependsOn configurations.abstractSpec
+    archiveBaseName = 'Abstract'
+    manifest {
+        attributes("Class-Path": configurations.abstractSpec.collect { it.absolutePath }.join(' '))
+    }
+}
+
+task concreteClasspathJar(type: Jar) {
+    dependsOn configurations.concreteSpec
+    archiveBaseName = 'Concrete'
+    manifest {
+        attributes("Class-Path": configurations.concreteSpec.collect { it.absolutePath }.join(' '))
+    }
+}
+
+ext {
+    setProperty("impl.includes", "Abstract,Concrete")
+}
+
+test {
+    dependsOn abstractClasspathJar
+    dependsOn concreteClasspathJar
+
+    def instanceJars = [
+        abstractClasspathJar.archiveFile.get().asFile.absolutePath,
+        concreteClasspathJar.archiveFile.get().asFile.absolutePath,
+    ]
+    systemProperties = [
+        "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(","),
+        "com.anaplan.engineering.azuki.implementation.includes"     : findProperty("impl.includes"),
+        "com.anaplan.engineering.azuki.implementation.excludes"     : findProperty("impl.excludes"),
+    ]
+}

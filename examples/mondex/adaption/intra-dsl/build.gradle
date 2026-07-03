@@ -1,0 +1,10 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":azuki-core")
+    api project(":examples:mondex:adaption:intra-api")
+
+    implementation libs.kotlin.test
+}

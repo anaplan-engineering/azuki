@@ -1,0 +1,21 @@
+plugins {
+    id 'azuki.common-conventions'
+    alias(libs.plugins.kotlin)
+    id 'com.google.devtools.ksp' version("2.0.21-1.0.25")
+}
+
+dependencies {
+    api project(':examples:mondex:specification:abstract')
+    api project(':examples:mondex:specification:concrete')
+    implementation platform(libs.kotlin.bom)
+    implementation libs.kotlin.reflect
+    api libs.kazuki.toolkit
+    ksp libs.kazuki.ksp
+    implementation libs.kotlin.test
+    implementation libs.slf4j.api
+    testRuntimeOnly libs.slf4j.impl
+}
+
+ksp {
+    arg("com.anaplan.engineering.kazuki.compile.debug.level", "INFO")
+}
