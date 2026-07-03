@@ -1,0 +1,16 @@
+package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.abstract.action
+
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.abstract.AbstractWorldAnimation
+import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.declaration.action.AddTransferToWorldDeclarableAction
+
+class AddTransferToWorldAction(worldName: String, purseName: String) :
+    AddTransferToWorldDeclarableAction(worldName, purseName),
+    AbstactWorldAction {
+
+    override fun act(animation: AbstractWorldAnimation) {
+        require(worldName == animation.worldName)
+        // Don't need to do anything else
+    }
+
+
+}

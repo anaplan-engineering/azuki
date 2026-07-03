@@ -1,0 +1,8 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":azuki-core")
+    implementation libs.slf4j.api
+}
