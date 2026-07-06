@@ -25,7 +25,7 @@ interface WorldActionFactory {
 
 interface TransferActionFactory {
     fun create(transferName: String, fromPurse: String, toPurse: String, amount: Int) = unsupportedAction()
-    fun makeATransfer(from: String, to: String, amount: Int) = unsupportedAction()
+    fun makeATransfer(from: String, to: String, amount: Int, successful: Boolean) = unsupportedAction()
     fun request(transferName: String) = unsupportedAction()
     fun send(transferName: String) = unsupportedAction()
     fun acknowledge(transferName: String) = unsupportedAction()

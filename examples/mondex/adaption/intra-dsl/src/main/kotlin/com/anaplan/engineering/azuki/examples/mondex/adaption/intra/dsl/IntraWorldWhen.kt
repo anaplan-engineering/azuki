@@ -23,8 +23,8 @@ class IntraWorldWhen(actionFactory: IntraWorldActionFactory<*>) :
         add(actionFactory.world.addPurse(worldName, purseName))
     }
 
-    override fun makeATransfer(fromPurse: String, toPurse: String, value: Int) {
-        add(actionFactory.transfer.makeATransfer(fromPurse, toPurse, value))
+    override fun makeATransfer(fromPurse: String, toPurse: String, value: Int, successful: Boolean) {
+        add(actionFactory.transfer.makeATransfer(fromPurse, toPurse, value, successful))
     }
 
     override fun createTransfer(worldName: String?, transferName: String, fromPurse: String, toPurse: String, amount: Int) {
