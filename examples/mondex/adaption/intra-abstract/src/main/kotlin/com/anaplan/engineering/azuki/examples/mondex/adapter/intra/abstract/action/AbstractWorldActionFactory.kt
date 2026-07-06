@@ -23,6 +23,7 @@ object AbstractWorldTransferActionFactory : TransferActionFactory {
     override fun acknowledge(transferName: String) = AcknowledgeTransferAction(transferName)
     override fun abort(transferName: String) = AbortTransferAction(transferName)
 
+    override fun makeATransfer(from: String, to: String, amount: Int, successful: Boolean) = MakeTransferAction(from, to, amount, successful)
 }
 
 object AbstractWorldPurseActionFactory : PurseActionFactory {
