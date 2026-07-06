@@ -206,20 +206,4 @@ class BEH2 : IntraWorldScenario() {
             }
         }
     }
-
-    @Eac("A failed transfer will keep all value accounted for in the world", """
-        The sum of all purses' balances and lost components does not change.
-    """)
-    fun transferFailedImpliesAllValueAccounted() {
-        given {
-            thereIsAPurse(person1, 3)
-            thereIsAPurse(person2, 2)
-        }
-        whenever {
-//            thereIsATransfer(person1, person2, 2, false)
-        }
-        then {
-            //allValueAccounted()
-        }
-    }
 }

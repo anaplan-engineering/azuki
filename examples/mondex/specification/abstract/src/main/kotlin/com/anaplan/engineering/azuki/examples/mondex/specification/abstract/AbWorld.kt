@@ -18,13 +18,23 @@ interface AbWorld {
     val functions: AbWorldFunctions
 }
 
+// it is also used in checks, have it as extension functions
+fun <K> Mapping<K, AbPurse>.totalBalance() =
+    dom.sumOf { name -> this[name].balance }
+
+fun <K> Mapping<K, AbPurse>.totalLost() =
+    dom.sumOf { name -> this[name].lost }
+
+fun <K> Mapping<K, AbPurse>.totalValue() =
+    totalBalance() + totalLost()
+
 class AbWorldProperties(abWorld: AbWorld) {
 
-    val totalBalance by property { abWorld.abAuthPurse.rng.sumOf { it.balance } }
+    val totalBalance by property { abWorld.abAuthPurse.totalBalance() }
 
-    val totalLost by property { abWorld.abAuthPurse.rng.sumOf { it.lost } }
+    val totalLost by property { abWorld.abAuthPurse.totalLost() }
 
-    val totalValue by property { totalBalance + totalLost }
+    val totalValue by property { abWorld.abAuthPurse.totalValue() }
 
 }
 

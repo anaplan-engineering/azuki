@@ -15,39 +15,6 @@ import com.anaplan.engineering.azuki.mondex.world1
 """)
 class BEH1 : IntraWorldScenario() {
 
-//    @Eac("old way")
-//    fun test1() {
-//        given {
-//            thereIsAWorld {
-//                personWithPurse(person1, 3, 0)
-//                personWithPurse(person2, 2, 1)
-//            }
-//            thereIsAPurse(person3, 6, 1)
-//        }
-//        whenever {
-//            thereIsATransfer(person1, person2, 3)
-//        }
-//        then {
-//            purseExists(person1, 0, 0)
-//            purseExists(person2, 5, 1)
-//            purseOf(person1) {
-//                hasBalance(0)
-//                hasLost(0)
-//            }
-//            purseOf(person2) {
-//                hasBalance(5)
-//                hasLost(1)
-//            }
-//            worldExists {
-//                personWithPurse(person1, 0, 0)
-//                personWithPurse(person2, 5, 1)
-//                personWithPurse(person3, 6, 1)
-//            }
-//        }
-//    }
-
-    @Eac("new way")
-    fun test2() {
     @Eac("Creates purses no transfer considering an explicit world available")
     fun explicitWorld() {
         given {
