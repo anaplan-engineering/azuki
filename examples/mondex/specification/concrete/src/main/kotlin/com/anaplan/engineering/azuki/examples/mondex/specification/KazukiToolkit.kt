@@ -1,10 +1,18 @@
 package com.anaplan.engineering.azuki.examples.mondex.specification
 
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.Message
+import com.anaplan.engineering.kazuki.core.Sequence
+import com.anaplan.engineering.kazuki.core.VFunction1
+import com.anaplan.engineering.kazuki.core.function
 import com.anaplan.engineering.kazuki.core.Tuple2
 import com.anaplan.engineering.kazuki.core.as_Relation
 import com.anaplan.engineering.kazuki.core.card
+import com.anaplan.engineering.kazuki.core.forall
+import com.anaplan.engineering.kazuki.core.implies
+import com.anaplan.engineering.kazuki.core.inter
 import com.anaplan.engineering.kazuki.core.is_Mapping
 import com.anaplan.engineering.kazuki.core.mk_Relation
+import com.anaplan.engineering.kazuki.core.set
 
 fun <D, R> is_InjectiveMapping(vararg maplets: Tuple2<D, R>) =
 //LF @QST why type error here? Missing in is_InjectiveMapping in kazuki core
@@ -45,5 +53,25 @@ private tailrec fun <T> List<T>.powersetAcc3(
     )
 }
 
-fun <T> Sequence<T>.isSubsetOf(isInSuperset: (T) -> Boolean): Boolean =
-    distinct().all(isInSuperset)
+fun <T> Set<T>.isSubsetOf(isInSuperset: (T) -> Boolean): Boolean = all(isInSuperset)
+
+//TODO LF SF - Sequence inherits Collection (not Relation)? Using VDM_Toolkit one instead; could do with Set.fold1?
+/*
+--@doc generalised disjointness of sets
+--@todo use fold? allow for set of rather than seq of?
+disjoint[@elem]: seq of (set of @elem) +> bool
+disjoint(s) ==
+    -- empty or singleton sequences are trivially disjoint
+    (len s > 1)
+    =>
+    -- other sequences of sets are disjoint if they are pairwise disjoint to all higher indexes (e.g., slightlty more efficient than POST?)
+    len s = card { i | i in set inds s & forall j in set inds s & j > i => s(i) inter s(j) = {} }
+--post
+ */
+fun <T> Sequence<Set<T>>.pairwise_disjoint() =
+    (len > 1UL) implies {
+        len == set(inds) { i -> forall(inds) { j -> (j > i) implies { (this[i] inter this[j]).isEmpty() } } }.card
+    }
+
+//fun <T> Sequence<T>.isSubsetOf(isInSuperset: (T) -> Boolean): Boolean =
+//    distinct().all(isInSuperset)

@@ -13,7 +13,15 @@ class IntraWorldThen(checkFactory: IntraWorldCheckFactory) :
     PurseChecks {
 
     override fun worldHasTotalBalance(worldName: String, balance: Int) {
-        add(checkFactory.world.hasTotalValue(worldName, balance))
+        add(checkFactory.world.hasTotalBalance(worldName, balance))
+    }
+
+    override fun worldHasTotalLost(worldName: String, lost: Int) {
+        add(checkFactory.world.hasTotalLost(worldName, lost))
+    }
+
+    override fun worldHasTotalValue(worldName: String, value: Int) {
+        add(checkFactory.world.hasTotalValue(worldName, value))
     }
 
     override fun worldHasPurse(worldName: String, purseName: String) {

@@ -35,7 +35,7 @@ task concreteClasspathJar(type: Jar) {
 }
 
 ext {
-    setProperty("impl.includes", "Abstract,Concrete")
+    setProperty("impl.includes", "Concrete")//"Abstract,Concrete")
 }
 
 test {

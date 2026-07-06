@@ -14,10 +14,10 @@ interface RetrieveSystem {
 
     // e.g.
     @Invariant
-    fun abstractBetweenNames() = abSystem.abWorld.abAuthPurse.dom == betSystem.betweenWorld.conAuthPurse.dom
+    fun abstractBetweenNames() = abSystem.abWorld.abAuthPurse.dom == betSystem.world.conAuthPurse.dom
 
     @Invariant
-    fun betweenConcreteNames() = abSystem.abWorld.abAuthPurse.dom == conSystem.conWorld.conAuthPurse.dom
+    fun betweenConcreteNames() = abSystem.abWorld.abAuthPurse.dom == conSystem.world.conAuthPurse.dom
 
 
     @FunctionProvider(RetrieveSystemFunctions::class)

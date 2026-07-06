@@ -15,32 +15,6 @@ interface PayDetails : TransferDetails {
     fun namesDistinct() = from != to
 }
 
-@Module
-interface CounterPartyDetails {
-    val name: Name
-    val value: nat
-    val nextSeqNo: nat
-}
-
-sealed interface Clear
-
-//LF @QST Injective projection for Clear over a non-empty set of pay details
-class image(val pd1: Set1<PayDetails>) : Clear
-
-
-sealed class Message {
-    // SF: These should be modules!
-    data class StartFrom(val cpd: CounterPartyDetails) : Message()
-    data class StartTo(val cpd: CounterPartyDetails) : Message()
-    data object ReadExceptionLog : Message()
-    data class Req(val pd: PayDetails) : Message()
-    data class Val(val pd: PayDetails) : Message()
-    data class Ack(val pd: PayDetails) : Message()
-    data class ExceptionLogResult(val name: Name, val pd: PayDetails) : Message()
-    data class ExceptionLogClear(val name: Name, val clear: Clear) : Message()
-    data object Bottom : Message()
-}
-
 //LF @QST Type-bound comprehension is not executable in VDM; needs sequence?
 //   Z says all PayDetails possible, not just those in conAuthPurse
 //     { pd | pd : PayDetail & pd.td.from in set dom conAuthPurse }
@@ -88,13 +62,14 @@ fun tuplesWithSum(dims: Int, sum: Int): Sequence<List<Int>> = sequence {
 }
 
 fun allPayDetailsFair(
+    bound: Int = 10,
     fromNames: Sequence<Name> = allSimpleNames(),
     toNames: Sequence<Name> = allSimpleNames(),
     values: Sequence<ULong> = allSimpleULongs(),
     fromSeqNos: Sequence<ULong> = allSimpleULongs(),
     toSeqNos: Sequence<ULong> = allSimpleULongs(),
 ): Sequence<PayDetails> = sequence {
-    val froms = fromNames.toList()   // finite in your ConWorld case
+    val froms = fromNames.take(bound).toList()
     val seqs = listOf(toNames, values, fromSeqNos, toSeqNos)
 
     var sum = 0

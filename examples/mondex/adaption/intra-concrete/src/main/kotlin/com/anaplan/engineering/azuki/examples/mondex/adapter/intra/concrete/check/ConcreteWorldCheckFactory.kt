@@ -5,6 +5,7 @@ import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.Conc
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldCheckFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.PurseCheckFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.WorldCheckFactory
+import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.unsupportedCheck
 import com.anaplan.engineering.kazuki.core.*
 import org.slf4j.LoggerFactory
 
@@ -15,10 +16,13 @@ object ConcreteWorldCheckFactory : IntraWorldCheckFactory {
 
 object ConcreteWorldPurseCheckFactory : PurseCheckFactory {
     override fun hasBalance(purseName: String, balance: Int) = PurseHasBalanceCheck(purseName, balance)
+    //TODO this is only possible through the retrieve
+    //override fun hasLost(purseName: String, lost: Int)
 }
 
 object ConcreteWorldWorldCheckFactory : WorldCheckFactory {
     override fun hasPurse(worldName: String, purseName: String) = WorldHasPurseCheck(worldName, purseName)
+    //override fun hasTotalBalance(worldName: String, balance: Int) = WorldHasTotalBalanceCheck(worldName, balance)
 }
 
 interface ConcreteWorldCheck : Check {
