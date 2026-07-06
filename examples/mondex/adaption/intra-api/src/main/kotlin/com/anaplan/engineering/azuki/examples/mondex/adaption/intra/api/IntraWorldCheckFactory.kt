@@ -18,6 +18,8 @@ interface PurseCheckFactory {
 
 interface WorldCheckFactory {
     fun hasTotalValue(worldName: String, value: Int) = unsupportedCheck()
+    fun hasTotalBalance(worldName: String, balance: Int) = unsupportedCheck()
+    fun hasTotalLost(worldName: String, lost: Int) = unsupportedCheck()
     fun hasPurse(worldName: String, purseName: String) = unsupportedCheck()
 }
 

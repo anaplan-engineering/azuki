@@ -20,9 +20,9 @@ object AbstractWorldPurseCheckFactory : PurseCheckFactory {
 
 object AbstractWorldWorldCheckFactory : WorldCheckFactory {
     override fun hasTotalValue(worldName: String, value: Int) = WorldHasTotalValueCheck(worldName, value)
-
+    override fun hasTotalBalance(worldName: String, balance: Int) = WorldHasTotalBalanceCheck(worldName, balance)
+    override fun hasTotalLost(worldName: String, lost: Int) = WorldHasTotalLostCheck(worldName, lost)
     override fun hasPurse(worldName: String, purseName: String) = WorldHasPurseCheck(worldName, purseName)
-
 }
 
 interface AbstractWorldCheck : Check {
