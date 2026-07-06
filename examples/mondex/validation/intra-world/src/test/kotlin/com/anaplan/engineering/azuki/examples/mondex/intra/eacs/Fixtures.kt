@@ -9,3 +9,7 @@ const val person3 = "person3"
 const val person4 = "person4"
 
 const val transfer1 = "transfer1"
+const val transfer2 = "transfer2"
+
+const val SUCCESS = true
+const val FAILURE = !SUCCESS

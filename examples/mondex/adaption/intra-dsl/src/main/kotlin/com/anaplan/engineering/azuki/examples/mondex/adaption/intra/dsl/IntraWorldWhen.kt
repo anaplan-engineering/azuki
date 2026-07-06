@@ -6,6 +6,7 @@ import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.dsl.action.P
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.dsl.action.TransferActions
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.dsl.action.WorldActions
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.dsl.dsl.ActionBlock
+import java.util.UUID
 
 class IntraWorldWhen(actionFactory: IntraWorldActionFactory<*>) :
     ActionBlock(actionFactory),
@@ -23,8 +24,16 @@ class IntraWorldWhen(actionFactory: IntraWorldActionFactory<*>) :
         add(actionFactory.world.addPurse(worldName, purseName))
     }
 
-    override fun makeATransfer(fromPurse: String, toPurse: String, value: Int) {
-        add(actionFactory.transfer.makeATransfer(fromPurse, toPurse, value))
+    override fun makeATransfer(fromPurse: String, toPurse: String, value: Int, successful: Boolean) {
+        val name = UUID.randomUUID().toString()
+        add(listOf(actionFactory.transfer.create(name, fromPurse, toPurse, value),
+                actionFactory.transfer.request(name),
+                actionFactory.transfer.send(name)))
+        if (successful) {
+            add(actionFactory.transfer.acknowledge(name))
+        } else {
+            add(actionFactory.transfer.abort(name))
+        }
     }
 
     override fun createTransfer(worldName: String?, transferName: String, fromPurse: String, toPurse: String, amount: Int) {
