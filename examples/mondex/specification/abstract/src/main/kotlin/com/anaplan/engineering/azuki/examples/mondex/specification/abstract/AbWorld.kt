@@ -20,9 +20,9 @@ interface AbWorld {
 
 class AbWorldProperties(abWorld: AbWorld) {
 
-    val totalBalance by property { abWorld.abAuthPurse.rng.sumOf { it.balance } }
+    val totalBalance by property { abWorld.abAuthPurse.sumOf { (_, p) -> p.balance } }
 
-    val totalLost by property { abWorld.abAuthPurse.rng.sumOf { it.lost } }
+    val totalLost by property { abWorld.abAuthPurse.sumOf { (_, p) -> p.lost } }
 
     val totalValue by property { totalBalance + totalLost }
 

@@ -6,13 +6,13 @@ object SecurityProperties {
 
     val noValueCreated = function(
         command = { before: AbWorld, after: AbWorld ->
-            before.properties.totalBalance <= after.properties.totalBalance
+            after.properties.totalBalance <= before.properties.totalBalance
         }
     )
 
     val allValueAccounted = function(
         command = { before: AbWorld, after: AbWorld ->
-            before.properties.totalValue == after.properties.totalValue
+            after.properties.totalValue == before.properties.totalValue
         }
     )
 
