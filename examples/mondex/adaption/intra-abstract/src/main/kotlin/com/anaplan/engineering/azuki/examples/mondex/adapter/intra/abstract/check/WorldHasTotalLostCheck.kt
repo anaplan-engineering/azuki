@@ -1,12 +1,12 @@
 package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.abstract.check
 
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.abstract.AbstractWorldAnimation
-import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldReifiedBehaviour
+import com.anaplan.engineering.azuki.examples.mondex.specification.abstract.totalLost
 
-class PurseHasBalanceCheck(private val purseName: String, private val balance: Int) : AbstractWorldCheck {
+class WorldHasTotalLostCheck(private val worldName: String, private val lost: Int) : AbstractWorldCheck {
 
     override fun check(animation: AbstractWorldAnimation) =
-        checkEquals(animation.getPurse(purseName).balance, balance.toULong())
+        checkEquals(animation.getWorld(worldName).abAuthPurse.totalLost(), lost.toULong())
 
     //LF QST: why should this be unsupportedBehaviour?
     override val behavior = -1
