@@ -26,7 +26,8 @@ private infix fun ((ConWorld) -> ConWorld).then(g: (ConWorld) -> ConWorld): (Con
 //TODO LF - with KSP could identify all elements in a VFunction command?
 //          1) collect a update frame (e.g. variables that changed, to create xiRest post);
 //          2) collect function calls (e.g. if some flag is on, chain pre/posts implicitly for stricter checking)
-
+//     Perhaps take inspiration from https://leanprover.github.io/functional_programming_in_lean/monads/class.html
+//
 // Attempt at Kazuki function composition; needed some generalisation (e.g. param signature) / compartmentalisation (e.g. function providers)
 private class ConWorldStep(
     val world: (ConSystemFunctions, TransferDetails) -> (ConWorld) -> ConWorld,
