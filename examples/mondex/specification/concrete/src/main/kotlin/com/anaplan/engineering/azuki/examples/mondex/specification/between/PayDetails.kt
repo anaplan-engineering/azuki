@@ -15,13 +15,6 @@ interface PayDetails : TransferDetails {
     fun namesDistinct() = from != to
 }
 
-@Module
-interface CounterPartyDetails {
-    val name: Name
-    val value: nat
-    val nextSeqNo: nat
-}
-
 sealed interface Clear
 
 //LF @QST Injective projection for Clear over a non-empty set of pay details
