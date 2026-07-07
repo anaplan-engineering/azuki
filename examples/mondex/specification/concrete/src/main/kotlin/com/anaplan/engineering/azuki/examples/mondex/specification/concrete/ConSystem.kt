@@ -196,10 +196,18 @@ class ConSystemFunctions(val system: ConSystem) {
 
     val establishValidPayDetails = worldFunction(establishValidPayDetailsStep)
 
-    // PRG126 Sect. 5.9 The Complete Protocol: first two steps of "StartFrom \semi StartTo \semi Req \semi Val \semi Ack"
     val startFromToOnWorld = worldFunction(startFromToOnWorldStep)
 
-    // establishValidPayDetails ; startFromToOnWorld
+    // PRG126 Sect. 5.9 The Complete Protocol: informally as "StartFrom \semi StartTo \semi Req \semi Val \semi Ack"
+    // * Note that "Other operations may be interleaved in an actual transfer"
+    // PRG126 Sect. 4.8 Invisible Operations: Increase + Abort
+    // * abort in particular talks about the ConPurse pdAuth being undefined - hence why we left it as nullable in ConPurse PayDetails?
+    // * Protocol plays abort at the beginning of a transfer, and abort is innocous
+    // * Protocol plays abort at epr/epv/epa and it generates a log
+    //   - PRG126 Sect. 2.3.1 Security Property 2.2: LogIfNecessary
+    //   - PRG126 Sect. 4.6 ConPurse invariants + 4.8.2 AbortPurseOkay pre
+    //
+    // startTransfer \defs establishValidPayDetails \semi startFromToOnWorld
     val startTransfer = worldFunction(establishValidPayDetailsStep compose startFromToOnWorldStep)
 
 }
