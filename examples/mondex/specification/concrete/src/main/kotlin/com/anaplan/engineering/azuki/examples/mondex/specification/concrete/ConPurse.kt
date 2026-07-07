@@ -132,8 +132,9 @@ class ConPurseFunctions(private val old: ConPurse) {
                 ), Message.Bottom)
         },
         // Z implicit pre! See ZEVES-PRG126 Table 8.2 p.86
-        // Technically speaking for this operation in isolation, this is not needed
-        // But for how it is used, in sequential composition with others, then it is!
+        // * ZEVES-PRG126 Theorem 8.6: issue on at least two names being needed (AbortPurseOkay is not total as PRG126 claims)!
+        // * ConPurse.nameLogged() invariant, which is the justification for this precondition we discovered
+        // * Because of the underdefinedness of pdAuth (PRG126 Sect. 4.8.2), its validity (ConPurse Invariants) is the responsibility of caller
         pre = { _ ->
             logIfNecessary.pre() &&
             old.name in setOf(old.pdAuth!!.from, old.pdAuth!!.to)
@@ -215,6 +216,7 @@ class ConPurseFunctions(private val old: ConPurse) {
     )
 
     //LF @QST need a mechanism to creating a different name and smaller or equal balance; can the `private val old` work?
+    //TODO this needs to "repeat" in certain places, and be new in others (cached)
     internal fun arbitraryCPD() =
         mk_CounterPartyDetails(
             name = old.name + "cpd",
