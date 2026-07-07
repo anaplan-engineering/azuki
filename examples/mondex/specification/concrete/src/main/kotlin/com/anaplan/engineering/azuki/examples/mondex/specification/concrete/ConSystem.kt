@@ -19,19 +19,43 @@ interface ConSystem {
     val functions: ConSystemFunctions
 }
 
-// World forward composition on transforms: (f ; g)(W) = g(f(W))
+// World forward composition: (f ; g)(W) = g(f(W))
 private infix fun ((ConWorld) -> ConWorld).then(g: (ConWorld) -> ConWorld): (ConWorld) -> ConWorld =
     { w -> g(this(w)) }
 
 //TODO LF - with KSP could identify all elements in a VFunction command?
 //          1) collect a update frame (e.g. variables that changed, to create xiRest post);
 //          2) collect function calls (e.g. if some flag is on, chain pre/posts implicitly for stricter checking)
-//
-//TODO: Attempt at Kazuki function composition; needed some generalisation (e.g. param signature) / compartmentalisation (e.g. function providers)
+
+// Attempt at Kazuki function composition; needed some generalisation (e.g. param signature) / compartmentalisation (e.g. function providers)
 private class ConWorldStep(
     val world: (ConSystemFunctions, TransferDetails) -> (ConWorld) -> ConWorld,
     val pre: (ConSystemFunctions, TransferDetails) -> Boolean,
     val post: (ConSystemFunctions, TransferDetails, ConSystem) -> Boolean
+)
+
+// Like Kazuki's function(...), but for host-parameterised world steps rather than VFunctions.
+private fun worldStep(
+    world: (ConSystemFunctions, TransferDetails) -> (ConWorld) -> ConWorld,
+    pre: (ConSystemFunctions, TransferDetails) -> Boolean = { _, _ -> true },
+    post: (ConSystemFunctions, TransferDetails, ConSystem) -> Boolean = { _, _, _ -> true }
+): ConWorldStep = ConWorldStep(world, pre, post)
+
+// Akin to Z \semi: P \semi Q \defs (\exists middle & P[middle/after] \land Q[middle/before])
+private fun middleSystem(host: ConSystemFunctions, step: ConWorldStep, td: TransferDetails): ConSystem =
+    mk_ConSystem(step.world(host, td)(host.system.conWorld))
+
+// (f ; g) at step level: chains world/pre/post before materialising to a VFunction.
+private infix fun ConWorldStep.compose(g: ConWorldStep): ConWorldStep = worldStep(
+    world = { host, td -> world(host, td) then g.world(host, td) },
+    pre = { host, td ->
+        pre(host, td)
+            && g.pre(ConSystemFunctions(middleSystem(host, this, td)), td)
+    },
+    post = { host, td, result ->
+        val middle = middleSystem(host, this, td)
+        post(host, td, middle) && g.post(ConSystemFunctions(middle), td, result)
+    },
 )
 
 class ConSystemFunctions(val system: ConSystem) {
@@ -44,42 +68,25 @@ class ConSystemFunctions(val system: ConSystem) {
         // pre = { after -> after != system.conWorld },  // this is allowed
     )
 
+    // Materialise a step as a Kazuki VFunction bound to this provider's before-state.
     private fun worldFunction(step: ConWorldStep): VFunction1<TransferDetails, ConSystem> = function(
         command = { td -> update(step.world(this, td)) },
         pre = { td -> step.pre(this, td) },
         post = { td, dash -> step.post(this, td, dash) },
     )
 
-    // (f ; g): command chains world updates; pre/post follow Z sequential composition.
-    private infix fun ConWorldStep.fwdCompose(g: ConWorldStep): VFunction1<TransferDetails, ConSystem> {
-        val host = this@ConSystemFunctions
-        return function(
-            command = { td ->
-                update(world(host, td) then g.world(host, td))
-            },
-            pre = { td ->
-                pre(host, td) && ConSystemFunctions(mk_ConSystem(world(host, td)(host.system.conWorld))).let { middle ->
-                    g.pre(middle, td)
-                }
-            },
-            post = { td, result ->
-                val middle = mk_ConSystem(world(host, td)(host.system.conWorld))
-                post(host, td, middle) && ConSystemFunctions(middle).let { mid ->
-                    g.post(mid, td, result)
-                }
-            },
-        )
-    }
-
+    // Initial message creation for given transfer details
     private fun startTransferMessages(td: TransferDetails): Pair<Message.StartFrom, Message.StartTo> {
         val fromPurse = system.conWorld.conAuthPurse[td.from]
         val toPurse = system.conWorld.conAuthPurse[td.to]
+        // StartFrom message gets the toPurse's name and seq no;
         return Message.StartFrom(
             mk_CounterPartyDetails(
                 toPurse.name,
                 td.value,
                 toPurse.nextSeqNo,
             ),
+        // StartTo message gets the fromPurse's name and seq no;
         ) to Message.StartTo(
             mk_CounterPartyDetails(
                 fromPurse.name,
@@ -89,23 +96,37 @@ class ConSystemFunctions(val system: ConSystem) {
         )
     }
 
-    private val establishValidPayDetailsStep = ConWorldStep(
+    // PRG126 Sect. 4.8 Invisible Operations: Increase + Abort
+    // * abort in particular talks about the ConPurse pdAuth being undefined - hence why we left it as nullable in ConPurse PayDetails?
+    // * Protocol plays abort at the beginning of a transfer, and abort is innocous
+    // * Protocol plays abort at epr/epv/epa and it generates a log
+    //   - PRG126 Sect. 2.3.1 Security Property 2.2: LogIfNecessary
+    //   - PRG126 Sect. 4.6 ConPurse invariants + 4.8.2 AbortPurseOkay pre
+    //   - we need to establish here the validity of purses pdAuth (see abortPurseOkay.pre comments)
+    private val establishValidPayDetailsStep = worldStep(
         world = { _, td ->
             { w ->
                 val fromPurse = w.conAuthPurse[td.from]
                 val toPurse = w.conAuthPurse[td.to]
 
+                // see PRG126, p.31 \mu-expr in StartFromPurseEafromOkay
                 val fromPurseDash = fromPurse.transform(
                     pdAuth = mk_PayDetails(
-                        td.from, td.to, td.value,
-                        fromPurse.nextSeqNo,
-                        toPurse.nextSeqNo,
+                        from      = fromPurse.name, // same as td.from,
+                        to        = td.to,
+                        value     = td.value,
+                        fromSeqNo = fromPurse.nextSeqNo,
+                        toSeqNo   = toPurse.nextSeqNo,
                     ),
                 )
+                // see see PRG126, p.32 \mu-expr in StartToPurseEafromOkay
                 val toPurseDash = toPurse.transform(
                     pdAuth = mk_PayDetails(
-                        td.to, td.from, td.value,
-                        toPurse.nextSeqNo, fromPurse.nextSeqNo,
+                        from      = td.to,
+                        to        = td.from,
+                        value     = td.value,
+                        fromSeqNo = toPurse.nextSeqNo,
+                        toSeqNo   = fromPurse.nextSeqNo,
                     ),
                 )
                 w.transform(
@@ -131,8 +152,8 @@ class ConSystemFunctions(val system: ConSystem) {
         },
     )
 
-    private val startFromToOnWorldStep = ConWorldStep(
-        world = { host, td ->
+    private val startFromToOnWorldStep = worldStep(
+        world = { _, td ->
             { w ->
                 val fromPurse = w.conAuthPurse[td.from]
                 val toPurse = w.conAuthPurse[td.to]
@@ -173,19 +194,12 @@ class ConSystemFunctions(val system: ConSystem) {
         },
     )
 
-    // PRG126 Sect. 4.8 Invisible Operations: Increase + Abort
-    // * abort in particular talks about the ConPurse pdAuth being undefined - hence why we left it as nullable in ConPurse PayDetails?
-    // * Protocol plays abort at the beginning of a transfer, and abort is innocous
-    // * Protocol plays abort at epr/epv/epa and it generates a log
-    //   - PRG126 Sect. 2.3.1 Security Property 2.2: LogIfNecessary
-    //   - PRG126 Sect. 4.6 ConPurse invariants + 4.8.2 AbortPurseOkay pre
-    //   - we need to establish here the validity of purses pdAuth (see abortPurseOkay.pre comments)
     val establishValidPayDetails = worldFunction(establishValidPayDetailsStep)
 
     // PRG126 Sect. 5.9 The Complete Protocol: first two steps of "StartFrom \semi StartTo \semi Req \semi Val \semi Ack"
     val startFromToOnWorld = worldFunction(startFromToOnWorldStep)
 
     // establishValidPayDetails ; startFromToOnWorld
-    val startTransfer = establishValidPayDetailsStep fwdCompose startFromToOnWorldStep
+    val startTransfer = worldFunction(establishValidPayDetailsStep compose startFromToOnWorldStep)
 
 }
