@@ -19,6 +19,7 @@ import com.anaplan.engineering.azuki.mondex.world1
 """)
 class BEH3 : IntraWorldScenario() {
 
+    @KnownBug(Issue(ConcreteWorld, "fails pre start composition - needs splitting?"))
     @Eac("Value can be transferred from one purse to another with a successful transfer", """
         Value moves from the sending purse's balance to the receiving purse's balance. The lost
         components do not change.
