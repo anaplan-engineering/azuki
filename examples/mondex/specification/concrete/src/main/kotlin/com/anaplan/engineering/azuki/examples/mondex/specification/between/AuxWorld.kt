@@ -15,6 +15,7 @@ import com.anaplan.engineering.kazuki.core.mk_
 import com.anaplan.engineering.kazuki.core.nat
 import com.anaplan.engineering.kazuki.core.plus
 import com.anaplan.engineering.kazuki.core.property
+import com.anaplan.engineering.kazuki.core.set
 
 @Module
 interface AuxWorld : ConWorld {
@@ -85,26 +86,16 @@ class AuxWorldProperties(private val auxWorld: AuxWorld) {
         //TODO LF SF - Narrows the sequence but would  make it finite? Say to size of conAuthPurse.dom?
         post = { r -> r.isSubsetOf { pd -> pd.from in auxWorld.conAuthPurse.dom } }
     ) {
-//        val bound = auxWorld.conAuthPurse.dom.card.toInt()
-//        as_Set(allPayDetailsFair(
-//            bound = bound, fromNames = auxWorld.conAuthPurse.dom.asSequence())
-//            .take(bound).toSet()
-//        )
-        // Using a conAuthPurse projection instead
-        auxWorld.conAuthPurse.rng.filter { cp -> cp.pdAuth != null && cp.pdAuth!!.from == cp.name }
-            .map { cp -> cp.pdAuth!! }.toSet()
+        set(auxWorld.conAuthPurse.rng
+            .filter { cp -> cp.pdAuth != null && cp.pdAuth!!.from == cp.name })
+            { cp -> cp.pdAuth!! }
     }
 
     val authenticTo by property(
         post = { r -> r.isSubsetOf { pd -> pd.to in auxWorld.conAuthPurse.dom } }
     ) {
-//        val bound = auxWorld.conAuthPurse.dom.card.toInt()
-//        as_Set(allPayDetailsFair(
-//            bound = bound, toNames = auxWorld.conAuthPurse.dom.asSequence())
-//            .take(bound).toSet()
-//        )
-        auxWorld.conAuthPurse.rng.filter { cp -> cp.pdAuth != null && cp.pdAuth!!.to == cp.name }
-            .map { cp -> cp.pdAuth!! }.toSet()
+        set(auxWorld.conAuthPurse.rng.filter { cp -> cp.pdAuth != null && cp.pdAuth!!.to == cp.name })
+            { cp -> cp.pdAuth!! }
     }
 
     val fromLogged by property(
