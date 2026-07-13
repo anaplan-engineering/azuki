@@ -59,7 +59,7 @@ interface BetweenWorld : AuxWorld {
      *   in a $req$ message need not have started the transaction yet, and
      *   need not even be authentic.)
      */
-    //@Invariant
+    @Invariant
     fun b2_etherNoFutureToPurseReqMsg() =
         //\forall pd: PayDetails | req(pd) \in ether & pd.toSeqNo < conAuthPurse(pd.to).nextSeqNo
         forall(ether.filter { is_Req(it) }) { m ->
@@ -69,8 +69,9 @@ interface BetweenWorld : AuxWorld {
      *  ZEVES-PRG126 addition: original purse was missing additional information about
      *  the authenticity of val messages in the ether for to and from purses!
      */
-    //@Invariant
+    @Invariant
     fun b3_1_2_etherValMsgAuthentic() =
+
         forall(ether.filter { is_Val(it) }) { m ->
             as_Val(m).pd in properties.authenticTo inter properties.authenticFrom
         }
@@ -81,7 +82,7 @@ interface BetweenWorld : AuxWorld {
      *   sequence number and a $from$ purse sequence number less than that
      *   purse's next sequence number.
      */
-   // @Invariant
+    @Invariant
     fun b3_etherNoFutureToPurseValMsg() =
         //\forall pd: PayDetails | val(pd) \in ether & pd.toSeqNo < conAuthPurse(pd.to).nextSeqNo \land pd.fromSeqNo < conAuthPurse(pd.from).nextSeqNo
         b3_1_2_etherValMsgAuthentic() &&
@@ -96,7 +97,7 @@ interface BetweenWorld : AuxWorld {
      *  ZEVES-PRG126 addition: original purse was missing additional information about
      *  the authenticity of ack messages in the ether for to and from purses!
      */
-    //@Invariant
+    @Invariant
     fun b4_1_2_etherAckMsgAuthentic() =
         forall(ether.filter { is_Ack(it) }) { m ->
             as_Ack(m).pd in properties.authenticTo inter properties.authenticFrom
@@ -108,7 +109,7 @@ interface BetweenWorld : AuxWorld {
      *   sequence number and a $from$ purse sequence number less than that
      *   purse's next sequence number.
      */
-    //@Invariant
+    @Invariant
     fun b4_etherNoFutureToPurseAckMsg() =
         //\forall pd: PayDetails | ack(pd) \in ether & pd.toSeqNo < conAuthPurse(pd.to).nextSeqNo \land pd.fromSeqNo < conAuthPurse(pd.from).nextSeqNo
         b3_1_2_etherValMsgAuthentic() &&
@@ -122,14 +123,14 @@ interface BetweenWorld : AuxWorld {
     /**
      * There are no `future' $from$ logs based on the $nextSeqNo$ of the $from$ purse
      */
-   // @Invariant
+    @Invariant
     fun b5_noFutureFromLogged() =
         forall(properties.fromLogged) { pd -> pd.fromSeqNo < conAuthPurse[pd.from].nextSeqNo }
 
     /**
      * There are no `future' $to$ logs based on the $nextSeqNo$ of the $to$ purse
      */
-    //@Invariant
+    @Invariant
     fun b6_noFutureToLogged() =
         forall(properties.toLogged) { pd -> pd.toSeqNo < conAuthPurse[pd.to].nextSeqNo }
 
@@ -141,7 +142,7 @@ interface BetweenWorld : AuxWorld {
      *   purse that is currently in a transaction as a $from$ purse (that is, in $epr$ or $epa$), hold
      *   a $from$ sequence number strictly less than that purse's stored current transaction sequence number.
      */
-    //@Invariant
+    @Invariant
     fun b7_noFutureEprEpaFromLogged() =
         forall(properties.fromLogged.filter { pd ->
             conAuthPurse[pd.from].status in mk_Set(Status.epr, Status.epa) } ) {
@@ -157,7 +158,7 @@ interface BetweenWorld : AuxWorld {
      *   $to$ purse (in $epv$), hold a $to$ sequence number strictly less
      *   than that purse's stored current transaction sequence number.
      */
-    //@Invariant
+    @Invariant
     fun b8_noFutureEpvEaToToLogged() =
         forall(properties.toLogged.filter { pd ->
             conAuthPurse[pd.to].status in mk_Set(Status.epv, Status.eaTo) } ) {
