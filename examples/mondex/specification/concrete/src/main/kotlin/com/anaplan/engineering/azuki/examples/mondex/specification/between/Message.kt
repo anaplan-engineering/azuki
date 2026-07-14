@@ -2,10 +2,13 @@ package com.anaplan.engineering.azuki.examples.mondex.specification.between
 
 import com.anaplan.engineering.kazuki.core.ComparableTypeLimit
 import com.anaplan.engineering.kazuki.core.Module
+import com.anaplan.engineering.kazuki.core.PrettyPrintable
 
 /*sealed*/ interface Message
 
-interface UnprotectedMessage : Message
+interface UnprotectedMessage : Message, PrettyPrintable {
+    override fun pretty() = javaClass.simpleName
+}
 
 @Module
 interface CPDUnprotectedMessage : UnprotectedMessage {
@@ -62,7 +65,9 @@ interface ExceptionLogClear : ExceptionProtectedMessage {
 
 // forged, error, unprotected status, silence/no-op
 @ComparableTypeLimit
-object Bottom : UnprotectedMessage
+object Bottom : UnprotectedMessage, PrettyPrintable {
+    override fun pretty() = javaClass.simpleName
+}
 
 // PRG 5.8 Forging Messages
 // * replay of earlier valid (ether) messages

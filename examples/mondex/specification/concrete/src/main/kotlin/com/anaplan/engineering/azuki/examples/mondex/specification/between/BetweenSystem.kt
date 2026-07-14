@@ -4,6 +4,7 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.between.Ack_M
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.BetweenSystem_Module.mk_BetweenSystem
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.BetweenSystem_Module.transform
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.BetweenWorld_Module.transform
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.CPDUnprotectedMessage_Module.as_CPDUnprotectedMessage
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.CounterPartyDetails_Module.mk_CounterPartyDetails
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.PayDetails_Module.mk_PayDetails
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Req_Module.mk_Req
@@ -73,18 +74,19 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
     //   - PRG126 Sect. 2.3.1 Security Property 2.2: LogIfNecessary
     //   - PRG126 Sect. 4.6 ConPurse invariants + 4.8.2 AbortPurseOkay pre
     //   - we need to establish here the validity of purses pdAuth (see abortPurseOkay.pre comments)
-    //
-    // TODO we are trying to model here the BetweenInitState, which will include the initial ether with partially started messages for startFrom and startTo!
     val startTransfer = function(
         command = { pd: PayDetails ->
 
+            // We are trying to model here the BetweenInitState, which will include
+            // the initial ether with partially started messages for startFrom and startTo.
             val mFrom = getMessage<StartFrom>(pd)
             val mTo = getMessage<StartTo>(pd)
 
-            //TODO Explicitly changing the ether like this should not be allowed!
+            //@4paper - Explicitly changing the ether is dangerous, but the invariants of BetweenWorld will enforce correctness
+            //          We need to do that explicitly, given we don't have infinite paydetails for BetweenInitState
             val system1 = update { w -> w.transform(ether = w.ether + mk_Set(mFrom, mTo)) }
 
-            //TODO LF - inner specification of these not being checked !!! This is not quite right
+            //TODO LF SF - inner specification of these not being checked; Would be if we had a compose operator
             val system2 = system1.functions.update { w ->
                 println("1: Create transfer from=${pd.from}, pd=${pd.mondexPretty()}")
                 println("1.1: w1=${w.mondexPretty()}")
@@ -95,7 +97,7 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
                 dashFrom
             }
 
-            val system3 = system2.functions.update { w ->
+            system2.functions.update { w ->
                 println("2: Create transfer to=${pd.from}, pd=${pd.mondexPretty()}")
                 println("2.1: w2=${w.mondexPretty()}")
                 println("2.2: StartToOkay m?=${mTo.mondexPretty()}")
@@ -104,7 +106,30 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
                 println("2.3: m!=${msg.mondexPretty()}")
                 dashTo
             }
-            system3
+        },
+        pre = { pd ->
+            // Expect that neither startFrom/To have been setup yet
+            forall(mk_Set(pd.from, pd.to)) { n ->
+                n in system.world.conAuthPurse.dom &&
+                system.world.conAuthPurse[n].pdAuth == null
+            }
+        },
+        post = { pd, result ->
+            val msgs = mk_Set(getMessage<StartFrom>(pd), getMessage<StartTo>(pd))
+            msgs subset result.world.ether &&
+            // Expect that startFrom/To have been setup
+            forall(mk_Set(pd.from, pd.to)) { n ->
+                n in result.world.conAuthPurse.dom &&
+                    result.world.conAuthPurse[n].pdAuth != null
+            }
+            forall(msgs) { m ->
+                as_CPDUnprotectedMessage(m).cpd.let { cpd ->
+                    // StartTo target is set but not ready (waiting a StartTo call)
+                    cpd.name in mk_Set(pd.from, pd.to) &&
+                        cpd.name in result.world.conAuthPurse.dom &&
+                        result.world.conAuthPurse[cpd.name].pdAuth != null
+                }
+            }
         },
     )
 
@@ -188,7 +213,6 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
             m in dash.ether &&
                 dash.conAuthPurse[pd.to].pdAuth == null &&
                 is_StartTo(m) &&
-                //TODO remove? Somewhat redundant
                 as_StartTo(m).cpd.let { cpd ->
                     cpd.name == pd.from &&
                         cpd.name in dash.conAuthPurse.dom &&
