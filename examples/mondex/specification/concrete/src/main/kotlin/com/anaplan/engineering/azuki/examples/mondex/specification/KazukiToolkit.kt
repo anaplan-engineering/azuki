@@ -58,7 +58,6 @@ fun <T> Set<T>.isSubsetOf(isInSuperset: (T) -> Boolean): Boolean = all(isInSuper
 //TODO LF SF - Sequence inherits Collection (not Relation)? Using VDM_Toolkit one instead; could do with Set.fold1?
 /*
 --@doc generalised disjointness of sets
---@todo use fold? allow for set of rather than seq of?
 disjoint[@elem]: seq of (set of @elem) +> bool
 disjoint(s) ==
     -- empty or singleton sequences are trivially disjoint
@@ -70,8 +69,8 @@ disjoint(s) ==
  */
 fun <T> Sequence<Set<T>>.pairwise_disjoint() =
     (len > 1UL) implies {
-        len == set(inds) { i -> forall(inds) { j -> (j > i) implies { (this[i] inter this[j]).isEmpty() } } }.card
+        len == set(inds, { i -> forall(inds) { j -> (j > i) implies { (this[i] inter this[j]).isEmpty() } } }) { i -> i }.card
     }
 
-//fun <T> Sequence<T>.isSubsetOf(isInSuperset: (T) -> Boolean): Boolean =
-//    distinct().all(isInSuperset)
+fun <T> Sequence<Set<T>>.pairwise_disjoint_k() =
+    forall(inds) { i -> forall(inds) { j -> (j > i) implies { (this[i] inter this[j]).isEmpty() } } }
