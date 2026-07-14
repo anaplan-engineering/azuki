@@ -508,7 +508,7 @@ class ConPurseFunctions(private val old: ConPurse) {
     )
 
     //TODO LF EAC - eaTo status, Fig 5.1 check?
-    val valPurseOkay = function(
+    val valPurseOkay = function<Message, Tuple2<ConPurse, Message>>(
         command = { m: Message ->
             val dash = authenticValMessage(m)
             mk_(dash.transform(

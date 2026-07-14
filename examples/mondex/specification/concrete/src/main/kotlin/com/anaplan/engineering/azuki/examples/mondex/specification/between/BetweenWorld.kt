@@ -466,41 +466,26 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
         //TODO EK chase the corresponding ones in Schma 8.21 onwards
         pre = { name, m ->
             val purse = old.conAuthPurse[name]
+            val pdAuth = purse.properties.pdAuth
             val ignorePre = old.functions.ignore.pre(name, m)
             val reqOkayPre = old.functions.phiBOp.pre(name, m, old.conAuthPurse[name].functions.reqPurseOkay)
             // ZEVES-PRG126 Table 8.3, p.87, Schema 8.21, Theorem 8.37
+            //TODO LF - how much of this is just ZEVES proof engineering needs?
             val reqPurseOkayPre =
-                purse.functions.reqPurseOkay.pre(m) && true
-//                (mk_Val(purse.properties.pdAuth) !in old.ether) implies {
-//                    purse.properties.pdAuth.to in old.conAuthPurse.dom &&
-//                        purse.properties.pdAuth.from in old.conAuthPurse.dom &&
-//                        (purse.properties.pdAuth.to != name) implies {
-//                            purse.properties.pdAuth.toSeqNo < old.conAuthPurse[purse.properties.pdAuth.to].nextSeqNo
-//                    } &&
-//                        (purse.properties.pdAuth.from != name) implies {
-//                            purse.properties.pdAuth.fromSeqNo < old.conAuthPurse[purse.properties.pdAuth.from].nextSeqNo
-//                    } &&
-//                        old.properties.fromInEpr.all { pdIn -> pdIn != purse.properties.pdAuth } &&
-//                        (mk_(purse.properties.pdAuth.from, purse.properties.pdAuth) !in old.archive) implies {
-//                            purse.properties.pdAuth in old.conAuthPurse[purse.properties.pdAuth.from].exLog
-//                    }
-//                } &&
-//                allPayDetails().filter { xEPR ->
-//                    xEPR.from in old.conAuthPurse.dom &&
-//                        old.conAuthPurse[xEPR.from].status == Status.epr &&
-//                        old.conAuthPurse[xEPR.from].pdAuth == xEPR
-//                }.any { xEPR -> xEPR.from != name } &&
-//                allPayDetails().filter { pd ->
-//                    pd.from in old.conAuthPurse.dom
-//                }.any { pd -> pd != purse.properties.pdAuth } &&
-//                purse.transform(
-//                    balance = purse.balance - purse.properties.pdAuth.value,
-//                    name = purse.properties.pdAuth.from,
-//                    status = Status.epa
-//                ) !in old.conAuthPurse.rng
-//                (as_Req(m).pd.from in old.conAuthPurse.dom) implies {
-//                    purse.properties.pdAuth != as_Req(m).pd
-//                }
+                purse.functions.reqPurseOkay.pre(m) &&
+                (mk_Val(pdAuth) !in old.ether) implies {
+                    // B3 - no future val msgs on given pdAuth
+                    pdAuth.to in old.conAuthPurse.dom &&
+                    pdAuth.from in old.conAuthPurse.dom &&
+                    (pdAuth.to != name) implies { pdAuth.toSeqNo < old.conAuthPurse[pdAuth.to].nextSeqNo } &&
+                    (pdAuth.from != name) implies { pdAuth.fromSeqNo < old.conAuthPurse[pdAuth.from].nextSeqNo } //&&
+                    // B9 - epr disjoint from val / ack in ether TODO LF - equivalent; prefers the first?
+//                    pdAuth !in old.properties.fromInEpr
+//                    old.properties.fromInEpr.all { pdIn -> pdIn != pdAuth } &&
+                    // B11 - val pdAuth is either archived or exception logged
+//                    (mk_(pdAuth.from, pdAuth) !in old.archive) implies {
+//                        pdAuth in old.conAuthPurse[pdAuth.from].exLog }
+                }
             setOf(ignorePre, reqOkayPre, reqPurseOkayPre).all { it }
         },
         //TODO no need for these checks?
@@ -512,7 +497,7 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
         }
     )
 
-    val valOp = function(
+    val valOp = function<Name, Message, Tuple2<BetweenWorld, Message>>(
         command = { name: Name, m: Message ->
             TODO("Choice for ignore of valPurseOkay. Here just valPurseOkay route completed.")
             mk_(old, mk_Ack(old.conAuthPurse[name].properties.pdAuth))

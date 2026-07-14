@@ -2,17 +2,11 @@ package com.anaplan.engineering.azuki.examples.mondex.specification.between
 
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Ack_Module.mk_Ack
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.BetweenSystem_Module.mk_BetweenSystem
-import com.anaplan.engineering.azuki.examples.mondex.specification.between.BetweenSystem_Module.transform
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.BetweenWorld_Module.transform
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.CPDUnprotectedMessage_Module.as_CPDUnprotectedMessage
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.CounterPartyDetails_Module.mk_CounterPartyDetails
-import com.anaplan.engineering.azuki.examples.mondex.specification.between.PayDetails_Module.mk_PayDetails
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Req_Module.mk_Req
-import com.anaplan.engineering.azuki.examples.mondex.specification.between.StartFrom_Module.as_StartFrom
-import com.anaplan.engineering.azuki.examples.mondex.specification.between.StartFrom_Module.is_StartFrom
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.StartFrom_Module.mk_StartFrom
-import com.anaplan.engineering.azuki.examples.mondex.specification.between.StartTo_Module.as_StartTo
-import com.anaplan.engineering.azuki.examples.mondex.specification.between.StartTo_Module.is_StartTo
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.StartTo_Module.mk_StartTo
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Val_Module.mk_Val
 import com.anaplan.engineering.azuki.examples.mondex.specification.mondexPretty
@@ -89,7 +83,7 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
             //TODO LF SF - inner specification of these not being checked; Would be if we had a compose operator
             val system2 = system1.functions.update { w ->
                 println("1: Create transfer from=${pd.from}, pd=${pd.mondexPretty()}")
-                println("1.1: w1=${w.mondexPretty()}")
+                println("1.1: w=${w.mondexPretty()}")
                 println("1.2: StartFromOkay m?=${mFrom.mondexPretty()}")
                 val (choiceFrom, resultFrom) = w.functions.startFrom(pd.from, mFrom)
                 val (dashFrom, msg) = resultFrom
@@ -99,7 +93,7 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
 
             system2.functions.update { w ->
                 println("2: Create transfer to=${pd.from}, pd=${pd.mondexPretty()}")
-                println("2.1: w2=${w.mondexPretty()}")
+                println("2.1: w=${w.mondexPretty()}")
                 println("2.2: StartToOkay m?=${mTo.mondexPretty()}")
                 val (choiceTo, resultTo) = w.functions.startTo(pd.to, mTo)
                 val (dashTo, msg) = resultTo
@@ -138,86 +132,50 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
             val mReq = getMessage<Req>(pd)
             update { w ->
                 println("3: Request transfer pd=${pd.mondexPretty()}")
-                println("3.1: w1=${w.mondexPretty()}")
+                println("3.1: w=${w.mondexPretty()}")
                 println("3.2: ReqOkay m?=${mReq.mondexPretty()}")
                 val (choiceTo, resultTo) = w.functions.reqOp(pd.from,mReq)
                 val (dashTo, msg) = resultTo
                 println("2.3: m!=${msg.mondexPretty()}")
                 dashTo
             }
-        }
+        },
+        //TODO LF - Somewhat repeated; need a cleaner resulting interface for the post?
+        pre = { pd -> system.world.functions.reqOp.pre(pd.from, getMessage<Req>(pd)) },
+        //post = { pd, result -> system.world.functions.reqOp.post(pd.from, getMessage<Req>(pd), result.world) }
     )
 
-    // We are trying to model here the BetweenInitState, which will include
-    // the initial ether with partially started messages for startFrom and startTo.
-    //
-    // Found having both startFrom/To together got confusing, given the way they set each other
-    private val establishValidPayDetailsFrom = function(
+    val sendTransfer = function(
         command = { pd: PayDetails ->
-            val fromPurse = system.world.conAuthPurse[pd.from]
-            val toPurse = system.world.conAuthPurse[pd.to]
-            // StartFrom message gets the toPurse's name and seq no;
-            val mFrom = mk_StartFrom(
-                mk_CounterPartyDetails(
-                    toPurse.name,
-                    pd.value,
-                    toPurse.nextSeqNo,
-                )
-            )
-            // Given how we (did not have as in PRG) BetweenInitState, we must update the ether
-            mk_(system.world.transform(ether = system.world.ether + mk_Set(mFrom)), mFrom)
-        },
-        pre = { pd ->
-            // Expect that neither startFrom/To have been setup yet
-            forall(mk_Set(pd.from, pd.to)) { n ->
-                n in system.world.conAuthPurse.dom //&&
-                    //system.world.conAuthPurse[n].pdAuth == null
+            val mVal = getMessage<Val>(pd)
+            update { w ->
+                println("4: Send transfer pd=${pd.mondexPretty()}")
+                println("4.1: w=${w.mondexPretty()}")
+                println("4.2: ReqOkay m?=${mVal.mondexPretty()}")
+//                val (choiceTo, resultTo) = w.functions.valOp(pd.from,mVal)
+//                val (dashTo, msg) = resultTo
+//                println("4.3: m!=${msg.mondexPretty()}")
+//                dashTo
+                w
             }
         },
-        post = { pd, result ->
-            val (dash, m) = result
-            m in dash.ether &&
-                dash.conAuthPurse[pd.from].pdAuth == null &&
-                is_StartFrom(m) &&
-                as_StartFrom(m).cpd.let { cpd ->
-                    // StartTo target is set but not ready (waiting a StartTo call)
-                    cpd.name == pd.to &&
-                        cpd.name in dash.conAuthPurse.dom &&
-                        dash.conAuthPurse[cpd.name].pdAuth == null
-                }
-        },
+        pre = { pd -> system.world.functions.valOp.pre(pd.from, getMessage<Val>(pd)) },
     )
 
-    private val establishValidPayDetailsTo = function(
+    val ackTransfer = function(
         command = { pd: PayDetails ->
-            val fromPurse = system.world.conAuthPurse[pd.from]
-            val toPurse = system.world.conAuthPurse[pd.to]
-            // StartTo message gets the fromPurse's name and seq no;
-            val mTo = mk_StartTo(
-            mk_CounterPartyDetails(
-                fromPurse.name,
-                pd.value,
-                fromPurse.nextSeqNo,
-                )
-            )
-            mk_(system.world.transform(ether = system.world.ether + mk_Set(mTo)), mTo)
+            val mAck = getMessage<Ack>(pd)
+            update { w ->
+                println("5: Send transfer pd=${pd.mondexPretty()}")
+                println("5.1: w=${w.mondexPretty()}")
+                println("5.2: ReqOkay m?=${mAck.mondexPretty()}")
+//                val (choiceTo, resultTo) = w.functions.ackOp(pd.from,mAck)
+//                val (dashTo, msg) = resultTo
+//                println("5.3: m!=${msg.mondexPretty()}")
+//                dashTo
+                w
+            }
         },
-        pre = { pd ->
-            // Expect that startFrom have been setup; startTo not yet
-            mk_Set(pd.from, pd.to) subset system.world.conAuthPurse.dom &&
-                system.world.conAuthPurse[pd.from].pdAuth != null &&
-                system.world.conAuthPurse[pd.to].pdAuth == null
-        },
-        post = { pd, result ->
-            val (dash, m) = result
-            m in dash.ether &&
-                dash.conAuthPurse[pd.to].pdAuth == null &&
-                is_StartTo(m) &&
-                as_StartTo(m).cpd.let { cpd ->
-                    cpd.name == pd.from &&
-                        cpd.name in dash.conAuthPurse.dom &&
-                        dash.conAuthPurse[cpd.name].pdAuth != null
-                }
-        },
+        pre = { pd -> system.world.functions.ackOp.pre(pd.from, getMessage<Ack>(pd)) },
     )
 }

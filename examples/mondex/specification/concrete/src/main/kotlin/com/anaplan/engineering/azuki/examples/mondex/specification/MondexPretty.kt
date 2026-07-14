@@ -46,12 +46,12 @@ private  fun <T> Sequence<T>.mondexPrettySeq(): String = buildString {
 }
 
 private fun CounterPartyDetails.mondexPrettyCounterPartyDetails(): String = buildString {
-    append("name=${name.asString()}, value=$value, nextSeqNo=$nextSeqNo")
+    append("CPD(name=${name.asString()}, value=$value, nextSeqNo=$nextSeqNo)")
 }
 
 private fun PayDetails.mondexPrettyPayDetails(): String = buildString {
-    append("{from=${from.asString()}, to=${to.asString()}, value=$value, ")
-    append("fromSeqNo=$fromSeqNo, toSeqNo=$toSeqNo}")
+    append("PayDetails(from=${from.asString()}, to=${to.asString()}, value=$value, ")
+    append("fromSeqNo=$fromSeqNo, toSeqNo=$toSeqNo)")
 }
 
 private fun ConPurse.mondexPrettyConPurse(): String = buildString {
@@ -91,9 +91,9 @@ private fun Clear.mondexPrettyClear(): String = buildString {
 }
 
 private fun LogBook.mondexPrettyLogBook(): String = buildString {
-    append("{")
+    append("LogBook({")
     append(joinToString(", ") { (name, pd) -> "${name.asString()} ↦ ${pd.mondexPrettyPayDetails()}" })
-    append("}")
+    append("})")
 }
 
 private fun ConWorld.mondexPrettyConWorld(): String = buildString {
