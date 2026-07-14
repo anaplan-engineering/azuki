@@ -19,6 +19,7 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.between.Val
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConPurse
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConWorld
 import com.anaplan.engineering.kazuki.core.prettyOrDefault
+import com.anaplan.engineering.kazuki.core.Sequence
 
 fun Any.mondexPretty(): String = when (this) {
     is Name -> asString()
@@ -29,10 +30,20 @@ fun Any.mondexPretty(): String = when (this) {
     is LogBook -> mondexPrettyLogBook()
     is BetweenWorld -> mondexPrettyConWorld()
     is ConWorld -> mondexPrettyConWorld()
+    is Set<*> -> mondexPrettySet()
+    is Sequence<*> -> mondexPrettySeq()
     else -> prettyOrDefault()
 }
 
 private fun Name.asString() = joinToString("")
+
+private  fun <T> Set<T>.mondexPrettySet(): String = buildString {
+    append(joinToString(",", "{ ", " }") { it?.mondexPretty() ?: "null" })
+}
+
+private  fun <T> Sequence<T>.mondexPrettySeq(): String = buildString {
+    append(joinToString(",", "[ ", " ]") { it?.mondexPretty() ?: "null" })
+}
 
 private fun CounterPartyDetails.mondexPrettyCounterPartyDetails(): String = buildString {
     append("name=${name.asString()}, value=$value, nextSeqNo=$nextSeqNo")
