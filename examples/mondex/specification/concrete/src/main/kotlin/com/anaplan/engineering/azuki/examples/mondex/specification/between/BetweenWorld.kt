@@ -168,7 +168,7 @@ interface BetweenWorld : AuxWorld {
     /**
      * If the $from$ purse is in $epr$ then there is no $val$ message or $ack$ message in the $ether$.
      */
-    //@Invariant
+    @Invariant
     fun b9_eprDisjointFromValAckEther() =
         forall(properties.fromInEpr) { pd ->
             mk_Seq(mk_Set(mk_Val(pd), mk_Ack(pd)), ether).pairwise_disjoint()
@@ -178,7 +178,7 @@ interface BetweenWorld : AuxWorld {
      * There is a $req$ message but no $ack$ message in the $ether$ precisely when the $to$ purse is in $epv$ or
      * has logged the transaction
      */
-    //@Invariant
+    @Invariant
     fun b10_reqAckEtherEpvToLoggedIff() =
         // For all + iff in two parts
         // \forall pd: PayDetails & (req(pd) \in ether \land ack(pd) !in ether)\iff (pd \in toInEpv \union toLogged)
@@ -192,7 +192,7 @@ interface BetweenWorld : AuxWorld {
      *   there is a $val$ message in the $ether$, then either the $from$
      *   purse is in $epa$ or has logged the transaction
      */
-    //@Invariant
+    @Invariant
     fun b11_toPurseEpvValLoggedFrom() =
         forall(ether.filter { is_Val(it) && as_Val(it).pd in properties.toInEpv }) { m ->
             as_Val(m).pd in (properties.fromInEpa + properties.fromLogged)
@@ -203,17 +203,16 @@ interface BetweenWorld : AuxWorld {
      *   logged the transaction, then there is a $req$ in the $ether$
      */
     //TODO LF EAC this chaining of b11-12 seems related to the possible Mondex bug?
-   // @Invariant
+    @Invariant
     fun b12_epaFromLoggedReqEther() =
-        // check that is_Req(pd) missing?
-        forall(properties.fromInEpa + properties.fromLogged) { pd -> is_Req(pd) && mk_Req(pd) in ether }
+        forall(properties.fromInEpa + properties.fromLogged) { pd -> mk_Req(pd) in ether }
 
     /**
      * The set $toLogged$ is finite.  This is
      *   sufficient to ensure that $definitelyLost$ is finite
      */
     // B13 is trivial because we are dealing with finite sets already; ignore
-    //@Invariant
+    @Invariant
     fun b13_toLoggedFinite() = true // toLogged \in \finset~PayDetails
 
     /**
@@ -221,7 +220,7 @@ interface BetweenWorld : AuxWorld {
      *   log details of any $exceptionLogResult$ message in the ether is
      *   either archived or in a purse transaction exception log
      */
-    //@Invariant
+    @Invariant
     fun b14_logArchiveConsistency() =
         forall(ether.filter { is_ExceptionLogResult(it) }) { m ->
             as_ExceptionLogResult(m).let { mk_(it.name, it.pd) in properties.allLogs } }
@@ -229,7 +228,7 @@ interface BetweenWorld : AuxWorld {
     /**
      * Exception log clear messages refer only to archived logs
      */
-    //@Invariant
+    @Invariant
     fun b15_allArchivedAreClearMsgs() =
         forall(ether.filter { is_ExceptionLogClear(it) }) { m ->
             as_ExceptionLogClear(m).let { (it.name x it.clear.pds) subset archive } }
@@ -238,12 +237,11 @@ interface BetweenWorld : AuxWorld {
      * For each $PayDetails$ in the logs there
      *   is a corresponding $PayDetails$ in a $req$ message in the ether
      */
-    //@Invariant
+    @Invariant
     fun b16_reqPayDetailsLogged() =
-        forall(properties.fromLogged + properties.toLogged) { pd -> is_Req(pd) && mk_Req(pd) in ether }
+        forall(properties.fromLogged + properties.toLogged) { pd -> mk_Req(pd) in ether }
 }
 
-//TODO LF SF - better way for this?
 const val SEED_CHOICE = 137L
 enum class UnprotectedPromotionChoice { Ignore, Abort, Act }
 enum class ProtectedPromotionChoice { Ignore, Act }
@@ -278,7 +276,6 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
         },
         // ZEVES-PRG126 Schema 8.17 p.71, Table 8.3, p.87
         pre = { name, m, act ->
-            //TODO LF do we need to check the inner pre/post here?
             m in old.ether && name in old.conAuthPurse.dom && act.pre(m)
             // \theta ConPurse = conAuthPurse name? is implicit here
         },
@@ -308,7 +305,6 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
     val increase = function(
         command = { name: Name, m: Message ->
             val choice = old.choice.nextUnprotected()
-            //TODO LF is `old.functions.ignore` = `ignore` directly? Seems so.
             if (choice == UnprotectedPromotionChoice.Act)
                 mk_(choice, old.functions.phiBOp(name, m, old.conAuthPurse[name].functions.increasePurseOkay))
             else
@@ -390,7 +386,7 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
         },
         // ZEVES-PRG126 Table 8.3, p.87, Schema 8.19 p.73, Theorem 8.34
         pre = { name, m  ->
-            //TODO LF PhiBOp has:
+            //Proof engineering note from ZEVES-PRG126 on PhiBOp:
             // * name? \in \dom conAuthPurse, \theta ConPurse = conAutPurse(name?)
             // * Thus, (\theta ConPurse).name = name? (!!!)
             // * Schema 8.19 says: (\theta ConPurse).name \in \dom conAuthPurse \implies (\theta ConPurse).name \neq name?
@@ -402,16 +398,14 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             val purseName = old.conAuthPurse[name].name
             val ignorePre = old.functions.ignore.pre(name, m)
             val abortPre = old.functions.abortOnly.pre(name, m)
-            //TODO LF here should be the startFromPurseEaFromOkay, but it has a different signature for phiBop composition
-            //        the general startFromPurseOkay is fine will have some duplicate check on abort.
             val startFromOkayPre = old.functions.phiBOp.pre(name, m, old.conAuthPurse[name].functions.startFromPurseOkay)
                 //old.conAuthPurse[name].functions.startFromPurseEaFromOkay)
+            //@4paper - proof engineering checks don't need to feature; repeated checks aren't expensive to run
             val startFromPre =
                 old.conAuthPurse[name].status == Status.eaFrom &&
                     old.conAuthPurse[name].nextSeqNo < MAX_NAT &&
                     is_StartFrom(m) &&
                     Bottom in old.ether &&
-                    // TODO LF purseName might not be quite right
                     payDetailsFromWithinNextSeqNo(name, purseName) &&
                     // Removed, given argument against Lemma 8.26/27 here
                     //((purseName in old.conAuthPurse.dom) implies { purseName != name }) &&
@@ -423,7 +417,6 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
 //            val (choice, r) = result
 //            val (dash, mbang) = r
 //            when (choice) {
-//                //TODO redundant given the phiBOp composition?
 //                UnprotectedPromotionChoice.Ignore -> old.functions.ignore.post(name, m, r)
 //                UnprotectedPromotionChoice.Abort  -> old.functions.abortOnly.post(name, m, r)
 //                UnprotectedPromotionChoice.Act    -> old.functions.phiBOp.post(name, m, old.conAuthPurse[name].functions.startFromPurseOkay, r)
