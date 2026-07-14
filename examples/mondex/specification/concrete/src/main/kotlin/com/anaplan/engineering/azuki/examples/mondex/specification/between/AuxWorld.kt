@@ -61,8 +61,6 @@ class AuxWorldProperties(private val auxWorld: AuxWorld) {
     val totalValue by property { totalBalance + totalLost }
 
     // allLogs = archive + { (n, pd) | n in conAuthPurse.keys & pd in conAuthPurse[n].exLog }
-    //TODO LF  Relation.+ is broken here: transformSet { it.elements + m } nests a LogBook instead of flattening maplets.
-    // Build one flat relation, then brand — avoids Relation.+ on LogBook.
     val allLogs by property {
         as_LogBook(
             as_Relation(
@@ -73,7 +71,6 @@ class AuxWorldProperties(private val auxWorld: AuxWorld) {
         )
     }
 
-    //TODO LF SF discuss -
     // Given BetweenWorld's constraints depends on:
     //      * ether: B{1, 2, 3, 4, 9, 10, 11, 14, 15}
     //      * dom conAuthPurse: B{5, 6, 7, 8, 10, 12, 13, 16}
@@ -83,7 +80,6 @@ class AuxWorldProperties(private val auxWorld: AuxWorld) {
     //      * can't be { pd | pd.from in conAuthPurse.dom }
     //      * in VDM would be { pd | pd : PayDetails & pd.from in conAuthPurse.dom }
     val authenticFrom by property(
-        //TODO LF SF - Narrows the sequence but would  make it finite? Say to size of conAuthPurse.dom?
         post = { r -> r.isSubsetOf { pd -> pd.from in auxWorld.conAuthPurse.dom } }
     ) {
         set(auxWorld.conAuthPurse.rng
