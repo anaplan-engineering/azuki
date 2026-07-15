@@ -20,6 +20,8 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.between.Start
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.StartTo_Module.mk_StartTo
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.Status
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.TransferDetails_Module.mk_TransferDetails
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.startFrom
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.startTo
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.toName
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConSystem_Module.mk_ConSystem
 import com.anaplan.engineering.kazuki.core.*
@@ -74,21 +76,23 @@ class ConcreteWorldAnimation(
     fun createTransfer(data: TransferData) {
         require(data.name !in transfers.keys && data.status == TransferData.Status.Created)
         transfers[data.name] = data
-        system = system.functions.startTransfer(data.payDetails)
+        val pd = data.payDetails
+        system = system.functions.startTransferFrom(pd.from, pd.startFrom())
+        system = system.functions.startTransferFrom(pd.to, pd.startTo())
     }
 
     fun requestTransfer(transferName: String) {
         require(transfers[transferName]?.status == TransferData.Status.Created)
         updateStatus(transferName, TransferData.Status.Requested)
         val data = transfers[transferName]!!
-        system = system.functions.requestTransfer(data.payDetails)
+        system = system.functions.requestTransfer(data.payDetails.from, system.last)
     }
 
     fun sendTransfer(transferName: String) {
         require(transfers[transferName]?.status in setOf(TransferData.Status.Requested))
         updateStatus(transferName, TransferData.Status.Sent)
         val data = transfers[transferName]!!
-        system = system.functions.sendTransfer(data.payDetails)
+        system = system.functions.sendTransfer(data.payDetails.to, system.last)
     }
 
     private fun updateStatus(transferName: String, status: TransferData.Status) {
@@ -99,7 +103,7 @@ class ConcreteWorldAnimation(
         require(transfers[transferName]?.status in  setOf(TransferData.Status.Requested, TransferData.Status.Sent))
         updateStatus(transferName, TransferData.Status.Acknowledged)
         val data = transfers[transferName]!!
-        system = system.functions.ackTransfer(data.payDetails)
+        system = system.functions.ackTransfer(data.payDetails.from, system.last)
     }
 
 
@@ -107,7 +111,7 @@ class ConcreteWorldAnimation(
         require(transferName in transfers.keys)
         updateStatus(transferName, TransferData.Status.Aborted)
         val data = transfers[transferName]!!
-        system = system.functions.abortTransfer(data.payDetails)
+        system = system.functions.abortTransfer(data.payDetails.from, system.last)
     }
 
 }
@@ -140,7 +144,7 @@ class ConcreteWorldAnimationBuilder(private val declarations: List<Declaration>)
 //            set(purseDeclarations) { dec -> mk_StartTo(dec.toCounterPartyDetails()) }
         return ConcreteWorldAnimation(
             //system = mk_ConSystem(mk_ConWorld(purses, ether, mk_LogBook())),
-            system = mk_BetweenSystem(mk_BetweenWorld(purses, ether, mk_LogBook())),
+            system = mk_BetweenSystem(mk_BetweenWorld(purses, ether, mk_LogBook()), Bottom),
 
             transfers = declarations.filterIsInstance<TransferDeclaration>().associate { dec ->
                 dec.name to TransferData(dec.name, dec.from, dec.to, dec.amount, TransferData.Status.Created)
