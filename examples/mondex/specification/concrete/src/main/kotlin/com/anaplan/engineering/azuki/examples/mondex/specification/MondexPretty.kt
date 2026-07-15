@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.examples.mondex.specification
 
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Ack
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.AuxWorld
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Bottom
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.BetweenWorld
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Clear
@@ -28,7 +29,7 @@ fun Any.mondexPretty(): String = when (this) {
     is ConPurse -> mondexPrettyConPurse()
     is Message -> mondexPrettyMessage()
     is LogBook -> mondexPrettyLogBook()
-    is BetweenWorld -> mondexPrettyConWorld()
+    is AuxWorld -> mondexPrettyAuxWorld()
     is ConWorld -> mondexPrettyConWorld()
     is Set<*> -> mondexPrettySet()
     is Sequence<*> -> mondexPrettySeq()
@@ -94,6 +95,30 @@ private fun LogBook.mondexPrettyLogBook(): String = buildString {
     append("LogBook({")
     append(joinToString(", ") { (name, pd) -> "${name.asString()} ↦ ${pd.mondexPrettyPayDetails()}" })
     append("})")
+}
+
+private fun StringBuilder.appendNonEmptyPayDetailsSet(name: String, set: Set<PayDetails>) {
+    if (set.isNotEmpty()) {
+        append(",\n\t$name={\n")
+        append(set.joinToString("\n") { pd -> "\t\t${pd.mondexPrettyPayDetails()}" })
+        append("\n\t}")
+    }
+}
+
+private fun AuxWorld.mondexPrettyAuxWorld(): String = buildString {
+    append(mondexPrettyConWorld().removeSuffix("\n)"))
+    appendNonEmptyPayDetailsSet("authenticFrom", properties.authenticFrom)
+    appendNonEmptyPayDetailsSet("authenticTo", properties.authenticTo)
+    appendNonEmptyPayDetailsSet("fromLogged", properties.fromLogged)
+    appendNonEmptyPayDetailsSet("toLogged", properties.toLogged)
+    appendNonEmptyPayDetailsSet("toInEpv", properties.toInEpv)
+    appendNonEmptyPayDetailsSet("toInEpayee", properties.toInEpayee)
+    appendNonEmptyPayDetailsSet("fromInEpr", properties.fromInEpr)
+    appendNonEmptyPayDetailsSet("fromInEpa", properties.fromInEpa)
+    appendNonEmptyPayDetailsSet("definitelyLost", properties.definitelyLost)
+    appendNonEmptyPayDetailsSet("maybeLost", properties.maybeLost)
+    appendNonEmptyPayDetailsSet("chosenLost", properties.chosenLost)
+    append("\n)")
 }
 
 private fun ConWorld.mondexPrettyConWorld(): String = buildString {

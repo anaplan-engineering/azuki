@@ -25,7 +25,6 @@ const val person2 = "person2"
 class BetweenWorldProtocolRun {
 
     val ether = mk_Set(Bottom, ReadExceptionLog)
-    val purses = createPurses(setOf(person1 to 3, person2 to 3))
 
     fun createPayDetails(from: String, to: String, balance: Int): PayDetails {
         require(from != to)
@@ -47,7 +46,8 @@ class BetweenWorldProtocolRun {
 
     @Test
     fun startFromRequest() {
-        val pd = createPayDetails(person1, person2, 2)
+        val pd = createPayDetails("from", "to", 2)
+        val purses = createPurses(setOf("from" to 3, "to" to 3))
         var system = mk_BetweenSystem(mk_BetweenWorld(purses, ether, mk_LogBook()), Bottom)
         system = system.functions.startTransferFrom(pd.from, pd.startFrom())
         system = system.functions.startTransferTo(pd.to, pd.startTo())
