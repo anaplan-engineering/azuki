@@ -395,21 +395,21 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             // * Seems so. Lemma 8.26 + 8.27, we see the between world \oplus for name? x name/from
             //@4paper - proof engineering got too involved/confused due to lack of concrete running example?!
             //@4paper - double checking pres is not onerous on execution time
-            val purseName = old.conAuthPurse[name].name
+            val purse = old.conAuthPurse[name]
             val ignorePre = old.functions.ignore.pre(name, m)
             val abortPre = old.functions.abortOnly.pre(name, m)
-            val startFromOkayPre = old.functions.phiBOp.pre(name, m, old.conAuthPurse[name].functions.startFromPurseOkay)
-                //old.conAuthPurse[name].functions.startFromPurseEaFromOkay)
+            val startFromOkayPre = old.functions.phiBOp.pre(name, m, purse.functions.startFromPurseOkay)
+                //purse.functions.startFromPurseEaFromOkay)
             //@4paper - proof engineering checks don't need to feature; repeated checks aren't expensive to run
             val startFromPre =
-                old.conAuthPurse[name].status == Status.eaFrom &&
-                    old.conAuthPurse[name].nextSeqNo < MAX_NAT &&
+                purse.status == Status.eaFrom &&
+                    purse.nextSeqNo < MAX_NAT &&
                     is_StartFrom(m) &&
                     Bottom in old.ether &&
-                    payDetailsFromWithinNextSeqNo(name, purseName) &&
+                    payDetailsFromWithinNextSeqNo(name, purse.name) &&
                     // Removed, given argument against Lemma 8.26/27 here
                     //((purseName in old.conAuthPurse.dom) implies { purseName != name }) &&
-                    freshStartFromConPurse(purseName, as_StartFrom(m))
+                    freshStartFromConPurse(purse.name, as_StartFrom(m))
             setOf(ignorePre, abortPre, startFromOkayPre, startFromPre).all { it }
         },
         //@4paper - manual proofs always took the abort path; ZEVES-PRG126 Ch8 shows the complexity of the consequences
@@ -419,7 +419,7 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
 //            when (choice) {
 //                UnprotectedPromotionChoice.Ignore -> old.functions.ignore.post(name, m, r)
 //                UnprotectedPromotionChoice.Abort  -> old.functions.abortOnly.post(name, m, r)
-//                UnprotectedPromotionChoice.Act    -> old.functions.phiBOp.post(name, m, old.conAuthPurse[name].functions.startFromPurseOkay, r)
+//                UnprotectedPromotionChoice.Act    -> old.functions.phiBOp.post(name, m, purse.functions.startFromPurseOkay, r)
 //            }
 //        }
     )
@@ -436,18 +436,18 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
         },
         // ZEVES-PRG126 Table 8.3, p.87, Schema 8.20 p.74, Theorem 8.36
         pre = { name, m  ->
-            val purseName = old.conAuthPurse[name].name
+            val purse = old.conAuthPurse[name]
             val ignorePre = old.functions.ignore.pre(name, m)
             val abortPre = old.functions.abortOnly.pre(name, m)
-            val startToOkayPre = old.functions.phiBOp.pre(name, m, old.conAuthPurse[name].functions.startToPurseOkay)
+            val startToOkayPre = old.functions.phiBOp.pre(name, m, purse.functions.startToPurseOkay)
             val startToPre =
                 is_StartTo(m) &&
-                    old.conAuthPurse[name].status == Status.eaFrom &&
-                    old.conAuthPurse[name].nextSeqNo < MAX_NAT &&
+                    purse.status == Status.eaFrom &&
+                    purse.nextSeqNo < MAX_NAT &&
                     as_StartTo(m).cpd.nextSeqNo < MAX_NAT &&
-                    payDetailsToWithinNextSeqNo(name, purseName) &&
+                    payDetailsToWithinNextSeqNo(name, purse.name) &&
                     //((purseName in old.conAuthPurse.dom) implies { purseName != name }) &&
-                    freshStartToConPurse(name, as_StartTo(m))
+                    freshStartToConPurse(purse.name, as_StartTo(m))
             setOf(ignorePre, abortPre, startToOkayPre, startToPre).all { it }
         },
     )
@@ -455,6 +455,7 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
     // req already used for the message so extended names to include op
 
     val reqOp = function(
+        //TODO use an extra parameter for this command?
         command = { name: Name, m: Message ->
             val choice = old.choice.nextProtected()
             val r = when (choice) {
@@ -463,17 +464,19 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             }
             mk_(choice, r)
         },
-        //TODO EK chase the corresponding ones in Schma 8.21 onwards
         pre = { name, m ->
             val purse = old.conAuthPurse[name]
-            val pdAuth = purse.properties.pdAuth
+            val pdAuth = purse.pdAuth // avoid .properties.pdAuth to avoid PreConditionFailure within a pre call
             val ignorePre = old.functions.ignore.pre(name, m)
-            val reqOkayPre = old.functions.phiBOp.pre(name, m, old.conAuthPurse[name].functions.reqPurseOkay)
+            val reqOkayPre = old.functions.phiBOp.pre(name, m, purse.functions.reqPurseOkay)
             // ZEVES-PRG126 Table 8.3, p.87, Schema 8.21, Theorem 8.37
             //TODO LF - how much of this is just ZEVES proof engineering needs?
             val reqPurseOkayPre =
+                is_Req(m) &&
+                purse.status == Status.epr &&
                 purse.functions.reqPurseOkay.pre(m) &&
-                (mk_Val(pdAuth) !in old.ether) implies {
+                (pdAuth != null && mk_Val(pdAuth) !in old.ether) implies {
+                    pdAuth != null &&
                     // B3 - no future val msgs on given pdAuth
                     pdAuth.to in old.conAuthPurse.dom &&
                     pdAuth.from in old.conAuthPurse.dom &&
@@ -488,86 +491,97 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
                 }
             setOf(ignorePre, reqOkayPre, reqPurseOkayPre).all { it }
         },
-        //TODO no need for these checks?
-        post = { name, m, result ->
-            val (choice, r) = result
-            val (dash, mbang) = r
-            old.conAuthPurse[name].functions.reqPurseOkay.post(
-                m, mk_(dash.conAuthPurse[name], mbang))
-        }
+//        post = { name, m, result ->
+//            val (choice, r) = result
+//            val (dash, mbang) = r
+//            old.conAuthPurse[name].functions.reqPurseOkay.post(
+//                m, mk_(dash.conAuthPurse[name], mbang))
+//        }
     )
 
-    val valOp = function<Name, Message, Tuple2<BetweenWorld, Message>>(
+    val valOp = function(
         command = { name: Name, m: Message ->
-            TODO("Choice for ignore of valPurseOkay. Here just valPurseOkay route completed.")
-            mk_(old, mk_Ack(old.conAuthPurse[name].properties.pdAuth))
+            val choice = old.choice.nextProtected()
+            val r = when (choice) {
+                ProtectedPromotionChoice.Ignore -> old.functions.ignore(name, m)
+                ProtectedPromotionChoice.Act    -> old.functions.phiBOp(name, m, old.conAuthPurse[name].functions.valPurseOkay)
+            }
+            mk_(choice, r)
         },
         pre = { name, m ->
             val purse = old.conAuthPurse[name]
-            if (old.conAuthPurse[name].pdAuth == null) {
-                false
-            }
-            else {
-                val valOkayPre = //old.functions.phiBOpFramePre(m, purse.name) &&
-                    purse.functions.valPurseOkay.pre(m) &&
-                    allPayDetails().filter { xEPV ->
-                        xEPV.to in old.conAuthPurse.dom &&
-                            old.conAuthPurse[xEPV.to].status == Status.epv &&
-                            old.conAuthPurse[xEPV.to].pdAuth == xEPV
-                    }.all { xEPV -> xEPV.to != name } &&
-                    allPayDetails().filter { pd -> pd.to in old.conAuthPurse.dom }.any { pd -> pd != purse.properties.pdAuth } &&
-                    purse.transform(
-                        balance = purse.balance + purse.properties.pdAuth.value,
-                        status = Status.eaTo
-                    ) !in old.conAuthPurse.rng
-
-                valOkayPre
-            }
+            val pdAuth = purse.pdAuth
+            val ignorePre = old.functions.ignore.pre(name, m)
+            val valOkayPre = old.functions.phiBOp.pre(name, m, purse.functions.valPurseOkay)
+            // ZEVES-PRG126 Table 8.3, p.87, Schema 8.22, Theorem 8.38
+            //TODO LF - how much of this is just ZEVES proof engineering needs?
+            val valPurseOkayPre =
+                is_Val(m) &&
+                purse.status == Status.epv &&
+                purse.functions.valPurseOkay.pre(m) &&
+                // B4 - no future ack messages in ether
+                (pdAuth != null && mk_Ack(pdAuth) !in old.ether) implies { pdAuth?.to in old.conAuthPurse.dom }
+            setOf(ignorePre, valOkayPre, valPurseOkayPre).all { it }
         },
-        post = { name, m, result ->
-            val (dash, mbang) = result
-            // needs more when we have disjunction
-            val valOkayPost = old.conAuthPurse[name].functions.valPurseOkay.post(
-                m, mk_(dash.conAuthPurse[name], mbang)
-            )
-
-            valOkayPost
-        }
+//        post = { name, m, result ->
+//            val (dash, mbang) = result
+//            // needs more when we have disjunction
+//            val valOkayPost = old.conAuthPurse[name].functions.valPurseOkay.post(
+//                m, mk_(dash.conAuthPurse[name], mbang)
+//            )
+//
+//            valOkayPost
+//        }
     )
 
     val ackOp = function(
         command = { name: Name, m: Message ->
-            TODO("Choice between ignore and ackPurseOkay")
-            mk_(old, Bottom)
+            val choice = old.choice.nextProtected()
+            val r = when (choice) {
+                ProtectedPromotionChoice.Ignore -> old.functions.ignore(name, m)
+                ProtectedPromotionChoice.Act    -> old.functions.phiBOp(name, m, old.conAuthPurse[name].functions.ackPurseOkay)
+            }
+            mk_(choice, r)
         },
         pre = { name, m ->
             val purse = old.conAuthPurse[name]
-            if (purse.pdAuth == null) {
-                false
-            }
-            else {
-                val ackOkayPre = //old.functions.phiBOpFramePre(m, name) &&
-                    purse.functions.ackPurseOkay.pre(m) &&
-                    allPayDetails().filter { xEPA ->
-                        xEPA.from in old.conAuthPurse.dom &&
-                            old.conAuthPurse[xEPA.from].status == Status.epa &&
-                            old.conAuthPurse[xEPA.from].pdAuth == xEPA
-                    }.all { xEPA -> xEPA.from != name} &&
-                    purse.transform(status = Status.eaTo) !in old.conAuthPurse.rng
-
-                ackOkayPre
-            }
+            val pdAuth = purse.properties.pdAuth
+            val ignorePre = old.functions.ignore.pre(name, m)
+            val ackOkayPre = old.functions.phiBOp.pre(name, m, purse.functions.ackPurseOkay)
+            // ZEVES-PRG126 Table 8.3, p.87, Schema 8.23, Theorem 8.38
+            //TODO LF - how much of this is just ZEVES proof engineering needs?
+            val ackPurseOkayPre =
+                is_Val(m) &&
+                    purse.status == Status.epa &&
+                    purse.functions.ackPurseOkay.pre(m)
+            setOf(ignorePre, ackOkayPre, ackPurseOkayPre).all { it }
         },
-        post = { name, m, result ->
-            val (dash, mbang) = result
-            val ackOkayPost = old.conAuthPurse[name].functions.ackPurseOkay.post(
-                m, mk_(dash.conAuthPurse[name], mbang)
-            )
-
-            ackOkayPost
-        }
+//        post = { name, m, result ->
+//            val (dash, mbang) = result
+//            val ackOkayPost = old.conAuthPurse[name].functions.ackPurseOkay.post(
+//                m, mk_(dash.conAuthPurse[name], mbang)
+//            )
+//
+//            ackOkayPost
+//        }
     )
 
+    /**
+     * There is a four stage protocol for reading and clearing exception
+     * logs: reading a log to the ether, copying a log from the ether to the
+     * archive, authorising a purse exception log clear based on what's in
+     * the archive, and clearing a purse's exception log having received
+     * authorisation.
+     *
+     * We note that as a result of this protocol, if {\it
+     * Clear\-Exception\-Log\-Purse\-Okay} aborts and logs an uncompleted
+     * transaction, then the purse's exception log will not be cleared.  The
+     * reason for this is as follows.  The purse gets to $eaFrom$ by
+     * aborting any uncompleted transaction.  If this would create a new
+     * exception record, the clear transaction could not occur, because the
+     * (imaged) exception log in the message would not match the actual
+     * exception log in the purse.
+     */
     val readExceptionLog = function(
         command = { name: Name, m: Message ->
             TODO("Choice between ignore and readExceptionLogPurseOkay")
@@ -599,9 +613,9 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             val purse = old.conAuthPurse[name]
             val clearExceptionLogOkayPre =// old.functions.phiBOpFramePre(m, name) &&
                 purse.functions.clearExceptionLogPurseEaFromOkay.pre(m) &&
-                allPayDetails().all { pd -> pd !in old.conAuthPurse[name].exLog } &&
-                purse.transform(exLog = emptySet()) !in old.conAuthPurse.rng
-
+//                allPayDetails().all { pd -> pd !in old.conAuthPurse[name].exLog } &&
+//                purse.transform(exLog = emptySet()) !in old.conAuthPurse.rng
+                TODO("Choice between ignore and clearExceptionLogPurseOkay")
             clearExceptionLogOkayPre
         },
         post = { name, m, result ->
@@ -614,6 +628,32 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
         }
     )
 
+    /**
+     * The message to clear an exception log can be created only for log
+     * details which are already recorded in the archive.  The clear code of
+     * the message is based on the selected logs in the archive.  The
+     * exception log clear message couples this clear code with the name of a
+     * purse.  This supports constraint B--\ref{b-req-clear} which requires
+     * that this operation not put a clear message into the ether if the
+     * relevant logs have not been archived.
+     *
+     * Exception logs must be kept for all time to ensure that all value
+     * remains accounted for.  The operation to clear purses of their
+     * exception logs must be supported by a mechanism to store the cleared
+     * logs.  This is what the archive supplies.
+     *
+     * The purse supports the $ReadExceptionLog$ operation, which puts an
+     * exception log record into the $ether$ as a message.  As the system
+     * implementers have no control over the $ether$, we have modelled it as
+     * lossy at the concrete level, allowing for messages to be lost from the
+     * $ether$ at any time.
+     *
+     * The $archive$ is a {\sl secure} store for information, and to support
+     * the security of the purse there must be a manual mechanism to move log
+     * messages from the $ether$ into the $archive$ for safe keeping.  This
+     * is modelled by the $Archive$ operation, and is implemented by some
+     * mechanism external to the target of evaluation.
+     */
     val authoriseExLogClearOkay = function(
         command = { name: Name, m: Message ->
             val pds = mk_Set1<PayDetails>() // TODO(Fix pds)
@@ -643,6 +683,18 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
         }
     )
 
+    /**
+     * There are some operations on the world that do not have equivalents on
+     * individual purses.  These are not implemented by the target of
+     * evaluation, but need to be implemented by some manual means or
+     * external system.
+     *
+     * The $archive$ is a {\sl secure} store for information, and to support
+     * the security of the purse there must be a manual mechanism to move log
+     * messages from the $ether$ into the $archive$ for safe keeping.  This
+     * is modelled by the $Archive$ operation, and is implemented by some
+     * mechanism external to the target of evaluation.
+     */
     val archive = function(
         command = { _: Name, _: Message ->
             // copies some exception log information from messages in the ether to the archive

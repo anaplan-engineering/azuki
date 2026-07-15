@@ -85,11 +85,10 @@ class ConcreteWorldAnimation(
     }
 
     fun sendTransfer(transferName: String) {
-        require(transfers[transferName]?.status == TransferData.Status.Requested)
+        require(transfers[transferName]?.status in setOf(TransferData.Status.Requested))
         updateStatus(transferName, TransferData.Status.Sent)
         val data = transfers[transferName]!!
-        throw LateDetectUnsupportedActionException()
-// TODO       system = system.functions.sendTransfer(data.details)
+        system = system.functions.sendTransfer(data.payDetails)
     }
 
     private fun updateStatus(transferName: String, status: TransferData.Status) {
@@ -97,11 +96,10 @@ class ConcreteWorldAnimation(
     }
 
     fun acknowledgeTransfer(transferName: String) {
-        require(transfers[transferName]?.status == TransferData.Status.Sent)
+        require(transfers[transferName]?.status in  setOf(TransferData.Status.Requested, TransferData.Status.Sent))
         updateStatus(transferName, TransferData.Status.Acknowledged)
         val data = transfers[transferName]!!
-        throw LateDetectUnsupportedActionException()
-// TODO       system = system.functions.acknowledgeTransfer(data.details)
+        system = system.functions.ackTransfer(data.payDetails)
     }
 
 
@@ -109,8 +107,7 @@ class ConcreteWorldAnimation(
         require(transferName in transfers.keys)
         updateStatus(transferName, TransferData.Status.Aborted)
         val data = transfers[transferName]!!
-        throw LateDetectUnsupportedActionException()
-// TODO       system = system.functions.abortTransfer(data.details)
+        system = system.functions.abortTransfer(data.payDetails)
     }
 
 }

@@ -12,6 +12,7 @@ import com.anaplan.engineering.azuki.mondex.person2
 import com.anaplan.engineering.azuki.mondex.person3
 import com.anaplan.engineering.azuki.mondex.person4
 import com.anaplan.engineering.azuki.mondex.transfer1
+import com.anaplan.engineering.azuki.mondex.transfer2
 import com.anaplan.engineering.azuki.mondex.world1
 
 @BEH(
@@ -71,6 +72,60 @@ class BEH3 : IntraWorldScenario() {
             person2 hasBalance 2
 
             person1 hasLost 2
+        }
+    }
+
+    @RestrictTo(ConcreteWorld)
+    @Eac("First authentic message with `val pd`", """
+        Sends does nothing abstractly, but changes the purse concretely, hence the restrict to annotation
+    """)
+    fun sendTransfer() {
+        given {
+            thereIsAWorld(world1) {
+                thereIsAPurse(person1, 3)
+                thereIsAPurse(person2, 2)
+            }
+        }
+        whenever {
+            // Create transfer updates the ConPurse pdAuth: PayDetails
+            createTransfer(world1, transfer1, person1, person2, 2)
+            requestTransfer(transfer1)
+            acknowledgeTransfer(transfer1)
+            sendTransfer(transfer1)
+        }
+        then {
+            world1 hasTotalBalance 5
+            person1 hasBalance 1
+            person2 hasBalance 2
+
+            person1 hasLost 2
+        }
+    }
+
+    @KnownBug(Issue(ConcreteWorld, "todo"))
+    @RestrictTo(ConcreteWorld)
+    @Eac("First full authentic protocol run", """
+        Sends does nothing abstractly, but changes the purse concretely, hence the restrict to annotation
+    """)
+    fun ackTransfer() {
+        given {
+            thereIsAWorld(world1) {
+                thereIsAPurse(person1, 3)
+                thereIsAPurse(person2, 2)
+            }
+        }
+        whenever {
+            createTransfer(world1, transfer1, person1, person2, 2)
+            requestTransfer(transfer1)
+            sendTransfer(transfer1)
+            acknowledgeTransfer(transfer1)
+        }
+        then {
+            world1 hasTotalBalance 5
+            person1 hasBalance 1
+            person2 hasBalance 2
+            person1 hasLost 0
+            person2 hasLost 0
         }
     }
 
