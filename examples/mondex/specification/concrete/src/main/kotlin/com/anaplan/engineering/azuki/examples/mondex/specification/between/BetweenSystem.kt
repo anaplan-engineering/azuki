@@ -38,6 +38,7 @@ typealias BetweenWorldMonad = (Tuple2<BetweenWorld, Message>) -> Tuple2<BetweenW
 // World forward composition: (f ; g)(W) = g(f(W)), shame `;` not possible
 infix fun <W> ((W) -> W).then(next: (W) -> W): (W) -> W = { monad -> next(this(monad)) }
 
+const val PRINT_BEFORE = false
 
 class BetweenSystemFunctions(val system: BetweenSystem) {
     // BetweenWorld delegated receiver to perform world updates functionally in monadic style
@@ -153,7 +154,7 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
                 { monad -> val (w, _) = monad; mk_(w.transform(ether = w.ether + mk_Set(m)), m) },
                 { monad -> val (w, _) = monad
                     println("1: StartFrom name?=${name}, m?=${m.mondexPretty()}")
-                    println("1.1: w=${w.mondexPretty()}")
+                    if (PRINT_BEFORE) println ("1.1: w=${w.mondexPretty()}")
                     val (choice, result) = w.functions.startFrom(name, m)
                     val (dash, msg) = result
                     println("1.2: m!=${msg.mondexPretty()}, choice=$choice")
@@ -185,7 +186,7 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
                 { monad -> val (w, _) = monad; mk_(w.transform(ether = w.ether + mk_Set(m)), m) },
                 { monad -> val (w, _) = monad
                     println("2: StartTo name?=${name}, m?=${m.mondexPretty()}")
-                    println("2.1: w=${w.mondexPretty()}")
+                    if (PRINT_BEFORE) println("2.1: w=${w.mondexPretty()}")
                     val (choice, result) = w.functions.startTo(name, m)
                     val (dash, msg) = result
                     println("2.2: m!=${msg.mondexPretty()}, choice=$choice")
@@ -217,7 +218,7 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
         command = { name: Name, m: Message ->
             update { monad -> val (w, _) = monad;
                 println("3: Request transfer name?=${name.mondexPretty()}, m?=${m.mondexPretty()}")
-                println("3.1: w=${w.mondexPretty()}")
+                if (PRINT_BEFORE) println("3.1: w=${w.mondexPretty()}")
                 val (choice, result) = w.functions.reqOp(name,m)
                 val (dash, msg) = result
                 println("3.2: m!=${msg.mondexPretty()}, choice=$choice")
@@ -239,7 +240,7 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
         command = { name: Name, m: Message ->
             update { monad -> val (w, _) = monad
                 println("4: Send transfer name?=${name.mondexPretty()}, m?=${m.mondexPretty()}")
-                println("4.1: w=${w.mondexPretty()}")
+                if (PRINT_BEFORE) println("4.1: w=${w.mondexPretty()}")
                 val (choice, result) = w.functions.valOp(name,m)
                 val (dash, msg) = result
                 println("4.2: m!=${msg.mondexPretty()}, choice=$choice")
@@ -258,7 +259,7 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
         command = { name: Name, m: Message ->
             update { monad -> val (w, _) = monad
                 println("5: Ack transfer name?=${name.mondexPretty()}, m?=${m.mondexPretty()}")
-                println("5.1: w=${w.mondexPretty()}")
+                if (PRINT_BEFORE) println("5.1: w=${w.mondexPretty()}")
                 val (choice, result) = w.functions.ackOp(name,m)
                 val (dash, msg) = result
                 println("5.2: m!=${msg.mondexPretty()}, choice=$choice")
@@ -276,7 +277,7 @@ class BetweenSystemFunctions(val system: BetweenSystem) {
         command = { name: Name, m: Message ->
             update { monad -> val (w, _) = monad
                 println("6: Abort transfer name?=${name.mondexPretty()}, m?=${m.mondexPretty()}")
-                println("6.1: w=${w.mondexPretty()}")
+                if (PRINT_BEFORE) println("6.1: w=${w.mondexPretty()}")
                 val (choice, result) = w.functions.abort(name,m)
                 val (dash, msg) = result
                 println("6.2: m!=${msg.mondexPretty()}, choice=$choice")

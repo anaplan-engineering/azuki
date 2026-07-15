@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.examples.mondex.specification.between
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Ack_Module.as_Ack
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Ack_Module.is_Ack
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Ack_Module.mk_Ack
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.AuxWorld_Module.mk_AuxWorld
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.AuxWorld_Module.transform
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Clear_Module.mk_Clear
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.ExceptionLogClear_Module.as_ExceptionLogClear
@@ -11,6 +12,7 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.between.Excep
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.ExceptionLogResult_Module.as_ExceptionLogResult
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.ExceptionLogResult_Module.is_ExceptionLogResult
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.ExceptionLogResult_Module.mk_ExceptionLogResult
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.PDProtectedMessage_Module.as_PDProtectedMessage
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.PayDetails_Module.mk_PayDetails
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Req_Module.as_Req
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Req_Module.is_Req
@@ -26,6 +28,7 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConP
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConPurse_Module.transform
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.MAX_NAT
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.Status
+import com.anaplan.engineering.azuki.examples.mondex.specification.mondexPretty
 import com.anaplan.engineering.azuki.examples.mondex.specification.pairwise_disjoint
 import com.anaplan.engineering.kazuki.core.*
 import kotlin.random.Random
@@ -180,12 +183,31 @@ interface BetweenWorld : AuxWorld {
      */
     @Invariant
     fun b10_reqAckEtherEpvToLoggedIff() =
-        // For all + iff in two parts
         // \forall pd: PayDetails & (req(pd) \in ether \land ack(pd) !in ether)\iff (pd \in toInEpv \union toLogged)
-        forall(properties.toInEpv inter properties.toLogged) { pd -> mk_Req(pd) in ether && mk_Ack(pd) !in ether } &&
-            forall(ether.filter { pd -> is_Req(pd) && !is_Ack(pd) }) { m ->
-                as_Req(m).pd in (properties.toInEpv + properties.toLogged)
-            }
+        // = [iff-def]
+        // \forall pd: PayDetails & ((req(pd) \in ether \land ack(pd) !in ether) \implies (pd \in toInEpv \union toLogged)) \land
+        //                          ((pd \in toInEpv \union toLogged) \inmplies (req(pd) \in ether \land ack(pd) !in ether))
+        // = [forall-dist-and]
+        // (\forall pd: PayDetails & (req(pd) \in ether \land ack(pd) !in ether) \implies (pd \in toInEpv \union toLogged)) \land
+        // (\forall pd: PayDetails & (pd \in toInEpv \union toLogged) \implies (req(pd) \in ether \land ack(pd) !in ether))
+        // = [ball-implies]
+        // (req(pd) \in ether \land ack(pd) !in ether \implies pd \in toInEpv \union toLogged) \land
+                // A and !B implies C
+                // !(A and !B) || C
+                // !A || B || C
+                // !is_Req(m) || is_Ack(m) || m.pd in toInEpv + toLogged
+        // (pd \in toInEpv \union toLogged \implies req(pd) \in ether \land ack(pd) !in ether)
+//        forall(ether) { m ->
+//            // need to choose between all options, not "fix" on a req option, given the "req" message won't be in EPV! (or not be necessarily logged)
+//            !is_Req(m) || is_Ack(m) || as_PDProtectedMessage(m).pd in properties.toInEpv + properties.toLogged
+//            //as_Req(m).pd in (properties.toInEpv + properties.toLogged)
+//        } &&
+        forall(ether) { m ->
+            val r = (is_Req(m) && !is_Ack(m)) implies { as_Req(m).pd in properties.toInEpv + properties.toLogged }
+            if (!r) { println("FAILED B10 for m=${m.mondexPretty()}"); return@forall true }
+            r
+        } &&
+        forall(properties.toInEpv + properties.toLogged) { pd -> mk_Req(pd) in ether && mk_Ack(pd) !in ether }
 
     /**
      * If the $to$ purse is in $epv$ and
@@ -268,11 +290,16 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
     val phiBOp = function(
         command = { name: Name, m: Message, act: PurseOp ->
             val (cdash, mbang) = act(m)
-            mk_(old.transform(
-                        conAuthPurse = old.conAuthPurse * mk_(name, cdash),
-                        ether = old.ether + mk_Set(mbang),
+            try {
+                mk_(old.transform(
+                    conAuthPurse = old.conAuthPurse * mk_(name, cdash),
+                    ether = old.ether + mk_Set(mbang),
                 ),
-                mbang)
+                    mbang)
+            } catch (p: PreconditionFailure) {
+                println("FAILED!\n\t"+mk_AuxWorld(old.conAuthPurse * mk_(name, cdash), old.ether + mk_Set(mbang), old.archive).mondexPretty())
+                throw p
+            }
         },
         // ZEVES-PRG126 Schema 8.17 p.71, Table 8.3, p.87
         pre = { name, m, act ->
@@ -551,7 +578,7 @@ class BetweenWorldFunctions(private val old: BetweenWorld) {
             // ZEVES-PRG126 Table 8.3, p.87, Schema 8.23, Theorem 8.38
             //TODO LF - how much of this is just ZEVES proof engineering needs?
             val ackPurseOkayPre =
-                is_Val(m) &&
+                is_Ack(m) &&
                     purse.status == Status.epa &&
                     purse.functions.ackPurseOkay.pre(m)
             setOf(ignorePre, ackOkayPre, ackPurseOkayPre).all { it }
