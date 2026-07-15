@@ -1,5 +1,6 @@
 package com.anaplan.engineering.azuki.examples.mondex.specification.between
 
+import com.anaplan.engineering.azuki.examples.mondex.specification.WorldSystem
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Ack_Module.as_Ack
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Ack_Module.is_Ack
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Ack_Module.mk_Ack
@@ -25,9 +26,10 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.then
 import com.anaplan.engineering.kazuki.core.*
 
 @Module
-interface BetweenSystem {
+interface BetweenSystem: WorldSystem {
 
-    val world: BetweenWorld
+    override val world: BetweenWorld
+    //val last: Message
     val last: Message
 
     @FunctionProvider(BetweenSystemFunctions::class)

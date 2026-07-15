@@ -68,3 +68,5 @@ includeBuild("vdm-animation")
 includeBuild("vdm-stub-generator")
 includeBuild("azuki-platform")
 
+
+include 'examples:mondex:adaption:intra-between'

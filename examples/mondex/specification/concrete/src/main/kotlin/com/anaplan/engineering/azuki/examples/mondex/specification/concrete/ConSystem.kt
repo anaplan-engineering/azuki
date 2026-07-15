@@ -14,6 +14,7 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.between.Trans
 import com.anaplan.engineering.azuki.examples.mondex.specification.WorldStep
 import com.anaplan.engineering.azuki.examples.mondex.specification.WorldStepFrameStack
 import com.anaplan.engineering.azuki.examples.mondex.specification.WorldStepHostContext
+import com.anaplan.engineering.azuki.examples.mondex.specification.WorldSystem
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Bottom
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.PayDetails
 import com.anaplan.engineering.azuki.examples.mondex.specification.composeWith
@@ -25,9 +26,9 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.worldStep
 import com.anaplan.engineering.kazuki.core.*
 
 @Module
-interface ConSystem {
+interface ConSystem: WorldSystem {
 
-    val world: ConWorld
+    override val world: ConWorld
 
     @FunctionProvider(ConSystemFunctions::class)
     val functions: ConSystemFunctions

@@ -1,0 +1,9 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+}
+
+dependencies {
+    api project(":examples:mondex:adaption:intra-declaration")
+    compileOnly project(":examples:mondex:specification:concrete")
+    implementation libs.slf4j.api
+}
