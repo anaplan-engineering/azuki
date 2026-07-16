@@ -4,7 +4,8 @@ import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.World
 
 class WorldHasTotalBalanceCheck (private val worldName: String, private val balance: Int) : WorldCheck {
 
-    override fun check(animation: WorldAnimation<*,*>) = true
+    // TODO EK Fill in when operations available
+    override fun check(animation: WorldAnimation<*,*>) = false
 //        (animation.getWorld(worldName) as? AuxWorld).properties.totalBalance == balance.toULong()
 
     override val behavior = -1
