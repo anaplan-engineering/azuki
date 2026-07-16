@@ -90,13 +90,12 @@ class BEH3 : IntraWorldScenario() {
             // Create transfer updates the ConPurse pdAuth: PayDetails
             createTransfer(world1, transfer1, person1, person2, 2)
             requestTransfer(transfer1)
-            acknowledgeTransfer(transfer1)
             sendTransfer(transfer1)
         }
         then {
             world1 hasTotalBalance 5
             person1 hasBalance 1
-            person2 hasBalance 2
+            person2 hasBalance 4
 
             person1 hasLost 2
         }

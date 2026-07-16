@@ -78,7 +78,7 @@ class ConcreteWorldAnimation(
         transfers[data.name] = data
         val pd = data.payDetails
         system = system.functions.startTransferFrom(pd.from, pd.startFrom())
-        system = system.functions.startTransferFrom(pd.to, pd.startTo())
+        system = system.functions.startTransferTo(pd.to, pd.startTo())
     }
 
     fun requestTransfer(transferName: String) {
