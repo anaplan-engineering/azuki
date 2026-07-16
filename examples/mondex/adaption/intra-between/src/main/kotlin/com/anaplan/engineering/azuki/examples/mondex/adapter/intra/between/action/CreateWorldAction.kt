@@ -1,14 +1,14 @@
-package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.action
+package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action
 
 import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedActionException
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.ConcreteWorldAnimation
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.WorldAnimation
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.declaration.action.CreateWorldDeclarableAction
 
 class CreateWorldAction(worldName: String) :
     CreateWorldDeclarableAction(worldName),
-    ConcreteWorldAction {
+    WorldAction {
 
-    override fun act(animation: ConcreteWorldAnimation) {
+    override fun act(animation: WorldAnimation<*,*>) {
         throw LateDetectUnsupportedActionException("Cannot add new worlds to concrete system")
     }
 

@@ -1,60 +1,59 @@
-package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete
+package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between
 
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.declaration.DeclarationStateBuilder
 import com.anaplan.engineering.azuki.declaration.toDeclarableAction
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.WorldAction
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.BetweenWorldActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.WorldCheck
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.action.ConcreteWorldActionFactory
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.check.ConcreteWorldCheck
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.check.ConcreteWorldCheckFactory
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.BetweenWorldCheckFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldCheckFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.declaration.IntraWorldDeclarationState
 import org.slf4j.LoggerFactory
 
-class ConcreteWorldSystemFactory :
-    VerifiableSystemFactory<IntraWorldActionFactory<WorldAction>, IntraWorldCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, ConcreteWorldSystem> {
+class BetweenWorldSystemFactory :
+    VerifiableSystemFactory<IntraWorldActionFactory<WorldAction>, IntraWorldCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, BetweenWorldSystem> {
 
-    override fun create(systemDefinition: SystemDefinition): ConcreteWorldSystem =
-        ConcreteWorldSystem(
+    override fun create(systemDefinition: SystemDefinition) : BetweenWorldSystem =
+        BetweenWorldSystem(
             systemDefinition.declarations.map(::toDeclarableAction),
-            systemDefinition.commands.map(toConcreteWorldAction),
-            systemDefinition.checks.map(toConcreteWorldCheck),
+            systemDefinition.commands.map(toBetweenWorldAction),
+            systemDefinition.checks.map(toBetweenWorldCheck),
         )
 
-    override val actionFactory = ConcreteWorldActionFactory
-    override val checkFactory = ConcreteWorldCheckFactory
+    override val actionFactory = BetweenWorldActionFactory
+    override val checkFactory = BetweenWorldCheckFactory
 
     companion object {
-        private val toConcreteWorldAction: (Action) -> WorldAction = {
+        private val toBetweenWorldAction: (Action) -> WorldAction = {
             it as? WorldAction
-                ?: throw IllegalArgumentException("Invalid action: $it")
+                ?: throw IllegalArgumentException("Invalid actions: $it")
         }
 
-        private val toConcreteWorldCheck: (Check) -> WorldCheck = {
+        private val toBetweenWorldCheck: (Check) -> WorldCheck = {
             it as? WorldCheck ?: throw IllegalArgumentException("Invalid check: $it")
         }
     }
 }
 
-class ConcreteWorldSystem(
+class BetweenWorldSystem(
     private val declarableActions: List<DeclarableAction<IntraWorldDeclarationState>>,
     private val commands: List<WorldAction>,
     private val checks: List<WorldCheck>,
 ) : VerifiableSystem<IntraWorldActionFactory<WorldAction>, IntraWorldCheckFactory> {
 
-    private fun build(): ConcreteWorldAnimation {
+    private fun build(): BetweenWorldAnimation {
         val declarations = DeclarationStateBuilder(::IntraWorldDeclarationState).build(declarableActions)
-        // The declaration builder is not particularly useful in this example so we choose not to consume it!
-        val builder = ConcreteWorldAnimationBuilder(declarations)
+        // declaration builder not helpful
+        val builder = BetweenWorldAnimationBuilder(declarations)
         val animation = builder.build()
         commands.forEach { it.act(animation) }
         return animation
     }
 
-    private fun runAllChecks(animation: ConcreteWorldAnimation) =
+    private fun runAllChecks(animation: BetweenWorldAnimation) =
         checks.fold(true) { l, r ->
             l && try {
                 r.check(animation)

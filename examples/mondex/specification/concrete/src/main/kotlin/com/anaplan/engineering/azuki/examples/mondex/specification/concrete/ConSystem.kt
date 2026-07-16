@@ -14,6 +14,8 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.between.Trans
 import com.anaplan.engineering.azuki.examples.mondex.specification.WorldStep
 import com.anaplan.engineering.azuki.examples.mondex.specification.WorldStepFrameStack
 import com.anaplan.engineering.azuki.examples.mondex.specification.WorldStepHostContext
+import com.anaplan.engineering.azuki.examples.mondex.specification.WorldSystem
+import com.anaplan.engineering.azuki.examples.mondex.specification.WorldSystemFunctions
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.Bottom
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.PayDetails
 import com.anaplan.engineering.azuki.examples.mondex.specification.composeWith
@@ -25,19 +27,19 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.worldStep
 import com.anaplan.engineering.kazuki.core.*
 
 @Module
-interface ConSystem {
+interface ConSystem: WorldSystem {
 
-    val world: ConWorld
+    override val world: ConWorld
 
     @FunctionProvider(ConSystemFunctions::class)
-    val functions: ConSystemFunctions
+    override val functions: ConSystemFunctions
 }
 
 typealias ConWorldMonad = (ConWorld) -> ConWorld
 // World forward composition: (f ; g)(W) = g(f(W)), shame `;` not possible
 infix fun <W> ((W) -> W).then(next: (W) -> W): (W) -> W = { w -> next(this(w)) }
 
-class ConSystemFunctions(val system: ConSystem) {
+class ConSystemFunctions(val system: ConSystem) : WorldSystemFunctions() {
 
 
     // ConWorld delegated receiver to perform world updates functionally in monadic style

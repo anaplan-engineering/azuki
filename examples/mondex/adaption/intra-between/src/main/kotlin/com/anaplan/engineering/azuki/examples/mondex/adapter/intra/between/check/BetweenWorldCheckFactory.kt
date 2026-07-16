@@ -1,38 +1,35 @@
-package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.check
+package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check
+
 
 import com.anaplan.engineering.azuki.core.system.Check
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.PurseHasBalanceCheck
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.PurseHasLostCheck
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.WorldHasPurseCheck
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.WorldHasTotalBalanceCheck
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.WorldHasTotalLostCheck
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.ConcreteWorldAnimation
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.WorldAnimation
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldCheckFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.PurseCheckFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.WorldCheckFactory
-import com.anaplan.engineering.kazuki.core.*
+import com.anaplan.engineering.kazuki.core.ConditionFailure
+import com.anaplan.engineering.kazuki.core.prettyOrDefault
 import org.slf4j.LoggerFactory
 
-object ConcreteWorldCheckFactory : IntraWorldCheckFactory {
-    override val purse = ConcreteWorldPurseCheckFactory
-    override val world = ConcreteWorldWorldCheckFactory
+object BetweenWorldCheckFactory : IntraWorldCheckFactory {
+    override val purse = BetweenWorldPurseCheckFactory
+    override val world = BetweenWorldWorldCheckFactory
 }
 
-object ConcreteWorldPurseCheckFactory : PurseCheckFactory {
+object BetweenWorldPurseCheckFactory : PurseCheckFactory {
     override fun hasBalance(purseName: String, balance: Int) = PurseHasBalanceCheck(purseName, balance)
     //TODO this is only possible through the retrieve
-    override fun hasLost(purseName: String, lost: Int) = PurseHasLostCheck(purseName, lost) // TODO rewrite
+    override fun hasLost(purseName: String, lost: Int) = PurseHasLostCheck(purseName, lost)
 }
 
-object ConcreteWorldWorldCheckFactory : WorldCheckFactory {
+object BetweenWorldWorldCheckFactory : WorldCheckFactory {
     override fun hasPurse(worldName: String, purseName: String) = WorldHasPurseCheck(worldName, purseName)
-    // TODO Checks that always pass - need fixing with retrieve
     override fun hasTotalBalance(worldName: String, balance: Int) = WorldHasTotalBalanceCheck(worldName, balance)
     override fun hasTotalLost(worldName: String, lost: Int) = WorldHasTotalLostCheck(worldName, lost)
 }
 
-interface ConcreteWorldCheck : Check {
-    fun check(animation: ConcreteWorldAnimation): Boolean
+interface WorldCheck : Check {
+
+    fun check(animation: WorldAnimation<*,*>): Boolean
 
     fun checkFailure(message: String? = null, fn: () -> Any): Boolean = try {
         fn()
@@ -66,7 +63,6 @@ interface ConcreteWorldCheck : Check {
         "Check '${javaClass.simpleName}' ${if (message == null) "" else "[$message]"}"
 
     companion object {
-        private val Log = LoggerFactory.getLogger(ConcreteWorldCheck::class.java)
+        private val Log = LoggerFactory.getLogger(WorldCheck::class.java)
     }
-
 }

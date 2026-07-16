@@ -5,6 +5,7 @@ plugins {
 configurations {
     abstractSpec
     concreteSpec
+    betweenSpec
 }
 
 dependencies {
@@ -14,6 +15,9 @@ dependencies {
 
     concreteSpec project(":examples:mondex:adaption:intra-concrete")
     concreteSpec project(":examples:mondex:specification:concrete")
+
+    betweenSpec project(":examples:mondex:adaption:intra-between")
+    betweenSpec project(":examples:mondex:specification:concrete")
 
     testRuntimeOnly libs.slf4j.impl
 }
@@ -34,17 +38,27 @@ task concreteClasspathJar(type: Jar) {
     }
 }
 
+task betweenClasspathJar(type: Jar) {
+    dependsOn configurations.betweenSpec
+    archiveBaseName = 'Between'
+    manifest {
+        attributes("Class-Path": configurations.betweenSpec.collect { it.absolutePath }.join(' '))
+    }
+}
+
 ext {
-    setProperty("impl.includes", "Abstract,Concrete")
+    setProperty("impl.includes", "Concrete, Between, Abstract")
 }
 
 test {
     dependsOn abstractClasspathJar
     dependsOn concreteClasspathJar
+    dependsOn betweenClasspathJar
 
     def instanceJars = [
         abstractClasspathJar.archiveFile.get().asFile.absolutePath,
         concreteClasspathJar.archiveFile.get().asFile.absolutePath,
+        betweenClasspathJar.archiveFile.get().asFile.absolutePath,
     ]
     systemProperties = [
         "com.anaplan.engineering.azuki.implementation.instance.jars": instanceJars.join(","),

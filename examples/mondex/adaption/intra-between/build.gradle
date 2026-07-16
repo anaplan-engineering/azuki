@@ -5,6 +5,5 @@ plugins {
 dependencies {
     api project(":examples:mondex:adaption:intra-declaration")
     compileOnly project(":examples:mondex:specification:concrete")
-    implementation project(":examples:mondex:adaption:intra-between")
     implementation libs.slf4j.api
 }

@@ -1,15 +1,14 @@
-package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.action
+package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action
 
 import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedActionException
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.ConcreteWorldAnimation
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.WorldAnimation
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.declaration.action.CreatePurseDeclarableAction
 
 class CreatePurseAction(purseName: String, balance: Int) :
     CreatePurseDeclarableAction(purseName, balance),
-    ConcreteWorldAction {
+    WorldAction {
 
-
-    override fun act(animation: ConcreteWorldAnimation) {
+    override fun act(animation: WorldAnimation<*,*>) {
         throw LateDetectUnsupportedActionException("Cannot add new purses to concrete world")
     }
 
