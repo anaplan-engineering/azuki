@@ -40,34 +40,35 @@ class ConcreteWorldAnimation(
     override fun createTransfer(data: TransferData) {
         require(data.name !in transfers.keys && data.status == TransferData.Status.Created)
         transfers[data.name] = data
-        val pd = data.payDetails
-        system = system.functions.startTransferFrom(pd.from, pd.startFrom())
-        system = system.functions.startTransferTo(pd.to, pd.startTo())
+        system = system.functions.startTransfer(data.payDetails)
     }
 
     override fun requestTransfer(transferName: String) {
         require(transfers[transferName]?.status == TransferData.Status.Created)
         updateStatus(transferName, TransferData.Status.Requested)
         val data = transfers[transferName]!!
-        system = system.functions.requestTransfer(data.payDetails.from, system.last)
-    }
-
-    override fun sendTransfer(transferName: String) {
-        require(transfers[transferName]?.status in setOf(TransferData.Status.Requested))
-        updateStatus(transferName, TransferData.Status.Sent)
-        val data = transfers[transferName]!!
-        system = system.functions.sendTransfer(data.payDetails.to, system.last)
+        throw LateDetectUnsupportedActionException()
+        // TODO system = system.functions.requestTransfer(data.payDetails)
     }
 
     private fun updateStatus(transferName: String, status: TransferData.Status) {
         transfers[transferName] = transfers[transferName]!!.copy(status = status)
     }
 
+    override fun sendTransfer(transferName: String) {
+        require(transfers[transferName]?.status == TransferData.Status.Requested)
+        updateStatus(transferName, TransferData.Status.Sent)
+        val data = transfers[transferName]!!
+        throw LateDetectUnsupportedActionException()
+// TODO       system = system.functions.sendTransfer(data.details)
+    }
+
     override fun acknowledgeTransfer(transferName: String) {
-        require(transfers[transferName]?.status in  setOf(TransferData.Status.Requested, TransferData.Status.Sent))
+        require(transfers[transferName]?.status == TransferData.Status.Sent)
         updateStatus(transferName, TransferData.Status.Acknowledged)
         val data = transfers[transferName]!!
-        system = system.functions.ackTransfer(data.payDetails.from, system.last)
+        throw LateDetectUnsupportedActionException()
+// TODO       system = system.functions.acknowledgeTransfer(data.details)
     }
 
 
@@ -75,7 +76,8 @@ class ConcreteWorldAnimation(
         require(transferName in transfers.keys)
         updateStatus(transferName, TransferData.Status.Aborted)
         val data = transfers[transferName]!!
-        system = system.functions.abortTransfer(data.payDetails.from, system.last)
+        throw LateDetectUnsupportedActionException()
+// TODO       system = system.functions.abortTransfer(data.details)
     }
 }
 
@@ -107,7 +109,7 @@ class ConcreteWorldAnimationBuilder(private val declarations: List<Declaration>)
 //            set(purseDeclarations) { dec -> mk_StartTo(dec.toCounterPartyDetails()) }
         return ConcreteWorldAnimation(
             //system = mk_ConSystem(mk_ConWorld(purses, ether, mk_LogBook())),
-            system = mk_BetweenSystem(mk_BetweenWorld(purses, ether, mk_LogBook()), Bottom),
+            system = mk_ConSystem(mk_ConWorld(purses, ether, mk_LogBook())),
 
             transfers = declarations.filterIsInstance<TransferDeclaration>().associate { dec ->
                 dec.name to TransferData(dec.name, dec.from, dec.to, dec.amount, TransferData.Status.Created)

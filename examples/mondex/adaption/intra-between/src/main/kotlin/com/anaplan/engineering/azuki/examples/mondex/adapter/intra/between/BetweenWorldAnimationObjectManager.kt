@@ -16,13 +16,17 @@ import com.anaplan.engineering.azuki.examples.mondex.specification.between.LogBo
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.PayDetails_Module.mk_PayDetails
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.ReadExceptionLog
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.TransferDetails_Module.mk_TransferDetails
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.startFrom
+import com.anaplan.engineering.azuki.examples.mondex.specification.between.startTo
 import com.anaplan.engineering.azuki.examples.mondex.specification.between.toName
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConPurse
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConPurse_Module.mk_ConPurse
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.ConWorld
 import com.anaplan.engineering.azuki.examples.mondex.specification.concrete.Status
 import com.anaplan.engineering.kazuki.core.*
+import com.anaplan.engineering.kazuki.core.last
 import javax.management.monitor.StringMonitor
+import kotlin.require
 
 data class TransferData(
     val name: String,
@@ -89,14 +93,16 @@ open class BetweenWorldAnimation(
     override fun createTransfer(data: TransferData) {
         require(data.name !in transfers.keys && data.status == TransferData.Status.Created)
         transfers[data.name] = data
-        system = system.functions.startTransfer(data.payDetails)
+        val pd = data.payDetails
+        system = system.functions.startTransferFrom(pd.from, pd.startFrom())
+        system = system.functions.startTransferTo(pd.to, pd.startTo())
     }
 
     override fun requestTransfer(transferName: String) {
         require(transfers[transferName]?.status == TransferData.Status.Created)
         updateStatus(transferName, TransferData.Status.Requested)
         val data = transfers[transferName]!!
-        system = system.functions.requestTransfer(data.payDetails)
+        system = system.functions.requestTransfer(data.payDetails.from, system.last)
     }
 
     private fun updateStatus(transferName: String, status: TransferData.Status) {
@@ -104,19 +110,17 @@ open class BetweenWorldAnimation(
     }
 
     override fun sendTransfer(transferName: String) {
-        require(transfers[transferName]?.status == TransferData.Status.Requested)
+        require(transfers[transferName]?.status in setOf(TransferData.Status.Requested))
         updateStatus(transferName, TransferData.Status.Sent)
         val data = transfers[transferName]!!
-        throw LateDetectUnsupportedActionException()
-// TODO       system = system.functions.sendTransfer(data.details)
+        system = system.functions.sendTransfer(data.payDetails.to, system.last)
     }
 
     override fun acknowledgeTransfer(transferName: String) {
-        require(transfers[transferName]?.status == TransferData.Status.Sent)
+        require(transfers[transferName]?.status in  setOf(TransferData.Status.Requested, TransferData.Status.Sent))
         updateStatus(transferName, TransferData.Status.Acknowledged)
         val data = transfers[transferName]!!
-        throw LateDetectUnsupportedActionException()
-// TODO       system = system.functions.acknowledgeTransfer(data.details)
+        system = system.functions.ackTransfer(data.payDetails.from, system.last)
     }
 
 
@@ -124,8 +128,7 @@ open class BetweenWorldAnimation(
         require(transferName in transfers.keys)
         updateStatus(transferName, TransferData.Status.Aborted)
         val data = transfers[transferName]!!
-        throw LateDetectUnsupportedActionException()
-// TODO       system = system.functions.abortTransfer(data.details)
+        system = system.functions.abortTransfer(data.payDetails.from, system.last)
     }
 }
 
@@ -157,7 +160,7 @@ class BetweenWorldAnimationBuilder(private val declarations: List<Declaration>) 
 //            set(purseDeclarations) { dec -> mk_StartTo(dec.toCounterPartyDetails()) }
         return BetweenWorldAnimation(
             //system = mk_ConSystem(mk_ConWorld(purses, ether, mk_LogBook())),
-            system = mk_BetweenSystem(mk_BetweenWorld(purses, ether, mk_LogBook())),
+            system = mk_BetweenSystem(mk_BetweenWorld(purses, ether, mk_LogBook()), Bottom),
 
             transfers = declarations.filterIsInstance<TransferDeclaration>().associate { dec ->
                 dec.name to TransferData(dec.name, dec.from, dec.to, dec.amount, TransferData.Status.Created)

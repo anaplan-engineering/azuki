@@ -53,6 +53,7 @@ ext {
 test {
     dependsOn abstractClasspathJar
     dependsOn concreteClasspathJar
+    dependsOn betweenClasspathJar
 
     def instanceJars = [
         abstractClasspathJar.archiveFile.get().asFile.absolutePath,
