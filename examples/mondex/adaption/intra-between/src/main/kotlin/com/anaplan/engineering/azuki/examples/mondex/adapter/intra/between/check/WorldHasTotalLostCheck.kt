@@ -2,10 +2,9 @@ package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.chec
 
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.WorldAnimation
 
-class WorldHasTotalBalanceCheck (private val worldName: String, private val balance: Int) : WorldCheck {
+class WorldHasTotalLostCheck(private val worldName: String, private val lost: Int) : WorldCheck {
 
     override fun check(animation: WorldAnimation<*,*>) = true
-//        (animation.getWorld(worldName) as? AuxWorld).properties.totalBalance == balance.toULong()
 
     override val behavior = -1
 }

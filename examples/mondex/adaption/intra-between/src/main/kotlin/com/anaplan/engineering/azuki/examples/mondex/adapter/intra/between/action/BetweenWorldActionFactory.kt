@@ -2,12 +2,13 @@ package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.acti
 
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.BetweenWorldAnimation
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.WorldAnimation
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.PurseActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.TransferActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.WorldActionFactory
 
-object BetweenWorldActionFactory : IntraWorldActionFactory<BetweenWorldAction> {
+object BetweenWorldActionFactory : IntraWorldActionFactory<WorldAction> {
     override val purse = BetweenWorldPurseActionFactory
     override val world = BetweenWorldWorldActionFactory
     override val transfer = BetweenWorldTransferActionFactory
@@ -33,6 +34,6 @@ object BetweenWorldWorldActionFactory : WorldActionFactory {
     override fun addTransfer(worldName: String, transferName: String) = AddTransferToWorldAction(worldName, transferName)
 }
 
-interface BetweenWorldAction : Action {
-    fun act(animation: BetweenWorldAnimation)
+interface WorldAction : Action {
+    fun act(animation: WorldAnimation<*,*>)
 }

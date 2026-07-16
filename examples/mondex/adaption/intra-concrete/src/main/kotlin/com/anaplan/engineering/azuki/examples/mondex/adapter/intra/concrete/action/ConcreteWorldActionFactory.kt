@@ -10,13 +10,13 @@ import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.actio
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.CreateWorldAction
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.RequestTransferAction
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.SendTransferAction
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.ConcreteWorldAnimation
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.WorldAction
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.PurseActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.TransferActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.WorldActionFactory
 
-object ConcreteWorldActionFactory : IntraWorldActionFactory<ConcreteWorldAction> {
+object ConcreteWorldActionFactory : IntraWorldActionFactory<WorldAction> {
     override val purse = ConcreteWorldPurseActionFactory
     override val world = ConcreteWorldWorldActionFactory
     override val transfer = ConcreteWorldTransferActionFactory
@@ -43,9 +43,5 @@ object ConcreteWorldWorldActionFactory : WorldActionFactory {
     override fun addPurse(worldName: String, purseName: String) = AddPurseToWorldAction(worldName, purseName)
     override fun addTransfer(worldName: String, transferName: String) =
         AddTransferToWorldAction(worldName, transferName)
-}
-
-interface ConcreteWorldAction : Action {
-    fun act(animation: ConcreteWorldAnimation)
 }
 

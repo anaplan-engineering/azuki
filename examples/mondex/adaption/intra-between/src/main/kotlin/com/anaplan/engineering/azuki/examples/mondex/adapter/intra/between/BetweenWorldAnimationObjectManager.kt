@@ -58,13 +58,13 @@ data class TransferData(
     }
 }
 
-abstract class WorldAnimation<World, S: WorldSystem>(
-    open var system: S,  // TODO: Change to WorldSystem when ConSystem finished
+abstract class WorldAnimation<W: ConWorld, S: WorldSystem>(
+    open var system: S,
     val worldName: String,
     open val transfers: MutableMap<String, TransferData>
 ) {
 
-    abstract fun getWorld(worldName: String): World
+    abstract fun getWorld(worldName: String): W
     abstract fun getPurse(name: String): ConPurse
     abstract fun createTransfer(data: TransferData)
     abstract fun requestTransfer(transferName: String)

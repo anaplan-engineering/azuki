@@ -4,42 +4,45 @@ import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.declaration.DeclarationStateBuilder
 import com.anaplan.engineering.azuki.declaration.toDeclarableAction
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.BetweenWorldAction
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.WorldAction
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.BetweenWorldActionFactory
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.WorldCheck
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.BetweenWorldCheckFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldCheckFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.declaration.IntraWorldDeclarationState
 import org.slf4j.LoggerFactory
 
 class BetweenWorldSystemFactory :
-    VerifiableSystemFactory<IntraWorldActionFactory<BetweenWorldAction>, IntraWorldCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, BetweenWorldSystem> {
+    VerifiableSystemFactory<IntraWorldActionFactory<WorldAction>, IntraWorldCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, BetweenWorldSystem> {
 
     override fun create(systemDefinition: SystemDefinition) : BetweenWorldSystem =
-        BetweenWorldFactory(
+        BetweenWorldSystem(
             systemDefinition.declarations.map(::toDeclarableAction),
-            systemDefinition.commands.map(::toBetweenWorldAction),
-            systemDefinition.commands.map(toBetweenWorldCheck),
+            systemDefinition.commands.map(toBetweenWorldAction),
+            systemDefinition.checks.map(toBetweenWorldCheck),
         )
 
     override val actionFactory = BetweenWorldActionFactory
     override val checkFactory = BetweenWorldCheckFactory
 
     companion object {
-        private val toBetweenWorldAction: (Action) -> BetweenWorldAction = {
-            it as? BetweenWorldAction
+        private val toBetweenWorldAction: (Action) -> WorldAction = {
+            it as? WorldAction
                 ?: throw IllegalArgumentException("Invalid actions: $it")
         }
 
-        private val toBetweenWorldCheck: (Check) -> BetweenWorldCheck = {
-            it as? BetweenWorldCheck ?: throw IllegalArgumentException("Invalid check: $it")
+        private val toBetweenWorldCheck: (Check) -> WorldCheck = {
+            it as? WorldCheck ?: throw IllegalArgumentException("Invalid check: $it")
         }
     }
 }
 
 class BetweenWorldSystem(
     private val declarableActions: List<DeclarableAction<IntraWorldDeclarationState>>,
-    private val commands: List<BetweenWorldAction>,
-    private val checks: List<BetweenWorldCheck>,
-) : VerifiableSystem<IntraWorldActionFactory<BetweenWorldAction>, IntraWorldCheckFactory> {
+    private val commands: List<WorldAction>,
+    private val checks: List<WorldCheck>,
+) : VerifiableSystem<IntraWorldActionFactory<WorldAction>, IntraWorldCheckFactory> {
 
     private fun build(): BetweenWorldAnimation {
         val declarations = DeclarationStateBuilder(::IntraWorldDeclarationState).build(declarableActions)

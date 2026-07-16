@@ -4,7 +4,8 @@ import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.declaration.DeclarationStateBuilder
 import com.anaplan.engineering.azuki.declaration.toDeclarableAction
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.action.ConcreteWorldAction
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.WorldAction
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.WorldCheck
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.action.ConcreteWorldActionFactory
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.check.ConcreteWorldCheck
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.check.ConcreteWorldCheckFactory
@@ -14,7 +15,7 @@ import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.declaration.
 import org.slf4j.LoggerFactory
 
 class ConcreteWorldSystemFactory :
-    VerifiableSystemFactory<IntraWorldActionFactory<ConcreteWorldAction>, IntraWorldCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, ConcreteWorldSystem> {
+    VerifiableSystemFactory<IntraWorldActionFactory<WorldAction>, IntraWorldCheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, ConcreteWorldSystem> {
 
     override fun create(systemDefinition: SystemDefinition): ConcreteWorldSystem =
         ConcreteWorldSystem(
@@ -27,22 +28,22 @@ class ConcreteWorldSystemFactory :
     override val checkFactory = ConcreteWorldCheckFactory
 
     companion object {
-        private val toConcreteWorldAction: (Action) -> ConcreteWorldAction = {
-            it as? ConcreteWorldAction
+        private val toConcreteWorldAction: (Action) -> WorldAction = {
+            it as? WorldAction
                 ?: throw IllegalArgumentException("Invalid action: $it")
         }
 
-        private val toConcreteWorldCheck: (Check) -> ConcreteWorldCheck = {
-            it as? ConcreteWorldCheck ?: throw IllegalArgumentException("Invalid check: $it")
+        private val toConcreteWorldCheck: (Check) -> WorldCheck = {
+            it as? WorldCheck ?: throw IllegalArgumentException("Invalid check: $it")
         }
     }
 }
 
 class ConcreteWorldSystem(
     private val declarableActions: List<DeclarableAction<IntraWorldDeclarationState>>,
-    private val commands: List<ConcreteWorldAction>,
-    private val checks: List<ConcreteWorldCheck>,
-) : VerifiableSystem<IntraWorldActionFactory<ConcreteWorldAction>, IntraWorldCheckFactory> {
+    private val commands: List<WorldAction>,
+    private val checks: List<WorldCheck>,
+) : VerifiableSystem<IntraWorldActionFactory<WorldAction>, IntraWorldCheckFactory> {
 
     private fun build(): ConcreteWorldAnimation {
         val declarations = DeclarationStateBuilder(::IntraWorldDeclarationState).build(declarableActions)

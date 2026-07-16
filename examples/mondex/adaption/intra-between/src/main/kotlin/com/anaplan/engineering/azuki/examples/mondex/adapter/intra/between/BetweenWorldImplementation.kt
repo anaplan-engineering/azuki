@@ -2,10 +2,10 @@ package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between
 
 import com.anaplan.engineering.azuki.core.system.Implementation
 import com.anaplan.engineering.azuki.core.system.NoSystemDefaults
-import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.BetweenWorldAction
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.action.WorldAction
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldImplementation
 
-class BetweenWorldImplementation : IntraWorldImplementation<BetweenWorldAction> {
+class BetweenWorldImplementation : IntraWorldImplementation<WorldAction> {
     override val name = "Between"
 
     override val implementationDefaults = NoSystemDefaults
