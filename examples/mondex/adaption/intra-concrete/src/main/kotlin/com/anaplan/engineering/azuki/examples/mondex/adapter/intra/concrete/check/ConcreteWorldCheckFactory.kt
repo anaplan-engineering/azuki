@@ -1,6 +1,7 @@
 package com.anaplan.engineering.azuki.examples.mondex.adapter.intra.concrete.check
 
 import com.anaplan.engineering.azuki.core.system.Check
+import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.PurseExLogContains
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.PurseHasBalanceCheck
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.PurseHasLostCheck
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.check.WorldHasPurseCheck
@@ -22,6 +23,7 @@ object ConcreteWorldPurseCheckFactory : PurseCheckFactory {
     override fun hasBalance(purseName: String, balance: Int) = PurseHasBalanceCheck(purseName, balance)
     //TODO this is only possible through the retrieve
     override fun hasLost(purseName: String, lost: Int) = PurseHasLostCheck(purseName, lost) // TODO rewrite
+    override fun exLogContains(purseName: String, transferName: String) = PurseExLogContains(purseName, transferName)
 }
 
 object ConcreteWorldWorldCheckFactory : WorldCheckFactory {

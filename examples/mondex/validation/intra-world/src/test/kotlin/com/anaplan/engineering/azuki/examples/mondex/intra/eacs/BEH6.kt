@@ -109,7 +109,7 @@ class BEH6 : IntraWorldScenario() {
         }
         then {
             person1 hasLost 2
-            // TODO: DSL — person1 exLogContains transfer1 (concrete)
+            person1 exceptionLogContains transfer1
         }
     }
 

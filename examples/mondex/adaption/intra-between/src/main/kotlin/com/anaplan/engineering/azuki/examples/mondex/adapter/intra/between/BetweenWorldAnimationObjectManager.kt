@@ -130,6 +130,7 @@ open class BetweenWorldAnimation(
         val data = transfers[transferName]!!
         system = system.functions.abortTransfer(data.payDetails.from, system.last)
     }
+
 }
 
 fun PurseDeclaration.toCounterPartyDetails(nextSeqNo: Int = 0) =
