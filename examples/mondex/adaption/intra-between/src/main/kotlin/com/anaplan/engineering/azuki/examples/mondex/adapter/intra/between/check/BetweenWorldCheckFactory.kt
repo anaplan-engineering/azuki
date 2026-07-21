@@ -19,6 +19,7 @@ object BetweenWorldPurseCheckFactory : PurseCheckFactory {
     override fun hasBalance(purseName: String, balance: Int) = PurseHasBalanceCheck(purseName, balance)
     //TODO this is only possible through the retrieve
     override fun hasLost(purseName: String, lost: Int) = PurseHasLostCheck(purseName, lost)
+    override fun exLogContains(purseName: String, transferName: String) = PurseExLogContains(purseName, transferName)
 }
 
 object BetweenWorldWorldCheckFactory : WorldCheckFactory {

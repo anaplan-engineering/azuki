@@ -36,5 +36,8 @@ class IntraWorldThen(checkFactory: IntraWorldCheckFactory) :
         add(checkFactory.purse.hasLost(purseName, lost))
     }
 
+    override fun purseExLogContains(purseName: String, transferName: String) {
+        add(checkFactory.purse.exLogContains(purseName, transferName))
+    }
 
 }
