@@ -70,6 +70,7 @@ abstract class WorldAnimation<W: ConWorld, S: WorldSystem>(
 
     abstract fun getWorld(worldName: String): W
     abstract fun getPurse(name: String): ConPurse
+    abstract fun getTransfer(transferName: String): TransferData
     abstract fun createTransfer(data: TransferData)
     abstract fun requestTransfer(transferName: String)
     abstract fun sendTransfer(transferName: String)
@@ -89,6 +90,11 @@ open class BetweenWorldAnimation(
     }
 
     override fun getPurse(name: String) = system.world.conAuthPurse[name.toName()]
+
+    override fun getTransfer(transferName: String): TransferData {
+        require(transferName in transfers.keys)
+        return transfers[transferName]!!
+    }
 
     override fun createTransfer(data: TransferData) {
         require(data.name !in transfers.keys && data.status == TransferData.Status.Created)
