@@ -8,8 +8,7 @@ class PurseExLogContains(
 ) : WorldCheck {
 
     override fun check(animation: WorldAnimation<*,*>): Boolean {
-        val transfer = animation.transfers[transferName]
-        return checkTrue(transfer!!.payDetails in animation.getPurse(purseName).exLog)
+        return checkTrue(animation.getTransfer(transferName).payDetails in animation.getPurse(purseName).exLog)
     }
 
     override val behavior = -1
