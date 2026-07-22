@@ -1,10 +1,10 @@
 package com.anaplan.engineering.azuki.tictactoe.scriptrunner
 
-import com.anaplan.engineering.azuki.core.runner.ImplementationInstance
 import com.anaplan.engineering.azuki.core.runner.TaskType
 import com.anaplan.engineering.azuki.core.runner.oracle.MultiOracleScenarioRunner
 import com.anaplan.engineering.azuki.runner.ExitCode
 import com.anaplan.engineering.azuki.runner.ScenarioScriptRunner
+import com.anaplan.engineering.azuki.reflect.metadata.QualifiedName
 import com.anaplan.engineering.azuki.tictactoe.adapter.api.*
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
@@ -20,6 +20,7 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
 import org.apache.logging.log4j.core.config.Configurator
 import java.io.File
+import java.util.UUID
 import kotlin.system.exitProcess
 
 typealias OracleScenarioResult = MultiOracleScenarioRunner.Result<TicTacToeActionFactory, TicTacToeCheckFactory, TicTacToeQueryFactory, TicTacToeActionGeneratorFactory>
@@ -119,8 +120,7 @@ object Command : CliktCommand(name = "scenario-runner") {
             imports,
             TicTacToeResultsProcessor(
                 scenarioName = scenarioName,
-                generatedTestPackage = testPackageName,
-                generatedTestClass = testClassName,
+                generatedTestName = QualifiedName.create(testPackageName, testClassName ?: "Generated_${UUID.randomUUID()}"),
                 outputDir = outputDir,
                 resultSummaryFileName = resultSummaryFileName,
                 queryResultsFileName = queryResultsFileName,

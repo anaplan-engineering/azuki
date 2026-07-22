@@ -3,6 +3,7 @@ package com.anaplan.engineering.azuki.verify.generation
 import com.anaplan.engineering.azuki.core.system.*
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
 import com.anaplan.engineering.azuki.script.generation.*
+import com.anaplan.engineering.azuki.reflect.metadata.QualifiedName
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -19,7 +20,7 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
     abstract override val actionGeneratorFactory: AGF
 
     protected abstract val scriptGeneration: ScriptGenerationService<AF, CF, QF, QF, AGF, *, *>
-    protected abstract val classGeneration: RunnableScenarioClassGenerator<*>
+    protected abstract val classGeneration: RunnableScenarioClassGenerator
     protected abstract val outputDir: File
 
     private val scenarioDir by lazy {
@@ -75,8 +76,8 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
                 fromChecks(listOf(checkFactory.systemValid()))
             }.verifiableScenario
 
-            val testCase = classGeneration.generate(className = context ?: "scenario-ocl",
-                packageName = "debug",
+            val testCase = classGeneration.generate(
+                classQualifiedName = QualifiedName.create("debug", context ?: "scenario-ocl"),
                 scenarioScript = scenarioScript,
                 implementationVersions = emptyMap())
             val definition = ScenarioFormatter.formatScenario(testCase.definition)
