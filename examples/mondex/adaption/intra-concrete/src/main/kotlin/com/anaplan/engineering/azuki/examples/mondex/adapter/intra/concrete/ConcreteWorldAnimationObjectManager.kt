@@ -37,6 +37,11 @@ class ConcreteWorldAnimation(
 
     override fun getPurse(name: String) = system.world.conAuthPurse[name.toName()]
 
+    override fun getTransfer(transferName: String): TransferData {
+        require(transferName in transfers.keys)
+        return transfers[transferName]!!
+    }
+
     override fun createTransfer(data: TransferData) {
         require(data.name !in transfers.keys && data.status == TransferData.Status.Created)
         transfers[data.name] = data
