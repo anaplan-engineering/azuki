@@ -14,7 +14,7 @@ interface IntraWorldCheckFactory : CheckFactory {
 interface PurseCheckFactory {
     fun hasBalance(purseName: String, balance: Int) = unsupportedCheck()
     fun hasLost(purseName: String, lost: Int) = unsupportedCheck()
-    fun exLogContains(purseName: String, transferName: String) = unsupportedCheck()
+    fun exLogContains(purseName: String, transfer: TransferRef) = unsupportedCheck()
 }
 
 interface WorldCheckFactory {

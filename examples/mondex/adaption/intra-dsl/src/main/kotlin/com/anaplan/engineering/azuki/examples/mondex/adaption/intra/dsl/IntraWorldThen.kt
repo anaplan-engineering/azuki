@@ -2,6 +2,7 @@ package com.anaplan.engineering.azuki.examples.mondex.adaption.intra.dsl
 
 import com.anaplan.engineering.azuki.core.dsl.Then
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldCheckFactory
+import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.TransferRef
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.dsl.check.PurseChecks
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.dsl.check.WorldChecks
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.dsl.dsl.CheckBlock
@@ -36,8 +37,8 @@ class IntraWorldThen(checkFactory: IntraWorldCheckFactory) :
         add(checkFactory.purse.hasLost(purseName, lost))
     }
 
-    override fun purseExLogContains(purseName: String, transferName: String) {
-        add(checkFactory.purse.exLogContains(purseName, transferName))
+    override fun purseExLogContains(purseName: String, transfer: TransferRef) {
+        add(checkFactory.purse.exLogContains(purseName, transfer))
     }
 
 }
