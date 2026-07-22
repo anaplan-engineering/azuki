@@ -5,6 +5,7 @@ import com.anaplan.engineering.azuki.core.system.Check
 import com.anaplan.engineering.azuki.examples.mondex.adapter.intra.between.WorldAnimation
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.IntraWorldCheckFactory
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.PurseCheckFactory
+import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.TransferRef
 import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.api.WorldCheckFactory
 import com.anaplan.engineering.kazuki.core.ConditionFailure
 import com.anaplan.engineering.kazuki.core.prettyOrDefault
@@ -19,7 +20,7 @@ object BetweenWorldPurseCheckFactory : PurseCheckFactory {
     override fun hasBalance(purseName: String, balance: Int) = PurseHasBalanceCheck(purseName, balance)
     //TODO this is only possible through the retrieve
     override fun hasLost(purseName: String, lost: Int) = PurseHasLostCheck(purseName, lost)
-    override fun exLogContains(purseName: String, transferName: String) = PurseExLogContains(purseName, transferName)
+    override fun exLogContains(purseName: String, transfer: TransferRef) = PurseExLogContains(purseName, transfer)
 }
 
 object BetweenWorldWorldCheckFactory : WorldCheckFactory {

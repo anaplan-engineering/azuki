@@ -9,6 +9,7 @@ import com.anaplan.engineering.azuki.examples.mondex.adaption.intra.dsl.IntraWor
 import com.anaplan.engineering.azuki.mondex.person1
 import com.anaplan.engineering.azuki.mondex.person2
 import com.anaplan.engineering.azuki.mondex.transfer1
+import com.anaplan.engineering.azuki.mondex.transfer1Ref
 import com.anaplan.engineering.azuki.mondex.world1
 
 /**
@@ -109,7 +110,7 @@ class BEH6 : IntraWorldScenario() {
         }
         then {
             person1 hasLost 2
-            person1 exceptionLogContains transfer1
+            person1 exceptionLogContains transfer1Ref
         }
     }
 
