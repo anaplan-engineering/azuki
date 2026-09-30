@@ -43,7 +43,7 @@ dependencies {
     api project(":examples:tictactoe:dsl")
     vdm project(":examples:tictactoe:adapter-vdm")
     kazuki project(":examples:tictactoe:adapter-kazuki")
-    kazuki project(":examples:tictactoe:kazuki")
+    kazuki "com.anaplan.engineering.azuki.examples:tictactoe-kazuki:1.0"
     sampleImplementationV1 project(":examples:tictactoe:adapter-implementation")
     sampleImplementationV1 project(":examples:tictactoe:implementation-v1")
     sampleImplementationV2 project(":examples:tictactoe:adapter-implementation")

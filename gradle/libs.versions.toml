@@ -1,14 +1,17 @@
 [versions]
-kotlin = "2.0.21"
+kotlin = "2.4.20"
+kotlin20 = "2.0.21"
 kazuki = "0.4.0-alpha.4"
-# 1.5.0+ are based on Kotlin 2.1, and would require the script parser to be pinned to the 2.1 version
-ktlint = "1.4.1"
+ktlint = "2.0.0-ALPHA-4"
 log4j = "2.17.0"
 
 [libraries]
 kotlin-bom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version.ref = "kotlin" }
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit" }
+kotlin20-bom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version.ref = "kotlin20" }
+kotlin20-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin20" }
+kotlin20-test = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlin20" }
 kotlin-compiler-embeddable = { group = "org.jetbrains.kotlin", name = "kotlin-compiler-embeddable" }
 kotlin-scripting-common = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-common" }
 kotlin-scripting-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jvm" }
@@ -34,8 +37,8 @@ lincheck = { group = "org.jetbrains.lincheck", name = "lincheck", version = "3.2
 
 semver4j = { group = "org.semver4j", name = "semver4j", version = "5.2.2" }
 
-ktlint-ruleEngine = { group = "com.pinterest.ktlint", name = "ktlint-rule-engine", version.ref = "ktlint" }
-ktlint-rulesetStandard = { group = "com.pinterest.ktlint", name = "ktlint-ruleset-standard", version.ref = "ktlint" }
+ktlint-ruleEngine = { group = "io.github.ktlint.core", name = "ktlint-rule-engine", version.ref = "ktlint" }
+ktlint-rulesetStandard = { group = "io.github.ktlint.core", name = "ktlint-ruleset-standard", version.ref = "ktlint" }
 
 kazuki-toolkit = { group = "com.anaplan.engineering", name = "kazuki-toolkit", version.ref = "kazuki"}
 kazuki-ksp = { group = "com.anaplan.engineering", name = "kazuki-ksp", version.ref = "kazuki"}
@@ -44,3 +47,4 @@ clikt-jvm = { group = "com.github.ajalt.clikt", name = "clikt-jvm", version = "5
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin20 = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin20" }

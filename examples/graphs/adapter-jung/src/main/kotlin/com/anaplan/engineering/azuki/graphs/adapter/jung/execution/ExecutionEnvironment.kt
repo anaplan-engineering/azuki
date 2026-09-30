@@ -8,10 +8,13 @@ class ExecutionEnvironment {
 
     private val graphs = mutableMapOf<String, MutableNetwork<*, Pair<*, *>>>()
 
-    fun <V> act(graphName: String, action: MutableNetwork<V, Pair<V, V>>.() -> Unit) =
-        (graphs[graphName] as? MutableNetwork<V, Pair<V, V>>)?.action() ?: throw ExecutionException("No such graph $graphName")
+    @Suppress("UNCHECKED_CAST")
+    fun <V : Any> act(graphName: String, action: MutableNetwork<V, Pair<V, V>>.() -> Unit) =
+        (graphs[graphName] as? MutableNetwork<V, Pair<V, V>>)?.action()
+            ?: throw ExecutionException("No such graph $graphName")
 
-    fun <V, T> get(graphName: String, get: Network<V, Pair<V, V>>.() -> T): T =
+    @Suppress("UNCHECKED_CAST")
+    fun <V : Any, T> get(graphName: String, get: Network<V, Pair<V, V>>.() -> T): T =
         (graphs[graphName] as? Network<V, Pair<V, V>>)?.get() ?: throw ExecutionException("No such graph $graphName")
 
     fun addGraph(graphName: String, graph: MutableNetwork<*, Pair<*, *>>) {

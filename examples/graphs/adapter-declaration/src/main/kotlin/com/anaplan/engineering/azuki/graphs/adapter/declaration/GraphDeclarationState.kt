@@ -17,36 +17,28 @@ class GraphDeclarationState : DeclarationState() {
         declarations[graphName] = DirectedGraphDeclaration<Any>(graphName, standalone = true)
     }
 
-    fun <V> addVertexToUndirectedGraph(graphName: String, vertex: V) {
+    fun <V : Any> addVertexToUndirectedGraph(graphName: String, vertex: V) {
         checkExists(graphName)
         val declaration = getDeclaration<UndirectedGraphDeclaration<V>>(graphName)
-        declarations[graphName] = declaration.copy(
-            vertices = declaration.vertices + vertex
-        )
+        declarations[graphName] = declaration.copy(vertices = declaration.vertices + vertex)
     }
 
-    fun <V> addEdgeToUndirectedGraph(graphName: String, source: V, target: V) {
+    fun <V : Any> addEdgeToUndirectedGraph(graphName: String, source: V, target: V) {
         checkExists(graphName)
         val declaration = getDeclaration<UndirectedGraphDeclaration<V>>(graphName)
-        declarations[graphName] = declaration.copy(
-            edges = declaration.edges + Pair(source, target)
-        )
+        declarations[graphName] = declaration.copy(edges = declaration.edges + Pair(source, target))
     }
 
-    fun <V> addVertexToDirectedGraph(graphName: String, vertex: V) {
+    fun <V : Any> addVertexToDirectedGraph(graphName: String, vertex: V) {
         checkExists(graphName)
         val declaration = getDeclaration<DirectedGraphDeclaration<V>>(graphName)
-        declarations[graphName] = declaration.copy(
-            vertices = declaration.vertices + vertex
-        )
+        declarations[graphName] = declaration.copy(vertices = declaration.vertices + vertex)
     }
 
-    fun <V> addEdgeToDirectedGraph(graphName: String, source: V, target: V) {
+    fun <V : Any> addEdgeToDirectedGraph(graphName: String, source: V, target: V) {
         checkExists(graphName)
         val declaration = getDeclaration<DirectedGraphDeclaration<V>>(graphName)
-        declarations[graphName] = declaration.copy(
-            edges = declaration.edges + Pair(source, target)
-        )
+        declarations[graphName] = declaration.copy(edges = declaration.edges + Pair(source, target))
     }
 }
 

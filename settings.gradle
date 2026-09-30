@@ -17,7 +17,6 @@ include(
     "examples:tictactoe:adapter-script-generation",
     "examples:tictactoe:adapter-vdm",
     "examples:tictactoe:adapter-kazuki",
-    "examples:tictactoe:kazuki",
     "examples:tictactoe:implementation",
     "examples:tictactoe:implementation-v1",
     "examples:tictactoe:implementation-v2",
@@ -43,7 +42,6 @@ include(
     'examples:right-of-way:adapter-kazuki',
     'examples:right-of-way:adapter-implementation',
     'examples:right-of-way:dsl',
-    'examples:right-of-way:kazuki',
     'examples:right-of-way:script-runner',
     'examples:right-of-way:eacs',
     'examples:right-of-way:implementation',
@@ -53,3 +51,10 @@ includeBuild("build-conventions")
 includeBuild("vdm-animation")
 includeBuild("vdm-stub-generator")
 includeBuild("azuki-platform")
+// this composite build is needed to hold kazuki dependencies on kotlin 2.0
+includeBuild("kazuki") {
+    dependencySubstitution {
+        substitute module("com.anaplan.engineering.azuki.examples:right-of-way-kazuki") using project(":examples-kazuki:right-of-way-kazuki")
+        substitute module("com.anaplan.engineering.azuki.examples:tictactoe-kazuki") using project(":examples-kazuki:tictactoe-kazuki")
+    }
+}

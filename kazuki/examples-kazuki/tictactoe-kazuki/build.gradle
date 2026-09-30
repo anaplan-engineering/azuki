@@ -1,15 +1,24 @@
 plugins {
-    id 'azuki.common-conventions'
-    alias(libs.plugins.kotlin)
+    alias(libs.plugins.kotlin20)
     id 'com.google.devtools.ksp' version("2.0.21-1.0.25")
 }
 
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 dependencies {
-    implementation platform(libs.kotlin.bom)
-    implementation libs.kotlin.reflect
+    implementation platform(libs.kotlin20.bom)
+    implementation libs.kotlin20.reflect
     api libs.kazuki.toolkit
     ksp libs.kazuki.ksp
-    implementation libs.kotlin.test
+    implementation libs.kotlin20.test
     implementation libs.slf4j.api
     testRuntimeOnly libs.slf4j.impl
 }

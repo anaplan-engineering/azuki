@@ -28,7 +28,7 @@ dependencies {
     vdm project(":examples:right-of-way:adapter-vdm")
 
     kazuki project(":examples:right-of-way:adapter-kazuki")
-    kazuki project(":examples:right-of-way:kazuki")
+    kazuki "com.anaplan.engineering.azuki.examples:right-of-way-kazuki:1.0"
 }
 
 task sampleImplClasspathJar(type: Jar) {

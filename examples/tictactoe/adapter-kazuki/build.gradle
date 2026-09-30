@@ -4,6 +4,6 @@ plugins {
 
 dependencies {
     api project(":examples:tictactoe:adapter-declaration")
-    compileOnly project(":examples:tictactoe:kazuki")
+    compileOnly "com.anaplan.engineering.azuki.examples:tictactoe-kazuki:1.0"
     implementation libs.slf4j.api
 }

@@ -54,7 +54,7 @@ dependencies {
     }
     vdm "com.anaplan.engineering:$vdmAnimatorModule"
     kazuki project(":examples:right-of-way:adapter-kazuki")
-    kazuki project(":examples:right-of-way:kazuki")
+    kazuki "com.anaplan.engineering.azuki.examples:right-of-way-kazuki:1.0"
     sampleImplementationV1 project(":examples:right-of-way:adapter-implementation")
     sampleImplementationV1 project(":examples:right-of-way:implementation-V1")
     testRuntimeOnly libs.slf4j.impl

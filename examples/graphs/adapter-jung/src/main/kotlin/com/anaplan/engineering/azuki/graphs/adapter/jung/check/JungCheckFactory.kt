@@ -36,6 +36,5 @@ interface JungCheck : Check {
 
 
 val toJungCheck: (Check) -> JungCheck = {
-    @Suppress("UNCHECKED_CAST")
     it as? JungCheck ?: throw IllegalArgumentException("Invalid check: $it")
 }

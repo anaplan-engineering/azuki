@@ -3,7 +3,7 @@ package com.anaplan.engineering.azuki.graphs.adapter.jgrapht.action
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.action.AddEdgeToUndirectedGraphDeclarableAction
 import com.anaplan.engineering.azuki.graphs.adapter.jgrapht.execution.ExecutionEnvironment
 
-class AddEdgeToUndirectedGraphAction<V>(graphName: String, source: V, target: V) :
+class AddEdgeToUndirectedGraphAction<V : Any>(graphName: String, source: V, target: V) :
     AddEdgeToUndirectedGraphDeclarableAction<V>(graphName, source, target), JGraphTAction {
     override fun act(env: ExecutionEnvironment) {
         env.act(graphName) {

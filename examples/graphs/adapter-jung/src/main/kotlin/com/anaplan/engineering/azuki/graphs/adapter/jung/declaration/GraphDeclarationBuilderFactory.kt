@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.graphs.adapter.jung.declaration
 
-import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedActionException
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.DirectedGraphDeclaration
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.GraphDeclaration
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.UndirectedGraphDeclaration
@@ -26,7 +25,6 @@ private class GraphDeclarationBuilder<T : GraphDeclaration<*>>(declaration: T) :
         val graph = when (declaration) {
             is UndirectedGraphDeclaration<*> -> NetworkBuilder.undirected()
             is DirectedGraphDeclaration<*> -> NetworkBuilder.directed()
-            else -> throw LateDetectUnsupportedActionException("Unknown graph declaration type ${declaration::class}")
         }.build<Any, Pair<*, *>>()
         declaration.vertices.forEach {
             graph.addNode(it)

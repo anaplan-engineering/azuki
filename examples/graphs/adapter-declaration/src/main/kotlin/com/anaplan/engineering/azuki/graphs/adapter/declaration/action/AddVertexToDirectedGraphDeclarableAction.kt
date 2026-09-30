@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.graphs.adapter.api.AddVertexBehaviour
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.GraphDeclarationState
 
-abstract class AddVertexToDirectedGraphDeclarableAction<V>(
+abstract class AddVertexToDirectedGraphDeclarableAction<V : Any>(
     protected val graphName: String,
     protected val vertex: V,
 ) : AddVertexBehaviour(), DeclarableAction<GraphDeclarationState> {

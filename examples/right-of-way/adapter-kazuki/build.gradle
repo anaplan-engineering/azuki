@@ -4,6 +4,6 @@ plugins {
 
 dependencies {
     api project(":examples:right-of-way:adapter-declaration")
-    compileOnly project(":examples:right-of-way:kazuki")
+    compileOnly "com.anaplan.engineering.azuki.examples:right-of-way-kazuki:1.0"
     implementation libs.slf4j.api
 }

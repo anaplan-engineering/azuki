@@ -37,7 +37,7 @@ interface RightOfWayOracleScenario :
     RightOfWayBuildableScenario {
 
     fun generate(generationFunction: RightOfWayGenerate.() -> Unit)
-    fun verify(verifyFunction: RightOfWayVerify.() -> Unit)
+    fun verify(verificationFunction: RightOfWayVerify.() -> Unit)
 }
 
 interface RightOfWayQueryScenario : ScenarioWithQueries<RightOfWayActionFactory, RightOfWayQueryFactory>,

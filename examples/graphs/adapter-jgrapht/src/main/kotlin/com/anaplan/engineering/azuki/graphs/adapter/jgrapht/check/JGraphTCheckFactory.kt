@@ -43,6 +43,5 @@ interface JGraphTCheck : Check {
 
 
 val toJGraphTCheck: (Check) -> JGraphTCheck = {
-    @Suppress("UNCHECKED_CAST")
     it as? JGraphTCheck ?: throw IllegalArgumentException("Invalid check: $it")
 }

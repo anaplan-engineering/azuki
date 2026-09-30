@@ -31,9 +31,7 @@ class JGraphTParallelAction(actions: List<List<JGraphTAction>>) : ParallelAction
     }
 }
 
-
 val toJGraphTAction: (Action) -> JGraphTAction = {
-    @Suppress("UNCHECKED_CAST")
     it as? JGraphTAction ?: throw IllegalArgumentException("Invalid action: $it")
 }
 
@@ -41,10 +39,9 @@ private object JGraphTUndirectedGraphActionFactory : UndirectedGraphActionFactor
 
     override fun create(graphName: String) = CreateUndirectedGraphAction(graphName)
 
-    override fun <T> addVertex(graphName: String, vertex: T) =
-        AddVertexToUndirectedGraphAction(graphName, vertex)
+    override fun <T : Any> addVertex(graphName: String, vertex: T) = AddVertexToUndirectedGraphAction(graphName, vertex)
 
-    override fun <T> addEdge(graphName: String, source: T, target: T) =
+    override fun <T : Any> addEdge(graphName: String, source: T, target: T) =
         AddEdgeToUndirectedGraphAction(graphName, source, target)
 
 }
@@ -53,10 +50,9 @@ private object JGraphTDirectedGraphActionFactory : DirectedGraphActionFactory {
 
     override fun create(graphName: String) = CreateDirectedGraphAction(graphName)
 
-    override fun <T> addVertex(graphName: String, vertex: T) =
-        AddVertexToDirectedGraphAction(graphName, vertex)
+    override fun <T : Any> addVertex(graphName: String, vertex: T) = AddVertexToDirectedGraphAction(graphName, vertex)
 
-    override fun <T> addEdge(graphName: String, source: T, target: T) =
+    override fun <T : Any> addEdge(graphName: String, source: T, target: T) =
         AddEdgeToDirectedGraphAction(graphName, source, target)
 
 

@@ -6,10 +6,12 @@ class ExecutionEnvironment {
 
     private val graphs = mutableMapOf<String, Graph<*, *>>()
 
-    fun <V> act(graphName: String, action: Graph<V, *>.() -> Unit) =
+    @Suppress("UNCHECKED_CAST")
+    fun <V : Any> act(graphName: String, action: Graph<V, *>.() -> Unit) =
         (graphs[graphName] as? Graph<V, *>)?.action() ?: throw ExecutionException("No such graph $graphName")
 
-    fun <V, T> get(graphName: String, get: Graph<V, *>.() -> T): T =
+    @Suppress("UNCHECKED_CAST")
+    fun <V : Any, T> get(graphName: String, get: Graph<V, *>.() -> T): T =
         (graphs[graphName] as? Graph<V, *>)?.get() ?: throw ExecutionException("No such graph $graphName")
 
     fun addGraph(graphName: String, graph: Graph<*, *>) {

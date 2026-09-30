@@ -6,17 +6,17 @@ import org.jgrapht.Graph
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultEdge
 
-class PathExistsCheck<V>(
+class PathExistsCheck<V : Any>(
     private val graphName: String,
     private val from: V,
     private val to: V,
     private val result: Boolean,
 ) : JGraphTCheck, PathExistsBehaviour() {
 
-    override fun check(env: ExecutionEnvironment) =
-        checkEqual(result, env.get<V, Boolean>(graphName) {
-            val path = DijkstraShortestPath(this as Graph<V, DefaultEdge>)
-            path.getPath(from, to) != null
-        })
+    @Suppress("UNCHECKED_CAST")
+    override fun check(env: ExecutionEnvironment) = checkEqual(result, env.get<V, Boolean>(graphName) {
+        val path = DijkstraShortestPath(this as Graph<V, DefaultEdge>)
+        path.getPath(from, to) != null
+    })
 
 }

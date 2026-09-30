@@ -5,7 +5,7 @@ import com.anaplan.engineering.azuki.graphs.adapter.jung.execution.ExecutionEnvi
 import edu.uci.ics.jung.algorithms.shortestpath.DijkstraShortestPath
 
 
-class HasShortestPathCheck<V>(
+class HasShortestPathCheck<V : Any>(
     private val graphName: String,
     private val path: List<V>,
 ) : JungCheck, GetShortestPathBehaviour() {
@@ -13,11 +13,10 @@ class HasShortestPathCheck<V>(
     private val from by lazy { path.first() }
     private val to by lazy { path.last() }
 
-    override fun check(env: ExecutionEnvironment) =
-        checkEqual(path, env.get(graphName) {
-            val pathAlg = DijkstraShortestPath(this)
-            val edges = pathAlg.getPath(from, to)
-            val edgeMap = pathAlg.getIncomingEdgeMap(from)
-            listOf(from) + edgeMap.filter { it.value in edges }.keys.toList()
-        })
+    override fun check(env: ExecutionEnvironment) = checkEqual(path, env.get(graphName) {
+        val pathAlg = DijkstraShortestPath(this)
+        val edges = pathAlg.getPath(from, to)
+        val edgeMap = pathAlg.getIncomingEdgeMap(from)
+        listOf(from) + edgeMap.filter { it.value in edges }.keys.toList()
+    })
 }

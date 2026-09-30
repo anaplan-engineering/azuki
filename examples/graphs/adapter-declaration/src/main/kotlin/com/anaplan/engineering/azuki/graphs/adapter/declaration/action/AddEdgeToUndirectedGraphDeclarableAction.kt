@@ -4,7 +4,7 @@ import com.anaplan.engineering.azuki.declaration.DeclarableAction
 import com.anaplan.engineering.azuki.graphs.adapter.api.AddEdgeBehaviour
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.GraphDeclarationState
 
-abstract class AddEdgeToUndirectedGraphDeclarableAction<V>(
+abstract class AddEdgeToUndirectedGraphDeclarableAction<V : Any>(
     protected val graphName: String,
     protected val source: V,
     protected val target: V,

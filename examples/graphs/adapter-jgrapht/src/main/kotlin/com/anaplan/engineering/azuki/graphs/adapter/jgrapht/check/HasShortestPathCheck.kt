@@ -7,7 +7,7 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultEdge
 
 
-class HasShortestPathCheck<V>(
+class HasShortestPathCheck<V : Any>(
     private val graphName: String,
     private val path: List<V>,
 ) : JGraphTCheck, GetShortestPathBehaviour() {
@@ -15,10 +15,10 @@ class HasShortestPathCheck<V>(
     private val from = path.first()
     private val to = path.last()
 
-    override fun check(env: ExecutionEnvironment) =
-        checkEqual(path, env.get<V, List<V>>(graphName) {
-            val pathAlg = DijkstraShortestPath(this as Graph<V, DefaultEdge>)
-            pathAlg.getPath(from, to).vertexList
-        })
+    @Suppress("UNCHECKED_CAST")
+    override fun check(env: ExecutionEnvironment) = checkEqual(path, env.get<V, List<V>>(graphName) {
+        val pathAlg = DijkstraShortestPath(this as Graph<V, DefaultEdge>)
+        pathAlg.getPath(from, to).vertexList
+    })
 
 }

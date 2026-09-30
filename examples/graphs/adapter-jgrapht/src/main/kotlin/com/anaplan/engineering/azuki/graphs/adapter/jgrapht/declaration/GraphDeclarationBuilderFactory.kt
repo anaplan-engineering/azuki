@@ -1,6 +1,5 @@
 package com.anaplan.engineering.azuki.graphs.adapter.jgrapht.declaration
 
-import com.anaplan.engineering.azuki.core.system.LateDetectUnsupportedActionException
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.DirectedGraphDeclaration
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.GraphDeclaration
 import com.anaplan.engineering.azuki.graphs.adapter.declaration.declaration.UndirectedGraphDeclaration
@@ -36,8 +35,6 @@ private class GraphDeclarationBuilder<T : GraphDeclaration<*>>(declaration: T) :
 
             is DirectedGraphDeclaration<*> -> GraphTypeBuilder.directed<Any, DefaultEdge>()
                 .edgeClass(DefaultEdge::class.java)
-
-            else -> throw LateDetectUnsupportedActionException("Unkown graph declaration type ${declaration::class}")
         }
         val graph = if (declaration.edges.any { it.first == it.second }) {
             graphBuilder.allowingSelfLoops(true).buildGraph()

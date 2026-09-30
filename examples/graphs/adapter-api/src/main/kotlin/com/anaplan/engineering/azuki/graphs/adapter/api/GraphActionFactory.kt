@@ -14,15 +14,15 @@ interface GraphActionFactory<out A : Action> : ActionFactory, ParallelActionFact
 interface UndirectedGraphActionFactory {
 
     fun create(graphName: String): Action = UnsupportedAction
-    fun <T> addVertex(graphName: String, vertex: T): Action = UnsupportedAction
-    fun <T> addEdge(graphName: String, source: T, target: T): Action = UnsupportedAction
+    fun <T : Any> addVertex(graphName: String, vertex: T): Action = UnsupportedAction
+    fun <T : Any> addEdge(graphName: String, source: T, target: T): Action = UnsupportedAction
 
 }
 
 interface DirectedGraphActionFactory {
 
     fun create(graphName: String): Action = UnsupportedAction
-    fun <T> addVertex(graphName: String, vertex: T): Action = UnsupportedAction
-    fun <T> addEdge(graphName: String, source: T, target: T): Action = UnsupportedAction
+    fun <T : Any> addVertex(graphName: String, vertex: T): Action = UnsupportedAction
+    fun <T : Any> addEdge(graphName: String, source: T, target: T): Action = UnsupportedAction
 
 }
