@@ -1,7 +1,6 @@
 package com.anaplan.engineering.azuki.rightofway.implementation
 
 import com.anaplan.engineering.azuki.rightofway.implementation.QuadrantBehaviours.Companion.CONVERGENCE_MATRICES
-import jdk.nashorn.internal.objects.NativeFunction.function
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.math.abs

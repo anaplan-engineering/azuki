@@ -4,11 +4,13 @@ plugins {
 }
 
 dependencies {
-    api project(":azuki-script-formatter")
+    api project(":azuki-script-formatter-api")
     api project(":azuki-core")
     api project(":azuki-declaration")
     implementation libs.kotlin.test
     implementation libs.slf4j.api
+
+    testRuntimeOnly project(":azuki-script-formatter-ktlint")
 }
 
 publishing {
