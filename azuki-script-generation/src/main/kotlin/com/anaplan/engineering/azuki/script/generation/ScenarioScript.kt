@@ -21,9 +21,9 @@ abstract class ScenarioScript(val typeName: String, val blocks: ScriptElementLis
      */
     inner class Renderer(
         /**
-         * The formatter to use, if any.
+         * Whether to format (using [ScenarioFormatter]).
          */
-        var formatter: ScenarioFormatterService = ScenarioFormatter,
+        var format: Boolean = true,
         /**
          * How to convert the scenario's blocks into a script.
          */
@@ -38,15 +38,10 @@ abstract class ScenarioScript(val typeName: String, val blocks: ScriptElementLis
         var indentString: String = "    "
     ) {
 
-        /** Shorthand for switching off formatting. */
-        fun doNotFormat() {
-            formatter = NoScenarioFormatterService
-        }
-
         internal fun render(blocks: ScriptElementList<ScriptBlock>): String {
             val wrapped = scriptType.wrap(typeName, blocks)
             val rendered = wrapped.render(RenderContext(indentLevel, indentString))
-            return formatter.formatScenario(rendered)
+            return if (format) ScenarioFormatter.formatScenario(rendered) else rendered
         }
     }
 
