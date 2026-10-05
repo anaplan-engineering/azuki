@@ -1,0 +1,30 @@
+comments:
+  UndocumentedPublicProperty:
+    active: false
+  UndocumentedPublicFunction:
+    active: false
+  UndocumentedPublicClass:
+    active: false
+naming:
+  FunctionMaxLength:
+      maximumFunctionNameLength: 50  # default of 30 is excessively short for self-documenting
+  FunctionMinLength:
+      minimumFunctionNameLength: 2  # default of 3 prevents things like `or`
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9]*' # Initial capital
+style:
+  WildcardImport:
+    active: false
+processors:
+  active: true
+  exclude:
+  - DetektProgressListener
+console-reports:
+  active: true
+  exclude:
+  - NotificationReport
+  - FindingsReport
+  - FileBasedFindingsReport
+output-reports:
+  active: true
+

@@ -1,7 +1,6 @@
 package com.anaplan.engineering.azuki.core.runner
 
 import com.anaplan.engineering.azuki.core.scenario.BuildableScenario
-import com.anaplan.engineering.azuki.core.scenario.VerifiableScenario
 import com.anaplan.engineering.azuki.core.system.Action
 import com.anaplan.engineering.azuki.core.system.ActionFactory
 import com.anaplan.engineering.azuki.core.system.CheckFactory
@@ -12,8 +11,11 @@ import com.anaplan.engineering.azuki.core.system.NoSystemDefaults
 import com.anaplan.engineering.azuki.core.system.SystemFactory
 import org.jetbrains.lincheck.Lincheck
 import java.io.ByteArrayOutputStream
+import java.lang.System
 import kotlin.concurrent.thread
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class TaskWrapperTest {
 
@@ -62,14 +64,15 @@ class TaskWrapperTest {
         override fun commands(actionFactory: ActionFactory) = listOf<Action>()
     }
 
-    object DummyImplementation : Implementation<ActionFactory, CheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults> {
+    object DummyImplementation :
+        Implementation<ActionFactory, CheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults> {
         override val name = "dummy"
         override val implementationDefaults = NoSystemDefaults
+        override val versionFilter = Implementation.VersionFilter.DefaultVersionFilter
 
-        override fun createSystemFactory(systemDefaults: NoSystemDefaults): SystemFactory<ActionFactory, CheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, *> {
+        override fun createSystemFactory(systemDefaults: NoSystemDefaults):
+            SystemFactory<ActionFactory, CheckFactory, NoQueryFactory, NoActionGeneratorFactory, NoSystemDefaults, *> {
             TODO("Not yet implemented")
         }
-
-        override val versionFilter = Implementation.VersionFilter.DefaultVersionFilter
     }
 }

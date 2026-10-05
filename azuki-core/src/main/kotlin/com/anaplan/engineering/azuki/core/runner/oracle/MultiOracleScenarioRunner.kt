@@ -113,7 +113,7 @@ class MultiOracleScenarioRunner<
     ) = instance.runTask(TaskType.CheckDeclarations, scenario) { implementation ->
         val systemFactory =
             implementation.createSystemFactory() as? VerifiableSystemFactory<AF, CF, QF, AGF, *, VerifiableSystem<AF, CF>>
-                ?: throw IllegalStateException("Trying to verify, but system factory does not create verifiable systems")
+                ?: error("Trying to verify, but system factory does not create verifiable systems")
         val declarations = scenario.declarations(systemFactory.actionFactory)
         val result = if (declarations.any { it is UnsupportedAction }) {
             Log.debug("Declarations contain unsupported action")
@@ -149,7 +149,7 @@ class MultiOracleScenarioRunner<
     ) = instance.runTask(TaskType.CheckActions, scenario) { implementation ->
         val systemFactory =
             implementation.createSystemFactory() as? VerifiableSystemFactory<AF, CF, QF, AGF, *, VerifiableSystem<AF, CF>>
-                ?: throw IllegalStateException("Trying to validate, but system factory does not create verifiable systems")
+                ?: error("Trying to validate, but system factory does not create verifiable systems")
         val declarations = scenario.declarations(systemFactory.actionFactory)
         val commands = scenario.commands(systemFactory.actionFactory)
         if (commands.isEmpty()) {
@@ -189,7 +189,7 @@ class MultiOracleScenarioRunner<
     private fun generateScenario(resultBuilder: OracleResult.Builder<AF, CF, QF, AGF>): OracleScenario<AF, QF, AGF> {
         fun getActionGeneratingSystemFactory(implementation: Implementation<AF, CF, QF, AGF, *>) =
             implementation.createSystemFactory() as? ActionGeneratingSystemFactory<AF, CF, QF, AGF, *, ActionGeneratingSystem<AF, CF>>
-                ?: throw IllegalStateException("Trying to generate actions, but system factory does not create systems with action generation capability")
+                ?: error("Trying to generate actions, but system factory does not create systems with action generation capability")
 
         val generateTaskResult = testInstance.runTask(TaskType.GenerateActions, scenario) { implementation ->
             val systemFactory = getActionGeneratingSystemFactory(implementation)
@@ -219,40 +219,42 @@ class MultiOracleScenarioRunner<
         instance.runTask(TaskType.Query, scenario) { implementation ->
             val systemFactory =
                 implementation.createSystemFactory() as? QueryableSystemFactory<AF, CF, QF, AGF, *, QueryableSystem<AF, CF>>
-                    ?: throw IllegalStateException("Trying to query, but system factory does not create queryable systems")
+                    ?: error("Trying to query, but system factory does not create queryable systems")
             val declarations = scenario.declarations(systemFactory.actionFactory)
             val commands = scenario.commands(systemFactory.actionFactory)
             if (UnsupportedAction in declarations || UnsupportedAction in commands) {
                 Log.warn("Unsupported action found")
                 emptyList()
-            } else try {
-                val queries = scenario.queries(systemFactory.queryFactory)
-                if (queries.isEmpty()) {
-                    Log.warn("No queries found!!")
-                }
-                val querySystemWriter = systemWriter ?: DefaultImplementationSystemWriter()
-                val queriesToWrite = scenario.queries(querySystemWriter.queryFactory ?: systemFactory.queryFactory)
-                querySystemWriter.write(SystemDefinition(
-                    declarations = scenario.declarations(querySystemWriter.actionFactory
-                        ?: systemFactory.actionFactory),
-                    commands = scenario.commands(querySystemWriter.actionFactory ?: systemFactory.actionFactory),
-                    queries = queriesToWrite.queries.filter { it !is UnsupportedQuery<*> },
-                    forAllQueries = queriesToWrite.forAllQueries,
-                ), "query")
-                val system = systemFactory.create(SystemDefinition(
-                    declarations = declarations,
-                    commands = commands,
-                    queries = queries.queries.filter { it !is UnsupportedQuery<*> },
-                    forAllQueries = queries.forAllQueries,
-                ))
+            } else {
                 try {
-                    system.query()
-                } finally {
-                    if (system is MutableSystem<*, *>) system.destroy()
+                    val queries = scenario.queries(systemFactory.queryFactory)
+                    if (queries.isEmpty()) {
+                        Log.warn("No queries found!!")
+                    }
+                    val querySystemWriter = systemWriter ?: DefaultImplementationSystemWriter()
+                    val queriesToWrite = scenario.queries(querySystemWriter.queryFactory ?: systemFactory.queryFactory)
+                    querySystemWriter.write(SystemDefinition(
+                        declarations = scenario.declarations(querySystemWriter.actionFactory
+                            ?: systemFactory.actionFactory),
+                        commands = scenario.commands(querySystemWriter.actionFactory ?: systemFactory.actionFactory),
+                        queries = queriesToWrite.queries.filter { it !is UnsupportedQuery<*> },
+                        forAllQueries = queriesToWrite.forAllQueries,
+                    ), "query")
+                    val system = systemFactory.create(SystemDefinition(
+                        declarations = declarations,
+                        commands = commands,
+                        queries = queries.queries.filter { it !is UnsupportedQuery<*> },
+                        forAllQueries = queries.forAllQueries,
+                    ))
+                    try {
+                        system.query()
+                    } finally {
+                        if (system is MutableSystem<*, *>) system.destroy()
+                    }
+                } catch (e: LateDetectUnsupportedActionException) {
+                    Log.warn("Late detected unsupported action found")
+                    emptyList()
                 }
-            } catch (e: LateDetectUnsupportedActionException) {
-                Log.warn("Late detected unsupported action found")
-                emptyList()
             }
         }
 
@@ -263,7 +265,7 @@ class MultiOracleScenarioRunner<
     ) = instance.runTask(TaskType.Verify, scenario) { implementation ->
         val systemFactory =
             implementation.createSystemFactory() as? VerifiableSystemFactory<AF, CF, QF, AGF, *, VerifiableSystem<AF, CF>>
-                ?: throw IllegalStateException("Trying to verify, but system factory does not create verifiable systems")
+                ?: error("Trying to verify, but system factory does not create verifiable systems")
         val declarations = scenario.declarations(systemFactory.actionFactory)
         val commands = scenario.commands(systemFactory.actionFactory)
         val checkSystemWriter = systemWriter ?: DefaultImplementationSystemWriter()
