@@ -4,15 +4,14 @@ plugins {
 }
 
 dependencies {
-    implementation libs.ktlint.ruleEngine
-    implementation libs.ktlint.rulesetStandard
+    implementation libs.slf4j.api
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             pom {
-                name = 'Azuki Script Formatter'
+                name = 'Azuki Script Formatter API'
                 description = 'Tools to assist with formatting Azuki scenario scripts'
             }
         }

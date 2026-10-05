@@ -98,7 +98,6 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
     private fun ScenarioScript.write(prefix: String, suffix: String) {
         write(prefix, suffix, render {
             indentLevel = 0
-            formatter = Formatter.Full
             scriptType = ScriptType.Standalone
         })
     }
@@ -108,6 +107,7 @@ abstract class ScriptGenerationSystemWriter<AF : ActionFactory, CF : CheckFactor
     }
 
     companion object {
+
         private const val ScenarioSuffix = "scn"
         private const val TestSuffix = "kt"
         private val Log = LoggerFactory.getLogger(ScriptGenerationSystemWriter::class.java)

@@ -13,6 +13,7 @@ dependencies {
     implementation project(":examples:tictactoe:adapter-script-generation")
     implementation project(":azuki-runner")
     implementation project(":azuki-verify:azuki-generation-utilities")
+    runtimeOnly project(":azuki-script-formatter-ktlint")
 
     implementation libs.clikt.jvm
     implementation libs.kotlin.reflect

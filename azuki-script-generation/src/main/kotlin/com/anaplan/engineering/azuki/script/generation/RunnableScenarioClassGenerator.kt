@@ -43,7 +43,7 @@ open class RunnableScenarioClassGenerator<S : RunnableScenario<*, *, *, *, *, *,
             indentLevel = 2
             scriptType = ScriptType.Inline
             // We're going to format the whole test-case anyway, so formatting twice is pointless
-            formatter = Formatter.None
+            format = false
         })
         appendLine("    }")
         appendLine("}")

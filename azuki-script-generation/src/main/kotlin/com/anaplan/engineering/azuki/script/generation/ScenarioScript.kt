@@ -1,6 +1,8 @@
 package com.anaplan.engineering.azuki.script.generation
 
+import com.anaplan.engineering.azuki.script.formatter.NoScenarioFormatterService
 import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatter
+import com.anaplan.engineering.azuki.script.formatter.ScenarioFormatterService
 
 /**
  * A scenario script.
@@ -19,9 +21,9 @@ abstract class ScenarioScript(val typeName: String, val blocks: ScriptElementLis
      */
     inner class Renderer(
         /**
-         * The formatter to use, if any.
+         * Whether to format (using [ScenarioFormatter]).
          */
-        var formatter: Formatter = Formatter.Full,
+        var format: Boolean = true,
         /**
          * How to convert the scenario's blocks into a script.
          */
@@ -39,7 +41,7 @@ abstract class ScenarioScript(val typeName: String, val blocks: ScriptElementLis
         internal fun render(blocks: ScriptElementList<ScriptBlock>): String {
             val wrapped = scriptType.wrap(typeName, blocks)
             val rendered = wrapped.render(RenderContext(indentLevel, indentString))
-            return formatter.format(rendered)
+            return if (format) ScenarioFormatter.formatScenario(rendered) else rendered
         }
     }
 
@@ -63,27 +65,6 @@ fun interface ScriptType {
          * Wrap the script blocks in the appropriate scenario function.
          */
         val Standalone = ScriptType { typeName, blocks -> ScriptBlock("${typeName}Scenario", blocks) }
-    }
-}
-
-/**
- * The type of formatter to run on the script after rendering.
- */
-fun interface Formatter {
-
-    fun format(scenarioScript: String): String
-
-    companion object {
-
-        /**
-         * Don't format.
-         */
-        val None = Formatter { it }
-
-        /**
-         * Format the scenario using the full-scenario formatter.
-         */
-        val Full = Formatter(ScenarioFormatter::formatScenario)
     }
 }
 

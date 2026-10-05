@@ -64,6 +64,15 @@ publishing {
                         organizationUrl = "http://www.anaplan.com"
                         roles = ['engineer intern']
                     }
+                    developer {
+                        id = 'matt-windsor-anaplan'
+                        name = 'Matt Windsor'
+                        email = 'matt.windsor@anaplan.com'
+                        url = "https://github.com/matt-windsor-anaplan"
+                        organization = "Anaplan Ltd"
+                        organizationUrl = "http://www.anaplan.com"
+                        roles = ['engineer']
+                    }
                 }
             }
         }

@@ -1,0 +1,22 @@
+plugins {
+    id 'azuki.kotlin-conventions'
+    id 'azuki.jar-publishing-conventions'
+}
+
+dependencies {
+    api project(":azuki-script-formatter-api")
+
+    implementation libs.ktlint.ruleEngine
+    implementation libs.ktlint.rulesetStandard
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Azuki Script Formatter KtLint backend'
+                description = 'Tools to assist with formatting Azuki scenario scripts (KtLint version)'
+            }
+        }
+    }
+}
