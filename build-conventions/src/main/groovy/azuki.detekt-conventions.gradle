@@ -1,0 +1,17 @@
+plugins {
+    id 'io.gitlab.arturbosch.detekt'
+}
+
+detekt {
+    config = files("$rootDir/.detekt/detekt.yml")
+    ignoreFailures = true // TODO -- invert once baseline established
+    allRules = true
+}
+
+tasks.named("detekt") {
+    reports {
+        html.required.set(true)
+    }
+}
+
+
